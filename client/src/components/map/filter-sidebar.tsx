@@ -42,7 +42,10 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
     hazards: events?.filter((e: any) => e.properties.event_type === "Hazard").length || 0,
     restrictions: events?.filter((e: any) => e.properties.event_type === "Roadworks" || e.properties.event_type === "Special event").length || 0,
     cameras: cameras?.length || 0,
-    incidents: incidents?.length || 0,
+    incidents: incidents?.filter((i: any) => !i.properties?.userReported).length || 0,
+    crime: incidents?.filter((i: any) => i.properties?.userReported && ['Crime', 'Theft', 'Violence', 'Vandalism'].includes(i.properties?.incidentType)).length || 0,
+    suspicious: incidents?.filter((i: any) => i.properties?.userReported && i.properties?.incidentType === 'Suspicious').length || 0,
+    emergency: incidents?.filter((i: any) => i.properties?.userReported && ['Public Safety', 'Fire', 'Utility'].includes(i.properties?.incidentType)).length || 0,
   };
 
   const handleRefresh = async () => {
@@ -50,12 +53,12 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
       await Promise.all([refetchEvents(), refetchCameras(), refetchIncidents()]);
       toast({
         title: "Data updated",
-        description: "Traffic data has been refreshed successfully.",
+        description: "Safety data has been refreshed successfully.",
       });
     } catch (error) {
       toast({
         title: "Update failed",
-        description: "Failed to refresh traffic data. Please try again.",
+        description: "Failed to refresh safety data. Please try again.",
         variant: "destructive",
       });
     }
@@ -80,7 +83,7 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-lg font-semibold text-foreground">Filter Events</h2>
-              <p className="text-sm text-muted-foreground">Show or hide traffic events</p>
+              <p className="text-sm text-muted-foreground">Show or hide safety and incident alerts</p>
             </div>
             {isMobile && (
               <Button variant="ghost" size="sm" onClick={onClose} data-testid="button-close-sidebar">
@@ -95,7 +98,7 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
         <div className="p-4 space-y-6 overflow-y-auto h-full pb-20">
           {/* Event Type Filters */}
           <div>
-            <h3 className="text-sm font-medium text-foreground mb-3">Event Types</h3>
+            <h3 className="text-sm font-medium text-foreground mb-3">Traffic Events</h3>
             <div className="space-y-3">
               <div className="flex items-center space-x-3">
                 <Checkbox 
@@ -177,6 +180,76 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
                 </span>
               </div>
               
+            </div>
+          </div>
+          
+          {/* Emergency & Crime Events */}
+          <div>
+            <h3 className="text-sm font-medium text-foreground mb-3">Emergency & Safety</h3>
+            <div className="space-y-3">
+              <div className="flex items-center space-x-3">
+                <Checkbox 
+                  id="filter-incidents"
+                  checked={filters.incidents}
+                  onCheckedChange={(checked) => onFilterChange('incidents', !!checked)}
+                  data-testid="checkbox-filter-incidents"
+                />
+                <div className="w-4 h-4 bg-red-600 rounded-full"></div>
+                <Label htmlFor="filter-incidents" className="text-sm text-foreground flex-1">
+                  Official Emergencies
+                </Label>
+                <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full" data-testid="text-count-incidents">
+                  {eventCounts.incidents}
+                </span>
+              </div>
+              
+              <div className="flex items-center space-x-3">
+                <Checkbox 
+                  id="filter-crime"
+                  checked={filters.crime}
+                  onCheckedChange={(checked) => onFilterChange('crime', !!checked)}
+                  data-testid="checkbox-filter-crime"
+                />
+                <div className="w-4 h-4 bg-purple-600 rounded-full"></div>
+                <Label htmlFor="filter-crime" className="text-sm text-foreground flex-1">
+                  Crime Reports
+                </Label>
+                <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full" data-testid="text-count-crime">
+                  {eventCounts.crime}
+                </span>
+              </div>
+              
+              <div className="flex items-center space-x-3">
+                <Checkbox 
+                  id="filter-suspicious"
+                  checked={filters.suspicious}
+                  onCheckedChange={(checked) => onFilterChange('suspicious', !!checked)}
+                  data-testid="checkbox-filter-suspicious"
+                />
+                <div className="w-4 h-4 bg-amber-600 rounded-full"></div>
+                <Label htmlFor="filter-suspicious" className="text-sm text-foreground flex-1">
+                  Suspicious Activity
+                </Label>
+                <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full" data-testid="text-count-suspicious">
+                  {eventCounts.suspicious}
+                </span>
+              </div>
+              
+              <div className="flex items-center space-x-3">
+                <Checkbox 
+                  id="filter-emergency"
+                  checked={filters.emergency}
+                  onCheckedChange={(checked) => onFilterChange('emergency', !!checked)}
+                  data-testid="checkbox-filter-emergency"
+                />
+                <div className="w-4 h-4 bg-indigo-600 rounded-full"></div>
+                <Label htmlFor="filter-emergency" className="text-sm text-foreground flex-1">
+                  Other Emergencies
+                </Label>
+                <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full" data-testid="text-count-emergency">
+                  {eventCounts.emergency}
+                </span>
+              </div>
             </div>
           </div>
           

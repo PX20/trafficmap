@@ -1,8 +1,8 @@
-# QLD Traffic Monitor
+# QLD Safety Monitor
 
 ## Overview
 
-QLD Traffic Monitor is a real-time traffic monitoring application for Queensland roads. The application provides live traffic events, road closures, hazards, and traffic camera feeds across Queensland by integrating with the official QLD Traffic API. Built as a full-stack web application, it features an interactive map interface with filtering capabilities, allowing users to view and analyze traffic conditions in real-time.
+QLD Safety Monitor is a comprehensive real-time safety and incident monitoring application for Queensland. The application provides live traffic events, emergency incidents, crime reports, suspicious behavior alerts, and traffic camera feeds across Queensland. It integrates with the official QLD Traffic API and QLD Emergency Services data feeds, while also supporting community-driven incident reporting through user authentication. Built as a full-stack web application, it features an interactive map interface with advanced filtering capabilities, allowing users to view and analyze safety conditions in real-time.
 
 ## User Preferences
 
@@ -25,29 +25,31 @@ The frontend follows a modular structure with separate concerns for UI component
 The backend is implemented as a Node.js Express server with TypeScript:
 - **API Framework**: Express.js with RESTful endpoints
 - **Data Storage**: Dual storage approach using both in-memory storage and PostgreSQL with Drizzle ORM
-- **External API Integration**: Integrates with the QLD Traffic API for real-time traffic data
+- **External API Integration**: Integrates with the QLD Traffic API for real-time traffic data and QLD Emergency Services for incident data
 - **Development Integration**: Custom Vite integration for seamless development experience
 
 The server acts as a proxy and caching layer between the frontend and the QLD Traffic API, providing data transformation and local storage capabilities.
 
 ### Data Storage Solutions
 The application uses a flexible storage architecture:
-- **Primary Database**: PostgreSQL configured via Drizzle ORM with schema definitions for users, traffic events, and traffic cameras
+- **Primary Database**: PostgreSQL configured via Drizzle ORM with schema definitions for users, incidents, traffic events, and traffic cameras
 - **Fallback Storage**: In-memory storage implementation for development and testing
 - **Storage Interface**: Abstract storage interface allows switching between storage implementations
 - **Migration Support**: Drizzle Kit for database schema migrations
 
 ### Authentication and Authorization
-Basic user management system is implemented with:
-- **User Schema**: Simple username/password authentication model
-- **Storage Interface**: User management through the storage abstraction layer
-- Currently implements foundation for authentication without active session management
+Full user authentication and authorization system implemented with:
+- **Replit Auth Integration**: Secure OpenID Connect authentication using Replit's identity provider
+- **Session Management**: PostgreSQL-based session storage with automatic token refresh
+- **Community Reporting**: Authenticated users can report safety incidents and crimes
+- **User Profile System**: Complete user management with profile data and incident history
 
 ### Map and Visualization
 Interactive mapping solution using:
 - **Map Library**: Leaflet for map rendering and interaction
-- **Marker System**: Custom markers for different event types (crashes, hazards, restrictions, cameras)
-- **Filtering**: Real-time filtering by event type, impact level, and time range
+- **Marker System**: Custom color-coded markers for traffic events, emergency incidents, crime reports, and suspicious activity alerts
+- **Advanced Filtering**: Real-time filtering by event category (traffic, crime, emergency), incident type, impact level, and time range
+- **Dual Data Sources**: Displays both official emergency data and community-reported incidents with source attribution
 - **Responsive Design**: Mobile-optimized interface with collapsible sidebar
 
 ## External Dependencies
@@ -57,6 +59,10 @@ Interactive mapping solution using:
   - Endpoint: `https://api.qldtraffic.qld.gov.au`
   - Provides GeoJSON formatted traffic data
   - Supports both public and authenticated API access
+- **QLD Emergency Services API**: Real-time emergency incident data
+  - ArcGIS Feature Server providing current emergency incidents
+  - Includes incident details, emergency vehicle deployments, and response status
+  - Covers police, fire, and ambulance service incidents across Queensland
 
 ### Database Services
 - **PostgreSQL**: Primary database (configured via Drizzle)

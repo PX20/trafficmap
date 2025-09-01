@@ -19,8 +19,8 @@ export function AppHeader({ onMenuToggle }: AppHeaderProps) {
             </svg>
           </div>
           <div>
-            <h1 className="text-lg font-semibold text-foreground">QLD Traffic Monitor</h1>
-            <p className="text-sm text-muted-foreground hidden md:block">Real-time traffic information</p>
+            <h1 className="text-lg font-semibold text-foreground">QLD Safety Monitor</h1>
+            <p className="text-sm text-muted-foreground hidden md:block">Real-time safety and incident alerts</p>
           </div>
         </div>
         

@@ -86,9 +86,9 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Report Traffic Incident</DialogTitle>
+          <DialogTitle>Report Safety Incident</DialogTitle>
           <DialogDescription>
-            Report a traffic incident or hazard you've observed to help other drivers stay informed.
+            Report any safety concern, incident, or suspicious activity you've observed to help keep the community informed and safe.
           </DialogDescription>
         </DialogHeader>
         
@@ -107,11 +107,19 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="Accident">Accident</SelectItem>
+                      <SelectItem value="Accident">Traffic Accident</SelectItem>
                       <SelectItem value="Breakdown">Vehicle Breakdown</SelectItem>
                       <SelectItem value="Roadwork">Roadwork</SelectItem>
                       <SelectItem value="Hazard">Road Hazard</SelectItem>
-                      <SelectItem value="Weather">Weather Related</SelectItem>
+                      <SelectItem value="Weather">Weather Emergency</SelectItem>
+                      <SelectItem value="Crime">Crime in Progress</SelectItem>
+                      <SelectItem value="Theft">Theft/Break-in</SelectItem>
+                      <SelectItem value="Suspicious">Suspicious Activity</SelectItem>
+                      <SelectItem value="Violence">Violence/Assault</SelectItem>
+                      <SelectItem value="Vandalism">Vandalism</SelectItem>
+                      <SelectItem value="Public Safety">Public Safety Concern</SelectItem>
+                      <SelectItem value="Utility">Utility Emergency</SelectItem>
+                      <SelectItem value="Fire">Fire/Smoke</SelectItem>
                       <SelectItem value="Other">Other</SelectItem>
                     </SelectContent>
                   </Select>
@@ -169,9 +177,9 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="High">High - Blocking traffic</SelectItem>
-                      <SelectItem value="Medium">Medium - Causing delays</SelectItem>
-                      <SelectItem value="Low">Low - Minor hazard</SelectItem>
+                      <SelectItem value="High">High - Immediate danger/emergency</SelectItem>
+                      <SelectItem value="Medium">Medium - Significant concern</SelectItem>
+                      <SelectItem value="Low">Low - Minor concern</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -187,7 +195,7 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
                   <FormLabel>Additional Details (Optional)</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Provide any additional details about the incident..."
+                      placeholder="Describe what you observed, number of people involved, vehicle descriptions, direction of travel, etc..."
                       className="min-h-20"
                       {...field}
                       data-testid="textarea-incident-description"

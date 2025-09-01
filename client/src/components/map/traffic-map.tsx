@@ -161,29 +161,58 @@ export function TrafficMap({ filters, onEventSelect, onCameraSelect }: TrafficMa
     }
 
     // Add incident markers
-    if (filters.incidents && (incidentsData as any)?.features) {
+    if ((incidentsData as any)?.features) {
       (incidentsData as any).features.forEach((feature: any) => {
         if (feature.geometry?.coordinates) {
           let coords: [number, number] | null = null;
+          let shouldShow = false;
+          let markerType = 'incident';
           
-          // Handle different geometry types for incidents
-          if (feature.geometry.type === 'Point') {
-            coords = [feature.geometry.coordinates[1], feature.geometry.coordinates[0]];
-          } else if (feature.geometry.type === 'MultiPoint' && feature.geometry.coordinates?.[0]) {
-            const point = feature.geometry.coordinates[0];
-            coords = [point[1], point[0]];
+          // Determine incident category and if it should be shown
+          const properties = feature.properties;
+          const isUserReported = properties?.userReported;
+          
+          if (isUserReported) {
+            // User-reported incidents
+            const incidentType = properties?.incidentType;
+            if (['Crime', 'Theft', 'Violence', 'Vandalism'].includes(incidentType) && filters.crime) {
+              shouldShow = true;
+              markerType = 'crime';
+            } else if (incidentType === 'Suspicious' && filters.suspicious) {
+              shouldShow = true;
+              markerType = 'suspicious';
+            } else if (['Public Safety', 'Fire', 'Utility'].includes(incidentType) && filters.emergency) {
+              shouldShow = true;
+              markerType = 'emergency';
+            }
+          } else {
+            // Official emergency incidents
+            if (filters.incidents) {
+              shouldShow = true;
+              markerType = 'incident';
+            }
           }
           
-          if (coords) {
-            const marker = L.marker(coords, {
-              icon: createCustomMarker(getMarkerColor('incident'))
-            });
+          if (shouldShow) {
+            // Handle different geometry types for incidents
+            if (feature.geometry.type === 'Point') {
+              coords = [feature.geometry.coordinates[1], feature.geometry.coordinates[0]];
+            } else if (feature.geometry.type === 'MultiPoint' && feature.geometry.coordinates?.[0]) {
+              const point = feature.geometry.coordinates[0];
+              coords = [point[1], point[0]];
+            }
+            
+            if (coords) {
+              const marker = L.marker(coords, {
+                icon: createCustomMarker(getMarkerColor(markerType))
+              });
 
-            const popupContent = createIncidentPopup(feature.properties);
-            marker.bindPopup(popupContent);
+              const popupContent = createIncidentPopup(feature.properties);
+              marker.bindPopup(popupContent);
 
-            marker.addTo(mapInstanceRef.current!);
-            newMarkers.push(marker);
+              marker.addTo(mapInstanceRef.current!);
+              newMarkers.push(marker);
+            }
           }
         }
       });
@@ -200,6 +229,9 @@ export function TrafficMap({ filters, onEventSelect, onCameraSelect }: TrafficMa
       'special event': '#f97316',
       'camera': '#3b82f6',
       'incident': '#dc2626',
+      'crime': '#9333ea',
+      'suspicious': '#f59e0b',
+      'emergency': '#4f46e5',
       'weather': '#10b981'
     };
     return colors[eventType as keyof typeof colors] || '#6b7280';
@@ -253,6 +285,22 @@ export function TrafficMap({ filters, onEventSelect, onCameraSelect }: TrafficMa
   };
 
   const createIncidentPopup = (properties: any) => {
+    // Check if this is a user-reported incident
+    if (properties?.userReported) {
+      return `
+        <div class="p-2 min-w-[250px]">
+          <h4 class="font-semibold text-foreground mb-2">${properties.incidentType || 'Community Report'}</h4>
+          <p class="text-sm text-muted-foreground mb-2">${properties.description || 'No description provided'}</p>
+          <div class="text-xs text-muted-foreground space-y-1">
+            <div><span class="font-medium">Location:</span> ${properties.locationDescription || 'Unknown'}</div>
+            <div><span class="font-medium">Reported:</span> ${new Date(properties.createdAt).toLocaleString()}</div>
+            <div><span class="font-medium">Source:</span> <span class="text-blue-600 font-medium">Community Report</span></div>
+          </div>
+        </div>
+      `;
+    }
+    
+    // Official emergency incident
     const vehiclesTotal = (properties.VehiclesAssigned || 0) + (properties.VehiclesOnRoute || 0) + (properties.VehiclesOnScene || 0);
     
     // Determine status color based on status
@@ -277,6 +325,7 @@ export function TrafficMap({ filters, onEventSelect, onCameraSelect }: TrafficMa
           <div><span class="font-medium">Region:</span> ${properties.Jurisdiction || 'Unknown'}</div>
           ${vehiclesTotal > 0 ? `<div><span class="font-medium">Vehicles:</span> ${vehiclesTotal} responding</div>` : ''}
           ${properties.Response_Date ? `<div><span class="font-medium">Reported:</span> ${new Date(properties.Response_Date).toLocaleString()}</div>` : ''}
+          <div><span class="font-medium">Source:</span> <span class="text-green-600 font-medium">Official</span></div>
         </div>
       </div>
     `;
@@ -309,7 +358,7 @@ export function TrafficMap({ filters, onEventSelect, onCameraSelect }: TrafficMa
         <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-30">
           <div className="bg-card p-6 rounded-lg shadow-lg flex items-center space-x-3">
             <div className="w-5 h-5 border-2 border-muted border-t-primary rounded-full animate-spin"></div>
-            <span className="text-foreground">Loading traffic data...</span>
+            <span className="text-foreground">Loading safety data...</span>
           </div>
         </div>
       )}

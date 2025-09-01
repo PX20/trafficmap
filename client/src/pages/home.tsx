@@ -15,6 +15,9 @@ export interface FilterState {
   restrictions: boolean;
   cameras: boolean;
   incidents: boolean;
+  crime: boolean;
+  suspicious: boolean;
+  emergency: boolean;
   impactLevel: 'all' | 'high' | 'medium';
   timeRange: 'now' | '1h' | '6h' | '24h';
   autoRefresh: boolean;
@@ -32,6 +35,9 @@ export default function Home() {
     restrictions: true,
     cameras: true,
     incidents: true,
+    crime: true,
+    suspicious: true,
+    emergency: true,
     impactLevel: 'all',
     timeRange: 'now',
     autoRefresh: true,
@@ -78,7 +84,7 @@ export default function Home() {
         <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path>
         </svg>
-        Report Incident
+        Report Safety Issue
       </Button>
 
       {/* Mobile FAB for filters */}
