@@ -26,12 +26,28 @@ export default function Feed() {
 
   const { data: incidents, isLoading: incidentsLoading } = useQuery({
     queryKey: ["/api/incidents", selectedSuburb],
+    queryFn: async () => {
+      const url = selectedSuburb 
+        ? `/api/incidents?suburb=${encodeURIComponent(selectedSuburb)}`
+        : "/api/incidents";
+      const response = await fetch(url);
+      if (!response.ok) throw new Error('Failed to fetch incidents');
+      return response.json();
+    },
     enabled: !!selectedSuburb,
     select: (data: any) => data?.features || [],
   });
 
   const { data: events, isLoading: eventsLoading } = useQuery({
     queryKey: ["/api/traffic/events", selectedSuburb],
+    queryFn: async () => {
+      const url = selectedSuburb 
+        ? `/api/traffic/events?suburb=${encodeURIComponent(selectedSuburb)}`
+        : "/api/traffic/events";
+      const response = await fetch(url);
+      if (!response.ok) throw new Error('Failed to fetch traffic events');
+      return response.json();
+    },
     enabled: !!selectedSuburb,
     select: (data: any) => data?.features || [],
   });
