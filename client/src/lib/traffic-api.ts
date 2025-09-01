@@ -6,13 +6,6 @@ export async function getTrafficEvents() {
   return response.json();
 }
 
-export async function getTrafficCameras() {
-  const response = await fetch('/api/traffic/cameras');
-  if (!response.ok) {
-    throw new Error(`Failed to fetch traffic cameras: ${response.statusText}`);
-  }
-  return response.json();
-}
 
 export async function getIncidents() {
   const response = await fetch('/api/incidents');

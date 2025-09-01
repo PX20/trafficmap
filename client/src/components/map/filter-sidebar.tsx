@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 import type { FilterState } from "@/pages/home";
-import { getTrafficEvents, getTrafficCameras, getIncidents } from "@/lib/traffic-api";
+import { getTrafficEvents, getIncidents } from "@/lib/traffic-api";
 
 interface FilterSidebarProps {
   isOpen: boolean;
@@ -25,10 +25,6 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
     select: (data: any) => data?.features || [],
   });
 
-  const { data: cameras, refetch: refetchCameras } = useQuery({
-    queryKey: ["/api/traffic/cameras"],
-    select: (data: any) => data?.features || [],
-  });
 
   const { data: incidents, refetch: refetchIncidents } = useQuery({
     queryKey: ["/api/incidents"],
@@ -41,7 +37,6 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
     crashes: events?.filter((e: any) => e.properties.event_type === "Crash").length || 0,
     hazards: events?.filter((e: any) => e.properties.event_type === "Hazard").length || 0,
     restrictions: events?.filter((e: any) => e.properties.event_type === "Roadworks" || e.properties.event_type === "Special event").length || 0,
-    cameras: cameras?.length || 0,
     incidents: incidents?.filter((i: any) => !i.properties?.userReported).length || 0,
     crime: incidents?.filter((i: any) => i.properties?.userReported && ['Crime', 'Theft', 'Violence', 'Vandalism'].includes(i.properties?.incidentType)).length || 0,
     suspicious: incidents?.filter((i: any) => i.properties?.userReported && i.properties?.incidentType === 'Suspicious').length || 0,
@@ -50,7 +45,7 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
 
   const handleRefresh = async () => {
     try {
-      await Promise.all([refetchEvents(), refetchCameras(), refetchIncidents()]);
+      await Promise.all([refetchEvents(), refetchIncidents()]);
       toast({
         title: "Data updated",
         description: "Safety data has been refreshed successfully.",
@@ -164,21 +159,6 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
                 </span>
               </div>
               
-              <div className="flex items-center space-x-3">
-                <Checkbox 
-                  id="filter-cameras"
-                  checked={filters.cameras}
-                  onCheckedChange={(checked) => onFilterChange('cameras', !!checked)}
-                  data-testid="checkbox-filter-cameras"
-                />
-                <div className="w-4 h-4 bg-blue-500 rounded-full"></div>
-                <Label htmlFor="filter-cameras" className="text-sm text-foreground flex-1">
-                  Traffic Cameras
-                </Label>
-                <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full" data-testid="text-count-cameras">
-                  {eventCounts.cameras}
-                </span>
-              </div>
               
             </div>
           </div>

@@ -10,8 +10,7 @@ const PUBLIC_API_KEY = "3e83add325cbb69ac4d8e5bf433d770b";
 
 // Traffic data cache to avoid hitting rate limits
 const trafficCache = {
-  events: { data: null as any, lastFetch: 0 },
-  cameras: { data: null as any, lastFetch: 0 }
+  events: { data: null as any, lastFetch: 0 }
 };
 
 const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes in milliseconds
@@ -156,71 +155,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get traffic cameras from QLD Traffic API (with caching)
-  app.get("/api/traffic/cameras", async (req, res) => {
-    try {
-      let data;
-
-      // Check if we have valid cached data
-      if (isCacheValid(trafficCache.cameras)) {
-        console.log("Using cached traffic cameras data");
-        data = trafficCache.cameras.data;
-      } else {
-        // Try to fetch fresh data
-        try {
-          console.log("Fetching fresh traffic cameras data...");
-          const apiKey = process.env.QLD_TRAFFIC_API_KEY || PUBLIC_API_KEY;
-          const response = await fetchWithRetry(`${API_BASE_URL}/v2/cameras?apikey=${apiKey}`);
-          
-          if (!response.ok) {
-            throw new Error(`QLD Traffic API error: ${response.status} ${response.statusText}`);
-          }
-          
-          data = await response.json();
-          
-          // Update cache
-          trafficCache.cameras = {
-            data: data,
-            lastFetch: Date.now()
-          };
-          
-        } catch (error) {
-          // If fetch fails and we have old cached data, use it
-          if (trafficCache.cameras.data) {
-            console.log("API fetch failed, using stale cached data");
-            data = trafficCache.cameras.data;
-          } else {
-            throw error;
-          }
-        }
-      }
-      
-      // Transform and store cameras in local storage for caching
-      if (data.features) {
-        for (const feature of data.features) {
-          const camera = {
-            id: feature.properties.id?.toString() || randomUUID(),
-            name: feature.properties.name || 'Traffic Camera',
-            location: feature.properties.location || null,
-            status: feature.properties.status || 'active',
-            imageUrl: feature.properties.image_url || null,
-            geometry: feature.geometry,
-            properties: feature.properties,
-          };
-          
-          await storage.updateTrafficCamera(camera.id, camera) || await storage.createTrafficCamera(camera);
-        }
-      }
-      
-      res.json(data);
-    } catch (error) {
-      console.error("Error fetching traffic cameras:", error);
-      res.status(500).json({ 
-        error: "Failed to fetch traffic cameras", 
-        message: error instanceof Error ? error.message : "Unknown error" 
-      });
-    }
-  });
 
   // Get cached events from local storage
   app.get("/api/events", async (req, res) => {
@@ -233,16 +167,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get cached cameras from local storage
-  app.get("/api/cameras", async (req, res) => {
-    try {
-      const cameras = await storage.getTrafficCameras();
-      res.json(cameras);
-    } catch (error) {
-      console.error("Error fetching cached cameras:", error);
-      res.status(500).json({ error: "Failed to fetch cameras" });
-    }
-  });
 
   // Get cached incidents (fast endpoint with pagination)
   app.get("/api/incidents", async (req, res) => {

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { getTrafficEvents, getTrafficCameras, getIncidents } from "@/lib/traffic-api";
+import { getTrafficEvents, getIncidents } from "@/lib/traffic-api";
 import type { FilterState } from "@/pages/home";
 
 // Fix Leaflet default marker icons
@@ -16,10 +16,9 @@ L.Icon.Default.mergeOptions({
 interface TrafficMapProps {
   filters: FilterState;
   onEventSelect: (eventId: string) => void;
-  onCameraSelect: (cameraId: string) => void;
 }
 
-export function TrafficMap({ filters, onEventSelect, onCameraSelect }: TrafficMapProps) {
+export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const markersRef = useRef<L.Marker[]>([]);
@@ -30,10 +29,6 @@ export function TrafficMap({ filters, onEventSelect, onCameraSelect }: TrafficMa
     refetchInterval: filters.autoRefresh ? 30000 : false,
   });
 
-  const { data: camerasData, isLoading: camerasLoading } = useQuery({
-    queryKey: ["/api/traffic/cameras"],
-    refetchInterval: filters.autoRefresh ? 30000 : false,
-  });
 
   const { data: incidentsData, isLoading: incidentsLoading } = useQuery({
     queryKey: ["/api/incidents"],
@@ -64,8 +59,8 @@ export function TrafficMap({ filters, onEventSelect, onCameraSelect }: TrafficMa
 
   // Update loading state
   useEffect(() => {
-    setIsLoading(eventsLoading || camerasLoading || incidentsLoading);
-  }, [eventsLoading, camerasLoading, incidentsLoading]);
+    setIsLoading(eventsLoading || incidentsLoading);
+  }, [eventsLoading, incidentsLoading]);
 
   // Update markers when data or filters change
   useEffect(() => {
@@ -142,23 +137,6 @@ export function TrafficMap({ filters, onEventSelect, onCameraSelect }: TrafficMa
       });
     }
 
-    // Add camera markers
-    if (filters.cameras && (camerasData as any)?.features) {
-      (camerasData as any).features.forEach((feature: any) => {
-        if (feature.geometry?.coordinates) {
-          const coords = feature.geometry.coordinates;
-          const marker = L.marker([coords[1], coords[0]], {
-            icon: createCustomMarker(getMarkerColor('camera'))
-          });
-
-          const popupContent = createCameraPopup(feature.properties);
-          marker.bindPopup(popupContent);
-
-          marker.addTo(mapInstanceRef.current!);
-          newMarkers.push(marker);
-        }
-      });
-    }
 
     // Add incident markers
     if ((incidentsData as any)?.features) {
@@ -219,7 +197,7 @@ export function TrafficMap({ filters, onEventSelect, onCameraSelect }: TrafficMa
     }
 
     markersRef.current = newMarkers;
-  }, [eventsData, camerasData, incidentsData, filters]);
+  }, [eventsData, incidentsData, filters]);
 
   const getMarkerColor = (eventType: string) => {
     const colors = {
@@ -227,7 +205,6 @@ export function TrafficMap({ filters, onEventSelect, onCameraSelect }: TrafficMa
       'hazard': '#f59e0b',
       'roadworks': '#f97316',
       'special event': '#f97316',
-      'camera': '#3b82f6',
       'incident': '#dc2626',
       'crime': '#9333ea',
       'suspicious': '#f59e0b',
@@ -267,22 +244,6 @@ export function TrafficMap({ filters, onEventSelect, onCameraSelect }: TrafficMa
     `;
   };
 
-  const createCameraPopup = (properties: any) => {
-    return `
-      <div class="p-2 min-w-[200px]">
-        <h4 class="font-semibold text-foreground mb-2">${properties.name || 'Traffic Camera'}</h4>
-        <p class="text-sm text-muted-foreground mb-2">${properties.location || ''}</p>
-        <div class="text-xs text-muted-foreground mb-3">
-          <div><span class="font-medium">Status:</span> 
-            <span class="text-green-600 font-medium">${properties.status || 'Active'}</span>
-          </div>
-        </div>
-        <button onclick="window.showCameraFeed('${properties.id}')" class="w-full px-3 py-1 bg-primary text-primary-foreground rounded text-sm hover:bg-primary/90">
-          View Live Feed
-        </button>
-      </div>
-    `;
-  };
 
   const createIncidentPopup = (properties: any) => {
     // Check if this is a user-reported incident
@@ -344,10 +305,7 @@ export function TrafficMap({ filters, onEventSelect, onCameraSelect }: TrafficMa
     (window as any).showEventDetails = (eventId: string) => {
       onEventSelect(eventId);
     };
-    (window as any).showCameraFeed = (cameraId: string) => {
-      onCameraSelect(cameraId);
-    };
-  }, [onEventSelect, onCameraSelect]);
+  }, [onEventSelect]);
 
   return (
     <div className="relative w-full h-full">

@@ -4,7 +4,6 @@ import { FilterSidebar } from "@/components/map/filter-sidebar";
 import { AppHeader } from "@/components/map/app-header";
 import { MapLegend } from "@/components/map/map-legend";
 import { EventModal } from "@/components/map/event-modal";
-import { CameraModal } from "@/components/map/camera-modal";
 import { IncidentReportForm } from "@/components/incident-report-form";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
@@ -13,7 +12,6 @@ export interface FilterState {
   crashes: boolean;
   hazards: boolean;
   restrictions: boolean;
-  cameras: boolean;
   incidents: boolean;
   crime: boolean;
   suspicious: boolean;
@@ -27,13 +25,11 @@ export default function Home() {
   const isMobile = useIsMobile();
   const [sidebarOpen, setSidebarOpen] = useState(!isMobile);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
-  const [selectedCameraId, setSelectedCameraId] = useState<string | null>(null);
   const [reportFormOpen, setReportFormOpen] = useState(false);
   const [filters, setFilters] = useState<FilterState>({
     crashes: true,
     hazards: true,
     restrictions: true,
-    cameras: true,
     incidents: true,
     crime: true,
     suspicious: true,
@@ -68,7 +64,6 @@ export default function Home() {
         <TrafficMap 
           filters={filters}
           onEventSelect={setSelectedEventId}
-          onCameraSelect={setSelectedCameraId}
         />
       </main>
 
@@ -105,10 +100,6 @@ export default function Home() {
         onClose={() => setSelectedEventId(null)}
       />
       
-      <CameraModal 
-        cameraId={selectedCameraId}
-        onClose={() => setSelectedCameraId(null)}
-      />
       
       <IncidentReportForm 
         isOpen={reportFormOpen}

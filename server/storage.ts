@@ -1,16 +1,13 @@
 import { 
   users,
   trafficEvents,
-  trafficCameras,
   incidents,
   comments,
   type User, 
   type UpsertUser,
   type InsertUser, 
   type TrafficEvent, 
-  type TrafficCamera, 
   type InsertTrafficEvent, 
-  type InsertTrafficCamera, 
   type Incident, 
   type InsertIncident,
   type Comment,
@@ -29,10 +26,6 @@ export interface IStorage {
   createTrafficEvent(event: InsertTrafficEvent): Promise<TrafficEvent>;
   updateTrafficEvent(id: string, event: Partial<TrafficEvent>): Promise<TrafficEvent | undefined>;
   deleteTrafficEvent(id: string): Promise<boolean>;
-  getTrafficCameras(): Promise<TrafficCamera[]>;
-  createTrafficCamera(camera: InsertTrafficCamera): Promise<TrafficCamera>;
-  updateTrafficCamera(id: string, camera: Partial<TrafficCamera>): Promise<TrafficCamera | undefined>;
-  deleteTrafficCamera(id: string): Promise<boolean>;
   getIncidents(): Promise<Incident[]>;
   getRecentIncidents(limit: number): Promise<Incident[]>;
   createIncident(incident: InsertIncident): Promise<Incident>;
@@ -102,37 +95,6 @@ export class DatabaseStorage implements IStorage {
 
   async deleteTrafficEvent(id: string): Promise<boolean> {
     const result = await db.delete(trafficEvents).where(eq(trafficEvents.id, id));
-    return (result.rowCount ?? 0) > 0;
-  }
-
-  async getTrafficCameras(): Promise<TrafficCamera[]> {
-    return await db.select().from(trafficCameras);
-  }
-
-  async createTrafficCamera(camera: InsertTrafficCamera): Promise<TrafficCamera> {
-    const id = randomUUID();
-    const [trafficCamera] = await db
-      .insert(trafficCameras)
-      .values({
-        ...camera,
-        id,
-        lastUpdated: new Date(),
-      })
-      .returning();
-    return trafficCamera;
-  }
-
-  async updateTrafficCamera(id: string, camera: Partial<TrafficCamera>): Promise<TrafficCamera | undefined> {
-    const [updated] = await db
-      .update(trafficCameras)
-      .set({ ...camera, lastUpdated: new Date() })
-      .where(eq(trafficCameras.id, id))
-      .returning();
-    return updated;
-  }
-
-  async deleteTrafficCamera(id: string): Promise<boolean> {
-    const result = await db.delete(trafficCameras).where(eq(trafficCameras.id, id));
     return (result.rowCount ?? 0) > 0;
   }
 
