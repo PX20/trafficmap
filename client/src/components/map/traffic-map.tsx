@@ -62,7 +62,8 @@ export function TrafficMap({ filters, onEventSelect, onCameraSelect }: TrafficMa
 
   // Update markers when data or filters change
   useEffect(() => {
-    if (!mapInstanceRef.current || !eventsData || !camerasData) return;
+    if (!mapInstanceRef.current) return;
+    console.log('Map data update:', { eventsData, camerasData, filters });
 
     // Clear existing markers
     markersRef.current.forEach(marker => {
@@ -74,7 +75,9 @@ export function TrafficMap({ filters, onEventSelect, onCameraSelect }: TrafficMa
 
     // Add event markers
     if ((eventsData as any)?.features) {
-      (eventsData as any).features.forEach((feature: any) => {
+      console.log('Processing events:', (eventsData as any).features.length, 'events');
+      (eventsData as any).features.forEach((feature: any, index: number) => {
+        console.log(`Event ${index}:`, feature.properties?.event_type, feature.geometry);
         const eventType = feature.properties.event_type?.toLowerCase();
         let shouldShow = false;
 
@@ -93,17 +96,44 @@ export function TrafficMap({ filters, onEventSelect, onCameraSelect }: TrafficMa
           }
         }
 
-        if (shouldShow && feature.geometry?.geometries?.[0]?.coordinates) {
-          const coords = feature.geometry.geometries[0].coordinates;
-          const marker = L.marker([coords[1], coords[0]], {
-            icon: createCustomMarker(getMarkerColor(eventType))
-          });
+        if (shouldShow && feature.geometry) {
+          let coords: [number, number] | null = null;
+          
+          // Handle different geometry types
+          if (feature.geometry.type === 'MultiPoint' && feature.geometry.coordinates?.[0]) {
+            // MultiPoint: use first point
+            const point = feature.geometry.coordinates[0];
+            coords = [point[1], point[0]];
+          } else if (feature.geometry.type === 'GeometryCollection' && feature.geometry.geometries?.[0]) {
+            // GeometryCollection: find first Point geometry
+            const pointGeometry = feature.geometry.geometries.find((g: any) => g.type === 'Point');
+            if (pointGeometry?.coordinates) {
+              coords = [pointGeometry.coordinates[1], pointGeometry.coordinates[0]];
+            }
+          } else if (feature.geometry.geometries?.[0]?.coordinates) {
+            // Legacy handling for other geometry collections
+            const geometry = feature.geometry.geometries[0];
+            if (geometry.type === 'Point') {
+              coords = [geometry.coordinates[1], geometry.coordinates[0]];
+            } else if (geometry.type === 'MultiLineString' || geometry.type === 'LineString') {
+              const firstLine = geometry.type === 'MultiLineString' ? geometry.coordinates[0] : geometry.coordinates;
+              if (firstLine && firstLine[0]) {
+                coords = [firstLine[0][1], firstLine[0][0]];
+              }
+            }
+          }
+          
+          if (coords) {
+            const marker = L.marker(coords, {
+              icon: createCustomMarker(getMarkerColor(eventType))
+            });
 
-          const popupContent = createEventPopup(feature.properties);
-          marker.bindPopup(popupContent);
+            const popupContent = createEventPopup(feature.properties);
+            marker.bindPopup(popupContent);
 
-          marker.addTo(mapInstanceRef.current!);
-          newMarkers.push(marker);
+            marker.addTo(mapInstanceRef.current!);
+            newMarkers.push(marker);
+          }
         }
       });
     }
