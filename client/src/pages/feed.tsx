@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { IncidentDetailModal } from "@/components/incident-detail-modal";
 import { 
   MapPin, 
   Clock, 
@@ -18,13 +19,16 @@ import {
   Shield,
   Eye,
   Zap,
-  RefreshCw
+  RefreshCw,
+  MessageCircle
 } from "lucide-react";
 
 export default function Feed() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [selectedSuburb, setSelectedSuburb] = useState(user?.homeSuburb || "");
+  const [selectedIncident, setSelectedIncident] = useState<any>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const { data: incidents, isLoading: incidentsLoading, data: rawIncidentData } = useQuery({
     queryKey: ["/api/incidents", selectedSuburb],
@@ -229,6 +233,16 @@ export default function Feed() {
     return `${diffDays}d ago`;
   };
 
+  const handleIncidentClick = (incident: any) => {
+    setSelectedIncident(incident);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedIncident(null);
+  };
+
   const getStatusBadge = (incident: any) => {
     if (incident.type === 'traffic') {
       const priority = incident.properties?.event_priority?.toLowerCase();
@@ -383,7 +397,12 @@ export default function Feed() {
                   };
 
                   return (
-                    <Card key={getUniqueKey(incident, index)} className="hover:shadow-md transition-shadow">
+                    <Card 
+                      key={getUniqueKey(incident, index)} 
+                      className="hover:shadow-md transition-all duration-200 cursor-pointer hover:scale-[1.01]"
+                      onClick={() => handleIncidentClick(incident)}
+                      data-testid={`card-incident-${index}`}
+                    >
                       <CardContent className="p-4">
                         <div className="flex items-start gap-3">
                           {getIncidentIcon(incident)}
@@ -399,18 +418,24 @@ export default function Feed() {
                               {getIncidentDescription(incident)}
                             </p>
                             
-                            <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                              <div className="flex items-center gap-1">
-                                <MapPin className="w-3 h-3" />
-                                <span className="truncate">{getIncidentLocation(incident)}</span>
+                            <div className="flex items-center justify-between text-xs text-muted-foreground">
+                              <div className="flex items-center gap-4">
+                                <div className="flex items-center gap-1">
+                                  <MapPin className="w-3 h-3" />
+                                  <span className="truncate">{getIncidentLocation(incident)}</span>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <Clock className="w-3 h-3" />
+                                  <span>{getTimeAgo(
+                                    incident.properties?.Response_Date || 
+                                    incident.properties?.last_updated || 
+                                    incident.properties?.createdAt
+                                  )}</span>
+                                </div>
                               </div>
-                              <div className="flex items-center gap-1">
-                                <Clock className="w-3 h-3" />
-                                <span>{getTimeAgo(
-                                  incident.properties?.Response_Date || 
-                                  incident.properties?.last_updated || 
-                                  incident.properties?.createdAt
-                                )}</span>
+                              <div className="flex items-center gap-1 text-muted-foreground hover:text-primary">
+                                <MessageCircle className="w-3 h-3" />
+                                <span>Discuss</span>
                               </div>
                             </div>
                           </div>
@@ -424,6 +449,15 @@ export default function Feed() {
           </div>
         )}
       </div>
+
+      {/* Incident Detail Modal */}
+      {selectedIncident && (
+        <IncidentDetailModal
+          incident={selectedIncident}
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+        />
+      )}
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import { pgTable, text, varchar, timestamp, jsonb, boolean, index } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -75,6 +76,41 @@ export const incidents = pgTable("incidents", {
   publishedDate: timestamp("published_date"),
 });
 
+export const comments = pgTable("comments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  incidentId: varchar("incident_id").notNull(),
+  userId: varchar("user_id").notNull(),
+  parentCommentId: varchar("parent_comment_id"),
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Relations
+export const usersRelations = relations(users, ({ many }) => ({
+  comments: many(comments),
+}));
+
+export const incidentsRelations = relations(incidents, ({ many }) => ({
+  comments: many(comments),
+}));
+
+export const commentsRelations = relations(comments, ({ one, many }) => ({
+  incident: one(incidents, {
+    fields: [comments.incidentId],
+    references: [incidents.id],
+  }),
+  user: one(users, {
+    fields: [comments.userId],
+    references: [users.id],
+  }),
+  parentComment: one(comments, {
+    fields: [comments.parentCommentId],
+    references: [comments.id],
+  }),
+  replies: many(comments),
+}));
+
 
 export const insertUserSchema = createInsertSchema(users).omit({
   createdAt: true,
@@ -96,6 +132,12 @@ export const insertIncidentSchema = createInsertSchema(incidents).omit({
   lastUpdated: true,
 });
 
+export const insertCommentSchema = createInsertSchema(comments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 
 export type UpsertUser = typeof users.$inferInsert;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -106,3 +148,5 @@ export type TrafficCamera = typeof trafficCameras.$inferSelect;
 export type InsertTrafficCamera = z.infer<typeof insertTrafficCameraSchema>;
 export type Incident = typeof incidents.$inferSelect;
 export type InsertIncident = z.infer<typeof insertIncidentSchema>;
+export type Comment = typeof comments.$inferSelect;
+export type InsertComment = z.infer<typeof insertCommentSchema>;

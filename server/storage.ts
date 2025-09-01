@@ -3,6 +3,7 @@ import {
   trafficEvents,
   trafficCameras,
   incidents,
+  comments,
   type User, 
   type UpsertUser,
   type InsertUser, 
@@ -11,7 +12,9 @@ import {
   type InsertTrafficEvent, 
   type InsertTrafficCamera, 
   type Incident, 
-  type InsertIncident 
+  type InsertIncident,
+  type Comment,
+  type InsertComment 
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc } from "drizzle-orm";
@@ -35,6 +38,10 @@ export interface IStorage {
   createIncident(incident: InsertIncident): Promise<Incident>;
   updateIncident(id: string, incident: Partial<Incident>): Promise<Incident | undefined>;
   deleteIncident(id: string): Promise<boolean>;
+  getCommentsByIncidentId(incidentId: string): Promise<Comment[]>;
+  createComment(comment: InsertComment): Promise<Comment>;
+  updateComment(id: string, comment: Partial<Comment>): Promise<Comment | undefined>;
+  deleteComment(id: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -165,6 +172,42 @@ export class DatabaseStorage implements IStorage {
 
   async deleteIncident(id: string): Promise<boolean> {
     const result = await db.delete(incidents).where(eq(incidents.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  async getCommentsByIncidentId(incidentId: string): Promise<Comment[]> {
+    return await db
+      .select()
+      .from(comments)
+      .where(eq(comments.incidentId, incidentId))
+      .orderBy(comments.createdAt);
+  }
+
+  async createComment(comment: InsertComment): Promise<Comment> {
+    const id = randomUUID();
+    const [newComment] = await db
+      .insert(comments)
+      .values({
+        ...comment,
+        id,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .returning();
+    return newComment;
+  }
+
+  async updateComment(id: string, comment: Partial<Comment>): Promise<Comment | undefined> {
+    const [updated] = await db
+      .update(comments)
+      .set({ ...comment, updatedAt: new Date() })
+      .where(eq(comments.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteComment(id: string): Promise<boolean> {
+    const result = await db.delete(comments).where(eq(comments.id, id));
     return (result.rowCount ?? 0) > 0;
   }
 
