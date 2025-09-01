@@ -8,6 +8,30 @@ import { z } from "zod";
 const API_BASE_URL = "https://api.qldtraffic.qld.gov.au";
 const PUBLIC_API_KEY = "3e83add325cbb69ac4d8e5bf433d770b";
 
+// Traffic data cache to avoid hitting rate limits
+const trafficCache = {
+  events: { data: null as any, lastFetch: 0 },
+  cameras: { data: null as any, lastFetch: 0 }
+};
+
+const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes in milliseconds
+const RETRY_DELAY = 30 * 1000; // 30 seconds delay on rate limit
+
+function isCacheValid(cacheEntry: any): boolean {
+  return cacheEntry.data && (Date.now() - cacheEntry.lastFetch) < CACHE_DURATION;
+}
+
+async function fetchWithRetry(url: string, retryDelay: number = RETRY_DELAY): Promise<Response> {
+  const response = await fetch(url);
+  
+  if (response.status === 429) {
+    console.log(`Rate limited, waiting ${retryDelay/1000}s before next attempt...`);
+    throw new Error(`Rate limited - try again in ${retryDelay/1000} seconds`);
+  }
+  
+  return response;
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
@@ -45,18 +69,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get traffic events from QLD Traffic API
+  // Get traffic events from QLD Traffic API (with caching)
   app.get("/api/traffic/events", async (req, res) => {
     try {
       const { suburb } = req.query;
-      const apiKey = process.env.QLD_TRAFFIC_API_KEY || PUBLIC_API_KEY;
-      const response = await fetch(`${API_BASE_URL}/v2/events?apikey=${apiKey}`);
-      
-      if (!response.ok) {
-        throw new Error(`QLD Traffic API error: ${response.status} ${response.statusText}`);
+      let data;
+
+      // Check if we have valid cached data
+      if (isCacheValid(trafficCache.events)) {
+        console.log("Using cached traffic events data");
+        data = trafficCache.events.data;
+      } else {
+        // Try to fetch fresh data
+        try {
+          console.log("Fetching fresh traffic events data...");
+          const apiKey = process.env.QLD_TRAFFIC_API_KEY || PUBLIC_API_KEY;
+          const response = await fetchWithRetry(`${API_BASE_URL}/v2/events?apikey=${apiKey}`);
+          
+          if (!response.ok) {
+            throw new Error(`QLD Traffic API error: ${response.status} ${response.statusText}`);
+          }
+          
+          data = await response.json();
+          
+          // Update cache
+          trafficCache.events = {
+            data: data,
+            lastFetch: Date.now()
+          };
+          
+        } catch (error) {
+          // If fetch fails and we have old cached data, use it
+          if (trafficCache.events.data) {
+            console.log("API fetch failed, using stale cached data");
+            data = trafficCache.events.data;
+          } else {
+            throw error;
+          }
+        }
       }
-      
-      let data = await response.json();
       
       // Filter by suburb if provided
       if (suburb && data.features) {
@@ -105,17 +156,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get traffic cameras from QLD Traffic API
+  // Get traffic cameras from QLD Traffic API (with caching)
   app.get("/api/traffic/cameras", async (req, res) => {
     try {
-      const apiKey = process.env.QLD_TRAFFIC_API_KEY || PUBLIC_API_KEY;
-      const response = await fetch(`${API_BASE_URL}/v2/cameras?apikey=${apiKey}`);
-      
-      if (!response.ok) {
-        throw new Error(`QLD Traffic API error: ${response.status} ${response.statusText}`);
+      let data;
+
+      // Check if we have valid cached data
+      if (isCacheValid(trafficCache.cameras)) {
+        console.log("Using cached traffic cameras data");
+        data = trafficCache.cameras.data;
+      } else {
+        // Try to fetch fresh data
+        try {
+          console.log("Fetching fresh traffic cameras data...");
+          const apiKey = process.env.QLD_TRAFFIC_API_KEY || PUBLIC_API_KEY;
+          const response = await fetchWithRetry(`${API_BASE_URL}/v2/cameras?apikey=${apiKey}`);
+          
+          if (!response.ok) {
+            throw new Error(`QLD Traffic API error: ${response.status} ${response.statusText}`);
+          }
+          
+          data = await response.json();
+          
+          // Update cache
+          trafficCache.cameras = {
+            data: data,
+            lastFetch: Date.now()
+          };
+          
+        } catch (error) {
+          // If fetch fails and we have old cached data, use it
+          if (trafficCache.cameras.data) {
+            console.log("API fetch failed, using stale cached data");
+            data = trafficCache.cameras.data;
+          } else {
+            throw error;
+          }
+        }
       }
-      
-      const data = await response.json();
       
       // Transform and store cameras in local storage for caching
       if (data.features) {
