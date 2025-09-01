@@ -22,10 +22,3 @@ export async function getIncidents() {
   return response.json();
 }
 
-export async function getWeatherStations() {
-  const response = await fetch('/api/weather');
-  if (!response.ok) {
-    throw new Error(`Failed to fetch weather data: ${response.statusText}`);
-  }
-  return response.json();
-}

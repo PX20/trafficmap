@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 import type { FilterState } from "@/pages/home";
-import { getTrafficEvents, getTrafficCameras, getIncidents, getWeatherStations } from "@/lib/traffic-api";
+import { getTrafficEvents, getTrafficCameras, getIncidents } from "@/lib/traffic-api";
 
 interface FilterSidebarProps {
   isOpen: boolean;
@@ -36,11 +36,6 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
     select: (data: any) => data?.features || [],
   });
 
-  const { data: weather, refetch: refetchWeather } = useQuery({
-    queryKey: ["/api/weather"],
-    queryFn: getWeatherStations,
-    select: (data: any) => data?.features || [],
-  });
 
   const eventCounts = {
     crashes: events?.filter((e: any) => e.properties.event_type === "Crash").length || 0,
@@ -48,12 +43,11 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
     restrictions: events?.filter((e: any) => e.properties.event_type === "Roadworks" || e.properties.event_type === "Special event").length || 0,
     cameras: cameras?.length || 0,
     incidents: incidents?.length || 0,
-    weather: weather?.length || 0,
   };
 
   const handleRefresh = async () => {
     try {
-      await Promise.all([refetchEvents(), refetchCameras(), refetchIncidents(), refetchWeather()]);
+      await Promise.all([refetchEvents(), refetchCameras(), refetchIncidents()]);
       toast({
         title: "Data updated",
         description: "Traffic data has been refreshed successfully.",
@@ -183,21 +177,6 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
                 </span>
               </div>
               
-              <div className="flex items-center space-x-3">
-                <Checkbox 
-                  id="filter-weather"
-                  checked={filters.weather}
-                  onCheckedChange={(checked) => onFilterChange('weather', !!checked)}
-                  data-testid="checkbox-filter-weather"
-                />
-                <div className="w-4 h-4 bg-green-500 rounded-full"></div>
-                <Label htmlFor="filter-weather" className="text-sm text-foreground flex-1">
-                  Weather Stations
-                </Label>
-                <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full" data-testid="text-count-weather">
-                  {eventCounts.weather}
-                </span>
-              </div>
             </div>
           </div>
           

@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type TrafficEvent, type TrafficCamera, type InsertTrafficEvent, type InsertTrafficCamera, type Incident, type InsertIncident, type WeatherStation, type InsertWeatherStation } from "@shared/schema";
+import { type User, type InsertUser, type TrafficEvent, type TrafficCamera, type InsertTrafficEvent, type InsertTrafficCamera, type Incident, type InsertIncident } from "@shared/schema";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -17,10 +17,6 @@ export interface IStorage {
   createIncident(incident: InsertIncident): Promise<Incident>;
   updateIncident(id: string, incident: Partial<Incident>): Promise<Incident | undefined>;
   deleteIncident(id: string): Promise<boolean>;
-  getWeatherStations(): Promise<WeatherStation[]>;
-  createWeatherStation(station: InsertWeatherStation): Promise<WeatherStation>;
-  updateWeatherStation(id: string, station: Partial<WeatherStation>): Promise<WeatherStation | undefined>;
-  deleteWeatherStation(id: string): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -28,14 +24,12 @@ export class MemStorage implements IStorage {
   private trafficEvents: Map<string, TrafficEvent>;
   private trafficCameras: Map<string, TrafficCamera>;
   private incidents: Map<string, Incident>;
-  private weatherStations: Map<string, WeatherStation>;
 
   constructor() {
     this.users = new Map();
     this.trafficEvents = new Map();
     this.trafficCameras = new Map();
     this.incidents = new Map();
-    this.weatherStations = new Map();
   }
 
   async getUser(id: string): Promise<User | undefined> {
@@ -71,6 +65,11 @@ export class MemStorage implements IStorage {
       information: event.information || null,
       webLink: event.webLink || null,
       alertMessage: event.alertMessage || null,
+      location: event.location || null,
+      impact: event.impact || null,
+      priority: event.priority || null,
+      geometry: event.geometry || null,
+      properties: event.properties || null,
     };
     this.trafficEvents.set(id, trafficEvent);
     return trafficEvent;
@@ -101,6 +100,8 @@ export class MemStorage implements IStorage {
       lastUpdated: new Date(),
       location: camera.location || null,
       imageUrl: camera.imageUrl || null,
+      geometry: camera.geometry || null,
+      properties: camera.properties || null,
     };
     this.trafficCameras.set(id, trafficCamera);
     return trafficCamera;
@@ -134,6 +135,8 @@ export class MemStorage implements IStorage {
       priority: incident.priority || null,
       agency: incident.agency || null,
       publishedDate: incident.publishedDate || null,
+      geometry: incident.geometry || null,
+      properties: incident.properties || null,
     };
     this.incidents.set(id, newIncident);
     return newIncident;
@@ -152,38 +155,6 @@ export class MemStorage implements IStorage {
     return this.incidents.delete(id);
   }
 
-  async getWeatherStations(): Promise<WeatherStation[]> {
-    return Array.from(this.weatherStations.values());
-  }
-
-  async createWeatherStation(station: InsertWeatherStation): Promise<WeatherStation> {
-    const id = randomUUID();
-    const newStation: WeatherStation = {
-      ...station,
-      id,
-      lastUpdated: new Date(),
-      temperature: station.temperature || null,
-      humidity: station.humidity || null,
-      weatherCode: station.weatherCode || null,
-      windSpeed: station.windSpeed || null,
-      windDirection: station.windDirection || null,
-    };
-    this.weatherStations.set(id, newStation);
-    return newStation;
-  }
-
-  async updateWeatherStation(id: string, station: Partial<WeatherStation>): Promise<WeatherStation | undefined> {
-    const existing = this.weatherStations.get(id);
-    if (!existing) return undefined;
-    
-    const updated = { ...existing, ...station, lastUpdated: new Date() };
-    this.weatherStations.set(id, updated);
-    return updated;
-  }
-
-  async deleteWeatherStation(id: string): Promise<boolean> {
-    return this.weatherStations.delete(id);
-  }
 }
 
 export const storage = new MemStorage();
