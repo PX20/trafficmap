@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { 
   MapPin, 
   Clock, 
@@ -16,7 +17,8 @@ import {
   Car, 
   Shield,
   Eye,
-  Zap
+  Zap,
+  RefreshCw
 } from "lucide-react";
 
 export default function Feed() {
@@ -24,7 +26,7 @@ export default function Feed() {
   const { toast } = useToast();
   const [selectedSuburb, setSelectedSuburb] = useState(user?.homeSuburb || "");
 
-  const { data: incidents, isLoading: incidentsLoading } = useQuery({
+  const { data: incidents, isLoading: incidentsLoading, data: rawIncidentData } = useQuery({
     queryKey: ["/api/incidents", selectedSuburb],
     queryFn: async () => {
       const url = selectedSuburb 
@@ -36,6 +38,28 @@ export default function Feed() {
     },
     enabled: !!selectedSuburb,
     select: (data: any) => data?.features || [],
+  });
+
+  const refreshMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch("/api/incidents/refresh", { method: "POST" });
+      if (!response.ok) throw new Error('Failed to refresh incidents');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/incidents"] });
+      toast({
+        title: "Data refreshed",
+        description: "Incidents have been updated from emergency services",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Refresh failed",
+        description: error.message || "Failed to refresh incident data",
+        variant: "destructive",
+      });
+    },
   });
 
   const { data: events, isLoading: eventsLoading } = useQuery({
@@ -258,10 +282,31 @@ export default function Feed() {
         {/* Suburb Selection */}
         <Card className="mb-6">
           <CardHeader>
-            <h3 className="text-lg font-semibold">Your Location</h3>
-            <p className="text-sm text-muted-foreground">
-              Set your home suburb to see local incidents
-            </p>
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold">Your Location</h3>
+                <p className="text-sm text-muted-foreground">
+                  Set your home suburb to see local incidents
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                {rawIncidentData?.lastUpdated && (
+                  <div className="text-xs text-muted-foreground">
+                    Updated {new Date(rawIncidentData.lastUpdated).toLocaleTimeString()}
+                  </div>
+                )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => refreshMutation.mutate()}
+                  disabled={refreshMutation.isPending}
+                  data-testid="button-refresh-incidents"
+                >
+                  <RefreshCw className={`w-4 h-4 mr-1 ${refreshMutation.isPending ? 'animate-spin' : ''}`} />
+                  {refreshMutation.isPending ? 'Refreshing...' : 'Refresh'}
+                </Button>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="flex gap-3">

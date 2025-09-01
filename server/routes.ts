@@ -166,29 +166,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get emergency incidents from ArcGIS Feature Server
+  // Get cached incidents (fast endpoint)
   app.get("/api/incidents", async (req, res) => {
     try {
       const { suburb } = req.query;
-      
-      // Set timeout for external API call to prevent hanging
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-      
-      const response = await fetch(
-        "https://services1.arcgis.com/vkTwD8kHw2woKBqV/arcgis/rest/services/ESCAD_Current_Incidents_Public/FeatureServer/0/query?f=geojson&where=1%3D1&outFields=*",
-        { signal: controller.signal }
-      );
-      
-      clearTimeout(timeoutId);
-      
-      let data;
-      if (!response.ok) {
-        console.warn(`ArcGIS API error: ${response.status} ${response.statusText}, falling back to user incidents only`);
-        data = { features: [] };
-      } else {
-        data = await response.json();
-      }
       
       // Get user-reported incidents from database
       const userIncidents = await storage.getIncidents();
@@ -210,12 +191,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }));
       
-      // Combine official and user-reported incidents
-      data.features = [...(data.features || []), ...userIncidentFeatures];
+      // Get cached emergency incidents (already stored from previous fetches)
+      const cachedIncidents = await storage.getIncidents();
+      const emergencyFeatures = cachedIncidents
+        .filter(incident => !(incident.properties as any)?.userReported)
+        .map(incident => ({
+          type: "Feature",
+          properties: incident.properties || {},
+          geometry: incident.geometry || {
+            type: "Point",
+            coordinates: [153.0251, -27.4698]
+          }
+        }));
+      
+      // Combine cached emergency incidents and user reports
+      const allFeatures = [...emergencyFeatures, ...userIncidentFeatures];
       
       // Filter by suburb if provided
-      if (suburb && data.features) {
-        data.features = data.features.filter((feature: any) => {
+      let filteredFeatures = allFeatures;
+      if (suburb) {
+        filteredFeatures = allFeatures.filter((feature: any) => {
           const locality = feature.properties?.Locality?.toLowerCase();
           const location = feature.properties?.Location?.toLowerCase();
           const locationDesc = feature.properties?.locationDescription?.toLowerCase();
@@ -226,7 +221,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // Transform and store incidents in local storage for caching
+      const data = {
+        type: "FeatureCollection",
+        features: filteredFeatures,
+        lastUpdated: new Date().toISOString()
+      };
+      
+      res.json(data);
+    } catch (error) {
+      console.error("Error fetching cached incidents:", error);
+      res.status(500).json({ 
+        error: "Failed to fetch incidents", 
+        message: error instanceof Error ? error.message : "Unknown error" 
+      });
+    }
+  });
+
+  // Refresh incidents from external API (slow endpoint)
+  app.post("/api/incidents/refresh", async (req, res) => {
+    try {
+      console.log("Refreshing incidents from external API...");
+      
+      // Set timeout for external API call to prevent hanging
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+      
+      const response = await fetch(
+        "https://services1.arcgis.com/vkTwD8kHw2woKBqV/arcgis/rest/services/ESCAD_Current_Incidents_Public/FeatureServer/0/query?f=geojson&where=1%3D1&outFields=*",
+        { signal: controller.signal }
+      );
+      
+      clearTimeout(timeoutId);
+      
+      let data;
+      if (!response.ok) {
+        console.warn(`ArcGIS API error: ${response.status} ${response.statusText}`);
+        return res.json({ success: false, message: "External API temporarily unavailable" });
+      }
+      
+      data = await response.json();
+      
+      // Clear existing emergency incidents (but keep user reports)
+      const existingIncidents = await storage.getIncidents();
+      const userIncidents = existingIncidents.filter(inc => (inc.properties as any)?.userReported);
+      
+      // Store new emergency incidents
+      let storedCount = 0;
       if (data.features) {
         for (const feature of data.features) {
           const props = feature.properties;
@@ -246,48 +286,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           try {
             await storage.updateIncident(incident.id, incident) || await storage.createIncident(incident);
+            storedCount++;
           } catch (error) {
             console.warn('Failed to store incident:', incident.id, error);
           }
         }
       }
       
-      res.json(data);
+      res.json({ 
+        success: true, 
+        message: `Successfully refreshed ${storedCount} emergency incidents`,
+        count: storedCount
+      });
     } catch (error) {
-      console.error("Error fetching incidents:", error);
-      
-      // If external API fails, still return user incidents
-      try {
-        const userIncidents = await storage.getIncidents();
-        const userIncidentFeatures = userIncidents.map(incident => ({
-          type: "Feature",
-          properties: {
-            ...(incident.properties || {}),
-            userReported: true,
-            incidentType: incident.incidentType,
-            description: incident.description,
-            locationDescription: incident.location,
-            createdAt: incident.lastUpdated,
-          },
-          geometry: incident.geometry || {
-            type: "Point",
-            coordinates: [153.0251, -27.4698] // Default to Brisbane
-          }
-        }));
-        
-        const fallbackData = { 
-          type: "FeatureCollection",
-          features: userIncidentFeatures 
-        };
-        
-        res.json(fallbackData);
-      } catch (fallbackError) {
-        console.error("Error in fallback incidents:", fallbackError);
-        res.status(500).json({ 
-          error: "Failed to fetch incidents", 
-          message: error instanceof Error ? error.message : "Unknown error" 
-        });
-      }
+      console.error("Error refreshing incidents:", error);
+      res.status(500).json({ 
+        success: false,
+        error: "Failed to refresh incidents", 
+        message: error instanceof Error ? error.message : "Unknown error" 
+      });
     }
   });
 
