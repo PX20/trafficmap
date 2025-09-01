@@ -86,11 +86,46 @@ export default function Feed() {
     }
   };
 
-  // Combine and sort all incidents by time
-  const allIncidents = [
+  // Combine, deduplicate, and sort all incidents by time
+  const combinedIncidents = [
     ...(incidents || []).map((inc: any) => ({ ...inc, type: 'incident' })),
     ...(events || []).map((event: any) => ({ ...event, type: 'traffic' }))
-  ].sort((a, b) => {
+  ];
+
+  // Deduplicate incidents based on unique identifiers
+  const deduplicatedIncidents = combinedIncidents.reduce((acc: any[], current: any) => {
+    // Generate a unique identifier for each incident
+    const getIncidentId = (incident: any) => {
+      if (incident.type === 'traffic') {
+        return incident.properties?.id || incident.properties?.event_id || `traffic-${incident.properties?.description}`;
+      }
+      if (incident.properties?.userReported) {
+        return `user-${incident.properties?.id || incident.properties?.createdAt}`;
+      }
+      return incident.properties?.Master_Incident_Number || incident.properties?.id || `incident-${incident.properties?.Response_Date}`;
+    };
+
+    const currentId = getIncidentId(current);
+    const existingIndex = acc.findIndex(item => getIncidentId(item) === currentId);
+    
+    if (existingIndex === -1) {
+      // New incident, add it
+      acc.push(current);
+    } else {
+      // Duplicate found, keep the more recent one
+      const existingTime = new Date(acc[existingIndex].properties?.Response_Date || acc[existingIndex].properties?.last_updated || acc[existingIndex].properties?.createdAt || 0);
+      const currentTime = new Date(current.properties?.Response_Date || current.properties?.last_updated || current.properties?.createdAt || 0);
+      
+      if (currentTime > existingTime) {
+        acc[existingIndex] = current;
+      }
+    }
+    
+    return acc;
+  }, []);
+
+  // Sort by most recent first
+  const allIncidents = deduplicatedIncidents.sort((a, b) => {
     const aTime = new Date(a.properties?.Response_Date || a.properties?.last_updated || a.properties?.createdAt || 0);
     const bTime = new Date(b.properties?.Response_Date || b.properties?.last_updated || b.properties?.createdAt || 0);
     return bTime.getTime() - aTime.getTime();
@@ -289,42 +324,55 @@ export default function Feed() {
                   </Badge>
                 </div>
 
-                {allIncidents.map((incident, index) => (
-                  <Card key={`${incident.type}-${incident.properties?.id || incident.properties?.Master_Incident_Number || index}`} className="hover:shadow-md transition-shadow">
-                    <CardContent className="p-4">
-                      <div className="flex items-start gap-3">
-                        {getIncidentIcon(incident)}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-2">
-                            <h4 className="font-semibold text-foreground truncate">
-                              {getIncidentTitle(incident)}
-                            </h4>
-                            {getStatusBadge(incident)}
-                          </div>
-                          
-                          <p className="text-sm text-muted-foreground mb-3">
-                            {getIncidentDescription(incident)}
-                          </p>
-                          
-                          <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                            <div className="flex items-center gap-1">
-                              <MapPin className="w-3 h-3" />
-                              <span className="truncate">{getIncidentLocation(incident)}</span>
+                {allIncidents.map((incident, index) => {
+                  // Create a more unique key to prevent React warnings
+                  const getUniqueKey = (incident: any, index: number) => {
+                    if (incident.type === 'traffic') {
+                      return `traffic-${incident.properties?.id || incident.properties?.event_id || index}`;
+                    }
+                    if (incident.properties?.userReported) {
+                      return `user-${incident.properties?.id || index}`;
+                    }
+                    return `incident-${incident.properties?.Master_Incident_Number || incident.properties?.id || index}`;
+                  };
+
+                  return (
+                    <Card key={getUniqueKey(incident, index)} className="hover:shadow-md transition-shadow">
+                      <CardContent className="p-4">
+                        <div className="flex items-start gap-3">
+                          {getIncidentIcon(incident)}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-2">
+                              <h4 className="font-semibold text-foreground truncate">
+                                {getIncidentTitle(incident)}
+                              </h4>
+                              {getStatusBadge(incident)}
                             </div>
-                            <div className="flex items-center gap-1">
-                              <Clock className="w-3 h-3" />
-                              <span>{getTimeAgo(
-                                incident.properties?.Response_Date || 
-                                incident.properties?.last_updated || 
-                                incident.properties?.createdAt
-                              )}</span>
+                            
+                            <p className="text-sm text-muted-foreground mb-3">
+                              {getIncidentDescription(incident)}
+                            </p>
+                            
+                            <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                              <div className="flex items-center gap-1">
+                                <MapPin className="w-3 h-3" />
+                                <span className="truncate">{getIncidentLocation(incident)}</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Clock className="w-3 h-3" />
+                                <span>{getTimeAgo(
+                                  incident.properties?.Response_Date || 
+                                  incident.properties?.last_updated || 
+                                  incident.properties?.createdAt
+                                )}</span>
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </>
             )}
           </div>
