@@ -56,6 +56,20 @@ export const incidents = pgTable("incidents", {
   publishedDate: timestamp("published_date"),
 });
 
+export const weatherStations = pgTable("weather_stations", {
+  id: varchar("id").primaryKey(),
+  name: text("name").notNull(),
+  location: text("location").notNull(),
+  latitude: text("latitude").notNull(),
+  longitude: text("longitude").notNull(),
+  temperature: text("temperature"),
+  humidity: text("humidity"),
+  weatherCode: text("weather_code"),
+  windSpeed: text("wind_speed"),
+  windDirection: text("wind_direction"),
+  lastUpdated: timestamp("last_updated").notNull(),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
@@ -76,6 +90,11 @@ export const insertIncidentSchema = createInsertSchema(incidents).omit({
   lastUpdated: true,
 });
 
+export const insertWeatherStationSchema = createInsertSchema(weatherStations).omit({
+  id: true,
+  lastUpdated: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type TrafficEvent = typeof trafficEvents.$inferSelect;
@@ -84,3 +103,5 @@ export type TrafficCamera = typeof trafficCameras.$inferSelect;
 export type InsertTrafficCamera = z.infer<typeof insertTrafficCameraSchema>;
 export type Incident = typeof incidents.$inferSelect;
 export type InsertIncident = z.infer<typeof insertIncidentSchema>;
+export type WeatherStation = typeof weatherStations.$inferSelect;
+export type InsertWeatherStation = z.infer<typeof insertWeatherStationSchema>;

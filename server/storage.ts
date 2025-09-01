@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type TrafficEvent, type TrafficCamera, type InsertTrafficEvent, type InsertTrafficCamera, type Incident, type InsertIncident } from "@shared/schema";
+import { type User, type InsertUser, type TrafficEvent, type TrafficCamera, type InsertTrafficEvent, type InsertTrafficCamera, type Incident, type InsertIncident, type WeatherStation, type InsertWeatherStation } from "@shared/schema";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -17,6 +17,10 @@ export interface IStorage {
   createIncident(incident: InsertIncident): Promise<Incident>;
   updateIncident(id: string, incident: Partial<Incident>): Promise<Incident | undefined>;
   deleteIncident(id: string): Promise<boolean>;
+  getWeatherStations(): Promise<WeatherStation[]>;
+  createWeatherStation(station: InsertWeatherStation): Promise<WeatherStation>;
+  updateWeatherStation(id: string, station: Partial<WeatherStation>): Promise<WeatherStation | undefined>;
+  deleteWeatherStation(id: string): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -24,12 +28,14 @@ export class MemStorage implements IStorage {
   private trafficEvents: Map<string, TrafficEvent>;
   private trafficCameras: Map<string, TrafficCamera>;
   private incidents: Map<string, Incident>;
+  private weatherStations: Map<string, WeatherStation>;
 
   constructor() {
     this.users = new Map();
     this.trafficEvents = new Map();
     this.trafficCameras = new Map();
     this.incidents = new Map();
+    this.weatherStations = new Map();
   }
 
   async getUser(id: string): Promise<User | undefined> {
@@ -144,6 +150,39 @@ export class MemStorage implements IStorage {
 
   async deleteIncident(id: string): Promise<boolean> {
     return this.incidents.delete(id);
+  }
+
+  async getWeatherStations(): Promise<WeatherStation[]> {
+    return Array.from(this.weatherStations.values());
+  }
+
+  async createWeatherStation(station: InsertWeatherStation): Promise<WeatherStation> {
+    const id = randomUUID();
+    const newStation: WeatherStation = {
+      ...station,
+      id,
+      lastUpdated: new Date(),
+      temperature: station.temperature || null,
+      humidity: station.humidity || null,
+      weatherCode: station.weatherCode || null,
+      windSpeed: station.windSpeed || null,
+      windDirection: station.windDirection || null,
+    };
+    this.weatherStations.set(id, newStation);
+    return newStation;
+  }
+
+  async updateWeatherStation(id: string, station: Partial<WeatherStation>): Promise<WeatherStation | undefined> {
+    const existing = this.weatherStations.get(id);
+    if (!existing) return undefined;
+    
+    const updated = { ...existing, ...station, lastUpdated: new Date() };
+    this.weatherStations.set(id, updated);
+    return updated;
+  }
+
+  async deleteWeatherStation(id: string): Promise<boolean> {
+    return this.weatherStations.delete(id);
   }
 }
 

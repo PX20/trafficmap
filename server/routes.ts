@@ -175,6 +175,97 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get weather data from Open-Meteo for Queensland cities
+  app.get("/api/weather", async (req, res) => {
+    try {
+      const queenslandCities = [
+        { name: "Brisbane", location: "Brisbane Metro", lat: -27.4698, lng: 153.0251 },
+        { name: "Gold Coast", location: "Gold Coast", lat: -28.0167, lng: 153.4000 },
+        { name: "Sunshine Coast", location: "Sunshine Coast", lat: -26.6500, lng: 153.0667 },
+        { name: "Townsville", location: "Townsville", lat: -19.2590, lng: 146.8169 },
+        { name: "Cairns", location: "Cairns", lat: -16.9186, lng: 145.7781 },
+        { name: "Toowoomba", location: "Toowoomba", lat: -27.5598, lng: 151.9507 },
+        { name: "Rockhampton", location: "Rockhampton", lat: -23.3781, lng: 150.5136 },
+        { name: "Mackay", location: "Mackay", lat: -21.1550, lng: 149.1844 },
+      ];
+
+      const weatherData = [];
+      
+      for (const city of queenslandCities) {
+        try {
+          const response = await fetch(
+            `https://api.open-meteo.com/v1/forecast?latitude=${city.lat}&longitude=${city.lng}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m,wind_direction_10m&timezone=Australia/Brisbane`
+          );
+          
+          if (response.ok) {
+            const data = await response.json();
+            const current = data.current;
+            
+            const stationData = {
+              id: city.name.toLowerCase().replace(' ', '-'),
+              name: city.name,
+              location: city.location,
+              latitude: city.lat.toString(),
+              longitude: city.lng.toString(),
+              temperature: current.temperature_2m?.toString(),
+              humidity: current.relative_humidity_2m?.toString(),
+              weatherCode: current.weather_code?.toString(),
+              windSpeed: current.wind_speed_10m?.toString(),
+              windDirection: current.wind_direction_10m?.toString(),
+            };
+            
+            // Store/update in cache
+            await storage.updateWeatherStation(stationData.id, stationData) || 
+                  await storage.createWeatherStation(stationData);
+            
+            weatherData.push({
+              type: "Feature",
+              geometry: {
+                type: "Point",
+                coordinates: [city.lng, city.lat]
+              },
+              properties: {
+                id: stationData.id,
+                name: city.name,
+                location: city.location,
+                temperature: current.temperature_2m,
+                humidity: current.relative_humidity_2m,
+                weather_code: current.weather_code,
+                wind_speed: current.wind_speed_10m,
+                wind_direction: current.wind_direction_10m,
+                last_updated: current.time
+              }
+            });
+          }
+        } catch (error) {
+          console.warn(`Failed to fetch weather for ${city.name}:`, error);
+        }
+      }
+      
+      res.json({
+        type: "FeatureCollection",
+        features: weatherData
+      });
+    } catch (error) {
+      console.error("Error fetching weather data:", error);
+      res.status(500).json({ 
+        error: "Failed to fetch weather data", 
+        message: error instanceof Error ? error.message : "Unknown error" 
+      });
+    }
+  });
+
+  // Get cached weather stations from local storage
+  app.get("/api/cached/weather", async (req, res) => {
+    try {
+      const stations = await storage.getWeatherStations();
+      res.json(stations);
+    } catch (error) {
+      console.error("Error fetching cached weather stations:", error);
+      res.status(500).json({ error: "Failed to fetch weather stations" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

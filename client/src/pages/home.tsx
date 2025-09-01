@@ -13,6 +13,7 @@ export interface FilterState {
   restrictions: boolean;
   cameras: boolean;
   incidents: boolean;
+  weather: boolean;
   impactLevel: 'all' | 'high' | 'medium';
   timeRange: 'now' | '1h' | '6h' | '24h';
   autoRefresh: boolean;
@@ -29,6 +30,7 @@ export default function Home() {
     restrictions: true,
     cameras: true,
     incidents: true,
+    weather: true,
     impactLevel: 'all',
     timeRange: 'now',
     autoRefresh: true,

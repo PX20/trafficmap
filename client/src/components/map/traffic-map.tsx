@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { getTrafficEvents, getTrafficCameras, getIncidents } from "@/lib/traffic-api";
+import { getTrafficEvents, getTrafficCameras, getIncidents, getWeatherStations } from "@/lib/traffic-api";
 import type { FilterState } from "@/pages/home";
 
 // Fix Leaflet default marker icons
@@ -41,6 +41,12 @@ export function TrafficMap({ filters, onEventSelect, onCameraSelect }: TrafficMa
     refetchInterval: filters.autoRefresh ? 60000 : false,
   });
 
+  const { data: weatherData, isLoading: weatherLoading } = useQuery({
+    queryKey: ["/api/weather"],
+    queryFn: getWeatherStations,
+    refetchInterval: filters.autoRefresh ? 300000 : false, // 5 minutes for weather
+  });
+
   // Initialize map
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return;
@@ -63,8 +69,8 @@ export function TrafficMap({ filters, onEventSelect, onCameraSelect }: TrafficMa
 
   // Update loading state
   useEffect(() => {
-    setIsLoading(eventsLoading || camerasLoading || incidentsLoading);
-  }, [eventsLoading, camerasLoading, incidentsLoading]);
+    setIsLoading(eventsLoading || camerasLoading || incidentsLoading || weatherLoading);
+  }, [eventsLoading, camerasLoading, incidentsLoading, weatherLoading]);
 
   // Update markers when data or filters change
   useEffect(() => {
@@ -188,8 +194,26 @@ export function TrafficMap({ filters, onEventSelect, onCameraSelect }: TrafficMa
       });
     }
 
+    // Add weather station markers
+    if (filters.weather && (weatherData as any)?.features) {
+      (weatherData as any).features.forEach((feature: any) => {
+        if (feature.geometry?.coordinates) {
+          const coords = feature.geometry.coordinates;
+          const marker = L.marker([coords[1], coords[0]], {
+            icon: createCustomMarker(getMarkerColor('weather'))
+          });
+
+          const popupContent = createWeatherPopup(feature.properties);
+          marker.bindPopup(popupContent);
+
+          marker.addTo(mapInstanceRef.current!);
+          newMarkers.push(marker);
+        }
+      });
+    }
+
     markersRef.current = newMarkers;
-  }, [eventsData, camerasData, incidentsData, filters]);
+  }, [eventsData, camerasData, incidentsData, weatherData, filters]);
 
   const getMarkerColor = (eventType: string) => {
     const colors = {
@@ -198,7 +222,8 @@ export function TrafficMap({ filters, onEventSelect, onCameraSelect }: TrafficMa
       'roadworks': '#f97316',
       'special event': '#f97316',
       'camera': '#3b82f6',
-      'incident': '#dc2626'
+      'incident': '#dc2626',
+      'weather': '#10b981'
     };
     return colors[eventType as keyof typeof colors] || '#6b7280';
   };
@@ -287,12 +312,37 @@ export function TrafficMap({ filters, onEventSelect, onCameraSelect }: TrafficMa
     return 'text-green-600';
   };
 
-  const getStatusColor = (status: string) => {
-    const s = status?.toLowerCase();
-    if (s === 'going' || s === 'active') return 'text-red-600';
-    if (s === 'patrolled' || s === 'monitoring') return 'text-yellow-600';
-    if (s === 'completed' || s === 'closed') return 'text-green-600';
-    return 'text-gray-600';
+  const createWeatherPopup = (properties: any) => {
+    const getWeatherDescription = (code: number) => {
+      if (code <= 3) return 'Clear/Partly Cloudy';
+      if (code <= 48) return 'Foggy/Overcast';
+      if (code <= 67) return 'Rainy';
+      if (code <= 77) return 'Snowy';
+      if (code <= 82) return 'Showers';
+      if (code <= 99) return 'Thunderstorms';
+      return 'Unknown';
+    };
+    
+    const windDirection = (deg: number) => {
+      const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+      return directions[Math.round(deg / 45) % 8];
+    };
+    
+    return `
+      <div class="p-2 min-w-[250px]">
+        <h4 class="font-semibold text-foreground mb-2">${properties.name} Weather Station</h4>
+        <p class="text-sm text-muted-foreground mb-2">${properties.location}</p>
+        <div class="text-xs text-muted-foreground space-y-1">
+          <div><span class="font-medium">Temperature:</span> 
+            <span class="text-green-600 font-medium">${properties.temperature}°C</span>
+          </div>
+          <div><span class="font-medium">Conditions:</span> ${getWeatherDescription(properties.weather_code)}</div>
+          <div><span class="font-medium">Humidity:</span> ${properties.humidity}%</div>
+          <div><span class="font-medium">Wind:</span> ${properties.wind_speed} km/h ${windDirection(properties.wind_direction)}</div>
+          <div><span class="font-medium">Updated:</span> ${new Date(properties.last_updated).toLocaleTimeString()}</div>
+        </div>
+      </div>
+    `;
   };
 
   // Setup global functions for popup interactions
