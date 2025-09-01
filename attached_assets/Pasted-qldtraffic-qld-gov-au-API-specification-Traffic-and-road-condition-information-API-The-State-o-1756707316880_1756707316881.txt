@@ -1,0 +1,968 @@
+qldtraffic.qld.gov.au 
+API specification
+Traffic and road condition information API
+© The State of Queensland (Department of Transport and Main Roads) 2023
+http://creativecommons.org/licenses/by/4.0/au/
+This work is licensed under a Creative Commons Attribution 4.0 International License
+To attribute this material, cite: State of Queensland (Department of Transport and Main Roads) QLDtraffic API
+specification
+Version no. 1.10
+Version date 19-02-2025
+Status Published
+Department of Transport and Main Roads Version 1.10 Page 2 of 31
+History
+Version Date Description
+0.11 24-03-2016 Draft specification for QLDtraffic public API specification (unreleased)
+0.12 06-05-2016 - Removed http if-modified-since request section
+- Removed ETag & If-None-Match request section
+- Significantly simplified API
+0.13 18-05-2016 - Updated 2.1.2 API Authorised Requests to state that the use of an
+API key is now optional although preferred
+- Updated section 4 data structures
+o Re-modelled API response as per strict GeoJSON
+specification to make the response easier to consume for the
+client (i.e. using generic GeoJSON parsers/map layer
+libraries) [4.1-4.2]
+o Re-modelled cardinality so that each road event represents 1
+GeoJSON Feature in a FeatureCollection (instead of an array
+of FeatureCollection as stated in v0.12 of this document) [4.1-
+4.2]
+o Changed Feature geometry property to always be of type
+GeometryCollection (all geometries of a road event) [4.2]
+o Moved all singular road event metadata into the properties of
+a Feature [4.3]
+o Replace Positions structure with Road Summary structure
+[section 4.6] which lists roads and boundaries related to a
+singular event
+0.14 24-05-2016 Document formatting for improved readability
+0.15 15-06-2016 Modify section detailing events API
+- Add 4.3.1 – model Source structure as an object (previously existing
+as simple properties)
+- Modify 4.3.4 – add postcode property to Road Summary structure
+- Update specimen GeoJson response (4.2)
+Add sections detailing traffic web cameras API
+- 5.3 Traffic Web Camera data (API)
+- 4.4 Feature structure (traffic web cameras)
+- 4.5 Feature properties (traffic web cameras)
+- Add specimen GeoJson response for this API (4.4)
+Department of Transport and Main Roads Version 1.10 Page 3 of 31
+0.20 06-07-2016 Rename domain name from qldtraffic.com.au to qldtraffic.qld.gov.au
+Modify section API access key (2.1.1) to clarify 2 uses of
+- 2.1.1.1 Public API access key
+- 2.1.1.2 Registration of an API access key
+Modify section API authorised requests (2.1.2) to indicate that the access
+key will be passed in the URL rather than as an HTTP header
+Update section Transport Protocol (3) to indicate that HTTPS will be used
+as the transport communication protocol (previously HTTP)
+Modify section detailing events API response GeoJson fields
+- Feature properties (4.3)
+o Add status property to
+o Add last_updated property
+o Add next_inspection property
+o Add web_link property
+-
+- Duration structure (4.3.3)
+o Add active_days property
+- Road Summary structure (4.3.4)
+o Remove region property in as it is not used
+0.21 08-07-2016 Modify API authorised requests (section 2.1.2)
+- specify key name as “api_key”
+- indicate error code as HTTP status 403
+0.22 28-07-2016 Modify API authorised requests (section 2.1.2)
+- specify key name as “apikey”
+- specify common public key
+- modify language to refer directly to query string
+Updated event sub type, and event due to type.
+1.0 29-07-2016 Modify API response examples with current rights/disclaimer/copyright
+information.
+Release final version of this document.
+ 
+1.1 10-03-2017 Include the details for where to register for an API access key.
+ 
+1.2 25-05-2017 Add the high risk crash zone API specification. Sections 4.6, 4.7 and 5.4.
+Department of Transport and Main Roads Version 1.10 Page 4 of 31
+1.3 05-10-2017 Include changes to the QLDtraffic service to cater for the area alerts. 
+Changes include:
+§ Feature properties (4.3)
+o Add area_alert property
+o Add alert_message property
+-
+§ Event Data (5.2)
+o Add information regarding the endpoint for accessing road events 
+along with area alerts.
+1.4 23-08-2022 Modify API access list section (Section 5.1) and Event data section 
+(Section 5.2) to include new API endpoint for road event changes past 
+one hour of system time
+1.5
+ 
+ 30-11-2022 Add the flood camera API specification. Sections 4.8, 4.9 and 5.5.
+1.6 09-11-2023 Change in section 2.1. Use of the data must be in accordance with 
+the Creative Commons Attribution 4.0 Australia (CC BY 4.0 AU) 
+license
+1.7 24-04-2024 Change in API specification list section (Section 5.4) to indicate that 
+the high risk crash zone data previously existed but no longer does.
+1.8 09-05-2024
+Removed unnecessary statement in Section 2.1.1.2 – Registration of 
+an API access key that cause misleading information to the API 
+users.
+1.9 14-11-2024 Changing the status of the document from ‘Draft’ to ‘Published’
+1.10 19-02-2025 Corrected the wording for area_alert description to include 
+information of how to identify the area alert geometry.
+Department of Transport and Main Roads Version 1.10 Page 5 of 31
+Contents
+Traffic and road conditioninformation API .......................................................................................................1
+Contents..........................................................................................................................................................5
+1 Introduction..................................................................................................................................................7
+1.1 Purpose ..............................................................................................................................................7
+1.2 Scope .................................................................................................................................................7
+1.3 Audience ............................................................................................................................................7
+1.4 Feedback............................................................................................................................................7
+1.5 References .........................................................................................................................................8
+1.6 Definitions...........................................................................................................................................8
+2 Protocol Specification..................................................................................................................................9
+2.1 Authorisation ......................................................................................................................................9
+2.1.1 API Access Keys.................................................................................................................................9
+2.1.1.1 Public API access key.....................................................................................................................9
+2.1.1.2 Registration of an API access key..................................................................................................9
+2.1.2 API Authorised Requests ..................................................................................................................10
+2.1.3 API Request Limiting Policy ..............................................................................................................10
+3 Transport Protocol .....................................................................................................................................10
+3.1 HTTPS..............................................................................................................................................10
+4 Data contract specification ........................................................................................................................10
+4.1 JSONstructure .................................................................................................................................10
+4.2 Feature structure...............................................................................................................................14
+4.3 Featureproperties.............................................................................................................................15
+4.3.1 Source structure................................................................................................................................19
+4.3.2 Impact structure ................................................................................................................................20
+4.3.3 Durationstructure .............................................................................................................................22
+4.3.4 Road summary structure...................................................................................................................23
+Department of Transport and Main Roads Version 1.10 Page 6 of 31
+4.4 Feature structure (traffic web cameras).............................................................................................24
+4.5 Feature properties (traffic web cameras)...........................................................................................25
+4.6 Feature structure (high risk crash zones) .........................................................................................26
+4.7 Feature properties (high risk crash zones) .......................................................................................27
+4.8 Feature structure (flood cameras).....................................................................................................28
+4.9 Feature properties (flood cameras)...................................................................................................28
+5 API specification........................................................................................................................................30
+5.1 API access........................................................................................................................................30
+5.2 Event data.........................................................................................................................................30
+5.3 Traffic Web Camera data .................................................................................................................30
+5.4 High risk crash zone data.................................................................................................................30
+5.5 Flood Camera data...........................................................................................................................31
+Department of Transport and Main Roads Version 1.10 Page 7 of 31
+1 Introduction
+1.1 Purpose
+This document provides a specification of the integration and data distribution framework provided by the
+Department of Transport and Main Roads’ QLDtraffic service. The specification is intended to provide
+sufficient detail to enable the implementation of client components that interact and communicate with the
+QLDtraffic service information.
+1.2 Scope
+The scope of this document is all traffic and road condition information captured and made available via the
+QLDtraffic service.
+This includes:
+- real-time information, such as crashes, hazards, road restrictions and other events
+Transport and Main Roads (TMR) provides this information in the interest of allowing and encouraging
+informed travel decisions by members of the public and industry.
+1.3 Audience
+The intended audience is developers, architects, system designers and testers. It assumes prior knowledge
+and understanding of concepts and specifications including HTTP, JSON and REST.
+1.4 Feedback
+We recognise that the success of the Queensland Government Open Data Initiative is dependent on an
+active community of people using open data.
+This QLDtraffic API specification is in a beta state and is intended to provide visibility to interested parties
+of the data available via the QLDtraffic service for the purpose of building applications.
+We welcome all feedback on the specification. While not all suggestions may be incorporated, they will be
+recorded and reviewed on a regular basis.
+Department of Transport and Main Roads Version 1.10 Page 8 of 31
+1.5 References
+1 S. Bradner, “RFC2119 – Key words for use in RFCs to Indicate Requirement Levels,” March 1997. [Online].
+Available: http://www.ietf.org/rfc/rfc2119.txt. [Accessed 21 February 2013].
+2 D. Crockford, “RFC4627 - The application/json Media Type for JavaScript Object Notation (JSON),” July
+2006. [Online]. Available: http://www.ietf.org/rfc/rfc4627.txt. [Accessed 5 June 2013].
+3 R. Fielding, J. Gettys, J. Mogul, H. Frystyk, L. Masinte, P. Leach and T. Berners-Lee, “Hypertext Transfer
+Protocol - HTTP/1.1,” June 1999. [Online]. Available: http://www.ietf.org/rfc/rfc2616.txt. [Accessed 5 June
+2013].
+4 R. Braden, “RFC1123 - Requirements for Internet Hosts - Application and Support,” October 1989. [Online].
+Available: http://www.ietf.org/rfc/rfc1123.txt. [Accessed 5 June 2013].
+5 H. Butler, M. Daly, A. Doyle, S. Gillies, T. Schaub and C. Schmidt, “The GeoJSON Format Specification,” 16
+June 2008. [Online]. Available: http://www.geojson.org/geojson-spec.html. [Accessed 5 June 2013].
+1.6 Definitions
+Term Definition
+API Application Programming Interface, a means of software applications to interact with other
+applications
+HTTP Hypertext Transfer Protocol
+HTTPS Secure Hypertext Transfer Protocol
+SSL Secure Sockets Layer
+JSON JavaScript Object Notation, an open standard for transmitting data.
+GEOJSON An open, specialized JSON format for encoding a variety of geographic data structures and
+related metadata.
+POI Point of Interest
+REST RepresentationalState Transfer
+TMR Transport and Main Roads
+URL Uniform Resource Locator. Also known as a web address.
+Department of Transport and Main Roads Version 1.10 Page 9 of 31
+2 Protocol Specification
+2.1 Authorisation
+The information provided as part of this service is provided on an as-is basis. Use of the data must be in
+accordance with the Creative Commons Attribution 4.0 Australia (CC BY 4.0 AU) license.
+Authorised use supports the integration with third party applications and software products as well as
+consumption by manual processes. TMR reserves the right to limit or restrict access to the data where
+access by third parties has a negative or detrimental impact on the overall service.
+2.1.1 API Access Keys
+The API will require a valid API access key is provided with the API request.
+Potential consumers of the API have 2 choices
+- Use the public API access key; or
+- Register a unique API access key by requesting one
+It is preferable that consumers are registered by requesting an API key, which will permit provision of
+enhanced service to consumers (e.g. being notified of upcoming releases and outages of the API).
+The 2 methods are detailed below.
+2.1.1.1 Public API access key
+A public API key, shown below, is available for developers who do not wish to register and receive their
+own API key:
+This key is globally limited to 100 requests/minute.
+Developers who have not acquired their own key must use this access key when programmatically
+requesting data from the API according to section 2.1.2 API Authorised Requests.
+2.1.1.2 Registration of an API access key
+To register, send the following details to qldtraffic@tmr.qld.gov.au: Organisation name, Contact
+person, Email address and Application name (if known).
+The API administrator will review API access requests to determine if access with be authorized to the
+API.
+Once an access request is successfully granted, the administrator will issue an API access key which is
+unique to the registered consumer and signed with the secret. The access key will be exchanged with the
+authorized consumer. Example:
+"apikey": "3e83add325cbb69ac4d8e5bf433d770b"
+"apikey": "3e83add325cbb69ac4d8e5bf433d770b"
+Department of Transport and Main Roads Version 1.10 Page 10 of 31
+Developers must use this access key when programmatically requesting data from the API according to
+section 2.1.2 API Authorised Requests.
+2.1.2 API Authorised Requests
+For authorized requests, developers must use a valid API access key in the HTTP URL query string
+parameter named “apikey” as below:
+The API will check the “apikey” query string parameter is present and valid before proceeding with
+requests. The following HTTP codes may be returned in this scenario:
+HTTP status code Description
+403 The request presented an API access key that was invalid
+2.1.3 API Request Limiting Policy
+The API will limit the number of requests which can be made during a nominated period. This information
+will be provided when access keys are issued to API consumers.
+When an individual access key has exceeded its limit, an HTTP 429 (Too Many Requests) will be
+returned from the server.
+3 Transport Protocol
+3.1 HTTPS
+HTTPS will be used as the transport communication protocol (HTTP with secure sockets layer).
+4 Data contract specification
+The data provided from the QLDtraffic service is available in JSON, utilizing the GeoJSON specification [5]
+for geographic information.
+Specific details about data provided by QLDtraffic is included below, however for general details about
+GeoJSON we recommend reviewing the GeoJSON specification at http://www.geojson.org/.
+4.1 JSON structure
+All GeoJSON feeds provided via QLDtraffic conform to the following basic format
+(example shown for the Event data API described in section 5.2):
+GET /v2/events?apikey=3e83add325cbb69ac4d8e5bf433d770b HTTP/1.1
+Host: api.qldtraffic.qld.gov.au
+Department of Transport and Main Roads Version 1.10 Page 11 of 31
+{
+"type": "FeatureCollection",
+"features": [
+{
+"type":
+"Feature",
+"geometry": {
+"type": "GeometryCollection",
+"geometries": [
+{
+"type":
+"LineString",
+"coordinates": [
+[
+153.0258962,
+-27.3399828
+[
+153.02596,
+-27.34007
+[
+153.02602,
+-27.34015
+[
+153.026028,
+-27.3401745
+]
+]
+},
+{
+"type":
+"LineString",
+"coordinates": [
+[
+153.025712,
+-27.3403917
+[
+153.0259353,
+-27.3406821
+]
+]
+},
+{
+"type":
+"LineString",
+"coordinates": [
+[
+153.026028,
+-27.3401745
+Department of Transport and Main Roads Version 1.10 Page 12 of 31
+}
+]
+},
+"properties": {
+"id": 155,
+"status": "Published",
+"published": "2016-06-13T12:19:00+10:00",
+"source": {
+"source_name": "EPS",
+"source_id": null,
+"account": null,
+"provided_by": null,
+"provided_by_url": "Department of Transport and Main Roads"
+},
+"url": "http://api.qldtraffic.qld.gov.au/v1/events/155",
+"event_type": "Special event",
+"event_subtype": "N/A",
+"event_due_to": null,
+"impact": {
+"direction": "Southbound",
+"towards": "Station",
+"impact_type": "Lanes blocked",
+"impact_subtype": "Right lane blocked",
+"delay": "No delays expected"
+},
+"duration": {
+"start": "2016-06-13T12:13:00+10:00",
+"end": "2016-06-27T12:18:00+10:00",
+"active_days": [
+"Monday",
+"Tuesday",
+"Wednesday",
+"Thursday"
+],
+"recurrences": [
+{
+"event_id": 155,
+"description": "Monday to Wednesday, 12 PM to 1 AM",
+"impact": {
+"direction": "Southbound",
+"towards": "Station",
+"impact_type": "Lanes blocked",
+"impact_subtype": "Right lane blocked",
+"delay": "No delays expected"
+}
+},
+{
+"event_id": 155,
+"description": "Tuesday to Wednesday, 12 AM to 12 PM",
+"impact": {
+"direction": "Southbound",
+"towards": "Station",
+"impact_type": "Lanes blocked",
+"impact_subtype": "Right lane blocked",
+"delay": "No delays expected"
+}
+Department of Transport and Main Roads Version 1.10 Page 13 of 31
+A road event is a set of geometries indicating the affected roads, and properties related to those affects.
+The root of the GeoJson API response is a FeatureCollection
+(http://geojson.org/geojson-spec.html#feature-collection-objects).
+},
+{
+"event_id": 155,
+"description": "Wednesday to Thursday, 12 AM to 12:01
+AM", "impact": {
+"direction": "Southbound",
+"towards": "Station",
+"impact_type": "Lanes
+blocked",
+"impact_subtype": "Right lane
+blocked", "delay": "No delays
+expected"
+}
+}
+]
+},
+"event_priority": "Low",
+"description": "Fitzgibbon - Road name
+abbreviations", "advice": "Use alternative route",
+"information": "Cleaning -
+Fitzgibbon", "road_summary": {
+"road_name": "Kuringgai Parkway / Merimbula Crescent / Mount Kaputar
+Avenue",
+"locality":
+"Fitzgibbon",
+"postcode": "4018",
+"local_government_area": "BRISBANE
+CITY", "district": "Metropolitan"
+},
+"last_updated": "2016-06-20T11:37:19.448257+10:00",
+"next_inspection": "2016-06-
+27T09:30:00.000000+10:00",
+"web_link": "http://www.metropolitan.qld.gov.au"
+}
+}
+],
+"published": "2016-07-06T15:20:12.9418832+10:00",
+"rights": {
+"owner": "As per the respective provided_by details contained in the feed:
+Department of Transport and Main Roads, Transport for NSW, or the
+respective Local Government Authority.",
+"disclaimer": "The State of Queensland makes no statements, representations
+or warranties about the accuracy, currency, reliability or completeness of
+the information contained in this feed.",
+"copyright": "Copyright in material within this feed is owned by the State of
+Queensland or other entities which provide material for the website by
+arrangement. Please consult the respective provided_by_url for each data
+owner or the QLDTraffic website for further information
+https://qldtraffic.qld.gov.au/More/Data.html."}
+}
+Department of Transport and Main Roads Version 1.10 Page 14 of 31
+Each Feature (http://geojson.org/geojson-spec.html#feature-objects ) in the FeatureCollection contains
+the geometry & details of a road event.
+A road event may have many non-contiguous segments of road which are affected.
+The following footer fields are present to describe all features in the API response
+Property Type Description
+published ISO Datetime The date time when the document was generated and published
+rights Object This object contains static text descriptions which apply to the
+document as a whole: owner, disclaimer and copyright
+See sections below for the description of each member.
+4.2 Feature structure
+When a GeoJson response is returned from API 5.2 Event data, the Feature geometry and properties
+collection all pertain to an individual road event.
+The general format for feature is:
+Properties of the above Feature are described as:
+Property Type Description
+type String Always “Feature”
+geometry Object This object contains geometry data structures supported by the GeoJson
+specification.
+The “type” used will be “GeometryCollection”. http://geojson.org/geojsonspec.html#geometry-collection
+The principal “type” attributes found within the “geometries” will be
+“LineString” and “Point”.
+properties Object This object contains the metadata properties related to the road event and is
+described in further detail in the following section.
+{
+ "type": "Feature", 
+ "geometry": Object,
+ "properties": Object
+}
+Department of Transport and Main Roads Version 1.10 Page 15 of 31
+4.3 Feature properties
+The general format for properties is:
+"properties": {
+ "id": Number, 
+ "status": String,
+ "published": ISO DateTime, 
+ "source": {
+ "source_name": String, 
+ "source_id": String,
+ "account": String,
+ "provided_by": String, 
+ "provided_by_url": String
+ },
+ "url": String, 
+ "event_type": String, 
+ "event_subtype": String, 
+ "event_due_to": String, 
+ "impact": {
+ "direction": String, 
+ "towards": String, 
+ "impact_type": String, 
+ "impact_subtype": String, 
+ "delay": String
+ },
+ "duration": {
+ "start": ISO DateTime, 
+ "end": ISO DateTime,
+ "active_days": [ String ],
+ "recurrences": [
+ 
+{
+ "event_id": Number, 
+ "description": String, 
+ "impact": {
+ "direction": String, 
+ "towards": String, 
+ "impact_type": String, 
+ "impact_subtype": String, 
+ "delay": String
+ 
+}
+ },
+ ...
+ 
+]
+ },
+ "event_priority": String, 
+ "description": String, 
+ "advice": String, 
+ "information": String, 
+ "road_summary": {
+ "road_name": String, 
+ "locality": String, 
+ "postcode": String,
+ "local_government_area": String, 
+ "district": String
+ 
+}
+ "last_updated": ISO Datetime, 
+ "next_inspection": ISO Datetime, 
+ "event_type": String }
+Department of Transport and Main Roads Version 1.10 Page 16 of 31
+This object contains the metadata properties related to the road event.
+Property Type Description
+id Number A unique identifier for this event
+status String The status for this event, always one of the following:
+- Published
+- Reopened #
+# Reopened status refers to a published event where roads have
+been reopened after closures
+published ISO
+Datetime
+The datetime that this event was published
+source Object A Source object, as described below.
+url String The url to access this individual event via the API
+e.g: v1/events/17
+event_type String The primary type for this event, always one of the following:
+- Hazard
+- Crash
+- Congestion
+- Roadworks
+- Special event
+- Flooding
+This is the 1st part of a 3-part hierarchy event categorisation as
+follows:
+event_type – event_subtype – event_due_to
+Department of Transport and Main Roads Version 1.10 Page 17 of 31
+event_subtype String The secondary type for this event, always one of the following:
+- Poor visibility
+- Adverse driving conditions
+- Signal fault
+- Road damage
+- Debris on road
+- Stationary vehicle
+- Fire
+- Single vehicle
+- Multi-vehicle
+- Recurring
+- Incident related
+- Earlier incident related
+- Planned roadworks
+- N/A
+- Long-term flooding
+- Flash flooding
+- Bridge or culvert damaged
+- General
+- Police incident
+- Emergency roadworks
+This is the 2nd part of a 3-part hierarchy event categorisation as
+follows:
+event_type – event_subtype – event_due_to
+event_due_to String The actual cause of the event, always one of the following:
+- Fog
+- Heavy rain
+- Dust
+- Sun glare
+- Smoke
+- High winds
+- Slippery surface
+- Animal or wildlife
+- Lights blacked out
+- Lights flashing yellow
+- Earlier flooding
+- Earlier flash flooding
+- Pot holes
+- Rough surface
+- Soft shoulders
+- Saturated pavements
+- Boggy conditions
+- Deep wheel tracks
+- Fallen vegetation
+- Spill
+- Burst water main
+- Heavy rain
+- Water over road
+- Heavy rain
+- Flooding of river
+This is the 3rd part of a 3-part hierarchy event categorisation as
+follows:
+- event_type – event_subtype – event_due_to
+Department of Transport and Main Roads Version 1.10 Page 18 of 31
+impact Object An Impact object, described below.
+duration Object The duration and times that this event impact.
+event_priority String The priority of the event, always one of the following:
+- Red Alert
+- High
+- Medium
+- Low
+The “Red Alert” is a higher priority than “High”
+description String An event description
+advice String Advice to motorists
+information String Extra information regarding this event.
+road_summary Object A Road summary object described below.
+last_updated ISO
+Datetime
+The date time this event was last updated in the system.
+next_inspection ISO
+Datetime
+The date time a review is next due for road inspection related to
+the roads of this event
+web_link String A URL link to additional information for the event (external to
+qldtraffic)
+area_alert Boolean This property is present only if the version 2 of the API is 
+accessed. Flag to determine whether the road event has an 
+area alert associated with it. If the value is true, then the last 
+geometry in the geometry collection for the road event is the 
+area alert.
+alert_message String This property is present only if the version 2 of the API is 
+accessed. Message associated with the area alert.
+Department of Transport and Main Roads Version 1.10 Page 19 of 31
+4.3.1 Source structure
+A source describes the source of the event data, whether it be Department of Transport and Main Roads
+or from other external event sources.
+Property Type Description
+source_name String The source system from which this event was
+sourced.
+Values:
+- EPS
+- Guardian
+- tfNSW
+source_id String The additional event identifier when from an
+external source
+account String The additional account information when from a
+“Guardian” external source
+provided_by String The additional regional data supporting events
+from the source
+provided_by_url String The additional web link data supporting events
+from the source
+{
+ "source_name": String, 
+ "source_id": String,
+ "account": String,
+ "provided_by": String, 
+ "provided_by_url": String
+}
+Department of Transport and Main Roads Version 1.10 Page 20 of 31
+4.3.2 Impact structure
+An impact describes the affect an event has on the roads effected.
+Property Type Description
+direction String Always one of the following:
+- Northbound
+- Southbound
+- Eastbound
+- Westbound
+- Northeast bound
+- Northwest bound
+- Southeast bound
+- Southwest bound
+- Inbound
+- Outbound
+- Both directions
+- All directions
+- Unknown
+towards String Text, may be null or whitespace.
+impact_type String Always one of the following:
+- N/A
+- Closures
+- Lanes affected
+- Lanes blocked
+- Road restricted
+- No blockage
+This is the 1st part of a 2-part hierarchy impact
+categorisation as follows:
+impact_type - impact_subtype
+{
+ "direction": String, 
+ "towards": String, 
+ "impact_type": String, 
+ "impact_subtype": String, 
+ "delay": String
+}
+Department of Transport and Main Roads Version 1.10 Page 21 of 31
+impact_subtype String Always one of the following:
+- Road closed to all traffic
+- Road closed to through traffic
+- One lane closed
+- Partial lane closures
+- All lanes affected
+- Both lanes affected
+- Lane or lanes reduced
+- Single lane in operation"
+- All lanes blocked
+- Both lanes blocked
+- Lane or lanes blocked
+- One lane blocked
+- Two lanes blocked
+- Left lane blocked
+- Middle lane blocked
+- Right lane blocked
+- Restricted to four wheel drive vehicles only
+- Restricted to high clearance vehicles only
+- Subject to a 5 tonne GVM limit
+- Subject to a 10 tonne GVM limit
+- Subject to a 15 tonne GVM limit
+- Subject to a 25 tonne GVM limit
+- Subject to a 42.5 tonne GVM limit
+- Subject to a 46 tonne GVM limit
+- Limited to 80% of legislative axle group
+limit
+This is the 2nd part of a 2-part hierarchy impact
+categorisation as follows:
+- impact_type - impact_subtype
+delay String Always one of the following:
+- Unknown traffic impact
+- No delays expected
+- Delays expected
+- Long delays expected
+- Delays expected (during active hours)
+- Long delays expected (during active
+hours)
+Department of Transport and Main Roads Version 1.10 Page 22 of 31
+4.3.3 Duration structure
+A duration describes when an even is taking place.
+Property Type Description
+start ISO Datetime The date and time this event starts
+end ISO Datetime The date and time this event stops
+active_days Array An array of days of the week that the recurring
+impacts for this event will occur at some point in
+the day. This summarizes days of the week for
+the recurrences array described below. Can be
+null or contain 0 to 7 elements. Possible values:
+- Sunday
+- Monday
+- Tuesday
+- Wednesday
+- Thursday
+- Friday
+- Saturday
+recurrences Array An array of days, times and impacts that this
+event is impacting the road, may be null or
+empty.
+recurrences[n].description String The days of week and times affected, eg. “Friday
+9pm to Saturday 8am”
+recurrences[n].impact Object An impact object, described above.
+{
+ "start": ISO DateTime, 
+ "end": ISO DateTime,
+ "active_days": [ String ],
+ "recurrences": [
+ {
+ "description": String, 
+ "impact": Object
+ }
+ ]
+}
+Department of Transport and Main Roads Version 1.10 Page 23 of 31
+4.3.4 Road summary structure
+Each road summary object lists the affected roads and location information (e.g. locality, district) related
+to the geometry of the road event.
+The general format for road summary is:
+Properties of the above RoadSummary are described below:
+Property Type Description
+road_name String The name of the road(s) for all geometries of the event
+locality String The locality name(s) for all geometries of the event
+postcode String The postcode(s) for all geometries of the event
+local_government_area String The local government area(s) for all geometries of the event
+district String The district(s) for all geometries of the event
+{
+ "road_name": String, 
+ "locality": String, 
+ "postcode": String,
+ "local_government_area": String, 
+ "district": String
+}
+Department of Transport and Main Roads Version 1.10 Page 24 of 31
+4.4 Feature structure (traffic web cameras)
+When a GeoJson response is returned from API 5.3 Traffic Web Camera data, the geometry types and
+properties collection are different to those described in the principal events API.
+Each GeoJson feature object lists the geometry and properties collection.
+The general format for Feature (in web cameras context) is:
+Properties of the above Feature are described as:
+Property Type Description
+type String Always “Feature”
+geometry Object This object contains geometry data structures supported by the GeoJson
+specification.
+The “type” used will be “Point” and geometry will be a simple lat/long pair.
+properties Object This object contains the metadata properties related to the traffic web camera
+and is described in further detail in the following section.
+{
+ "type": "Feature", 
+ "geometry": {
+ "type": "Point",
+ "coordinates": [
+ 151.9763031,
+ -27.56567955
+ ]
+ },
+ "properties": { 
+ "id": 5,
+ "url": "http://api.qldtraffic.qld.gov.au/v1/webcams/5", 
+ "description": "Toowoomba - Down the Range - East", 
+ "direction": "East",
+ "district": "Darling Downs", 
+ "locality": "Toowoomba City", 
+ "postcode": "4350",
+ "image_url": "http://qldtraffic.qld.gov.au/.../toowoomba_range-east.jpg"
+ }
+}
+Department of Transport and Main Roads Version 1.10 Page 25 of 31
+4.5 Feature properties (traffic web cameras)
+When a GeoJson response is returned from API 5.3 Traffic Web Camera data, the properties collection
+object lists the web/flood camera metadata and URL to the web/flood camera image.
+The general format for Feature properties (in web cameras context) is:
+Properties are described below:
+Property Type Description
+id Number The id of the web camera.
+url String The URL to retrieve a single web camera (metadata) via the API
+description String The description of the web camera (used for labelling)
+direction String The compass direction the web camera is facing. Can be one of:
+North, NorthEast, East, SouthEast, South, SouthWest, West, NorthWest
+district String The district of the web camera location
+locality String The locality of the web camera location
+postcode String The postcode of the web camera location
+image_url String The URL to retrieve the most current web camera image (JPEG format)
+"properties": {
+ "id": Number,
+ "url": String, 
+ "description": String, 
+ "direction": String, 
+ "district": String, 
+ "locality": String, 
+ "postcode": String, 
+ "image_url": String
+}
+Department of Transport and Main Roads Version 1.10 Page 26 of 31
+4.6 Feature structure (high risk crash zones)
+This high risk crash zone data no longer exist.
+Each GeoJson feature object lists the geometry and properties collection.
+The general format for the high risk crash zone feature is:
+Properties of the above Feature are described as:
+Property Type Description
+type String Always “Feature”
+geometry Object This object contains geometry data structures supported by the GeoJson
+specification.
+properties Object This object contains the metadata properties related to the high risk crash 
+zone and is described in further detail in the following section.
+{
+ "type": "Feature", 
+ "geometry": {
+ "type": "Point",
+ "coordinates": [
+ 151.9763031,
+ -27.56567955
+ ]
+ },
+ "properties": {
+ "road_section_id": "91", 
+ "road_name": "The Range",
+ "Suburb": "Toowoomba City",
+ "District": "Darling Downs", 
+ "description": "Toowoomba - Down the Range – East. This road has experienced a higher crash 
+occurrence in the past compared to other roads. Road users are advised to take care and to drive 
+to prevailing conditions."
+ }
+}
+Department of Transport and Main Roads Version 1.10 Page 27 of 31
+4.7 Feature properties (high risk crash zones)
+This high risk crash zone data no longer exist.
+When a GeoJson response is returned from API 5.4 Traffic High risk crash zone data, the properties
+collection object lists the high risk crash zone metadata.
+The general format for feature properties is:
+Properties are described below:
+Property Type Description
+road_section_id Number The id of the road section
+road_name String The road or roads affected by the high risk crash zone
+Suburb String The suburb / locality of the high risk crash zone
+District String The district of the high risk crash zone
+description String The description of the high risk crash zone
+"properties": {
+ "road_section_id": Number,
+ "road_name": String, 
+ "Suburb": String, 
+ "District": String, 
+ "description": String
+}
+Department of Transport and Main Roads Version 1.10 Page 28 of 31
+4.8 Feature structure (flood cameras)
+When a GeoJson response is returned from API 5.4 Flood Camera data, the geometry types and
+properties collection are different to those described in the principal events API.
+Each GeoJson feature object lists the geometry and properties collection.
+The general format for Feature (in flood cameras context) is:
+Properties of the above Feature are described as:
+Property Type Description
+type String Always “Feature”
+geometry Object This object contains geometry data structures supported by the GeoJson
+specification.
+The “type” used will be “Point” and geometry will be a simple lat/long pair.
+properties Object This object contains the metadata properties related to the flood camera and
+is described in further detail in the following section.
+4.9 Feature properties (flood cameras)
+When a GeoJson response is returned from API 5.4 Flood Camera data, the properties collection object 
+lists the flood camera metadata and URL to the flood camera image.
+The general format for Feature properties (in flood cameras context) is:
+Department of Transport and Main Roads Version 1.10 Page 29 of 31
+Properties are described below:
+Property Type Description
+id Number The id of the flood camera.
+url String The URL to retrieve a single flood camera (metadata) via the API
+description String The description of the flood camera (used for labelling)
+direction String The compass direction the flood camera is facing. Can be one of:
+North, NorthEast, East, SouthEast, South, SouthWest, West, NorthWest
+district String The district of the flood camera location
+locality String The locality of the flood camera location
+postcode String The postcode of the flood camera location
+image_url String The URL to retrieve the most current flood camera image (JPEG format)
+"properties": {
+ "id": Number,
+ "url": String, 
+ "description": String, 
+ "direction": String, 
+ "district": String, 
+ "locality": String, 
+ "postcode": String, 
+ "image_url": String
+}
+Department of Transport and Main Roads Version 1.10 Page 30 of 31
+5 API specification
+This section identifies the application programming interfaces provided by the QLDtraffic service for the
+purposes of integration. It provides details of their use and identifies expected results based on given
+conditions.
+Traffic and road event information relates to dynamic information about events impacting the road network.
+This includes unplanned events, such as crashes, hazards, and temporary restrictions due to
+environmental conditions, and planned events, such as roadworks and special events. This information
+may be actively managed by TMR, or imported into the QLD traffic service from external data sources.
+Typically this information is updated at least daily.
+5.1 API access
+All API access is via the following API URL Paths:
+§ https://api.qldtraffic.qld.gov.au/v1/
+NB: The road events returned will not have information about the area alerts.
+§ https://api.qldtraffic.qld.gov.au/v2/ (only for event data)
+§ https://api.qldtraffic.qld.gov.au/v2/past-one-hour (road event changes for the past 
+one hour of system time)
+Note for the process of obtaining an API access key for authorized parties to consume the API, refer to
+section 2.1 Authorisation of this document.
+If you have been granted access to the API during the development phase, you will be provided with a
+different base URL to access the service.
+5.2 Event data
+All current event information captured within the QLDtraffic service that may be directly created by TMR, or
+imported from external sources such as other Queensland and interstate road agencies, is accessible via
+the following path: https://api.qldtraffic.qld.gov.au/v2/events
+Additionally, road events that are created, updated, archived, or reopened for the past one hour of system 
+time, is accessible via the following path: https://api.qldtraffic.qld.gov.au/v2/events/pastone-hour
+5.3 Traffic Web Camera data
+All live traffic web camera still images & metadata captured within the QLD traffic service is accessible via
+the following path: https://api.qldtraffic.qld.gov.au/v1/webcams
+5.4 High risk crash zone data
+The high risk crash zone data are previously existed but no longer does.
+A high risk crash zone may be described as follows:
+This road has experienced a higher crash occurrence in the past compared to other roads. Road users 
+are advised to take care and to drive to prevailing conditions.
+Department of Transport and Main Roads Version 1.10 Page 31 of 31
+The list of high risk crash zones presented on the QLD Traffic website is accessible via the following path: 
+https://api.qldtraffic.qld.gov.au/v1/highriskcrashzones
+5.5 Flood Camera data
+All live traffic web camera still images & metadata captured within the QLD traffic service is accessible via
+the following path https://api.qldtraffic.qld.gov.au/v1/floodcams
