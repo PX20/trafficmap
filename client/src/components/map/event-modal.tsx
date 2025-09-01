@@ -13,7 +13,7 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
     queryKey: ["/api/traffic/events"],
   });
 
-  const event = eventsData?.features?.find((f: any) => f.properties.id.toString() === eventId);
+  const event = (eventsData as any)?.features?.find((f: any) => f.properties.id.toString() === eventId);
 
   if (!event) return null;
 

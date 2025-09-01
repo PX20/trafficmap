@@ -73,8 +73,8 @@ export function TrafficMap({ filters, onEventSelect, onCameraSelect }: TrafficMa
     const newMarkers: L.Marker[] = [];
 
     // Add event markers
-    if (eventsData.features) {
-      eventsData.features.forEach((feature: any) => {
+    if ((eventsData as any)?.features) {
+      (eventsData as any).features.forEach((feature: any) => {
         const eventType = feature.properties.event_type?.toLowerCase();
         let shouldShow = false;
 
@@ -109,8 +109,8 @@ export function TrafficMap({ filters, onEventSelect, onCameraSelect }: TrafficMa
     }
 
     // Add camera markers
-    if (filters.cameras && camerasData.features) {
-      camerasData.features.forEach((feature: any) => {
+    if (filters.cameras && (camerasData as any)?.features) {
+      (camerasData as any).features.forEach((feature: any) => {
         if (feature.geometry?.coordinates) {
           const coords = feature.geometry.coordinates;
           const marker = L.marker([coords[1], coords[0]], {
@@ -137,7 +137,7 @@ export function TrafficMap({ filters, onEventSelect, onCameraSelect }: TrafficMa
       'special event': '#f97316',
       'camera': '#3b82f6'
     };
-    return colors[eventType] || '#6b7280';
+    return colors[eventType as keyof typeof colors] || '#6b7280';
   };
 
   const createCustomMarker = (color: string) => {

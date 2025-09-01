@@ -53,6 +53,12 @@ export class MemStorage implements IStorage {
       ...event,
       id,
       lastUpdated: new Date(),
+      description: event.description || null,
+      eventSubtype: event.eventSubtype || null,
+      advice: event.advice || null,
+      information: event.information || null,
+      webLink: event.webLink || null,
+      alertMessage: event.alertMessage || null,
     };
     this.trafficEvents.set(id, trafficEvent);
     return trafficEvent;
@@ -81,6 +87,8 @@ export class MemStorage implements IStorage {
       ...camera,
       id,
       lastUpdated: new Date(),
+      location: camera.location || null,
+      imageUrl: camera.imageUrl || null,
     };
     this.trafficCameras.set(id, trafficCamera);
     return trafficCamera;

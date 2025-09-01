@@ -25,21 +25,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const event = {
             id: feature.properties.id.toString(),
             eventType: feature.properties.event_type,
-            eventSubtype: feature.properties.event_subtype,
+            eventSubtype: feature.properties.event_subtype || null,
             title: feature.properties.description || feature.properties.event_type,
-            description: feature.properties.description,
+            description: feature.properties.description || null,
             location: feature.properties.road_summary?.road_name || 'Unknown location',
             impact: feature.properties.event_priority?.toLowerCase() || 'unknown',
             priority: feature.properties.event_priority,
             status: feature.properties.status,
-            advice: feature.properties.advice,
-            information: feature.properties.information,
+            advice: feature.properties.advice || null,
+            information: feature.properties.information || null,
             geometry: feature.geometry,
             properties: feature.properties,
             nextInspection: feature.properties.next_inspection ? new Date(feature.properties.next_inspection) : null,
-            webLink: feature.properties.web_link,
+            webLink: feature.properties.web_link || null,
             areaAlert: feature.properties.area_alert || false,
-            alertMessage: feature.properties.alert_message,
+            alertMessage: feature.properties.alert_message || null,
           };
           
           await storage.updateTrafficEvent(event.id, event) || await storage.createTrafficEvent(event);
@@ -74,9 +74,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const camera = {
             id: feature.properties.id?.toString() || randomUUID(),
             name: feature.properties.name || 'Traffic Camera',
-            location: feature.properties.location || 'Unknown location',
+            location: feature.properties.location || null,
             status: feature.properties.status || 'active',
-            imageUrl: feature.properties.image_url,
+            imageUrl: feature.properties.image_url || null,
             geometry: feature.geometry,
             properties: feature.properties,
           };

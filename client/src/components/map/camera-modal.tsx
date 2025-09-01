@@ -11,7 +11,7 @@ export function CameraModal({ cameraId, onClose }: CameraModalProps) {
     queryKey: ["/api/traffic/cameras"],
   });
 
-  const camera = camerasData?.features?.find((f: any) => f.properties.id?.toString() === cameraId);
+  const camera = (camerasData as any)?.features?.find((f: any) => f.properties.id?.toString() === cameraId);
 
   if (!camera) return null;
 

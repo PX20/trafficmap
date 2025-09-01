@@ -22,18 +22,18 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
   
   const { data: events, refetch: refetchEvents } = useQuery({
     queryKey: ["/api/traffic/events"],
-    select: (data) => data.features || [],
+    select: (data: any) => data?.features || [],
   });
 
   const { data: cameras, refetch: refetchCameras } = useQuery({
     queryKey: ["/api/traffic/cameras"],
-    select: (data) => data.features || [],
+    select: (data: any) => data?.features || [],
   });
 
   const eventCounts = {
-    crashes: events?.filter(e => e.properties.event_type === "Crash").length || 0,
-    hazards: events?.filter(e => e.properties.event_type === "Hazard").length || 0,
-    restrictions: events?.filter(e => e.properties.event_type === "Roadworks" || e.properties.event_type === "Special event").length || 0,
+    crashes: events?.filter((e: any) => e.properties.event_type === "Crash").length || 0,
+    hazards: events?.filter((e: any) => e.properties.event_type === "Hazard").length || 0,
+    restrictions: events?.filter((e: any) => e.properties.event_type === "Roadworks" || e.properties.event_type === "Special event").length || 0,
     cameras: cameras?.length || 0,
   };
 
