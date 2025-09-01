@@ -92,37 +92,38 @@ export default function Feed() {
     ...(events || []).map((event: any) => ({ ...event, type: 'traffic' }))
   ];
 
-  // Deduplicate incidents based on unique identifiers
-  const deduplicatedIncidents = combinedIncidents.reduce((acc: any[], current: any) => {
+  // Deduplicate incidents using a Map for better performance and accuracy
+  const incidentMap = new Map();
+  
+  for (const incident of combinedIncidents) {
     // Generate a unique identifier for each incident
-    const getIncidentId = (incident: any) => {
-      if (incident.type === 'traffic') {
-        return incident.properties?.id || incident.properties?.event_id || `traffic-${incident.properties?.description}`;
-      }
-      if (incident.properties?.userReported) {
-        return `user-${incident.properties?.id || incident.properties?.createdAt}`;
-      }
-      return incident.properties?.Master_Incident_Number || incident.properties?.id || `incident-${incident.properties?.Response_Date}`;
-    };
-
-    const currentId = getIncidentId(current);
-    const existingIndex = acc.findIndex(item => getIncidentId(item) === currentId);
+    let incidentId: string;
     
-    if (existingIndex === -1) {
-      // New incident, add it
-      acc.push(current);
+    if (incident.type === 'traffic') {
+      incidentId = incident.properties?.id || incident.properties?.event_id || `traffic-${incident.properties?.description}-${incident.properties?.road_summary?.road_name}`;
+    } else if (incident.properties?.userReported) {
+      incidentId = `user-${incident.properties?.id || incident.properties?.createdAt}`;
     } else {
-      // Duplicate found, keep the more recent one
-      const existingTime = new Date(acc[existingIndex].properties?.Response_Date || acc[existingIndex].properties?.last_updated || acc[existingIndex].properties?.createdAt || 0);
-      const currentTime = new Date(current.properties?.Response_Date || current.properties?.last_updated || current.properties?.createdAt || 0);
-      
-      if (currentTime > existingTime) {
-        acc[existingIndex] = current;
-      }
+      // For emergency incidents, use Master_Incident_Number as primary identifier
+      incidentId = incident.properties?.Master_Incident_Number || incident.properties?.id || `incident-${incident.properties?.Response_Date}-${incident.properties?.Location}`;
     }
     
-    return acc;
-  }, []);
+    // Check if we already have this incident
+    if (incidentMap.has(incidentId)) {
+      // Keep the more recent one
+      const existing = incidentMap.get(incidentId);
+      const existingTime = new Date(existing.properties?.Response_Date || existing.properties?.last_updated || existing.properties?.createdAt || 0);
+      const currentTime = new Date(incident.properties?.Response_Date || incident.properties?.last_updated || incident.properties?.createdAt || 0);
+      
+      if (currentTime > existingTime) {
+        incidentMap.set(incidentId, incident);
+      }
+    } else {
+      incidentMap.set(incidentId, incident);
+    }
+  }
+  
+  const deduplicatedIncidents = Array.from(incidentMap.values());
 
   // Sort by most recent first
   const allIncidents = deduplicatedIncidents.sort((a, b) => {
