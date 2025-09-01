@@ -1,8 +1,14 @@
+import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+
 interface AppHeaderProps {
   onMenuToggle: () => void;
 }
 
 export function AppHeader({ onMenuToggle }: AppHeaderProps) {
+  const { user, isAuthenticated } = useAuth();
+
   return (
     <header className="absolute top-0 left-0 right-0 z-20 bg-card/95 backdrop-blur-sm border-b border-border">
       <div className="px-4 py-3 flex items-center justify-between">
@@ -18,12 +24,37 @@ export function AppHeader({ onMenuToggle }: AppHeaderProps) {
           </div>
         </div>
         
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-4">
           {/* Status Indicator */}
           <div className="flex items-center space-x-1 px-2 py-1 bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-300 rounded-full text-sm">
             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
             <span className="hidden md:block">Live</span>
           </div>
+          
+          {/* User Info and Logout */}
+          {isAuthenticated && user && (
+            <div className="flex items-center space-x-3">
+              <div className="hidden md:flex items-center space-x-2">
+                <Avatar className="w-8 h-8">
+                  <AvatarImage src={user.profileImageUrl || undefined} alt={user.firstName || 'User'} />
+                  <AvatarFallback>
+                    {user.firstName ? user.firstName[0].toUpperCase() : user.email ? user.email[0].toUpperCase() : 'U'}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="text-sm text-foreground">
+                  {user.firstName || user.email}
+                </span>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => window.location.href = '/api/logout'}
+                data-testid="button-logout"
+              >
+                Sign Out
+              </Button>
+            </div>
+          )}
           
           {/* Menu Button */}
           <button 
