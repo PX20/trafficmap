@@ -5,7 +5,9 @@ import { AppHeader } from "@/components/map/app-header";
 import { MapLegend } from "@/components/map/map-legend";
 import { EventModal } from "@/components/map/event-modal";
 import { CameraModal } from "@/components/map/camera-modal";
+import { IncidentReportForm } from "@/components/incident-report-form";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Button } from "@/components/ui/button";
 
 export interface FilterState {
   crashes: boolean;
@@ -23,6 +25,7 @@ export default function Home() {
   const [sidebarOpen, setSidebarOpen] = useState(!isMobile);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [selectedCameraId, setSelectedCameraId] = useState<string | null>(null);
+  const [reportFormOpen, setReportFormOpen] = useState(false);
   const [filters, setFilters] = useState<FilterState>({
     crashes: true,
     hazards: true,
@@ -65,6 +68,19 @@ export default function Home() {
 
       {!isMobile && <MapLegend sidebarOpen={sidebarOpen} />}
 
+      {/* Report Incident Button */}
+      <Button
+        onClick={() => setReportFormOpen(true)}
+        className="fixed bottom-6 left-6 z-30 shadow-lg"
+        size="lg"
+        data-testid="button-report-incident"
+      >
+        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        Report Incident
+      </Button>
+
       {/* Mobile FAB for filters */}
       {isMobile && !sidebarOpen && (
         <button
@@ -86,6 +102,11 @@ export default function Home() {
       <CameraModal 
         cameraId={selectedCameraId}
         onClose={() => setSelectedCameraId(null)}
+      />
+      
+      <IncidentReportForm 
+        isOpen={reportFormOpen}
+        onClose={() => setReportFormOpen(false)}
       />
     </div>
   );

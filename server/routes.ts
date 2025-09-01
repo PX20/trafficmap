@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
+import { insertIncidentSchema } from "@shared/schema";
 import { z } from "zod";
 
 const API_BASE_URL = "https://api.qldtraffic.qld.gov.au";
@@ -188,6 +189,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching cached incidents:", error);
       res.status(500).json({ error: "Failed to fetch incidents" });
+    }
+  });
+
+  // Report new incident (authenticated users only)
+  app.post("/api/incidents/report", isAuthenticated, async (req: any, res) => {
+    try {
+      const reportData = z.object({
+        incidentType: z.string().min(1),
+        title: z.string().min(1),
+        description: z.string().optional(),
+        location: z.string().min(1),
+        priority: z.enum(["High", "Medium", "Low"]).optional(),
+      }).parse(req.body);
+
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      
+      const incident = {
+        incidentType: reportData.incidentType,
+        title: reportData.title,
+        description: reportData.description || null,
+        location: reportData.location,
+        status: "Reported",
+        priority: reportData.priority || null,
+        agency: "User Report",
+        publishedDate: new Date(),
+        geometry: null,
+        properties: {
+          reportedBy: user?.email || "Anonymous",
+          userReported: true,
+        },
+      };
+      
+      const newIncident = await storage.createIncident(incident);
+      res.json(newIncident);
+    } catch (error) {
+      console.error("Error creating incident report:", error);
+      res.status(500).json({ 
+        error: "Failed to submit incident report", 
+        message: error instanceof Error ? error.message : "Unknown error" 
+      });
     }
   });
 
