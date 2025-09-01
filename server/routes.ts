@@ -170,13 +170,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/incidents", async (req, res) => {
     try {
       const { suburb } = req.query;
-      const response = await fetch("https://services1.arcgis.com/vkTwD8kHw2woKBqV/arcgis/rest/services/ESCAD_Current_Incidents_Public/FeatureServer/0/query?f=geojson&where=1%3D1&outFields=*");
       
+      // Set timeout for external API call to prevent hanging
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      
+      const response = await fetch(
+        "https://services1.arcgis.com/vkTwD8kHw2woKBqV/arcgis/rest/services/ESCAD_Current_Incidents_Public/FeatureServer/0/query?f=geojson&where=1%3D1&outFields=*",
+        { signal: controller.signal }
+      );
+      
+      clearTimeout(timeoutId);
+      
+      let data;
       if (!response.ok) {
-        throw new Error(`ArcGIS API error: ${response.status} ${response.statusText}`);
+        console.warn(`ArcGIS API error: ${response.status} ${response.statusText}, falling back to user incidents only`);
+        data = { features: [] };
+      } else {
+        data = await response.json();
       }
-      
-      let data = await response.json();
       
       // Get user-reported incidents from database
       const userIncidents = await storage.getIncidents();
@@ -243,10 +255,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(data);
     } catch (error) {
       console.error("Error fetching incidents:", error);
-      res.status(500).json({ 
-        error: "Failed to fetch incidents", 
-        message: error instanceof Error ? error.message : "Unknown error" 
-      });
+      
+      // If external API fails, still return user incidents
+      try {
+        const userIncidents = await storage.getIncidents();
+        const userIncidentFeatures = userIncidents.map(incident => ({
+          type: "Feature",
+          properties: {
+            ...(incident.properties || {}),
+            userReported: true,
+            incidentType: incident.incidentType,
+            description: incident.description,
+            locationDescription: incident.location,
+            createdAt: incident.lastUpdated,
+          },
+          geometry: incident.geometry || {
+            type: "Point",
+            coordinates: [153.0251, -27.4698] // Default to Brisbane
+          }
+        }));
+        
+        const fallbackData = { 
+          type: "FeatureCollection",
+          features: userIncidentFeatures 
+        };
+        
+        res.json(fallbackData);
+      } catch (fallbackError) {
+        console.error("Error in fallback incidents:", fallbackError);
+        res.status(500).json({ 
+          error: "Failed to fetch incidents", 
+          message: error instanceof Error ? error.message : "Unknown error" 
+        });
+      }
     }
   });
 
