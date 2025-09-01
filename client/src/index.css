@@ -104,16 +104,18 @@
 
 /* Leaflet popup styling */
 .leaflet-popup-content-wrapper {
-  border-radius: var(--radius);
-  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.2), 0 4px 6px -2px rgb(0 0 0 / 0.1);
+  border-radius: var(--radius) !important;
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.3), 0 4px 6px -2px rgb(0 0 0 / 0.2) !important;
   background: hsl(var(--card)) !important;
-  border: 1px solid hsl(var(--border));
+  background-color: hsl(var(--card)) !important;
+  border: 2px solid hsl(var(--border)) !important;
   opacity: 1 !important;
 }
 
 .leaflet-popup-tip {
   background: hsl(var(--card)) !important;
-  border-color: hsl(var(--border));
+  background-color: hsl(var(--card)) !important;
+  border-color: hsl(var(--border)) !important;
   opacity: 1 !important;
 }
 
@@ -128,25 +130,65 @@
   z-index: 1000 !important;
 }
 
+.leaflet-popup-content {
+  background: hsl(var(--card)) !important;
+  color: hsl(var(--foreground)) !important;
+}
+
+.leaflet-popup-content * {
+  color: hsl(var(--foreground)) !important;
+}
+
 .leaflet-popup-content p {
   color: hsl(var(--foreground)) !important;
   margin: 0;
 }
 
-.leaflet-popup-content .text-muted-foreground {
+.leaflet-popup-content h4 {
+  color: hsl(var(--foreground)) !important;
+  margin: 0 0 8px 0;
+}
+
+.leaflet-popup-content div {
+  color: hsl(var(--foreground)) !important;
+}
+
+.leaflet-popup-content span {
+  color: hsl(var(--foreground)) !important;
+}
+
+.leaflet-popup-content .text-muted-foreground,
+.leaflet-popup-content span[class*="text-muted"] {
   color: hsl(var(--muted-foreground)) !important;
 }
 
 .leaflet-popup-content button {
   background: hsl(var(--primary)) !important;
+  background-color: hsl(var(--primary)) !important;
   color: hsl(var(--primary-foreground)) !important;
-  border: none;
+  border: none !important;
   border-radius: var(--radius);
   transition: background-color 0.2s;
+  padding: 8px 16px !important;
+  font-weight: 500 !important;
 }
 
 .leaflet-popup-content button:hover {
   background: hsl(var(--primary) / 0.9) !important;
+  background-color: hsl(var(--primary) / 0.9) !important;
+}
+
+/* Force full opacity and solid backgrounds */
+.leaflet-popup-content-wrapper,
+.leaflet-popup-content {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  background-color: white !important;
+}
+
+.dark .leaflet-popup-content-wrapper,
+.dark .leaflet-popup-content {
+  background-color: hsl(222.2, 84%, 4.9%) !important;
 }
 
 .leaflet-control-container .leaflet-top.leaflet-right {

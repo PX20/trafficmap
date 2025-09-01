@@ -63,7 +63,6 @@ export function TrafficMap({ filters, onEventSelect, onCameraSelect }: TrafficMa
   // Update markers when data or filters change
   useEffect(() => {
     if (!mapInstanceRef.current) return;
-    console.log('Map data update:', { eventsData, camerasData, filters });
 
     // Clear existing markers
     markersRef.current.forEach(marker => {
@@ -75,9 +74,7 @@ export function TrafficMap({ filters, onEventSelect, onCameraSelect }: TrafficMa
 
     // Add event markers
     if ((eventsData as any)?.features) {
-      console.log('Processing events:', (eventsData as any).features.length, 'events');
-      (eventsData as any).features.forEach((feature: any, index: number) => {
-        console.log(`Event ${index}:`, feature.properties?.event_type, feature.geometry);
+      (eventsData as any).features.forEach((feature: any) => {
         const eventType = feature.properties.event_type?.toLowerCase();
         let shouldShow = false;
 
