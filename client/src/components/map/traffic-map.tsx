@@ -251,15 +251,30 @@ export function TrafficMap({ filters, onEventSelect, onCameraSelect }: TrafficMa
   };
 
   const createIncidentPopup = (properties: any) => {
+    const vehiclesTotal = (properties.VehiclesAssigned || 0) + (properties.VehiclesOnRoute || 0) + (properties.VehiclesOnScene || 0);
+    
+    // Determine status color based on status
+    const status = properties.CurrentStatus?.toLowerCase();
+    let statusColor = 'text-gray-600';
+    if (status === 'going' || status === 'active') statusColor = 'text-red-600';
+    else if (status === 'patrolled' || status === 'monitoring') statusColor = 'text-yellow-600';
+    else if (status === 'completed' || status === 'closed') statusColor = 'text-green-600';
+    
     return `
       <div class="p-2 min-w-[250px]">
-        <h4 class="font-semibold text-foreground mb-2">${properties.title || properties.incidenttype || 'Emergency Incident'}</h4>
-        <p class="text-sm text-muted-foreground mb-2">${properties.description || properties.details || ''}</p>
+        <h4 class="font-semibold text-foreground mb-2">${properties.GroupedType || 'Emergency Incident'}</h4>
+        <p class="text-sm text-muted-foreground mb-2">Incident #${properties.Master_Incident_Number || 'Unknown'}</p>
         <div class="text-xs text-muted-foreground space-y-1">
-          <div><span class="font-medium">Type:</span> ${properties.incidenttype || 'Incident'}</div>
-          <div><span class="font-medium">Location:</span> ${properties.location || properties.suburb || 'Unknown'}</div>
-          <div><span class="font-medium">Status:</span> ${properties.status || 'Active'}</div>
-          ${properties.agency ? `<div><span class="font-medium">Agency:</span> ${properties.agency}</div>` : ''}
+          <div><span class="font-medium">Location:</span> ${properties.Location || 'Unknown'}</div>
+          <div><span class="font-medium">Locality:</span> ${properties.Locality || 'Unknown'}</div>
+          <div><span class="font-medium">Status:</span> 
+            <span class="${statusColor} font-medium">
+              ${properties.CurrentStatus || 'Active'}
+            </span>
+          </div>
+          <div><span class="font-medium">Region:</span> ${properties.Jurisdiction || 'Unknown'}</div>
+          ${vehiclesTotal > 0 ? `<div><span class="font-medium">Vehicles:</span> ${vehiclesTotal} responding</div>` : ''}
+          ${properties.Response_Date ? `<div><span class="font-medium">Reported:</span> ${new Date(properties.Response_Date).toLocaleString()}</div>` : ''}
         </div>
       </div>
     `;
@@ -270,6 +285,14 @@ export function TrafficMap({ filters, onEventSelect, onCameraSelect }: TrafficMa
     if (p === 'high' || p === 'red alert') return 'text-red-600';
     if (p === 'medium') return 'text-yellow-600';
     return 'text-green-600';
+  };
+
+  const getStatusColor = (status: string) => {
+    const s = status?.toLowerCase();
+    if (s === 'going' || s === 'active') return 'text-red-600';
+    if (s === 'patrolled' || s === 'monitoring') return 'text-yellow-600';
+    if (s === 'completed' || s === 'closed') return 'text-green-600';
+    return 'text-gray-600';
   };
 
   // Setup global functions for popup interactions

@@ -133,20 +133,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         for (const feature of data.features) {
           const props = feature.properties;
           const incident = {
-            id: props.objectid?.toString() || props.OBJECTID?.toString() || randomUUID(),
-            incidentType: props.incidenttype || props.incident_type || props.category || 'Incident',
-            title: props.title || props.headline || props.description || 'Emergency Incident',
-            description: props.description || props.details || null,
-            location: props.location || props.suburb || props.address || null,
-            status: props.status || props.current_status || 'Active',
-            priority: props.priority || props.severity || null,
-            agency: props.agency || props.responsible_agency || null,
+            id: props.OBJECTID?.toString() || randomUUID(),
+            incidentType: props.GroupedType || 'Incident',
+            title: `${props.GroupedType || 'Emergency Incident'} - ${props.Locality || 'Queensland'}`,
+            description: props.Master_Incident_Number ? `Incident #${props.Master_Incident_Number}` : null,
+            location: props.Location || props.Locality || null,
+            status: props.CurrentStatus || 'Active',
+            priority: null,
+            agency: props.Jurisdiction || null,
             geometry: feature.geometry,
             properties: feature.properties,
-            publishedDate: props.published_date || props.created_date ? new Date(props.published_date || props.created_date) : null,
+            publishedDate: props.Response_Date ? new Date(props.Response_Date) : null,
           };
           
-          await storage.updateIncident(incident.id, incident) || await storage.createIncident(incident);
+          try {
+            await storage.updateIncident(incident.id, incident) || await storage.createIncident(incident);
+          } catch (error) {
+            console.warn('Failed to store incident:', incident.id, error);
+          }
         }
       }
       
