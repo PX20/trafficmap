@@ -14,7 +14,7 @@ import {
   type InsertIncident 
 } from "@shared/schema";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -31,6 +31,7 @@ export interface IStorage {
   updateTrafficCamera(id: string, camera: Partial<TrafficCamera>): Promise<TrafficCamera | undefined>;
   deleteTrafficCamera(id: string): Promise<boolean>;
   getIncidents(): Promise<Incident[]>;
+  getRecentIncidents(limit: number): Promise<Incident[]>;
   createIncident(incident: InsertIncident): Promise<Incident>;
   updateIncident(id: string, incident: Partial<Incident>): Promise<Incident | undefined>;
   deleteIncident(id: string): Promise<boolean>;
@@ -130,6 +131,14 @@ export class DatabaseStorage implements IStorage {
 
   async getIncidents(): Promise<Incident[]> {
     return await db.select().from(incidents);
+  }
+
+  async getRecentIncidents(limit: number): Promise<Incident[]> {
+    return await db
+      .select()
+      .from(incidents)
+      .orderBy(desc(incidents.lastUpdated))
+      .limit(limit);
   }
 
   async createIncident(incident: InsertIncident): Promise<Incident> {

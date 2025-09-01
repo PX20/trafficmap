@@ -166,24 +166,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get cached incidents (fast endpoint)
+  // Get cached incidents (fast endpoint with pagination)
   app.get("/api/incidents", async (req, res) => {
     try {
-      const { suburb } = req.query;
+      const { suburb, limit = '50' } = req.query;
+      const maxLimit = parseInt(limit as string, 10);
       
-      // Get user-reported incidents from database
-      const userIncidents = await storage.getIncidents();
+      // Get recent incidents from database with a reasonable limit
+      const recentIncidents = await storage.getRecentIncidents(maxLimit);
       
-      // Transform user incidents to GeoJSON format
-      const userIncidentFeatures = userIncidents.map(incident => ({
+      // Transform incidents to GeoJSON format
+      let incidentFeatures = recentIncidents.map(incident => ({
         type: "Feature",
         properties: {
           ...(incident.properties || {}),
-          userReported: true,
           incidentType: incident.incidentType,
           description: incident.description,
           locationDescription: incident.location,
           createdAt: incident.lastUpdated,
+          userReported: incident.incidentType === 'Crime' || incident.incidentType === 'Suspicious' || !(incident.properties as any)?.Master_Incident_Number,
         },
         geometry: incident.geometry || {
           type: "Point",
@@ -191,26 +192,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }));
       
-      // Get cached emergency incidents (already stored from previous fetches)
-      const cachedIncidents = await storage.getIncidents();
-      const emergencyFeatures = cachedIncidents
-        .filter(incident => !(incident.properties as any)?.userReported)
-        .map(incident => ({
-          type: "Feature",
-          properties: incident.properties || {},
-          geometry: incident.geometry || {
-            type: "Point",
-            coordinates: [153.0251, -27.4698]
-          }
-        }));
-      
-      // Combine cached emergency incidents and user reports
-      const allFeatures = [...emergencyFeatures, ...userIncidentFeatures];
-      
       // Filter by suburb if provided
-      let filteredFeatures = allFeatures;
       if (suburb) {
-        filteredFeatures = allFeatures.filter((feature: any) => {
+        incidentFeatures = incidentFeatures.filter((feature: any) => {
           const locality = feature.properties?.Locality?.toLowerCase();
           const location = feature.properties?.Location?.toLowerCase();
           const locationDesc = feature.properties?.locationDescription?.toLowerCase();
@@ -223,8 +207,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const data = {
         type: "FeatureCollection",
-        features: filteredFeatures,
-        lastUpdated: new Date().toISOString()
+        features: incidentFeatures,
+        lastUpdated: new Date().toISOString(),
+        total: incidentFeatures.length
       };
       
       res.json(data);
