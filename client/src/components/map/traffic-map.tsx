@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { getTrafficEvents, getTrafficCameras } from "@/lib/traffic-api";
+import { getTrafficEvents, getTrafficCameras, getIncidents } from "@/lib/traffic-api";
 import type { FilterState } from "@/pages/home";
 
 // Fix Leaflet default marker icons
@@ -35,6 +35,12 @@ export function TrafficMap({ filters, onEventSelect, onCameraSelect }: TrafficMa
     refetchInterval: filters.autoRefresh ? 30000 : false,
   });
 
+  const { data: incidentsData, isLoading: incidentsLoading } = useQuery({
+    queryKey: ["/api/incidents"],
+    queryFn: getIncidents,
+    refetchInterval: filters.autoRefresh ? 60000 : false,
+  });
+
   // Initialize map
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return;
@@ -57,8 +63,8 @@ export function TrafficMap({ filters, onEventSelect, onCameraSelect }: TrafficMa
 
   // Update loading state
   useEffect(() => {
-    setIsLoading(eventsLoading || camerasLoading);
-  }, [eventsLoading, camerasLoading]);
+    setIsLoading(eventsLoading || camerasLoading || incidentsLoading);
+  }, [eventsLoading, camerasLoading, incidentsLoading]);
 
   // Update markers when data or filters change
   useEffect(() => {
@@ -153,8 +159,37 @@ export function TrafficMap({ filters, onEventSelect, onCameraSelect }: TrafficMa
       });
     }
 
+    // Add incident markers
+    if (filters.incidents && (incidentsData as any)?.features) {
+      (incidentsData as any).features.forEach((feature: any) => {
+        if (feature.geometry?.coordinates) {
+          let coords: [number, number] | null = null;
+          
+          // Handle different geometry types for incidents
+          if (feature.geometry.type === 'Point') {
+            coords = [feature.geometry.coordinates[1], feature.geometry.coordinates[0]];
+          } else if (feature.geometry.type === 'MultiPoint' && feature.geometry.coordinates?.[0]) {
+            const point = feature.geometry.coordinates[0];
+            coords = [point[1], point[0]];
+          }
+          
+          if (coords) {
+            const marker = L.marker(coords, {
+              icon: createCustomMarker(getMarkerColor('incident'))
+            });
+
+            const popupContent = createIncidentPopup(feature.properties);
+            marker.bindPopup(popupContent);
+
+            marker.addTo(mapInstanceRef.current!);
+            newMarkers.push(marker);
+          }
+        }
+      });
+    }
+
     markersRef.current = newMarkers;
-  }, [eventsData, camerasData, filters]);
+  }, [eventsData, camerasData, incidentsData, filters]);
 
   const getMarkerColor = (eventType: string) => {
     const colors = {
@@ -162,7 +197,8 @@ export function TrafficMap({ filters, onEventSelect, onCameraSelect }: TrafficMa
       'hazard': '#f59e0b',
       'roadworks': '#f97316',
       'special event': '#f97316',
-      'camera': '#3b82f6'
+      'camera': '#3b82f6',
+      'incident': '#dc2626'
     };
     return colors[eventType as keyof typeof colors] || '#6b7280';
   };
@@ -210,6 +246,21 @@ export function TrafficMap({ filters, onEventSelect, onCameraSelect }: TrafficMa
         <button onclick="window.showCameraFeed('${properties.id}')" class="w-full px-3 py-1 bg-primary text-primary-foreground rounded text-sm hover:bg-primary/90">
           View Live Feed
         </button>
+      </div>
+    `;
+  };
+
+  const createIncidentPopup = (properties: any) => {
+    return `
+      <div class="p-2 min-w-[250px]">
+        <h4 class="font-semibold text-foreground mb-2">${properties.title || properties.incidenttype || 'Emergency Incident'}</h4>
+        <p class="text-sm text-muted-foreground mb-2">${properties.description || properties.details || ''}</p>
+        <div class="text-xs text-muted-foreground space-y-1">
+          <div><span class="font-medium">Type:</span> ${properties.incidenttype || 'Incident'}</div>
+          <div><span class="font-medium">Location:</span> ${properties.location || properties.suburb || 'Unknown'}</div>
+          <div><span class="font-medium">Status:</span> ${properties.status || 'Active'}</div>
+          ${properties.agency ? `<div><span class="font-medium">Agency:</span> ${properties.agency}</div>` : ''}
+        </div>
       </div>
     `;
   };

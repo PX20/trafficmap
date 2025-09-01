@@ -41,6 +41,21 @@ export const trafficCameras = pgTable("traffic_cameras", {
   lastUpdated: timestamp("last_updated").notNull(),
 });
 
+export const incidents = pgTable("incidents", {
+  id: varchar("id").primaryKey(),
+  incidentType: text("incident_type").notNull(),
+  title: text("title").notNull(),
+  description: text("description"),
+  location: text("location"),
+  status: text("status").notNull(),
+  priority: text("priority"),
+  agency: text("agency"),
+  geometry: jsonb("geometry"),
+  properties: jsonb("properties"),
+  lastUpdated: timestamp("last_updated").notNull(),
+  publishedDate: timestamp("published_date"),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
@@ -56,9 +71,16 @@ export const insertTrafficCameraSchema = createInsertSchema(trafficCameras).omit
   lastUpdated: true,
 });
 
+export const insertIncidentSchema = createInsertSchema(incidents).omit({
+  id: true,
+  lastUpdated: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type TrafficEvent = typeof trafficEvents.$inferSelect;
 export type InsertTrafficEvent = z.infer<typeof insertTrafficEventSchema>;
 export type TrafficCamera = typeof trafficCameras.$inferSelect;
 export type InsertTrafficCamera = z.infer<typeof insertTrafficCameraSchema>;
+export type Incident = typeof incidents.$inferSelect;
+export type InsertIncident = z.infer<typeof insertIncidentSchema>;

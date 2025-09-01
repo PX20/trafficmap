@@ -117,6 +117,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get emergency incidents from ArcGIS Feature Server
+  app.get("/api/incidents", async (req, res) => {
+    try {
+      const response = await fetch("https://services1.arcgis.com/vkTwD8kHw2woKBqV/arcgis/rest/services/ESCAD_Current_Incidents_Public/FeatureServer/0/query?f=geojson&where=1%3D1&outFields=*");
+      
+      if (!response.ok) {
+        throw new Error(`ArcGIS API error: ${response.status} ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      
+      // Transform and store incidents in local storage for caching
+      if (data.features) {
+        for (const feature of data.features) {
+          const props = feature.properties;
+          const incident = {
+            id: props.objectid?.toString() || props.OBJECTID?.toString() || randomUUID(),
+            incidentType: props.incidenttype || props.incident_type || props.category || 'Incident',
+            title: props.title || props.headline || props.description || 'Emergency Incident',
+            description: props.description || props.details || null,
+            location: props.location || props.suburb || props.address || null,
+            status: props.status || props.current_status || 'Active',
+            priority: props.priority || props.severity || null,
+            agency: props.agency || props.responsible_agency || null,
+            geometry: feature.geometry,
+            properties: feature.properties,
+            publishedDate: props.published_date || props.created_date ? new Date(props.published_date || props.created_date) : null,
+          };
+          
+          await storage.updateIncident(incident.id, incident) || await storage.createIncident(incident);
+        }
+      }
+      
+      res.json(data);
+    } catch (error) {
+      console.error("Error fetching incidents:", error);
+      res.status(500).json({ 
+        error: "Failed to fetch incidents", 
+        message: error instanceof Error ? error.message : "Unknown error" 
+      });
+    }
+  });
+
+  // Get cached incidents from local storage
+  app.get("/api/cached/incidents", async (req, res) => {
+    try {
+      const incidents = await storage.getIncidents();
+      res.json(incidents);
+    } catch (error) {
+      console.error("Error fetching cached incidents:", error);
+      res.status(500).json({ error: "Failed to fetch incidents" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

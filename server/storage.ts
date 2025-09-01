@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type TrafficEvent, type TrafficCamera, type InsertTrafficEvent, type InsertTrafficCamera } from "@shared/schema";
+import { type User, type InsertUser, type TrafficEvent, type TrafficCamera, type InsertTrafficEvent, type InsertTrafficCamera, type Incident, type InsertIncident } from "@shared/schema";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -13,17 +13,23 @@ export interface IStorage {
   createTrafficCamera(camera: InsertTrafficCamera): Promise<TrafficCamera>;
   updateTrafficCamera(id: string, camera: Partial<TrafficCamera>): Promise<TrafficCamera | undefined>;
   deleteTrafficCamera(id: string): Promise<boolean>;
+  getIncidents(): Promise<Incident[]>;
+  createIncident(incident: InsertIncident): Promise<Incident>;
+  updateIncident(id: string, incident: Partial<Incident>): Promise<Incident | undefined>;
+  deleteIncident(id: string): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
   private users: Map<string, User>;
   private trafficEvents: Map<string, TrafficEvent>;
   private trafficCameras: Map<string, TrafficCamera>;
+  private incidents: Map<string, Incident>;
 
   constructor() {
     this.users = new Map();
     this.trafficEvents = new Map();
     this.trafficCameras = new Map();
+    this.incidents = new Map();
   }
 
   async getUser(id: string): Promise<User | undefined> {
@@ -105,6 +111,39 @@ export class MemStorage implements IStorage {
 
   async deleteTrafficCamera(id: string): Promise<boolean> {
     return this.trafficCameras.delete(id);
+  }
+
+  async getIncidents(): Promise<Incident[]> {
+    return Array.from(this.incidents.values());
+  }
+
+  async createIncident(incident: InsertIncident): Promise<Incident> {
+    const id = randomUUID();
+    const newIncident: Incident = {
+      ...incident,
+      id,
+      lastUpdated: new Date(),
+      description: incident.description || null,
+      location: incident.location || null,
+      priority: incident.priority || null,
+      agency: incident.agency || null,
+      publishedDate: incident.publishedDate || null,
+    };
+    this.incidents.set(id, newIncident);
+    return newIncident;
+  }
+
+  async updateIncident(id: string, incident: Partial<Incident>): Promise<Incident | undefined> {
+    const existing = this.incidents.get(id);
+    if (!existing) return undefined;
+    
+    const updated = { ...existing, ...incident, lastUpdated: new Date() };
+    this.incidents.set(id, updated);
+    return updated;
+  }
+
+  async deleteIncident(id: string): Promise<boolean> {
+    return this.incidents.delete(id);
   }
 }
 

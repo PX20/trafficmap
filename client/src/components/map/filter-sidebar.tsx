@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 import type { FilterState } from "@/pages/home";
-import { getTrafficEvents, getTrafficCameras } from "@/lib/traffic-api";
+import { getTrafficEvents, getTrafficCameras, getIncidents } from "@/lib/traffic-api";
 
 interface FilterSidebarProps {
   isOpen: boolean;
@@ -30,16 +30,23 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
     select: (data: any) => data?.features || [],
   });
 
+  const { data: incidents, refetch: refetchIncidents } = useQuery({
+    queryKey: ["/api/incidents"],
+    queryFn: getIncidents,
+    select: (data: any) => data?.features || [],
+  });
+
   const eventCounts = {
     crashes: events?.filter((e: any) => e.properties.event_type === "Crash").length || 0,
     hazards: events?.filter((e: any) => e.properties.event_type === "Hazard").length || 0,
     restrictions: events?.filter((e: any) => e.properties.event_type === "Roadworks" || e.properties.event_type === "Special event").length || 0,
     cameras: cameras?.length || 0,
+    incidents: incidents?.length || 0,
   };
 
   const handleRefresh = async () => {
     try {
-      await Promise.all([refetchEvents(), refetchCameras()]);
+      await Promise.all([refetchEvents(), refetchCameras(), refetchIncidents()]);
       toast({
         title: "Data updated",
         description: "Traffic data has been refreshed successfully.",
@@ -134,6 +141,22 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
                 </Label>
                 <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full" data-testid="text-count-restrictions">
                   {eventCounts.restrictions}
+                </span>
+              </div>
+              
+              <div className="flex items-center space-x-3">
+                <Checkbox 
+                  id="filter-incidents"
+                  checked={filters.incidents}
+                  onCheckedChange={(checked) => onFilterChange('incidents', !!checked)}
+                  data-testid="checkbox-filter-incidents"
+                />
+                <div className="w-4 h-4 bg-red-600 rounded-full"></div>
+                <Label htmlFor="filter-incidents" className="text-sm text-foreground flex-1">
+                  Emergency Incidents
+                </Label>
+                <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full" data-testid="text-count-incidents">
+                  {eventCounts.incidents}
                 </span>
               </div>
               

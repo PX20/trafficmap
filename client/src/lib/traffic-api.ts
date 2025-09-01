@@ -13,3 +13,11 @@ export async function getTrafficCameras() {
   }
   return response.json();
 }
+
+export async function getIncidents() {
+  const response = await fetch('/api/incidents');
+  if (!response.ok) {
+    throw new Error(`Failed to fetch incidents: ${response.statusText}`);
+  }
+  return response.json();
+}
