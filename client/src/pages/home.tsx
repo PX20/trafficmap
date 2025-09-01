@@ -40,7 +40,7 @@ export default function Home() {
     emergency: true,
     impactLevel: 'all',
     timeRange: 'now',
-    autoRefresh: true,
+    autoRefresh: false,
   });
 
   const handleFilterChange = (key: keyof FilterState, value: boolean | string) => {
