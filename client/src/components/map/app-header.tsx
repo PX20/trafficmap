@@ -1,6 +1,8 @@
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Link, useLocation } from "wouter";
+import { Map, List } from "lucide-react";
 
 interface AppHeaderProps {
   onMenuToggle: () => void;
@@ -8,6 +10,7 @@ interface AppHeaderProps {
 
 export function AppHeader({ onMenuToggle }: AppHeaderProps) {
   const { user, isAuthenticated } = useAuth();
+  const [location] = useLocation();
 
   return (
     <header className="absolute top-0 left-0 right-0 z-20 bg-card/95 backdrop-blur-sm border-b border-border">
@@ -25,6 +28,32 @@ export function AppHeader({ onMenuToggle }: AppHeaderProps) {
         </div>
         
         <div className="flex items-center space-x-4">
+          {/* View Toggle */}
+          <div className="flex items-center bg-muted p-1 rounded-lg">
+            <Link href="/">
+              <Button
+                variant={location === "/" ? "default" : "ghost"}
+                size="sm"
+                className="h-8"
+                data-testid="button-map-view"
+              >
+                <Map className="w-4 h-4 mr-1" />
+                Map
+              </Button>
+            </Link>
+            <Link href="/feed">
+              <Button
+                variant={location === "/feed" ? "default" : "ghost"}
+                size="sm"
+                className="h-8"
+                data-testid="button-feed-view"
+              >
+                <List className="w-4 h-4 mr-1" />
+                Feed
+              </Button>
+            </Link>
+          </div>
+          
           {/* Status Indicator */}
           <div className="flex items-center space-x-1 px-2 py-1 bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-300 rounded-full text-sm">
             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>

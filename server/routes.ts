@@ -24,9 +24,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update user's home suburb
+  app.patch('/api/user/suburb', isAuthenticated, async (req: any, res) => {
+    try {
+      const { homeSuburb } = z.object({
+        homeSuburb: z.string().min(1),
+      }).parse(req.body);
+
+      const userId = req.user.claims.sub;
+      const updatedUser = await storage.updateUserSuburb(userId, homeSuburb);
+      
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Error updating user suburb:", error);
+      res.status(500).json({ message: "Failed to update suburb" });
+    }
+  });
+
   // Get traffic events from QLD Traffic API
   app.get("/api/traffic/events", async (req, res) => {
     try {
+      const { suburb } = req.query;
       const apiKey = process.env.QLD_TRAFFIC_API_KEY || PUBLIC_API_KEY;
       const response = await fetch(`${API_BASE_URL}/v2/events?apikey=${apiKey}`);
       
@@ -34,7 +56,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         throw new Error(`QLD Traffic API error: ${response.status} ${response.statusText}`);
       }
       
-      const data = await response.json();
+      let data = await response.json();
+      
+      // Filter by suburb if provided
+      if (suburb && data.features) {
+        data.features = data.features.filter((feature: any) => {
+          const locality = feature.properties?.road_summary?.locality?.toLowerCase();
+          const roadName = feature.properties?.road_summary?.road_name?.toLowerCase();
+          const searchSuburb = (suburb as string).toLowerCase();
+          return locality?.includes(searchSuburb) || roadName?.includes(searchSuburb);
+        });
+      }
       
       // Transform and store events in local storage for caching
       if (data.features) {
@@ -137,13 +169,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get emergency incidents from ArcGIS Feature Server
   app.get("/api/incidents", async (req, res) => {
     try {
+      const { suburb } = req.query;
       const response = await fetch("https://services1.arcgis.com/vkTwD8kHw2woKBqV/arcgis/rest/services/ESCAD_Current_Incidents_Public/FeatureServer/0/query?f=geojson&where=1%3D1&outFields=*");
       
       if (!response.ok) {
         throw new Error(`ArcGIS API error: ${response.status} ${response.statusText}`);
       }
       
-      const data = await response.json();
+      let data = await response.json();
+      
+      // Get user-reported incidents from database
+      const userIncidents = await storage.getIncidents();
+      
+      // Transform user incidents to GeoJSON format
+      const userIncidentFeatures = userIncidents.map(incident => ({
+        type: "Feature",
+        properties: {
+          ...(incident.properties || {}),
+          userReported: true,
+          incidentType: incident.incidentType,
+          description: incident.description,
+          locationDescription: incident.location,
+          createdAt: incident.lastUpdated,
+        },
+        geometry: incident.geometry || {
+          type: "Point",
+          coordinates: [153.0251, -27.4698] // Default to Brisbane
+        }
+      }));
+      
+      // Combine official and user-reported incidents
+      data.features = [...(data.features || []), ...userIncidentFeatures];
+      
+      // Filter by suburb if provided
+      if (suburb && data.features) {
+        data.features = data.features.filter((feature: any) => {
+          const locality = feature.properties?.Locality?.toLowerCase();
+          const location = feature.properties?.Location?.toLowerCase();
+          const locationDesc = feature.properties?.locationDescription?.toLowerCase();
+          const searchSuburb = (suburb as string).toLowerCase();
+          return locality?.includes(searchSuburb) || 
+                 location?.includes(searchSuburb) || 
+                 locationDesc?.includes(searchSuburb);
+        });
+      }
       
       // Transform and store incidents in local storage for caching
       if (data.features) {
