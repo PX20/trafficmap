@@ -430,6 +430,234 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Enhanced user profile routes
+  app.put('/api/user/profile', isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const profileData = req.body;
+      
+      const updatedUser = await storage.updateUserProfile(userId, profileData);
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Error updating user profile:", error);
+      res.status(500).json({ message: "Failed to update profile" });
+    }
+  });
+
+  app.get('/api/users/suburb/:suburb', async (req, res) => {
+    try {
+      const { suburb } = req.params;
+      const users = await storage.getUsersBySuburb(suburb);
+      res.json(users);
+    } catch (error) {
+      console.error("Error fetching users by suburb:", error);
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
+  // Comment voting routes
+  app.post('/api/comments/:commentId/vote', isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const { commentId } = req.params;
+      const { voteType } = req.body;
+      
+      if (!['helpful', 'not_helpful'].includes(voteType)) {
+        return res.status(400).json({ message: "Invalid vote type" });
+      }
+      
+      const vote = await storage.voteOnComment({
+        userId,
+        commentId,
+        voteType
+      });
+      
+      res.json(vote);
+    } catch (error) {
+      console.error("Error voting on comment:", error);
+      res.status(500).json({ message: "Failed to vote on comment" });
+    }
+  });
+
+  app.get('/api/comments/:commentId/user-vote', isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const { commentId } = req.params;
+      
+      const vote = await storage.getUserVoteOnComment(userId, commentId);
+      res.json(vote || null);
+    } catch (error) {
+      console.error("Error fetching user vote:", error);
+      res.status(500).json({ message: "Failed to fetch vote" });
+    }
+  });
+
+  // Neighborhood group routes
+  app.get('/api/neighborhood-groups', async (req, res) => {
+    try {
+      const { suburb } = req.query;
+      
+      let groups;
+      if (suburb) {
+        groups = await storage.getGroupsBySuburb(suburb as string);
+      } else {
+        groups = await storage.getNeighborhoodGroups();
+      }
+      
+      res.json(groups);
+    } catch (error) {
+      console.error("Error fetching neighborhood groups:", error);
+      res.status(500).json({ message: "Failed to fetch groups" });
+    }
+  });
+
+  app.post('/api/neighborhood-groups', isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const groupData = {
+        ...req.body,
+        createdBy: userId
+      };
+      
+      const group = await storage.createNeighborhoodGroup(groupData);
+      
+      // Auto-join the creator to the group
+      await storage.joinNeighborhoodGroup({
+        userId,
+        groupId: group.id,
+        role: 'admin'
+      });
+      
+      res.json(group);
+    } catch (error) {
+      console.error("Error creating neighborhood group:", error);
+      res.status(500).json({ message: "Failed to create group" });
+    }
+  });
+
+  app.post('/api/neighborhood-groups/:groupId/join', isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const { groupId } = req.params;
+      
+      const membership = await storage.joinNeighborhoodGroup({
+        userId,
+        groupId,
+        role: 'member'
+      });
+      
+      res.json(membership);
+    } catch (error) {
+      console.error("Error joining neighborhood group:", error);
+      res.status(500).json({ message: "Failed to join group" });
+    }
+  });
+
+  app.delete('/api/neighborhood-groups/:groupId/leave', isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const { groupId } = req.params;
+      
+      const success = await storage.leaveNeighborhoodGroup(userId, groupId);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Membership not found" });
+      }
+      
+      res.json({ success });
+    } catch (error) {
+      console.error("Error leaving neighborhood group:", error);
+      res.status(500).json({ message: "Failed to leave group" });
+    }
+  });
+
+  // Emergency contact routes
+  app.get('/api/emergency-contacts', isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const contacts = await storage.getEmergencyContacts(userId);
+      res.json(contacts);
+    } catch (error) {
+      console.error("Error fetching emergency contacts:", error);
+      res.status(500).json({ message: "Failed to fetch contacts" });
+    }
+  });
+
+  app.post('/api/emergency-contacts', isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const contactData = {
+        ...req.body,
+        userId
+      };
+      
+      const contact = await storage.createEmergencyContact(contactData);
+      res.json(contact);
+    } catch (error) {
+      console.error("Error creating emergency contact:", error);
+      res.status(500).json({ message: "Failed to create contact" });
+    }
+  });
+
+  app.delete('/api/emergency-contacts/:contactId', isAuthenticated, async (req, res) => {
+    try {
+      const { contactId } = req.params;
+      const success = await storage.deleteEmergencyContact(contactId);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Contact not found" });
+      }
+      
+      res.json({ success });
+    } catch (error) {
+      console.error("Error deleting emergency contact:", error);
+      res.status(500).json({ message: "Failed to delete contact" });
+    }
+  });
+
+  // Safety check-in routes
+  app.post('/api/safety-checkins', isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const checkInData = {
+        ...req.body,
+        userId
+      };
+      
+      const checkIn = await storage.createSafetyCheckIn(checkInData);
+      res.json(checkIn);
+    } catch (error) {
+      console.error("Error creating safety check-in:", error);
+      res.status(500).json({ message: "Failed to create check-in" });
+    }
+  });
+
+  app.get('/api/safety-checkins/incident/:incidentId', async (req, res) => {
+    try {
+      const { incidentId } = req.params;
+      const checkIns = await storage.getSafetyCheckIns(incidentId);
+      res.json(checkIns);
+    } catch (error) {
+      console.error("Error fetching safety check-ins:", error);
+      res.status(500).json({ message: "Failed to fetch check-ins" });
+    }
+  });
+
+  app.get('/api/safety-checkins/user', isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const checkIns = await storage.getUserSafetyCheckIns(userId);
+      res.json(checkIns);
+    } catch (error) {
+      console.error("Error fetching user safety check-ins:", error);
+      res.status(500).json({ message: "Failed to fetch check-ins" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
