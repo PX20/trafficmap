@@ -14,7 +14,7 @@ import { Link } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { IncidentDetailModal } from "@/components/incident-detail-modal";
 import { AppHeader } from "@/components/map/app-header";
-import { filterLocationsByProximity, extractCoordinatesFromGeometry } from "@/lib/location-utils";
+import { findRegionBySuburb, getRegionalSuburbs } from "@/lib/regions";
 import { 
   MapPin, 
   Clock, 
@@ -84,16 +84,12 @@ export default function Feed() {
   };
 
   const { data: incidents, isLoading: incidentsLoading, data: rawIncidentData } = useQuery({
-    queryKey: ["/api/incidents", selectedSuburb],
+    queryKey: ["/api/incidents"],
     queryFn: async () => {
-      const url = selectedSuburb 
-        ? `/api/incidents?suburb=${encodeURIComponent(selectedSuburb)}`
-        : "/api/incidents";
-      const response = await fetch(url);
+      const response = await fetch("/api/incidents");
       if (!response.ok) throw new Error('Failed to fetch incidents');
       return response.json();
     },
-    enabled: !!selectedSuburb,
     select: (data: any) => data?.features || [],
   });
 
@@ -120,16 +116,12 @@ export default function Feed() {
   });
 
   const { data: events, isLoading: eventsLoading } = useQuery({
-    queryKey: ["/api/traffic/events", selectedSuburb],
+    queryKey: ["/api/traffic/events"],
     queryFn: async () => {
-      const url = selectedSuburb 
-        ? `/api/traffic/events?suburb=${encodeURIComponent(selectedSuburb)}`
-        : "/api/traffic/events";
-      const response = await fetch(url);
+      const response = await fetch("/api/traffic/events");
       if (!response.ok) throw new Error('Failed to fetch traffic events');
       return response.json();
     },
-    enabled: !!selectedSuburb,
     select: (data: any) => data?.features || [],
   });
 
@@ -206,61 +198,65 @@ export default function Feed() {
   
   const deduplicatedIncidents = Array.from(incidentMap.values());
 
-  // Apply location filtering if enabled
+  // Apply regional filtering if location is selected
   let filteredIncidents = deduplicatedIncidents;
   
   // Check if location filtering should be applied
   const locationFilterEnabled = localStorage.getItem('locationFilter') === 'true';
-  const homeCoordinatesStr = localStorage.getItem('homeCoordinates');
-  const homeBoundingBoxStr = localStorage.getItem('homeBoundingBox');
   
-  if (locationFilterEnabled && homeCoordinatesStr && selectedSuburb) {
-    try {
-      const homeCoordinates = JSON.parse(homeCoordinatesStr);
-      const homeBoundingBox = homeBoundingBoxStr ? JSON.parse(homeBoundingBoxStr) : undefined;
+  if (locationFilterEnabled && selectedSuburb) {
+    // Find the region for the selected suburb
+    const region = findRegionBySuburb(selectedSuburb);
+    
+    if (region) {
+      console.log(`Filtering incidents for ${selectedSuburb} → ${region.name} region`);
+      console.log('Available incidents:', deduplicatedIncidents.slice(0, 3).map(i => ({
+        type: i.type,
+        location: i.type === 'traffic' 
+          ? (i.properties?.road_summary?.locality || i.properties?.road_summary?.road_name)
+          : (i.properties?.Locality || i.properties?.Location || i.properties?.locationDescription)
+      })));
       
-      console.log('=== Feed Location Filtering Debug ===');
-      console.log('Home coordinates:', homeCoordinates);
-      console.log('Home bounding box:', homeBoundingBox);
-      console.log('Total incidents before filtering:', deduplicatedIncidents.length);
+      // Filter incidents to those in the same region
+      filteredIncidents = deduplicatedIncidents.filter((incident: any) => {
+        // Extract location information from different incident types
+        let incidentLocation = '';
+        
+        if (incident.type === 'traffic') {
+          incidentLocation = incident.properties?.road_summary?.locality || 
+                            incident.properties?.road_summary?.road_name || '';
+        } else if (incident.properties?.userReported) {
+          incidentLocation = incident.properties?.locationDescription || 
+                            incident.properties?.Location || '';
+        } else {
+          // Emergency incidents
+          incidentLocation = incident.properties?.Locality || 
+                            incident.properties?.Location || '';
+        }
+        
+        // Check if the incident location matches any suburb in our region
+        if (incidentLocation) {
+          const locationLower = incidentLocation.toLowerCase();
+          return region.suburbs.some(suburb => {
+            const suburbLower = suburb.toLowerCase();
+            // More flexible matching - check for partial matches and common variations
+            return locationLower.includes(suburbLower) ||
+                   suburbLower.includes(locationLower) ||
+                   // Also check for road/highway names that cross the region
+                   locationLower.includes('sunshine') ||
+                   locationLower.includes('caloundra') ||
+                   locationLower.includes('maroochydore') ||
+                   locationLower.includes('nambour') ||
+                   locationLower.includes('noosa');
+          });
+        }
+        
+        return false;
+      });
       
-      // Convert incidents to format expected by filterLocationsByProximity
-      const incidentsWithCoords = deduplicatedIncidents
-        .map((incident: any) => {
-          const coords = extractCoordinatesFromGeometry(incident.geometry);
-          if (coords) {
-            console.log('Incident with coords:', {
-              title: incident.properties?.description || incident.properties?.incidentType || 'Unknown',
-              coords: coords,
-              type: incident.type
-            });
-          } else {
-            console.log('Incident without coords:', {
-              title: incident.properties?.description || incident.properties?.incidentType || 'Unknown',
-              geometry: incident.geometry,
-              type: incident.type
-            });
-          }
-          return coords ? { ...incident, coordinates: coords } : null;
-        })
-        .filter(Boolean);
-      
-      console.log('Incidents with coordinates:', incidentsWithCoords.length);
-      
-      // Apply proximity filtering (15km radius)
-      filteredIncidents = filterLocationsByProximity(
-        incidentsWithCoords,
-        homeCoordinates,
-        homeBoundingBox,
-        15 // 15km radius
-      );
-      
-      console.log('Incidents after filtering:', filteredIncidents.length);
-      console.log('=== End Debug ===');
-    } catch (error) {
-      console.error('Failed to apply location filtering:', error);
-      // Fall back to showing all incidents if filtering fails
-      filteredIncidents = deduplicatedIncidents;
+      console.log(`Filtered ${deduplicatedIncidents.length} → ${filteredIncidents.length} incidents for ${region.name} region`);
+    } else {
+      console.log(`No region found for ${selectedSuburb}, showing all incidents`);
     }
   }
 
@@ -498,7 +494,10 @@ export default function Feed() {
                 <h3 className="text-xl font-bold text-foreground mb-3">All Clear!</h3>
                 <p className="text-muted-foreground text-lg">
                   No recent incidents reported in {selectedSuburb}
-                  {locationFilterEnabled && homeCoordinatesStr ? ' (within 15km)' : ''}
+                  {locationFilterEnabled && selectedSuburb ? (() => {
+                    const region = findRegionBySuburb(selectedSuburb);
+                    return region ? ` (${region.name} region)` : '';
+                  })() : ''}
                 </p>
                 <p className="text-sm text-muted-foreground mt-2">
                   Check back later for updates
@@ -514,7 +513,10 @@ export default function Feed() {
                       </h2>
                       <p className="text-muted-foreground">
                         {selectedSuburb}
-                        {locationFilterEnabled && homeCoordinatesStr ? ' (within 15km)' : ''} • {allIncidents.length} active incidents
+                        {locationFilterEnabled && selectedSuburb ? (() => {
+                          const region = findRegionBySuburb(selectedSuburb);
+                          return region ? ` (${region.name} region)` : '';
+                        })() : ''} • {allIncidents.length} active incidents
                       </p>
                     </div>
                     <div className="bg-background rounded-full p-3">

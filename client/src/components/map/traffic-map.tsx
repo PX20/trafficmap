@@ -4,7 +4,8 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { getTrafficEvents, getIncidents } from "@/lib/traffic-api";
 import type { FilterState } from "@/pages/home";
-import { filterLocationsByProximity, extractCoordinatesFromGeometry } from "@/lib/location-utils";
+import { findRegionBySuburb } from "@/lib/regions";
+import { extractCoordinatesFromGeometry } from "@/lib/location-utils";
 
 // Fix Leaflet default marker icons
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -84,53 +85,64 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
 
     const newMarkers: L.Marker[] = [];
     
-    // Apply location filtering if enabled
+    // Apply regional filtering if enabled
     let filteredEventsData = eventsData;
     let filteredIncidentsData = incidentsData;
     
-    if (filters.locationFilter && filters.homeCoordinates && filters.homeLocation) {
-      // Filter traffic events by proximity
-      if (eventsData?.features) {
-        const eventsWithCoords = eventsData.features
-          .map((feature: any) => {
-            const coords = extractCoordinatesFromGeometry(feature.geometry);
-            return coords ? { ...feature, coordinates: coords } : null;
-          })
-          .filter(Boolean);
-          
-        const nearbyEvents = filterLocationsByProximity(
-          eventsWithCoords,
-          filters.homeCoordinates,
-          filters.homeBoundingBox,
-          15 // 15km radius
-        );
-        
-        filteredEventsData = {
-          ...eventsData,
-          features: nearbyEvents
-        };
-      }
+    if (filters.locationFilter && filters.homeLocation) {
+      const region = findRegionBySuburb(filters.homeLocation);
       
-      // Filter incidents by proximity
-      if (incidentsData?.features) {
-        const incidentsWithCoords = incidentsData.features
-          .map((feature: any) => {
-            const coords = extractCoordinatesFromGeometry(feature.geometry);
-            return coords ? { ...feature, coordinates: coords } : null;
-          })
-          .filter(Boolean);
+      if (region) {
+        // Filter traffic events by region
+        if (eventsData?.features) {
+          const regionalEvents = eventsData.features.filter((feature: any) => {
+            const locality = feature.properties?.road_summary?.locality || '';
+            const roadName = feature.properties?.road_summary?.road_name || '';
+            const locationText = `${locality} ${roadName}`.toLowerCase();
+            
+            return region.suburbs.some(suburb => {
+              const suburbLower = suburb.toLowerCase();
+              return locationText.includes(suburbLower) ||
+                     suburbLower.includes(locationText) ||
+                     locationText.includes('sunshine') ||
+                     locationText.includes('caloundra') ||
+                     locationText.includes('maroochydore') ||
+                     locationText.includes('nambour') ||
+                     locationText.includes('noosa');
+            });
+          });
           
-        const nearbyIncidents = filterLocationsByProximity(
-          incidentsWithCoords,
-          filters.homeCoordinates,
-          filters.homeBoundingBox,
-          15 // 15km radius
-        );
+          filteredEventsData = {
+            ...eventsData,
+            features: regionalEvents
+          };
+        }
         
-        filteredIncidentsData = {
-          ...incidentsData,
-          features: nearbyIncidents
-        };
+        // Filter incidents by region
+        if (incidentsData?.features) {
+          const regionalIncidents = incidentsData.features.filter((feature: any) => {
+            const locality = feature.properties?.Locality || '';
+            const location = feature.properties?.Location || '';
+            const locationDesc = feature.properties?.locationDescription || '';
+            const locationText = `${locality} ${location} ${locationDesc}`.toLowerCase();
+            
+            return region.suburbs.some(suburb => {
+              const suburbLower = suburb.toLowerCase();
+              return locationText.includes(suburbLower) ||
+                     suburbLower.includes(locationText) ||
+                     locationText.includes('sunshine') ||
+                     locationText.includes('caloundra') ||
+                     locationText.includes('maroochydore') ||
+                     locationText.includes('nambour') ||
+                     locationText.includes('noosa');
+            });
+          });
+          
+          filteredIncidentsData = {
+            ...incidentsData,
+            features: regionalIncidents
+          };
+        }
       }
     }
 
