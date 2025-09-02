@@ -275,7 +275,7 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
                   data-testid="checkbox-location-filter"
                 />
                 <Label htmlFor="location-filter-enabled" className="text-sm text-foreground flex-1">
-                  Show only nearby incidents
+                  Include surrounding suburbs
                 </Label>
               </div>
               
