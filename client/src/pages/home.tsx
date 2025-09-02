@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { TrafficMap } from "@/components/map/traffic-map";
 import { FilterSidebar } from "@/components/map/filter-sidebar";
 import { AppHeader } from "@/components/map/app-header";
-import { MapLegend } from "@/components/map/map-legend";
 import { IncidentDetailModal } from "@/components/incident-detail-modal";
 import { IncidentReportForm } from "@/components/incident-report-form";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -128,7 +127,6 @@ export default function Home() {
         />
       </main>
 
-      {!isMobile && <MapLegend sidebarOpen={sidebarOpen} />}
 
       {/* Report Incident Button */}
       <Button
