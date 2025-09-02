@@ -546,12 +546,39 @@ export default function Feed() {
 
                   const getSourceInfo = (incident: any) => {
                     if (incident.type === 'traffic') {
-                      return { name: 'QLD Traffic', type: 'Official', avatar: 'QT', color: 'bg-blue-500' };
+                      return { 
+                        name: 'QLD Traffic', 
+                        type: 'Official', 
+                        avatar: 'QT', 
+                        color: 'bg-gradient-to-br from-blue-500 to-blue-600',
+                        photoUrl: null
+                      };
                     }
                     if (incident.properties?.userReported) {
-                      return { name: 'Community Report', type: 'Resident', avatar: 'CR', color: 'bg-purple-500' };
+                      // Extract user data from properties
+                      const reporterName = incident.properties?.reporterName || 'Anonymous User';
+                      const photoUrl = incident.properties?.photoUrl;
+                      
+                      // Create initials from the reporter name
+                      const getInitials = (name: string) => {
+                        return name.split(' ').map(word => word.charAt(0).toUpperCase()).join('').slice(0, 2);
+                      };
+                      
+                      return { 
+                        name: reporterName, 
+                        type: 'Community Report', 
+                        avatar: getInitials(reporterName), 
+                        color: 'bg-gradient-to-br from-purple-500 to-purple-600',
+                        photoUrl: photoUrl
+                      };
                     }
-                    return { name: 'Emergency Services', type: 'Official', avatar: 'ES', color: 'bg-red-500' };
+                    return { 
+                      name: 'Emergency Services', 
+                      type: 'Official', 
+                      avatar: 'ES', 
+                      color: 'bg-gradient-to-br from-red-500 to-red-600',
+                      photoUrl: null
+                    };
                   };
 
                   const sourceInfo = getSourceInfo(incident);
@@ -570,17 +597,28 @@ export default function Feed() {
                         <div className="p-4 pb-3">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                              <Avatar className="w-10 h-10">
-                                <AvatarFallback className={`${sourceInfo.color} text-white font-semibold text-sm`}>
-                                  {sourceInfo.avatar}
-                                </AvatarFallback>
+                              <Avatar className="w-12 h-12 ring-2 ring-primary/20">
+                                {sourceInfo.photoUrl ? (
+                                  <img src={sourceInfo.photoUrl} alt={sourceInfo.name} className="w-full h-full object-cover" />
+                                ) : (
+                                  <AvatarFallback className={`${sourceInfo.color} text-white font-bold text-sm shadow-lg`}>
+                                    {sourceInfo.avatar}
+                                  </AvatarFallback>
+                                )}
                               </Avatar>
                               <div>
                                 <div className="flex items-center gap-2">
-                                  <h4 className="font-semibold text-foreground text-sm">
+                                  <h4 className="font-bold text-foreground text-base">
                                     {sourceInfo.name}
                                   </h4>
-                                  <Badge variant="outline" className="text-xs px-2 py-0.5">
+                                  <Badge 
+                                    variant={incident.properties?.userReported ? "secondary" : "default"} 
+                                    className={`text-xs px-2 py-1 font-medium ${
+                                      incident.properties?.userReported 
+                                        ? 'bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-700' 
+                                        : 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-700'
+                                    }`}
+                                  >
                                     {sourceInfo.type}
                                   </Badge>
                                 </div>
@@ -600,26 +638,28 @@ export default function Feed() {
                         </div>
 
                         {/* Post Content */}
-                        <div className="px-4 pb-3">
-                          <div className="flex items-start gap-3 mb-3">
-                            <div className="p-2 rounded-full bg-muted group-hover:bg-muted/80 transition-colors">
+                        <div className="px-4 pb-4">
+                          <div className="flex items-start gap-4 mb-4">
+                            <div className="p-3 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 group-hover:from-primary/20 group-hover:to-primary/10 transition-all duration-300 shadow-sm">
                               {getIncidentIcon(incident)}
                             </div>
                             <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-2">
-                                <h3 className="font-bold text-foreground text-lg">
+                              <div className="flex items-start justify-between gap-2 mb-3">
+                                <h3 className="font-bold text-foreground text-xl leading-tight">
                                   {getIncidentTitle(incident)}
                                 </h3>
                                 {getStatusBadge(incident)}
                               </div>
                               
-                              <p className="text-muted-foreground mb-3 leading-relaxed">
+                              <p className="text-muted-foreground mb-4 leading-relaxed text-base">
                                 {getIncidentDescription(incident)}
                               </p>
                               
-                              <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 rounded-lg p-3">
-                                <MapPin className="w-4 h-4 text-primary" />
-                                <span className="font-medium">{getIncidentLocation(incident)}</span>
+                              <div className="flex items-center gap-3 text-sm text-muted-foreground bg-gradient-to-r from-muted/80 to-muted/40 rounded-xl p-4 border border-border/50">
+                                <div className="p-2 rounded-lg bg-primary/10">
+                                  <MapPin className="w-4 h-4 text-primary" />
+                                </div>
+                                <span className="font-semibold text-foreground">{getIncidentLocation(incident)}</span>
                               </div>
                             </div>
                           </div>
@@ -628,33 +668,33 @@ export default function Feed() {
                         <Separator />
 
                         {/* Engagement Bar */}
-                        <div className="px-4 py-3">
+                        <div className="px-4 py-4 bg-gradient-to-r from-background to-muted/20">
                           <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-6">
-                              <Button variant="ghost" size="sm" className="flex items-center gap-2 hover:text-red-500 transition-colors">
-                                <Heart className="w-4 h-4" />
-                                <span className="text-sm font-medium">{randomLikes}</span>
+                            <div className="flex items-center gap-8">
+                              <Button variant="ghost" size="sm" className="flex items-center gap-3 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950 transition-all duration-200 rounded-full px-4 py-2">
+                                <Heart className="w-5 h-5" />
+                                <span className="text-sm font-semibold">{randomLikes}</span>
                               </Button>
                               <Button 
                                 variant="ghost" 
                                 size="sm" 
-                                className="flex items-center gap-2 hover:text-blue-500 transition-colors"
+                                className="flex items-center gap-3 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950 transition-all duration-200 rounded-full px-4 py-2"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleIncidentClick(incident);
                                 }}
                               >
-                                <MessageCircle className="w-4 h-4" />
-                                <span className="text-sm font-medium">{randomComments}</span>
+                                <MessageCircle className="w-5 h-5" />
+                                <span className="text-sm font-semibold">{randomComments}</span>
                               </Button>
-                              <Button variant="ghost" size="sm" className="flex items-center gap-2 hover:text-green-500 transition-colors">
-                                <Share className="w-4 h-4" />
-                                <span className="text-sm font-medium">Share</span>
+                              <Button variant="ghost" size="sm" className="flex items-center gap-3 hover:text-green-500 hover:bg-green-50 dark:hover:bg-green-950 transition-all duration-200 rounded-full px-4 py-2">
+                                <Share className="w-5 h-5" />
+                                <span className="text-sm font-semibold">Share</span>
                               </Button>
                             </div>
-                            <div className="text-xs text-muted-foreground flex items-center gap-1">
-                              <Users className="w-3 h-3" />
-                              <span>{Math.floor(Math.random() * 100) + 50} views</span>
+                            <div className="text-sm text-muted-foreground flex items-center gap-2 bg-muted/60 rounded-full px-3 py-2">
+                              <Users className="w-4 h-4" />
+                              <span className="font-medium">{Math.floor(Math.random() * 100) + 50} views</span>
                             </div>
                           </div>
                         </div>
