@@ -159,7 +159,7 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
             } else if (incidentType === 'Suspicious' && filters.suspicious) {
               shouldShow = true;
               markerType = 'suspicious';
-            } else if (['Public Safety', 'Fire', 'Utility'].includes(incidentType) && filters.emergency) {
+            } else if (['Public Safety', 'Fire', 'Utility', 'Road Hazard'].includes(incidentType) && filters.emergency) {
               shouldShow = true;
               markerType = 'emergency';
             }
