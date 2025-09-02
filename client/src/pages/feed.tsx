@@ -14,6 +14,7 @@ import { Link } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { IncidentDetailModal } from "@/components/incident-detail-modal";
 import { AppHeader } from "@/components/map/app-header";
+import { filterLocationsByProximity, extractCoordinatesFromGeometry } from "@/lib/location-utils";
 import { 
   MapPin, 
   Clock, 
@@ -205,8 +206,43 @@ export default function Feed() {
   
   const deduplicatedIncidents = Array.from(incidentMap.values());
 
+  // Apply location filtering if enabled
+  let filteredIncidents = deduplicatedIncidents;
+  
+  // Check if location filtering should be applied
+  const locationFilterEnabled = localStorage.getItem('locationFilter') === 'true';
+  const homeCoordinatesStr = localStorage.getItem('homeCoordinates');
+  const homeBoundingBoxStr = localStorage.getItem('homeBoundingBox');
+  
+  if (locationFilterEnabled && homeCoordinatesStr && selectedSuburb) {
+    try {
+      const homeCoordinates = JSON.parse(homeCoordinatesStr);
+      const homeBoundingBox = homeBoundingBoxStr ? JSON.parse(homeBoundingBoxStr) : undefined;
+      
+      // Convert incidents to format expected by filterLocationsByProximity
+      const incidentsWithCoords = deduplicatedIncidents
+        .map((incident: any) => {
+          const coords = extractCoordinatesFromGeometry(incident.geometry);
+          return coords ? { ...incident, coordinates: coords } : null;
+        })
+        .filter(Boolean);
+      
+      // Apply proximity filtering (15km radius)
+      filteredIncidents = filterLocationsByProximity(
+        incidentsWithCoords,
+        homeCoordinates,
+        homeBoundingBox,
+        15 // 15km radius
+      );
+    } catch (error) {
+      console.error('Failed to apply location filtering:', error);
+      // Fall back to showing all incidents if filtering fails
+      filteredIncidents = deduplicatedIncidents;
+    }
+  }
+
   // Sort by most recent first
-  const allIncidents = deduplicatedIncidents.sort((a, b) => {
+  const allIncidents = filteredIncidents.sort((a, b) => {
     const aTime = new Date(a.properties?.Response_Date || a.properties?.last_updated || a.properties?.createdAt || 0);
     const bTime = new Date(b.properties?.Response_Date || b.properties?.last_updated || b.properties?.createdAt || 0);
     return bTime.getTime() - aTime.getTime();
@@ -439,6 +475,7 @@ export default function Feed() {
                 <h3 className="text-xl font-bold text-foreground mb-3">All Clear!</h3>
                 <p className="text-muted-foreground text-lg">
                   No recent incidents reported in {selectedSuburb}
+                  {locationFilterEnabled && homeCoordinatesStr ? ' (within 15km)' : ''}
                 </p>
                 <p className="text-sm text-muted-foreground mt-2">
                   Check back later for updates
@@ -453,7 +490,8 @@ export default function Feed() {
                         Live Safety Feed
                       </h2>
                       <p className="text-muted-foreground">
-                        {selectedSuburb} • {allIncidents.length} active incidents
+                        {selectedSuburb}
+                        {locationFilterEnabled && homeCoordinatesStr ? ' (within 15km)' : ''} • {allIncidents.length} active incidents
                       </p>
                     </div>
                     <div className="bg-background rounded-full p-3">
