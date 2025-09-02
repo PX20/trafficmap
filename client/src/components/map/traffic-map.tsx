@@ -159,13 +159,23 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
               // Check if this category is enabled in filters
               if (filters[categoryId]) {
                 shouldShow = true;
-                // Determine marker type based on category (you can customize these)
-                if (categoryId.includes('safety') || categoryId.includes('crime')) {
+                // Map categoryId to marker type by looking up the category name
+                // Use hardcoded mapping since we know the category IDs
+                let categoryName = '';
+                if (categoryId === '792759f4-1b98-4665-b14c-44a54e9969e9') categoryName = 'safety & crime';
+                else if (categoryId === '9b1d58d9-cfd1-4c31-93e9-754276a5f265') categoryName = 'infrastructure & hazards'; 
+                else if (categoryId === '54d31da5-fc10-4ad2-8eca-04bac680e668') categoryName = 'emergency situations';
+                else if (categoryId === 'd03f47a9-10fb-4656-ae73-92e959d7566a') categoryName = 'wildlife & nature';
+                else if (categoryId === 'deaca906-3561-4f80-b79f-ed99561c3b04') categoryName = 'community issues';
+                
+                if (categoryName.includes('safety') || categoryName.includes('crime')) {
                   markerType = 'crime';
-                } else if (categoryId.includes('emergency')) {
-                  markerType = 'emergency'; 
-                } else if (categoryId.includes('suspicious')) {
-                  markerType = 'suspicious';
+                } else if (categoryName.includes('emergency')) {
+                  markerType = 'emergency';
+                } else if (categoryName.includes('wildlife') || categoryName.includes('nature')) {
+                  markerType = 'wildlife';
+                } else if (categoryName.includes('community')) {
+                  markerType = 'community';
                 } else {
                   markerType = 'incident'; // default
                 }
@@ -173,13 +183,25 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
             } else {
               // Fallback for legacy incidents without categoryId
               const incidentType = properties?.incidentType;
-              if (['Crime', 'Theft', 'Violence', 'Vandalism'].includes(incidentType) && filters.crime) {
+              const description = properties?.description?.toLowerCase() || '';
+              const wildlifeType = properties?.wildlifeType;
+              
+              // Check for wildlife indicators
+              if (wildlifeType || description.includes('snake') || description.includes('python') || 
+                  description.includes('animal') || description.includes('wildlife')) {
+                // This should be a wildlife incident
+                const wildlifeCategoryId = 'd03f47a9-10fb-4656-ae73-92e959d7566a';
+                if (filters[wildlifeCategoryId]) {
+                  shouldShow = true;
+                  markerType = 'wildlife';
+                }
+              } else if (['Crime', 'Theft', 'Violence', 'Vandalism'].includes(incidentType) && filters.crime) {
                 shouldShow = true;
                 markerType = 'crime';
               } else if (incidentType === 'Suspicious' && filters.suspicious) {
                 shouldShow = true;
                 markerType = 'suspicious';
-              } else if (['Public Safety', 'Fire', 'Utility', 'Road Hazard'].includes(incidentType) && filters.emergency) {
+              } else if (['Fire', 'Utility', 'Road Hazard'].includes(incidentType) && filters.emergency) {
                 shouldShow = true;
                 markerType = 'emergency';
               }

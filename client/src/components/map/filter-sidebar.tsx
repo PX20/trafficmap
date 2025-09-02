@@ -56,7 +56,21 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
 
   // Count incidents by category
   const getCategoryCount = (categoryId: string) => {
-    const userIncidents = incidents?.filter((i: any) => i.properties?.userReported && i.properties?.categoryId === categoryId) || [];
+    let userIncidents = incidents?.filter((i: any) => i.properties?.userReported && i.properties?.categoryId === categoryId) || [];
+    
+    // For wildlife category, also count legacy incidents that should be wildlife
+    if (categoryId === 'd03f47a9-10fb-4656-ae73-92e959d7566a') { // Wildlife & Nature ID
+      const legacyWildlifeIncidents = incidents?.filter((i: any) => {
+        const props = i.properties;
+        if (!props?.userReported || props?.categoryId) return false;
+        const description = props?.description?.toLowerCase() || '';
+        const wildlifeType = props?.wildlifeType;
+        return wildlifeType || description.includes('snake') || description.includes('python') || 
+               description.includes('animal') || description.includes('wildlife');
+      }) || [];
+      userIncidents = [...userIncidents, ...legacyWildlifeIncidents];
+    }
+    
     return userIncidents.length;
   };
   
