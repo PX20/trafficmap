@@ -42,7 +42,16 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return;
 
-    const map = L.map(mapRef.current).setView([-27.4698, 153.0251], 10);
+    // Use home location if available, otherwise default to Brisbane
+    let centerCoords: [number, number] = [-27.4698, 153.0251]; // Brisbane default
+    let zoomLevel = 10; // State-wide view
+    
+    if (filters.homeCoordinates) {
+      centerCoords = [filters.homeCoordinates.lat, filters.homeCoordinates.lon];
+      zoomLevel = 13; // Suburb-level view for home location
+    }
+
+    const map = L.map(mapRef.current).setView(centerCoords, zoomLevel);
     
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors'
@@ -56,7 +65,7 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
         mapInstanceRef.current = null;
       }
     };
-  }, []);
+  }, [filters.homeCoordinates]);
 
   // Update loading state
   useEffect(() => {
