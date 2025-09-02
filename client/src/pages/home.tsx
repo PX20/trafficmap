@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { TrafficMap } from "@/components/map/traffic-map";
 import { FilterSidebar } from "@/components/map/filter-sidebar";
 import { AppHeader } from "@/components/map/app-header";
@@ -7,6 +7,7 @@ import { IncidentDetailModal } from "@/components/incident-detail-modal";
 import { IncidentReportForm } from "@/components/incident-report-form";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
+import { useQuery } from "@tanstack/react-query";
 
 export interface FilterState {
   // Keep existing traffic events filters
@@ -39,6 +40,23 @@ export default function Home() {
     timeRange: 'now',
     // Dynamic category filters will be added automatically when users interact with them
   });
+  
+  // Fetch categories to initialize all category filters as checked by default
+  const { data: categories = [] } = useQuery({
+    queryKey: ["/api/categories"],
+    select: (data: any) => data || [],
+  });
+  
+  // Initialize all category filters to true when categories are loaded
+  useEffect(() => {
+    if (categories.length > 0) {
+      const categoryFilters: Record<string, boolean> = {};
+      categories.forEach((category: any) => {
+        categoryFilters[category.id] = true;
+      });
+      setFilters(prev => ({ ...prev, ...categoryFilters }));
+    }
+  }, [categories]);
 
   const handleFilterChange = (key: keyof FilterState, value: boolean | string) => {
     setFilters(prev => ({ ...prev, [key]: value }));
