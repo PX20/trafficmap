@@ -5,6 +5,7 @@ import { DashboardModal } from "@uppy/react";
 import AwsS3 from "@uppy/aws-s3";
 import type { UploadResult } from "@uppy/core";
 import { Button } from "@/components/ui/button";
+import "./uppy-styles.css";
 
 interface ObjectUploaderProps {
   maxNumberOfFiles?: number;

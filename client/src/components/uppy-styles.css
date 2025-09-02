@@ -1,0 +1,23 @@
+/* Uppy Modal Styling */
+.uppy-Dashboard-modal {
+  z-index: 9999 !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  background: rgba(0, 0, 0, 0.5) !important;
+}
+
+.uppy-Dashboard-inner {
+  position: relative !important;
+  z-index: 10000 !important;
+  margin: 2rem auto !important;
+  max-width: 90vw !important;
+  max-height: 90vh !important;
+}
+
+.uppy-size--md .uppy-Dashboard-inner {
+  width: 750px !important;
+  height: 550px !important;
+}
