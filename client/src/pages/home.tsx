@@ -87,6 +87,46 @@ export default function Home() {
     }
   }, []);
   
+  // Listen for localStorage changes from feed page
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'homeLocation') {
+        const savedLocation = localStorage.getItem('homeLocation');
+        const savedCoordinates = localStorage.getItem('homeCoordinates');
+        const savedBoundingBox = localStorage.getItem('homeBoundingBox');
+        const locationFilterEnabled = localStorage.getItem('locationFilter') === 'true';
+        
+        if (savedLocation && savedCoordinates) {
+          try {
+            const coordinates = JSON.parse(savedCoordinates);
+            const boundingBox = savedBoundingBox ? JSON.parse(savedBoundingBox) : undefined;
+            setFilters(prev => ({
+              ...prev,
+              homeLocation: savedLocation,
+              homeCoordinates: coordinates,
+              homeBoundingBox: boundingBox,
+              locationFilter: locationFilterEnabled
+            }));
+          } catch (error) {
+            console.error('Failed to sync location from feed:', error);
+          }
+        } else {
+          // Location was cleared
+          setFilters(prev => ({
+            ...prev,
+            homeLocation: '',
+            homeCoordinates: undefined,
+            homeBoundingBox: undefined,
+            locationFilter: false
+          }));
+        }
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+  
   // Save location to localStorage when it changes
   useEffect(() => {
     if (filters.homeLocation && filters.homeCoordinates) {

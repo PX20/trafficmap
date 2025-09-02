@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -36,9 +36,51 @@ import {
 export default function Feed() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [selectedSuburb, setSelectedSuburb] = useState(user?.homeSuburb || "");
+  const [selectedSuburb, setSelectedSuburb] = useState("");
   const [selectedIncident, setSelectedIncident] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  
+  // Load saved location from localStorage on startup (sync with map home location)
+  useEffect(() => {
+    const savedLocation = localStorage.getItem('homeLocation');
+    if (savedLocation) {
+      setSelectedSuburb(savedLocation);
+    } else if (user?.homeSuburb) {
+      setSelectedSuburb(user.homeSuburb);
+    }
+  }, [user?.homeSuburb]);
+  
+  // Listen for localStorage changes (when location changes on map)
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'homeLocation' && e.newValue) {
+        setSelectedSuburb(e.newValue);
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+  
+  // Function to sync location to localStorage (so map gets updated)
+  const syncLocationToStorage = (location: string, coordinates?: { lat: number; lon: number }, boundingBox?: [number, number, number, number]) => {
+    if (location) {
+      localStorage.setItem('homeLocation', location);
+      localStorage.setItem('locationFilter', 'true');
+      if (coordinates) {
+        localStorage.setItem('homeCoordinates', JSON.stringify(coordinates));
+      }
+      if (boundingBox) {
+        localStorage.setItem('homeBoundingBox', JSON.stringify(boundingBox));
+      }
+      // Trigger storage event for other tabs/components
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: 'homeLocation',
+        newValue: location,
+        oldValue: selectedSuburb
+      }));
+    }
+  };
 
   const { data: incidents, isLoading: incidentsLoading, data: rawIncidentData } = useQuery({
     queryKey: ["/api/incidents", selectedSuburb],
@@ -326,11 +368,24 @@ export default function Feed() {
                   value={selectedSuburb}
                   onChange={(location, coordinates, boundingBox) => {
                     setSelectedSuburb(location);
+                    // Sync with map home location
+                    syncLocationToStorage(location, coordinates, boundingBox);
                     // Automatically update when location is selected
                     setTimeout(() => handleSuburbUpdate(), 100);
                   }}
                   onClear={() => {
                     setSelectedSuburb('');
+                    // Clear from localStorage too
+                    localStorage.removeItem('homeLocation');
+                    localStorage.removeItem('homeCoordinates');
+                    localStorage.removeItem('homeBoundingBox');
+                    localStorage.setItem('locationFilter', 'false');
+                    // Trigger storage event
+                    window.dispatchEvent(new StorageEvent('storage', {
+                      key: 'homeLocation',
+                      newValue: null,
+                      oldValue: selectedSuburb
+                    }));
                     // Clear the feed when location is cleared
                     setTimeout(() => handleSuburbUpdate(), 100);
                   }}
