@@ -15,7 +15,7 @@ L.Icon.Default.mergeOptions({
 
 interface TrafficMapProps {
   filters: FilterState;
-  onEventSelect: (eventId: string) => void;
+  onEventSelect: (incident: any) => void;
 }
 
 export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
@@ -237,8 +237,8 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
           </div>
           <div><span class="font-medium">Status:</span> ${properties.status || 'Unknown'}</div>
         </div>
-        <button onclick="window.showEventDetails('${properties.id}')" class="mt-3 w-full px-3 py-1 bg-primary text-primary-foreground rounded text-sm hover:bg-primary/90">
-          View Details
+        <button onclick="window.showIncidentDetails('${properties.id}', 'traffic')" class="mt-3 w-full px-3 py-1 bg-primary text-primary-foreground rounded text-sm hover:bg-primary/90">
+          View Details & Comments
         </button>
       </div>
     `;
@@ -257,6 +257,9 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
             <div><span class="font-medium">Reported:</span> ${new Date(properties.createdAt).toLocaleString()}</div>
             <div><span class="font-medium">Source:</span> <span class="text-blue-600 font-medium">Community Report</span></div>
           </div>
+          <button onclick="window.showIncidentDetails('${properties.id}', 'user-reported')" class="mt-3 w-full px-3 py-1 bg-primary text-primary-foreground rounded text-sm hover:bg-primary/90">
+            View Details & Comments
+          </button>
         </div>
       `;
     }
@@ -288,6 +291,9 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
           ${properties.Response_Date ? `<div><span class="font-medium">Reported:</span> ${new Date(properties.Response_Date).toLocaleString()}</div>` : ''}
           <div><span class="font-medium">Source:</span> <span class="text-green-600 font-medium">Official</span></div>
         </div>
+        <button onclick="window.showIncidentDetails('${properties.Master_Incident_Number || properties.id}', 'emergency')" class="mt-3 w-full px-3 py-1 bg-primary text-primary-foreground rounded text-sm hover:bg-primary/90">
+          View Details & Comments
+        </button>
       </div>
     `;
   };
@@ -302,10 +308,30 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
 
   // Setup global functions for popup interactions
   useEffect(() => {
-    (window as any).showEventDetails = (eventId: string) => {
-      onEventSelect(eventId);
+    (window as any).showIncidentDetails = (incidentId: string, incidentType: string) => {
+      // Find the incident data and pass it to the modal
+      let incident = null;
+      
+      if (incidentType === 'traffic') {
+        const event = (eventsData as any)?.features?.find((f: any) => f.properties.id?.toString() === incidentId);
+        if (event) {
+          incident = { ...event, type: 'traffic' };
+        }
+      } else if (incidentType === 'user-reported' || incidentType === 'emergency') {
+        const incidentData = (incidentsData as any)?.features?.find((f: any) => 
+          f.properties.id?.toString() === incidentId || 
+          f.properties.Master_Incident_Number?.toString() === incidentId
+        );
+        if (incidentData) {
+          incident = { ...incidentData, type: incidentType };
+        }
+      }
+      
+      if (incident) {
+        onEventSelect(incident);
+      }
     };
-  }, [onEventSelect]);
+  }, [onEventSelect, eventsData, incidentsData]);
 
   return (
     <div className="relative w-full h-full">

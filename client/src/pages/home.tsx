@@ -3,7 +3,7 @@ import { TrafficMap } from "@/components/map/traffic-map";
 import { FilterSidebar } from "@/components/map/filter-sidebar";
 import { AppHeader } from "@/components/map/app-header";
 import { MapLegend } from "@/components/map/map-legend";
-import { EventModal } from "@/components/map/event-modal";
+import { IncidentDetailModal } from "@/components/incident-detail-modal";
 import { IncidentReportForm } from "@/components/incident-report-form";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
@@ -24,7 +24,7 @@ export interface FilterState {
 export default function Home() {
   const isMobile = useIsMobile();
   const [sidebarOpen, setSidebarOpen] = useState(!isMobile);
-  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+  const [selectedIncident, setSelectedIncident] = useState<any>(null);
   const [reportFormOpen, setReportFormOpen] = useState(false);
   const [filters, setFilters] = useState<FilterState>({
     crashes: true,
@@ -63,7 +63,7 @@ export default function Home() {
       }`}>
         <TrafficMap 
           filters={filters}
-          onEventSelect={setSelectedEventId}
+          onEventSelect={setSelectedIncident}
         />
       </main>
 
@@ -95,9 +95,10 @@ export default function Home() {
         </button>
       )}
 
-      <EventModal 
-        eventId={selectedEventId}
-        onClose={() => setSelectedEventId(null)}
+      <IncidentDetailModal 
+        incident={selectedIncident}
+        isOpen={!!selectedIncident}
+        onClose={() => setSelectedIncident(null)}
       />
       
       

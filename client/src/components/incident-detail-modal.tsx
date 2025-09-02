@@ -42,6 +42,11 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyText, setReplyText] = useState("");
 
+  // Return early if no incident
+  if (!incident || !isOpen) {
+    return null;
+  }
+
   // Extract incident ID from the incident object
   const incidentId = getIncidentId(incident);
 
