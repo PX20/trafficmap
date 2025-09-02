@@ -8,6 +8,8 @@ import {
   ObjectStorageService,
   ObjectNotFoundError,
 } from "./objectStorage";
+import express from "express";
+import path from "path";
 
 const API_BASE_URL = "https://api.qldtraffic.qld.gov.au";
 const PUBLIC_API_KEY = "3e83add325cbb69ac4d8e5bf433d770b";
@@ -36,6 +38,9 @@ async function fetchWithRetry(url: string, retryDelay: number = RETRY_DELAY): Pr
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Serve static assets from attached_assets directory
+  app.use('/attached_assets', express.static(path.resolve(process.cwd(), 'attached_assets')));
+
   // Auth middleware
   await setupAuth(app);
 
