@@ -290,7 +290,7 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
               <span class="text-blue-600 font-medium">Community Report</span>
             </div>
           </div>
-          <button onclick="window.showIncidentDetails('${properties.id}', 'user-reported')" class="w-full px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md transition-colors flex items-center justify-center gap-1.5">
+          <button onclick="window.showIncidentDetails('${properties.id}', 'user-reported')" class="w-full px-3 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white text-sm font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-1.5 border border-blue-500/20">
             <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
               <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"></path>
               <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"></path>
