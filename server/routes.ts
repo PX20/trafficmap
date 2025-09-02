@@ -307,13 +307,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const response = await fetch(
         `https://api.geoapify.com/v1/geocode/autocomplete?` +
-        `text=${encodeURIComponent(q + ', Queensland, Australia')}&` +
+        `text=${encodeURIComponent(q)}&` +
         `apiKey=${process.env.GEOAPIFY_API_KEY}&` +
         `filter=countrycode:au&` +
-        `filter=place:state&` +
-        `bias=countrycode:au&` +
-        `limit=5&` +
-        `format=json`
+        `bias=proximity:153.0281,-27.4705&` +
+        `limit=5`
       );
 
       if (!response.ok) {
