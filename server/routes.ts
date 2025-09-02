@@ -292,7 +292,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Location search endpoint using Geoapify API
+  // Location search endpoint using Nominatim (OpenStreetMap)
   app.get('/api/location/search', async (req, res) => {
     const { q } = req.query;
     
@@ -300,51 +300,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(400).json({ error: 'Query parameter q is required' });
     }
 
-    if (!process.env.GEOAPIFY_API_KEY) {
-      return res.status(500).json({ error: 'Geoapify API key not configured' });
-    }
-
     try {
+      // Using Nominatim (OpenStreetMap) as a free alternative
+      // Focus on Queensland, Australia for better local results
       const response = await fetch(
-        `https://api.geoapify.com/v1/geocode/autocomplete?` +
-        `text=${encodeURIComponent(q)}&` +
-        `apiKey=${process.env.GEOAPIFY_API_KEY}&` +
-        `filter=countrycode:au&` +
-        `bias=proximity:153.0281,-27.4705&` +
-        `limit=5`
+        `https://nominatim.openstreetmap.org/search?` +
+        `q=${encodeURIComponent(q + ', Queensland, Australia')}&` +
+        `format=json&` +
+        `addressdetails=1&` +
+        `limit=5&` +
+        `countrycodes=au&` +
+        `bounded=1&` +
+        `viewbox=138.0,-29.0,154.0,-9.0`, // Queensland bounding box
+        {
+          headers: {
+            'User-Agent': 'QLD Safety Monitor (contact: support@example.com)'
+          }
+        }
       );
 
       if (!response.ok) {
-        throw new Error(`Geoapify API error: ${response.status}`);
+        throw new Error('Geocoding request failed');
       }
 
       const data = await response.json();
       
-      // Transform Geoapify response to our format
-      const locationSuggestions = data.results
-        ?.filter((item: any) => 
-          item.state && 
-          (item.state.includes('Queensland') || item.state.includes('QLD')) &&
-          (item.suburb || item.city || item.locality)
+      // Transform to our format and filter for Queensland suburbs
+      const locationSuggestions = data
+        .filter((item: any) => 
+          item.address && 
+          (item.address.suburb || item.address.city || item.address.town) &&
+          item.address.state && 
+          (item.address.state.includes('Queensland') || item.address.state.includes('QLD'))
         )
-        ?.map((item: any) => ({
-          display_name: item.formatted,
-          lat: item.lat,
-          lon: item.lon,
+        .map((item: any) => ({
+          display_name: item.display_name,
+          lat: parseFloat(item.lat),
+          lon: parseFloat(item.lon),
           address: {
-            suburb: item.suburb || item.city || item.locality,
-            city: item.city,
-            state: item.state,
-            postcode: item.postcode,
-            country: item.country
+            suburb: item.address.suburb || item.address.city || item.address.town,
+            city: item.address.city,
+            state: item.address.state,
+            postcode: item.address.postcode,
+            country: item.address.country
           },
-          boundingbox: item.bbox ? [
-            item.bbox.lat1.toString(), // min_lat
-            item.bbox.lat2.toString(), // max_lat
-            item.bbox.lon1.toString(), // min_lon
-            item.bbox.lon2.toString()  // max_lon
+          boundingbox: item.boundingbox ? [
+            item.boundingbox[0], // min_lat
+            item.boundingbox[1], // max_lat
+            item.boundingbox[2], // min_lon
+            item.boundingbox[3]  // max_lon
           ] : undefined
-        })) || [];
+        }));
 
       res.json(locationSuggestions);
 
