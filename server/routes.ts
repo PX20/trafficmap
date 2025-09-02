@@ -433,7 +433,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Enhanced user profile routes
   app.put('/api/user/profile', isAuthenticated, async (req, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = (req.user as any)?.claims?.sub;
       const profileData = req.body;
       
       const updatedUser = await storage.updateUserProfile(userId, profileData);
@@ -462,7 +462,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Comment voting routes
   app.post('/api/comments/:commentId/vote', isAuthenticated, async (req, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = (req.user as any)?.claims?.sub;
       const { commentId } = req.params;
       const { voteType } = req.body;
       
@@ -485,7 +485,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/comments/:commentId/user-vote', isAuthenticated, async (req, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = (req.user as any)?.claims?.sub;
       const { commentId } = req.params;
       
       const vote = await storage.getUserVoteOnComment(userId, commentId);
@@ -517,7 +517,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/neighborhood-groups', isAuthenticated, async (req, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = (req.user as any)?.claims?.sub;
       const groupData = {
         ...req.body,
         createdBy: userId
@@ -541,7 +541,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/neighborhood-groups/:groupId/join', isAuthenticated, async (req, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = (req.user as any)?.claims?.sub;
       const { groupId } = req.params;
       
       const membership = await storage.joinNeighborhoodGroup({
@@ -559,7 +559,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete('/api/neighborhood-groups/:groupId/leave', isAuthenticated, async (req, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = (req.user as any)?.claims?.sub;
       const { groupId } = req.params;
       
       const success = await storage.leaveNeighborhoodGroup(userId, groupId);
@@ -578,7 +578,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Emergency contact routes
   app.get('/api/emergency-contacts', isAuthenticated, async (req, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = (req.user as any)?.claims?.sub;
       const contacts = await storage.getEmergencyContacts(userId);
       res.json(contacts);
     } catch (error) {
@@ -589,7 +589,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/emergency-contacts', isAuthenticated, async (req, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = (req.user as any)?.claims?.sub;
       const contactData = {
         ...req.body,
         userId
@@ -622,7 +622,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Safety check-in routes
   app.post('/api/safety-checkins', isAuthenticated, async (req, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = (req.user as any)?.claims?.sub;
       const checkInData = {
         ...req.body,
         userId
@@ -649,7 +649,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/safety-checkins/user', isAuthenticated, async (req, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = (req.user as any)?.claims?.sub;
       const checkIns = await storage.getUserSafetyCheckIns(userId);
       res.json(checkIns);
     } catch (error) {

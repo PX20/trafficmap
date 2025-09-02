@@ -63,17 +63,19 @@ export function AppHeader({ onMenuToggle }: AppHeaderProps) {
           {/* User Info and Logout */}
           {isAuthenticated && user && (
             <div className="flex items-center space-x-3">
-              <div className="hidden md:flex items-center space-x-2">
-                <Avatar className="w-8 h-8">
-                  <AvatarImage src={user.profileImageUrl || undefined} alt={user.firstName || 'User'} />
-                  <AvatarFallback>
-                    {user.firstName ? user.firstName[0].toUpperCase() : user.email ? user.email[0].toUpperCase() : 'U'}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="text-sm text-foreground">
-                  {user.firstName || user.email}
-                </span>
-              </div>
+              <Link href="/profile">
+                <div className="hidden md:flex items-center space-x-2 p-2 hover:bg-muted rounded-lg transition-colors cursor-pointer" data-testid="link-user-profile">
+                  <Avatar className="w-8 h-8">
+                    <AvatarImage src={user.profileImageUrl || undefined} alt={user.firstName || 'User'} />
+                    <AvatarFallback>
+                      {user.firstName ? user.firstName[0].toUpperCase() : user.email ? user.email[0].toUpperCase() : 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="text-sm text-foreground">
+                    {user.firstName || user.email}
+                  </span>
+                </div>
+              </Link>
               <Button 
                 variant="outline" 
                 size="sm"
