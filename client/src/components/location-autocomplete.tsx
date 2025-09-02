@@ -189,7 +189,7 @@ export function LocationAutocomplete({
                 <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
                 <div className="min-w-0 flex-1">
                   <div className="font-medium text-foreground text-sm">
-                    {suggestion.address.suburb}
+                    {suggestion.address.suburb || suggestion.address.city}
                   </div>
                   <div className="text-xs text-muted-foreground truncate">
                     {suggestion.address.postcode ? `${suggestion.address.postcode}, QLD` : 'QLD'}

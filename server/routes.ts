@@ -336,25 +336,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .map((item: any) => {
           const suburb = item.address.suburb || item.address.city || item.address.town;
           const postcode = item.address.postcode;
-          const state = item.address.state;
-          
-          // Create a cleaner display name
-          let cleanDisplayName = suburb;
-          if (postcode) {
-            cleanDisplayName += ` ${postcode}`;
-          }
-          if (state && !state.includes('Queensland')) {
-            cleanDisplayName += `, ${state}`;
-          }
           
           return {
-            display_name: cleanDisplayName,
+            display_name: item.display_name, // Keep original for debugging
             lat: parseFloat(item.lat),
             lon: parseFloat(item.lon),
             address: {
               suburb: suburb,
               city: item.address.city,
-              state: state,
+              state: item.address.state,
               postcode: postcode,
               country: item.address.country
             },
