@@ -160,9 +160,9 @@ export default function Home() {
         onClose={() => setSidebarOpen(false)}
       />
       
-      <main className={`absolute top-16 right-0 bottom-0 transition-all duration-300 ${
+      <main className={`absolute top-16 right-0 bottom-0 left-0 transition-all duration-300 ${
         sidebarOpen && !isMobile ? 'left-80' : 'left-0'
-      }`}>
+      } ${isMobile ? 'h-[calc(100vh-4rem)]' : ''}`}>
         <TrafficMap 
           filters={filters}
           onEventSelect={setSelectedIncident}

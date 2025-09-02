@@ -260,12 +260,13 @@ export default function Feed() {
     }
   }
 
-  // Sort by most recent first
+  // Sort by most recent first  
   const allIncidents = filteredIncidents.sort((a, b) => {
-    const aTime = new Date(a.properties?.Response_Date || a.properties?.last_updated || a.properties?.createdAt || 0);
-    const bTime = new Date(b.properties?.Response_Date || b.properties?.last_updated || b.properties?.createdAt || 0);
+    const aTime = new Date(a.properties?.Response_Date || a.properties?.last_updated || a.properties?.createdAt || a.properties?.timeReported || 0);
+    const bTime = new Date(b.properties?.Response_Date || b.properties?.last_updated || b.properties?.createdAt || b.properties?.timeReported || 0);
     return bTime.getTime() - aTime.getTime();
   });
+
 
   const getIncidentIcon = (incident: any) => {
     if (incident.type === 'traffic') {
