@@ -168,18 +168,12 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
             </div>
           </div>
           
-          {/* Hierarchical Categories for User Reports */}
-          {(categories as any[]).map((category: any) => (
-            <div key={category.id}>
-              <h3 className="text-sm font-medium text-foreground mb-3 flex items-center gap-2">
-                <div 
-                  className="w-3 h-3 rounded-full" 
-                  style={{ backgroundColor: category.color }}
-                />
-                {category.name}
-              </h3>
-              <div className="space-y-3">
-                <div className="flex items-center space-x-3">
+          {/* Community Reports by Category */}
+          <div>
+            <h3 className="text-sm font-medium text-foreground mb-3">Community Reports</h3>
+            <div className="space-y-3">
+              {(categories as any[]).map((category: any) => (
+                <div key={category.id} className="flex items-center space-x-3">
                   <Checkbox 
                     id={`filter-category-${category.id}`}
                     checked={filters[category.id as keyof FilterState] === true}
@@ -191,15 +185,15 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
                     style={{ backgroundColor: category.color }}
                   />
                   <Label htmlFor={`filter-category-${category.id}`} className="text-sm text-foreground flex-1">
-                    All {category.name}
+                    {category.name}
                   </Label>
                   <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
                     {getCategoryCount(category.id)}
                   </span>
                 </div>
-              </div>
+              ))}
             </div>
-          ))}
+          </div>
           
           {/* Time Range */}
           <div>
