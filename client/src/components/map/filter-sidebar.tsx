@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -5,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import type { FilterState } from "@/pages/home";
 import { getTrafficEvents, getIncidents } from "@/lib/traffic-api";
 
@@ -18,6 +20,17 @@ interface FilterSidebarProps {
 export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: FilterSidebarProps) {
   const isMobile = useIsMobile();
   const { toast } = useToast();
+  const [expandedSections, setExpandedSections] = useState({
+    traffic: true,
+    community: true,
+  });
+  
+  const toggleSection = (section: string) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [section]: !prev[section as keyof typeof prev]
+    }));
+  };
   
   const { data: events, refetch: refetchEvents } = useQuery({
     queryKey: ["/api/traffic/events"],
@@ -98,100 +111,123 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
         </div>
         
         <div className="p-4 space-y-6 overflow-y-auto" style={{ height: 'calc(100vh - 8rem)' }}>
-          {/* Traffic Events - Keep existing for external API data */}
+          {/* Incident Types - Main Section */}
           <div>
-            <h3 className="text-sm font-medium text-foreground mb-3">Traffic Events</h3>
-            <div className="space-y-3">
-              <div className="flex items-center space-x-3">
-                <Checkbox 
-                  id="filter-crashes"
-                  checked={filters.crashes}
-                  onCheckedChange={(checked) => onFilterChange('crashes', !!checked)}
-                  data-testid="checkbox-filter-crashes"
-                />
-                <div className="w-4 h-4 bg-red-500 rounded-full"></div>
-                <Label htmlFor="filter-crashes" className="text-sm text-foreground flex-1">
-                  Crashes
-                </Label>
-                <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full" data-testid="text-count-crashes">
-                  {eventCounts.crashes}
-                </span>
-              </div>
+            <h2 className="text-lg font-semibold text-foreground mb-4">Incident Types</h2>
+            
+            {/* Traffic Events - Collapsible */}
+            <div className="mb-4">
+              <button
+                onClick={() => toggleSection('traffic')}
+                className="flex items-center justify-between w-full p-2 text-left hover:bg-muted/50 rounded-md transition-colors"
+              >
+                <h3 className="text-sm font-medium text-foreground">Traffic Events</h3>
+                {expandedSections.traffic ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+              </button>
               
-              <div className="flex items-center space-x-3">
-                <Checkbox 
-                  id="filter-hazards"
-                  checked={filters.hazards}
-                  onCheckedChange={(checked) => onFilterChange('hazards', !!checked)}
-                  data-testid="checkbox-filter-hazards"
-                />
-                <div className="w-4 h-4 bg-yellow-500 rounded-full"></div>
-                <Label htmlFor="filter-hazards" className="text-sm text-foreground flex-1">
-                  Hazards
-                </Label>
-                <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full" data-testid="text-count-hazards">
-                  {eventCounts.hazards}
-                </span>
-              </div>
-              
-              <div className="flex items-center space-x-3">
-                <Checkbox 
-                  id="filter-restrictions"
-                  checked={filters.restrictions}
-                  onCheckedChange={(checked) => onFilterChange('restrictions', !!checked)}
-                  data-testid="checkbox-filter-restrictions"
-                />
-                <div className="w-4 h-4 bg-orange-500 rounded-full"></div>
-                <Label htmlFor="filter-restrictions" className="text-sm text-foreground flex-1">
-                  Road Restrictions
-                </Label>
-                <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full" data-testid="text-count-restrictions">
-                  {eventCounts.restrictions}
-                </span>
-              </div>
-              
-              <div className="flex items-center space-x-3">
-                <Checkbox 
-                  id="filter-incidents"
-                  checked={filters.incidents}
-                  onCheckedChange={(checked) => onFilterChange('incidents', !!checked)}
-                  data-testid="checkbox-filter-incidents"
-                />
-                <div className="w-4 h-4 bg-red-600 rounded-full"></div>
-                <Label htmlFor="filter-incidents" className="text-sm text-foreground flex-1">
-                  Official Emergencies
-                </Label>
-                <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full" data-testid="text-count-incidents">
-                  {eventCounts.incidents}
-                </span>
-              </div>
-            </div>
-          </div>
-          
-          {/* Community Reports by Category */}
-          <div>
-            <h3 className="text-sm font-medium text-foreground mb-3">Community Reports</h3>
-            <div className="space-y-3">
-              {(categories as any[]).map((category: any) => (
-                <div key={category.id} className="flex items-center space-x-3">
-                  <Checkbox 
-                    id={`filter-category-${category.id}`}
-                    checked={filters[category.id as keyof FilterState] === true}
-                    onCheckedChange={(checked) => onFilterChange(category.id as keyof FilterState, !!checked)}
-                    data-testid={`checkbox-filter-${category.name.toLowerCase().replace(/\s+/g, '-')}`}
-                  />
-                  <div 
-                    className="w-4 h-4 rounded-full" 
-                    style={{ backgroundColor: category.color }}
-                  />
-                  <Label htmlFor={`filter-category-${category.id}`} className="text-sm text-foreground flex-1">
-                    {category.name}
-                  </Label>
-                  <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
-                    {getCategoryCount(category.id)}
-                  </span>
+              {expandedSections.traffic && (
+                <div className="mt-3 ml-4 space-y-3">
+                  <div className="flex items-center space-x-3">
+                    <Checkbox 
+                      id="filter-crashes"
+                      checked={filters.crashes}
+                      onCheckedChange={(checked) => onFilterChange('crashes', !!checked)}
+                      data-testid="checkbox-filter-crashes"
+                    />
+                    <div className="w-4 h-4 bg-red-500 rounded-full"></div>
+                    <Label htmlFor="filter-crashes" className="text-sm text-foreground flex-1">
+                      Crashes
+                    </Label>
+                    <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full" data-testid="text-count-crashes">
+                      {eventCounts.crashes}
+                    </span>
+                  </div>
+                  
+                  <div className="flex items-center space-x-3">
+                    <Checkbox 
+                      id="filter-hazards"
+                      checked={filters.hazards}
+                      onCheckedChange={(checked) => onFilterChange('hazards', !!checked)}
+                      data-testid="checkbox-filter-hazards"
+                    />
+                    <div className="w-4 h-4 bg-yellow-500 rounded-full"></div>
+                    <Label htmlFor="filter-hazards" className="text-sm text-foreground flex-1">
+                      Hazards
+                    </Label>
+                    <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full" data-testid="text-count-hazards">
+                      {eventCounts.hazards}
+                    </span>
+                  </div>
+                  
+                  <div className="flex items-center space-x-3">
+                    <Checkbox 
+                      id="filter-restrictions"
+                      checked={filters.restrictions}
+                      onCheckedChange={(checked) => onFilterChange('restrictions', !!checked)}
+                      data-testid="checkbox-filter-restrictions"
+                    />
+                    <div className="w-4 h-4 bg-orange-500 rounded-full"></div>
+                    <Label htmlFor="filter-restrictions" className="text-sm text-foreground flex-1">
+                      Road Restrictions
+                    </Label>
+                    <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full" data-testid="text-count-restrictions">
+                      {eventCounts.restrictions}
+                    </span>
+                  </div>
+                  
+                  <div className="flex items-center space-x-3">
+                    <Checkbox 
+                      id="filter-incidents"
+                      checked={filters.incidents}
+                      onCheckedChange={(checked) => onFilterChange('incidents', !!checked)}
+                      data-testid="checkbox-filter-incidents"
+                    />
+                    <div className="w-4 h-4 bg-red-600 rounded-full"></div>
+                    <Label htmlFor="filter-incidents" className="text-sm text-foreground flex-1">
+                      Official Emergencies
+                    </Label>
+                    <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full" data-testid="text-count-incidents">
+                      {eventCounts.incidents}
+                    </span>
+                  </div>
                 </div>
-              ))}
+              )}
+            </div>
+            
+            {/* Community Reports - Collapsible */}
+            <div className="mb-4">
+              <button
+                onClick={() => toggleSection('community')}
+                className="flex items-center justify-between w-full p-2 text-left hover:bg-muted/50 rounded-md transition-colors"
+              >
+                <h3 className="text-sm font-medium text-foreground">Community Reports</h3>
+                {expandedSections.community ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+              </button>
+              
+              {expandedSections.community && (
+                <div className="mt-3 ml-4 space-y-3">
+                  {(categories as any[]).map((category: any) => (
+                    <div key={category.id} className="flex items-center space-x-3">
+                      <Checkbox 
+                        id={`filter-category-${category.id}`}
+                        checked={filters[category.id as keyof FilterState] === true}
+                        onCheckedChange={(checked) => onFilterChange(category.id as keyof FilterState, !!checked)}
+                        data-testid={`checkbox-filter-${category.name.toLowerCase().replace(/\s+/g, '-')}`}
+                      />
+                      <div 
+                        className="w-4 h-4 rounded-full" 
+                        style={{ backgroundColor: category.color }}
+                      />
+                      <Label htmlFor={`filter-category-${category.id}`} className="text-sm text-foreground flex-1">
+                        {category.name}
+                      </Label>
+                      <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
+                        {getCategoryCount(category.id)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
           
