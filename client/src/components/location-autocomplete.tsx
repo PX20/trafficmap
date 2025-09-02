@@ -57,31 +57,44 @@ export function LocationAutocomplete({
 
   const searchLocation = async (query: string) => {
     // Cancel previous request
-    if (abortControllerRef.current && !abortControllerRef.current.signal.aborted) {
+    if (abortControllerRef.current) {
       try {
         abortControllerRef.current.abort();
       } catch (error) {
         // Ignore abort errors
+        console.debug('AbortController abort error:', error);
       }
     }
 
-    abortControllerRef.current = new AbortController();
+    // Create new AbortController for this request
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
     setIsLoading(true);
 
     try {
-      // Use server endpoint that handles Geoapify API calls
+      // Use server endpoint that handles Nominatim API calls
       const response = await fetch(
         `/api/location/search?q=${encodeURIComponent(query)}`,
         {
-          signal: abortControllerRef.current.signal
+          signal: controller.signal
         }
       );
+
+      // Check if this request was aborted
+      if (controller.signal.aborted) {
+        return;
+      }
 
       if (!response.ok) {
         throw new Error('Geocoding request failed');
       }
 
       const data = await response.json();
+      
+      // Check again if aborted before updating state
+      if (controller.signal.aborted) {
+        return;
+      }
       
       // Data is already transformed by the server
       const locationSuggestions: LocationSuggestion[] = data;
@@ -92,14 +105,18 @@ export function LocationAutocomplete({
     } catch (error) {
       if ((error as Error).name !== 'AbortError') {
         console.error('Location search failed:', error);
-        toast({
-          title: "Location search failed",
-          description: "Unable to search for locations. Please try again.",
-          variant: "destructive",
-        });
+        if (!controller.signal.aborted) {
+          toast({
+            title: "Location search failed",
+            description: "Unable to search for locations. Please try again.",
+            variant: "destructive",
+          });
+        }
       }
     } finally {
-      setIsLoading(false);
+      if (!controller.signal.aborted) {
+        setIsLoading(false);
+      }
     }
   };
 
