@@ -65,22 +65,11 @@ export function LocationAutocomplete({
     setIsLoading(true);
 
     try {
-      // Using Nominatim (OpenStreetMap) as a free alternative
-      // Focus on Queensland, Australia for better local results
+      // Use server endpoint that handles Geoapify API calls
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?` +
-        `q=${encodeURIComponent(query + ', Queensland, Australia')}&` +
-        `format=json&` +
-        `addressdetails=1&` +
-        `limit=5&` +
-        `countrycodes=au&` +
-        `bounded=1&` +
-        `viewbox=138.0,-29.0,154.0,-9.0`, // Queensland bounding box
+        `/api/location/search?q=${encodeURIComponent(query)}`,
         {
-          signal: abortControllerRef.current.signal,
-          headers: {
-            'User-Agent': 'QLD Safety Monitor (contact: support@example.com)'
-          }
+          signal: abortControllerRef.current.signal
         }
       );
 
@@ -90,32 +79,8 @@ export function LocationAutocomplete({
 
       const data = await response.json();
       
-      // Transform to our format and filter for Queensland suburbs
-      const locationSuggestions: LocationSuggestion[] = data
-        .filter((item: any) => 
-          item.address && 
-          (item.address.suburb || item.address.city || item.address.town) &&
-          item.address.state && 
-          (item.address.state.includes('Queensland') || item.address.state.includes('QLD'))
-        )
-        .map((item: any) => ({
-          display_name: item.display_name,
-          lat: parseFloat(item.lat),
-          lon: parseFloat(item.lon),
-          address: {
-            suburb: item.address.suburb || item.address.city || item.address.town,
-            city: item.address.city,
-            state: item.address.state,
-            postcode: item.address.postcode,
-            country: item.address.country
-          },
-          boundingbox: item.boundingbox ? [
-            item.boundingbox[0], // min_lat
-            item.boundingbox[1], // max_lat
-            item.boundingbox[2], // min_lon
-            item.boundingbox[3]  // max_lon
-          ] as [string, string, string, string] : undefined
-        }));
+      // Data is already transformed by the server
+      const locationSuggestions: LocationSuggestion[] = data;
 
       setSuggestions(locationSuggestions);
       setShowSuggestions(true);

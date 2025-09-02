@@ -292,6 +292,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Location search endpoint using Geoapify API
+  app.get('/api/location/search', async (req, res) => {
+    const { q } = req.query;
+    
+    if (!q || typeof q !== 'string') {
+      return res.status(400).json({ error: 'Query parameter q is required' });
+    }
+
+    if (!process.env.GEOAPIFY_API_KEY) {
+      return res.status(500).json({ error: 'Geoapify API key not configured' });
+    }
+
+    try {
+      const response = await fetch(
+        `https://api.geoapify.com/v1/geocode/autocomplete?` +
+        `text=${encodeURIComponent(q + ', Queensland, Australia')}&` +
+        `apiKey=${process.env.GEOAPIFY_API_KEY}&` +
+        `filter=countrycode:au&` +
+        `filter=place:state&` +
+        `bias=countrycode:au&` +
+        `limit=5&` +
+        `format=json`
+      );
+
+      if (!response.ok) {
+        throw new Error(`Geoapify API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      // Transform Geoapify response to our format
+      const locationSuggestions = data.results
+        ?.filter((item: any) => 
+          item.state && 
+          (item.state.includes('Queensland') || item.state.includes('QLD')) &&
+          (item.suburb || item.city || item.locality)
+        )
+        ?.map((item: any) => ({
+          display_name: item.formatted,
+          lat: item.lat,
+          lon: item.lon,
+          address: {
+            suburb: item.suburb || item.city || item.locality,
+            city: item.city,
+            state: item.state,
+            postcode: item.postcode,
+            country: item.country
+          },
+          boundingbox: item.bbox ? [
+            item.bbox.lat1.toString(), // min_lat
+            item.bbox.lat2.toString(), // max_lat
+            item.bbox.lon1.toString(), // min_lon
+            item.bbox.lon2.toString()  // max_lon
+          ] : undefined
+        })) || [];
+
+      res.json(locationSuggestions);
+
+    } catch (error) {
+      console.error('Location search error:', error);
+      res.status(500).json({ error: 'Location search failed' });
+    }
+  });
+
   // Refresh incidents from external API (slow endpoint)
   app.post("/api/incidents/refresh", async (req, res) => {
     try {
