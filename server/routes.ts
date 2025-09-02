@@ -185,12 +185,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let incidentFeatures = recentIncidents.map(incident => ({
         type: "Feature",
         properties: {
+          id: incident.id,
           ...(incident.properties || {}),
           incidentType: incident.incidentType,
           description: incident.description,
           locationDescription: incident.location,
           createdAt: incident.lastUpdated,
-          userReported: incident.incidentType === 'Crime' || incident.incidentType === 'Suspicious' || !(incident.properties as any)?.Master_Incident_Number,
+          userReported: incident.agency === 'User Report' || incident.incidentType === 'Crime' || incident.incidentType === 'Suspicious' || !(incident.properties as any)?.Master_Incident_Number,
         },
         geometry: incident.geometry || {
           type: "Point",

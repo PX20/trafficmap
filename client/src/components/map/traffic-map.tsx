@@ -150,6 +150,7 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
           const properties = feature.properties;
           const isUserReported = properties?.userReported;
           
+          
           if (isUserReported) {
             // User-reported incidents
             const incidentType = properties?.incidentType;
