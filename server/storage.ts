@@ -11,6 +11,8 @@ import {
   conversations,
   messages,
   notifications,
+  categories,
+  subcategories,
   type User, 
   type UpsertUser,
   type InsertUser, 
@@ -35,10 +37,14 @@ import {
   type Message,
   type InsertMessage,
   type Notification,
-  type InsertNotification
+  type InsertNotification,
+  type Category,
+  type InsertCategory,
+  type Subcategory,
+  type InsertSubcategory
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, or, ne } from "drizzle-orm";
+import { eq, desc, and, or, ne, sql } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -105,6 +111,13 @@ export interface IStorage {
   createNotification(notification: InsertNotification): Promise<Notification>;
   markNotificationAsRead(notificationId: string): Promise<void>;
   markAllNotificationsAsRead(userId: string): Promise<void>;
+  
+  // Category operations
+  getCategories(): Promise<Category[]>;
+  createCategory(category: InsertCategory): Promise<Category>;
+  getSubcategories(categoryId?: string): Promise<Subcategory[]>;
+  createSubcategory(subcategory: InsertSubcategory): Promise<Subcategory>;
+  incrementSubcategoryReportCount(subcategoryId: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -560,6 +573,63 @@ export class DatabaseStorage implements IStorage {
       .update(notifications)
       .set({ isRead: true })
       .where(eq(notifications.userId, userId));
+  }
+  
+  // Category operations
+  async getCategories(): Promise<Category[]> {
+    return await db
+      .select()
+      .from(categories)
+      .where(eq(categories.isActive, true))
+      .orderBy(categories.order);
+  }
+  
+  async createCategory(category: InsertCategory): Promise<Category> {
+    const [created] = await db
+      .insert(categories)
+      .values(category)
+      .returning();
+    return created;
+  }
+  
+  async getSubcategories(categoryId?: string): Promise<Subcategory[]> {
+    if (categoryId) {
+      return await db
+        .select()
+        .from(subcategories)
+        .where(and(
+          eq(subcategories.isActive, true),
+          eq(subcategories.categoryId, categoryId)
+        ))
+        .orderBy(subcategories.order);
+    } else {
+      return await db
+        .select()
+        .from(subcategories)
+        .where(eq(subcategories.isActive, true))
+        .orderBy(subcategories.order);
+    }
+  }
+  
+  async createSubcategory(subcategory: InsertSubcategory): Promise<Subcategory> {
+    const [created] = await db
+      .insert(subcategories)
+      .values(subcategory)
+      .returning();
+    return created;
+  }
+  
+  async incrementSubcategoryReportCount(subcategoryId: string): Promise<void> {
+    try {
+      await db
+        .update(subcategories)
+        .set({ 
+          reportCount: sql`${subcategories.reportCount} + 1` 
+        })
+        .where(eq(subcategories.id, subcategoryId));
+    } catch (error) {
+      console.log(`Failed to increment report count for subcategory ${subcategoryId}:`, error);
+    }
   }
 
 }

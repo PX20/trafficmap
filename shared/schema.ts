@@ -63,6 +63,8 @@ export const trafficEvents = pgTable("traffic_events", {
 export const incidents = pgTable("incidents", {
   id: varchar("id").primaryKey(),
   incidentType: text("incident_type").notNull(),
+  categoryId: varchar("category_id"), // New hierarchical category
+  subcategoryId: varchar("subcategory_id"), // New hierarchical subcategory
   title: text("title").notNull(),
   description: text("description"),
   location: text("location"),
@@ -115,6 +117,31 @@ export const emergencyContacts = pgTable("emergency_contacts", {
   contactName: varchar("contact_name").notNull(),
   contactPhone: varchar("contact_phone"),
   relationship: varchar("relationship"), // 'family' | 'friend' | 'neighbor' | 'colleague'
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Hierarchical category system for incident reporting
+export const categories = pgTable("categories", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name").notNull(),
+  description: text("description"),
+  icon: varchar("icon"), // Icon name for UI
+  color: varchar("color"), // Color for UI markers
+  order: integer("order").default(0), // Display order
+  isActive: boolean("is_active").default(true),
+  requiresApproval: boolean("requires_approval").default(false), // For new categories
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const subcategories = pgTable("subcategories", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  categoryId: varchar("category_id").notNull(),
+  name: varchar("name").notNull(),
+  description: text("description"),
+  icon: varchar("icon"),
+  reportCount: integer("report_count").default(0), // For threshold-based display
+  isActive: boolean("is_active").default(true),
+  order: integer("order").default(0),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -185,9 +212,30 @@ export const usersRelations = relations(users, ({ many }) => ({
   notifications: many(notifications),
 }));
 
-export const incidentsRelations = relations(incidents, ({ many }) => ({
+export const incidentsRelations = relations(incidents, ({ one, many }) => ({
   comments: many(comments),
   safetyCheckIns: many(safetyCheckIns),
+  category: one(categories, {
+    fields: [incidents.categoryId],
+    references: [categories.id],
+  }),
+  subcategory: one(subcategories, {
+    fields: [incidents.subcategoryId],
+    references: [subcategories.id],
+  }),
+}));
+
+export const categoriesRelations = relations(categories, ({ many }) => ({
+  subcategories: many(subcategories),
+  incidents: many(incidents),
+}));
+
+export const subcategoriesRelations = relations(subcategories, ({ one, many }) => ({
+  category: one(categories, {
+    fields: [subcategories.categoryId],
+    references: [categories.id],
+  }),
+  incidents: many(incidents),
 }));
 
 export const commentsRelations = relations(comments, ({ one, many }) => ({
@@ -355,6 +403,16 @@ export const insertNotificationSchema = createInsertSchema(notifications).omit({
   createdAt: true,
 });
 
+export const insertCategorySchema = createInsertSchema(categories).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertSubcategorySchema = createInsertSchema(subcategories).omit({
+  id: true,
+  createdAt: true,
+});
+
 export type UpsertUser = typeof users.$inferInsert;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -380,3 +438,7 @@ export type Message = typeof messages.$inferSelect;
 export type InsertMessage = z.infer<typeof insertMessageSchema>;
 export type Notification = typeof notifications.$inferSelect;
 export type InsertNotification = z.infer<typeof insertNotificationSchema>;
+export type Category = typeof categories.$inferSelect;
+export type InsertCategory = z.infer<typeof insertCategorySchema>;
+export type Subcategory = typeof subcategories.$inferSelect;
+export type InsertSubcategory = z.infer<typeof insertSubcategorySchema>;

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,7 +14,8 @@ import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
 
 const reportIncidentSchema = z.object({
-  incidentType: z.string().min(1, "Incident type is required"),
+  categoryId: z.string().min(1, "Category is required"),
+  subcategoryId: z.string().min(1, "Subcategory is required"),
   title: z.string().min(1, "Title is required"),
   description: z.string().optional(),
   location: z.string().min(1, "Location is required"),
@@ -32,11 +33,24 @@ interface IncidentReportFormProps {
 export function IncidentReportForm({ isOpen, onClose, initialLocation }: IncidentReportFormProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
+  
+  // Fetch categories and subcategories
+  const { data: categories = [] } = useQuery({
+    queryKey: ["/api/categories"],
+    enabled: isOpen,
+  });
+  
+  const { data: subcategories = [] } = useQuery({
+    queryKey: ["/api/subcategories", selectedCategoryId],
+    enabled: isOpen && !!selectedCategoryId,
+  });
   
   const form = useForm<ReportIncidentData>({
     resolver: zodResolver(reportIncidentSchema),
     defaultValues: {
-      incidentType: "",
+      categoryId: "",
+      subcategoryId: "",
       title: "",
       description: "",
       location: initialLocation || "",
@@ -94,39 +108,79 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
         
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            {/* Category Selection */}
             <FormField
               control={form.control}
-              name="incidentType"
+              name="categoryId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Incident Type</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormLabel>Category</FormLabel>
+                  <Select 
+                    onValueChange={(value) => {
+                      field.onChange(value);
+                      setSelectedCategoryId(value);
+                      form.setValue("subcategoryId", ""); // Reset subcategory when category changes
+                    }} 
+                    defaultValue={field.value}
+                  >
                     <FormControl>
-                      <SelectTrigger data-testid="select-incident-type">
-                        <SelectValue placeholder="Select incident type" />
+                      <SelectTrigger data-testid="select-category">
+                        <SelectValue placeholder="Choose a category" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="Accident">Traffic Accident</SelectItem>
-                      <SelectItem value="Breakdown">Vehicle Breakdown</SelectItem>
-                      <SelectItem value="Roadwork">Roadwork</SelectItem>
-                      <SelectItem value="Hazard">Road Hazard</SelectItem>
-                      <SelectItem value="Weather">Weather Emergency</SelectItem>
-                      <SelectItem value="Crime">Crime in Progress</SelectItem>
-                      <SelectItem value="Theft">Theft/Break-in</SelectItem>
-                      <SelectItem value="Suspicious">Suspicious Activity</SelectItem>
-                      <SelectItem value="Violence">Violence/Assault</SelectItem>
-                      <SelectItem value="Vandalism">Vandalism</SelectItem>
-                      <SelectItem value="Public Safety">Public Safety Concern</SelectItem>
-                      <SelectItem value="Utility">Utility Emergency</SelectItem>
-                      <SelectItem value="Fire">Fire/Smoke</SelectItem>
-                      <SelectItem value="Other">Other</SelectItem>
+                      {(categories as any[]).map((category: any) => (
+                        <SelectItem key={category.id} value={category.id}>
+                          <div className="flex items-center gap-2">
+                            <div 
+                              className="w-3 h-3 rounded-full" 
+                              style={{ backgroundColor: category.color }}
+                            />
+                            <span>{category.name}</span>
+                          </div>
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <FormMessage />
                 </FormItem>
               )}
             />
+            
+            {/* Subcategory Selection - Only show when category is selected */}
+            {selectedCategoryId && (
+              <FormField
+                control={form.control}
+                name="subcategoryId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Specific Type</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger data-testid="select-subcategory">
+                          <SelectValue placeholder="Choose specific type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {(subcategories as any[]).map((subcategory: any) => (
+                          <SelectItem key={subcategory.id} value={subcategory.id}>
+                            <div className="flex flex-col">
+                              <span className="font-medium">{subcategory.name}</span>
+                              {subcategory.description && (
+                                <span className="text-xs text-muted-foreground">
+                                  {subcategory.description}
+                                </span>
+                              )}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             <FormField
               control={form.control}
