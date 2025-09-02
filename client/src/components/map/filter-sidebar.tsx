@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { ChevronDown, ChevronRight, Car, Shield, Construction, Zap, TreePine, Users } from "lucide-react";
 import type { FilterState } from "@/pages/home";
 import { getTrafficEvents, getIncidents } from "@/lib/traffic-api";
 
@@ -126,7 +126,7 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
                 className="flex items-center justify-between w-full p-2 text-left hover:bg-muted/50 rounded-md transition-colors"
               >
                 <h3 className="text-sm font-medium text-foreground flex items-center gap-2">
-                  <div className="w-4 h-4 bg-blue-500 rounded-full"></div>
+                  <Car className="w-4 h-4 text-blue-500" />
                   Traffic
                 </h3>
                 {expandedSections.traffic ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
@@ -141,7 +141,7 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
                       onCheckedChange={(checked) => onFilterChange('crashes', !!checked)}
                       data-testid="checkbox-filter-crashes"
                     />
-                    <div className="w-4 h-4 bg-red-500 rounded-full"></div>
+                    <Car className="w-4 h-4 text-red-500" />
                     <Label htmlFor="filter-crashes" className="text-sm text-foreground flex-1">
                       Crashes
                     </Label>
@@ -157,7 +157,7 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
                       onCheckedChange={(checked) => onFilterChange('hazards', !!checked)}
                       data-testid="checkbox-filter-hazards"
                     />
-                    <div className="w-4 h-4 bg-yellow-500 rounded-full"></div>
+                    <Construction className="w-4 h-4 text-yellow-500" />
                     <Label htmlFor="filter-hazards" className="text-sm text-foreground flex-1">
                       Hazards
                     </Label>
@@ -173,7 +173,7 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
                       onCheckedChange={(checked) => onFilterChange('restrictions', !!checked)}
                       data-testid="checkbox-filter-restrictions"
                     />
-                    <div className="w-4 h-4 bg-orange-500 rounded-full"></div>
+                    <Construction className="w-4 h-4 text-orange-500" />
                     <Label htmlFor="filter-restrictions" className="text-sm text-foreground flex-1">
                       Road Restrictions
                     </Label>
@@ -189,7 +189,7 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
                       onCheckedChange={(checked) => onFilterChange('incidents', !!checked)}
                       data-testid="checkbox-filter-incidents"
                     />
-                    <div className="w-4 h-4 bg-red-600 rounded-full"></div>
+                    <Zap className="w-4 h-4 text-red-600" />
                     <Label htmlFor="filter-incidents" className="text-sm text-foreground flex-1">
                       Official Emergencies
                     </Label>
@@ -202,17 +202,24 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
             </div>
             
             {/* Individual Category Sections */}
-            {(categories as any[]).map((category: any) => (
+            {(categories as any[]).map((category: any) => {
+              const getCategoryIcon = (name: string) => {
+                if (name.includes('Safety') || name.includes('Crime')) return <Shield className="w-4 h-4" style={{ color: category.color }} />;
+                if (name.includes('Infrastructure') || name.includes('Hazards')) return <Construction className="w-4 h-4" style={{ color: category.color }} />;
+                if (name.includes('Emergency')) return <Zap className="w-4 h-4" style={{ color: category.color }} />;
+                if (name.includes('Wildlife') || name.includes('Nature')) return <TreePine className="w-4 h-4" style={{ color: category.color }} />;
+                if (name.includes('Community')) return <Users className="w-4 h-4" style={{ color: category.color }} />;
+                return <Shield className="w-4 h-4" style={{ color: category.color }} />;
+              };
+              
+              return (
               <div key={category.id} className="mb-4">
                 <button
                   onClick={() => toggleSection(category.name)}
                   className="flex items-center justify-between w-full p-2 text-left hover:bg-muted/50 rounded-md transition-colors"
                 >
                   <h3 className="text-sm font-medium text-foreground flex items-center gap-2">
-                    <div 
-                      className="w-4 h-4 rounded-full" 
-                      style={{ backgroundColor: category.color }}
-                    />
+                    {getCategoryIcon(category.name)}
                     {category.name}
                   </h3>
                   {expandedSections[category.name as keyof typeof expandedSections] ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
@@ -237,7 +244,8 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
                   </div>
                 )}
               </div>
-            ))}
+            );
+            })}
           </div>
           
           
