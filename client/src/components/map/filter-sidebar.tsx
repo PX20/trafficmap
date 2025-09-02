@@ -21,7 +21,7 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
   const isMobile = useIsMobile();
   const { toast } = useToast();
   const [expandedSections, setExpandedSections] = useState({
-    traffic: true,
+    traffic: false,
     'Safety & Crime': false,
     'Infrastructure & Hazards': false,
     'Emergency Situations': false,
@@ -125,7 +125,10 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
                 onClick={() => toggleSection('traffic')}
                 className="flex items-center justify-between w-full p-2 text-left hover:bg-muted/50 rounded-md transition-colors"
               >
-                <h3 className="text-sm font-medium text-foreground">Traffic</h3>
+                <h3 className="text-sm font-medium text-foreground flex items-center gap-2">
+                  <div className="w-4 h-4 bg-blue-500 rounded-full"></div>
+                  Traffic
+                </h3>
                 {expandedSections.traffic ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
               </button>
               
@@ -237,21 +240,6 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
             ))}
           </div>
           
-          {/* Time Range */}
-          <div>
-            <h3 className="text-sm font-medium text-foreground mb-3">Time Range</h3>
-            <Select value={filters.timeRange} onValueChange={(value) => onFilterChange('timeRange', value)}>
-              <SelectTrigger className="w-full" data-testid="select-time-range">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="now">Current Events</SelectItem>
-                <SelectItem value="1h">Last Hour</SelectItem>
-                <SelectItem value="6h">Last 6 Hours</SelectItem>
-                <SelectItem value="24h">Last 24 Hours</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
           
           <div className="pt-4 border-t border-border">
             <Button 
