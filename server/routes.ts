@@ -260,11 +260,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
             createdAt: incident.lastUpdated,
             userReported: isUserReported,
             // Add proper user attribution for user-reported incidents
-            ...(isUserReported && props.reporterId && {
+            ...(isUserReported && {
               reporterId: props.reporterId,
-              reporterName: props.reporterName,
-              timeReported: props.timeReported,
-              photoUrl: props.photoUrl
+              reporterName: props.reporterName || props.reportedBy?.split('@')[0] || "Anonymous User",
+              timeReported: props.timeReported || incident.lastUpdated,
+              photoUrl: props.photoUrl,
+              title: incident.title || props.title
             })
           },
           geometry: incident.geometry || {
@@ -567,6 +568,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         properties: {
           reportedBy: user?.email || "Anonymous",
           userReported: true,
+          // Store user details for proper attribution
+          reporterId: user?.id,
+          reporterName: user?.firstName && user?.lastName 
+            ? `${user.firstName} ${user.lastName}` 
+            : user?.firstName || user?.email?.split('@')[0] || "Anonymous User",
+          photoUrl: user?.profileImageUrl,
+          timeReported: new Date().toISOString(),
         },
       };
       
