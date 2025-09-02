@@ -155,7 +155,6 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
                       onCheckedChange={(checked) => onFilterChange('crashes', !!checked)}
                       data-testid="checkbox-filter-crashes"
                     />
-                    <div className="w-4 h-4 bg-red-500 rounded-full"></div>
                     <Label htmlFor="filter-crashes" className="text-sm text-foreground flex-1">
                       Crashes
                     </Label>
@@ -171,7 +170,6 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
                       onCheckedChange={(checked) => onFilterChange('hazards', !!checked)}
                       data-testid="checkbox-filter-hazards"
                     />
-                    <div className="w-4 h-4 bg-yellow-500 rounded-full"></div>
                     <Label htmlFor="filter-hazards" className="text-sm text-foreground flex-1">
                       Hazards
                     </Label>
@@ -187,7 +185,6 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
                       onCheckedChange={(checked) => onFilterChange('restrictions', !!checked)}
                       data-testid="checkbox-filter-restrictions"
                     />
-                    <div className="w-4 h-4 bg-orange-500 rounded-full"></div>
                     <Label htmlFor="filter-restrictions" className="text-sm text-foreground flex-1">
                       Road Restrictions
                     </Label>
@@ -203,7 +200,6 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
                       onCheckedChange={(checked) => onFilterChange('incidents', !!checked)}
                       data-testid="checkbox-filter-incidents"
                     />
-                    <div className="w-4 h-4 bg-red-600 rounded-full"></div>
                     <Label htmlFor="filter-incidents" className="text-sm text-foreground flex-1">
                       Official Emergencies
                     </Label>
