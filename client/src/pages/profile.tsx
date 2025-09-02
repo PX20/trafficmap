@@ -10,7 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { ArrowLeft, MapPin, Shield, Users, Phone, UserCheck } from "lucide-react";
+import { ObjectUploader } from "@/components/ObjectUploader";
+import { ArrowLeft, MapPin, Shield, Users, Phone, UserCheck, Camera } from "lucide-react";
 import { Link } from "wouter";
 
 export default function Profile() {
@@ -57,6 +58,54 @@ export default function Profile() {
     },
   });
 
+  const uploadPhotoMutation = useMutation({
+    mutationFn: async (photoURL: string) => {
+      const response = await fetch("/api/user/profile-photo", {
+        method: "PUT",
+        body: JSON.stringify({ photoURL }),
+        headers: { 
+          "Content-Type": "application/json",
+        }
+      });
+      if (!response.ok) throw new Error('Failed to update profile photo');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      toast({
+        title: "Photo updated",
+        description: "Your profile photo has been updated successfully.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Upload failed",
+        description: "Failed to update profile photo. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleGetUploadParameters = async () => {
+    const response = await fetch("/api/objects/upload", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" }
+    });
+    if (!response.ok) throw new Error('Failed to get upload URL');
+    const data = await response.json();
+    return {
+      method: "PUT" as const,
+      url: data.uploadURL,
+    };
+  };
+
+  const handlePhotoUploadComplete = (result: any) => {
+    if (result.successful && result.successful[0]) {
+      const uploadURL = result.successful[0].uploadURL;
+      uploadPhotoMutation.mutate(uploadURL);
+    }
+  };
+
   const handleSave = () => {
     updateProfileMutation.mutate(formData);
   };
@@ -97,12 +146,25 @@ export default function Profile() {
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-4">
-                    <Avatar className="w-20 h-20">
-                      <AvatarImage src={user.profileImageUrl || undefined} alt={user.firstName || 'User'} />
-                      <AvatarFallback className="text-lg">
-                        {user.firstName ? user.firstName[0].toUpperCase() : user.email ? user.email[0].toUpperCase() : 'U'}
-                      </AvatarFallback>
-                    </Avatar>
+                    <div className="relative">
+                      <Avatar className="w-20 h-20">
+                        <AvatarImage src={user.profileImageUrl || undefined} alt={user.firstName || 'User'} />
+                        <AvatarFallback className="text-lg">
+                          {user.firstName ? user.firstName[0].toUpperCase() : user.email ? user.email[0].toUpperCase() : 'U'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="absolute -bottom-2 -right-2">
+                        <ObjectUploader
+                          maxNumberOfFiles={1}
+                          maxFileSize={5242880} // 5MB
+                          onGetUploadParameters={handleGetUploadParameters}
+                          onComplete={handlePhotoUploadComplete}
+                          buttonClassName="rounded-full w-8 h-8 p-0 bg-primary hover:bg-primary/90"
+                        >
+                          <Camera className="w-4 h-4" />
+                        </ObjectUploader>
+                      </div>
+                    </div>
                     <div>
                       <CardTitle className="text-xl" data-testid="text-user-name">
                         {user.firstName && user.lastName 

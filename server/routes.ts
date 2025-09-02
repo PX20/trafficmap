@@ -4,6 +4,10 @@ import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { insertIncidentSchema, insertCommentSchema } from "@shared/schema";
 import { z } from "zod";
+import {
+  ObjectStorageService,
+  ObjectNotFoundError,
+} from "./objectStorage";
 
 const API_BASE_URL = "https://api.qldtraffic.qld.gov.au";
 const PUBLIC_API_KEY = "3e83add325cbb69ac4d8e5bf433d770b";
@@ -427,6 +431,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting comment:", error);
       res.status(500).json({ message: "Failed to delete comment" });
+    }
+  });
+
+  // Object storage routes for profile photos
+  app.post("/api/objects/upload", isAuthenticated, async (req, res) => {
+    const objectStorageService = new ObjectStorageService();
+    try {
+      const uploadURL = await objectStorageService.getObjectEntityUploadURL();
+      res.json({ uploadURL });
+    } catch (error) {
+      console.error("Error getting upload URL:", error);
+      res.status(500).json({ error: "Failed to get upload URL" });
+    }
+  });
+
+  // Serve object files
+  app.get("/objects/:objectPath(*)", async (req, res) => {
+    const objectStorageService = new ObjectStorageService();
+    try {
+      const objectFile = await objectStorageService.getObjectEntityFile(
+        req.path,
+      );
+      objectStorageService.downloadObject(objectFile, res);
+    } catch (error) {
+      console.error("Error accessing object:", error);
+      if (error instanceof ObjectNotFoundError) {
+        return res.sendStatus(404);
+      }
+      return res.sendStatus(500);
+    }
+  });
+
+  // Update profile photo
+  app.put("/api/user/profile-photo", isAuthenticated, async (req, res) => {
+    if (!req.body.photoURL) {
+      return res.status(400).json({ error: "photoURL is required" });
+    }
+
+    try {
+      const userId = (req.user as any)?.claims?.sub;
+      const objectStorageService = new ObjectStorageService();
+      
+      // Normalize the object path from the uploaded URL
+      const objectPath = objectStorageService.normalizeObjectEntityPath(
+        req.body.photoURL
+      );
+
+      // Set ACL policy for the uploaded photo (make it public since profile photos are visible to others)
+      await objectStorageService.trySetObjectEntityAclPolicy(
+        req.body.photoURL,
+        {
+          owner: userId,
+          visibility: "public",
+        }
+      );
+
+      // Update user's profileImageUrl in the database
+      const updatedUser = await storage.updateUserProfile(userId, {
+        profileImageUrl: objectPath,
+      });
+
+      if (!updatedUser) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      res.json({
+        objectPath: objectPath,
+        user: updatedUser,
+      });
+    } catch (error) {
+      console.error("Error setting profile photo:", error);
+      res.status(500).json({ error: "Internal server error" });
     }
   });
 
