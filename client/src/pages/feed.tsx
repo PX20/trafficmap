@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { LocationAutocomplete } from "@/components/location-autocomplete";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -321,12 +322,20 @@ export default function Feed() {
             </div>
             <div className="flex gap-3">
               <div className="flex-1">
-                <Input
+                <LocationAutocomplete
                   value={selectedSuburb}
-                  onChange={(e) => setSelectedSuburb(e.target.value)}
+                  onChange={(location, coordinates, boundingBox) => {
+                    setSelectedSuburb(location);
+                    // Automatically update when location is selected
+                    setTimeout(() => handleSuburbUpdate(), 100);
+                  }}
+                  onClear={() => {
+                    setSelectedSuburb('');
+                    // Clear the feed when location is cleared
+                    setTimeout(() => handleSuburbUpdate(), 100);
+                  }}
                   placeholder="Enter your suburb (e.g., Brisbane City, Surfers Paradise)"
-                  className="rounded-full border-2 focus:border-primary"
-                  data-testid="input-suburb"
+                  disabled={false}
                 />
               </div>
               <Button 
