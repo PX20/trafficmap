@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
-import { useParams } from "wouter";
+import { useParams, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -22,6 +22,7 @@ export default function Messages() {
   const { user: currentUser } = useAuth();
   const [newMessage, setNewMessage] = useState("");
   const queryClient = useQueryClient();
+  const [, setLocation] = useLocation();
 
   // Fetch conversations
   const { data: conversations = [], isLoading: conversationsLoading } = useQuery<Conversation[]>({
@@ -142,7 +143,7 @@ export default function Messages() {
                           variant={isActive ? "secondary" : "ghost"}
                           className="w-full justify-start p-3 h-auto"
                           onClick={() => {
-                            window.location.href = `/messages/${conversation.id}`;
+                            setLocation(`/messages/${conversation.id}`);
                           }}
                           data-testid={`conversation-${conversation.id}`}
                         >
@@ -188,7 +189,7 @@ export default function Messages() {
                       variant="ghost"
                       size="sm"
                       onClick={() => {
-                        window.location.href = '/messages';
+                        setLocation('/messages');
                       }}
                       className="lg:hidden"
                     >

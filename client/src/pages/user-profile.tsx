@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "wouter";
+import { useParams, Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,7 @@ import type { User } from "@shared/schema";
 export default function UserProfile() {
   const { userId } = useParams();
   const { user: currentUser, isAuthenticated } = useAuth();
+  const [, setLocation] = useLocation();
   
   // Fetch user data
   const { data: viewedUser, isLoading: userLoading } = useQuery({
@@ -152,8 +153,8 @@ export default function UserProfile() {
                           
                           if (response.ok) {
                             const conversation = await response.json();
-                            // Navigate to the conversation
-                            window.location.href = `/messages/${conversation.id}`;
+                            // Navigate to the conversation using React routing
+                            setLocation(`/messages/${conversation.id}`);
                           }
                         } catch (error) {
                           console.error('Failed to start conversation:', error);
