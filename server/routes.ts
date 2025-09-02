@@ -10,6 +10,8 @@ import {
 } from "./objectStorage";
 import express from "express";
 import path from "path";
+import sharp from "sharp";
+import fs from "fs";
 
 const API_BASE_URL = "https://api.qldtraffic.qld.gov.au";
 const PUBLIC_API_KEY = "3e83add325cbb69ac4d8e5bf433d770b";
@@ -37,9 +39,65 @@ async function fetchWithRetry(url: string, retryDelay: number = RETRY_DELAY): Pr
   return response;
 }
 
+
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Serve static assets from attached_assets directory
-  app.use('/attached_assets', express.static(path.resolve(process.cwd(), 'attached_assets')));
+  // Debug: log the path being used
+  const assetsPath = path.resolve(process.cwd(), 'attached_assets');
+  console.log('Serving static assets from:', assetsPath);
+  console.log('Directory exists:', fs.existsSync(assetsPath));
+  
+  // Serve static assets with compression for images
+  app.use('/attached_assets', express.static(assetsPath));
+  
+  // Image compression endpoint - compresses images on-the-fly
+  app.get('/api/compress-image', async (req, res) => {
+    const imagePath = req.query.path as string;
+    if (!imagePath) {
+      return res.status(400).json({ error: 'Path parameter required' });
+    }
+    
+    const filePath = path.join(process.cwd(), imagePath);
+    
+    try {
+      if (!fs.existsSync(filePath) || !imagePath.startsWith('/attached_assets/')) {
+        return res.status(404).json({ error: 'Image not found' });
+      }
+
+      const stats = fs.statSync(filePath);
+      const fileSize = stats.size;
+      
+      // Only compress images larger than 100KB
+      if (fileSize < 100 * 1024) {
+        return res.sendFile(filePath);
+      }
+
+      const compressed = await sharp(filePath)
+        .resize(800, 800, { 
+          fit: 'inside', 
+          withoutEnlargement: true 
+        })
+        .jpeg({ 
+          quality: 75, 
+          progressive: true 
+        })
+        .toBuffer();
+
+      res.set({
+        'Content-Type': 'image/jpeg',
+        'Content-Length': compressed.length.toString(),
+        'Cache-Control': 'public, max-age=86400', // 1 day cache
+        'X-Original-Size': fileSize.toString(),
+        'X-Compressed-Size': compressed.length.toString(),
+        'X-Compression-Ratio': `${Math.round(((fileSize - compressed.length) / fileSize) * 100)}%`
+      });
+
+      res.send(compressed);
+      
+    } catch (error) {
+      console.error('Image compression error:', error);
+      res.status(500).json({ error: 'Compression failed' });
+    }
+  });
 
   // Auth middleware
   await setupAuth(app);
