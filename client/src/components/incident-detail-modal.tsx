@@ -42,13 +42,8 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyText, setReplyText] = useState("");
 
-  // Return early if no incident
-  if (!incident || !isOpen) {
-    return null;
-  }
-
-  // Extract incident ID from the incident object
-  const incidentId = getIncidentId(incident);
+  // Extract incident ID from the incident object (safe to call even if incident is null)
+  const incidentId = incident ? getIncidentId(incident) : null;
 
   const { data: comments = [], isLoading: commentsLoading } = useQuery({
     queryKey: ["/api/incidents", incidentId, "comments"],
@@ -57,7 +52,7 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
       if (!response.ok) throw new Error('Failed to fetch comments');
       return response.json();
     },
-    enabled: isOpen && !!incidentId,
+    enabled: isOpen && !!incidentId && !!incident,
   });
 
   const createCommentMutation = useMutation({
@@ -84,6 +79,8 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
   });
 
   function getIncidentId(incident: any): string {
+    if (!incident) return `unknown-${Date.now()}`;
+    
     if (incident.type === 'traffic') {
       return incident.properties?.id || incident.properties?.event_id || `traffic-${Date.now()}`;
     } else if (incident.properties?.userReported) {
@@ -94,6 +91,8 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
   }
 
   const getIncidentIcon = (incident: any) => {
+    if (!incident) return <AlertTriangle className="w-6 h-6 text-gray-500" />;
+    
     if (incident.type === 'traffic') {
       const eventType = incident.properties?.event_type?.toLowerCase();
       if (eventType === 'crash') return <Car className="w-6 h-6 text-red-500" />;
@@ -116,6 +115,8 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
   };
 
   const getIncidentTitle = (incident: any) => {
+    if (!incident) return "Unknown Incident";
+    
     if (incident.type === 'traffic') {
       return incident.properties?.description || incident.properties?.event_type || "Traffic Event";
     }
@@ -128,6 +129,8 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
   };
 
   const getIncidentDescription = (incident: any) => {
+    if (!incident) return "No information available";
+    
     if (incident.type === 'traffic') {
       return incident.properties?.information || incident.properties?.advice || "Traffic information";
     }
@@ -140,6 +143,8 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
   };
 
   const getIncidentLocation = (incident: any) => {
+    if (!incident) return "Unknown location";
+    
     if (incident.type === 'traffic') {
       return incident.properties?.road_summary?.road_name || incident.properties?.road_summary?.locality || "Unknown location";
     }
@@ -167,6 +172,8 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
   };
 
   const getStatusBadge = (incident: any) => {
+    if (!incident) return <Badge variant="outline">Unknown</Badge>;
+    
     if (incident.type === 'traffic') {
       const priority = incident.properties?.event_priority?.toLowerCase();
       if (priority === 'high' || priority === 'red alert') {
@@ -301,6 +308,11 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
     }
     return acc;
   }, {});
+
+  // Don't render if no incident
+  if (!incident) {
+    return null;
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
