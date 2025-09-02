@@ -49,16 +49,11 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
   const { data: comments = [], isLoading: commentsLoading } = useQuery({
     queryKey: ["/api/incidents", incidentId, "comments"],
     queryFn: async () => {
-      console.log('🔍 Fetching comments for:', incidentId);
       const response = await fetch(`/api/incidents/${incidentId}/comments`);
       if (!response.ok) throw new Error('Failed to fetch comments');
-      const data = await response.json();
-      console.log('📝 Comments received:', data.length, 'comments');
-      return data;
+      return response.json();
     },
-    enabled: isOpen && !!incidentId && !!incident,
-    staleTime: 0, // Always fetch fresh data
-    gcTime: 0, // Clear cache immediately
+    enabled: isOpen && !!incidentId && !!incident
   });
 
   const createCommentMutation = useMutation({
@@ -225,19 +220,23 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
     });
   };
 
-  const renderComment = (comment: Comment) => {
-    const isReply = !!comment.parentCommentId;
+  const renderComment = (comment: Comment, isReply = false) => {
+    const userData = getUserData(comment.userId);
     
     return (
       <div key={comment.id} className={`${isReply ? 'ml-8 border-l-2 border-muted pl-4' : ''}`}>
         <div className="flex gap-3 mb-3">
           <Avatar className="w-8 h-8">
-            <AvatarFallback>{comment.userId.slice(0, 2).toUpperCase()}</AvatarFallback>
+            <AvatarImage src={userData.avatar} alt={userData.name} />
+            <AvatarFallback>{userData.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
           </Avatar>
           <div className="flex-1">
             <div className="bg-muted p-3 rounded-lg">
               <div className="flex items-center justify-between mb-1">
-                <span className="text-sm font-medium">User {comment.userId.slice(-4)}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium">{userData.name}</span>
+                  <span className="text-xs text-muted-foreground">• {userData.location}</span>
+                </div>
                 <span className="text-xs text-muted-foreground">
                   {getTimeAgo(comment.createdAt?.toString() || '')}
                 </span>
@@ -315,8 +314,20 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
     return acc;
   }, {});
   
-  console.log('🔧 Grouped comments:', groupedComments);
-  console.log('💬 Total comments array:', comments);
+
+  // User data mapping
+  const getUserData = (userId: string) => {
+    const users: Record<string, { name: string; avatar: string; location: string }> = {
+      'user-001': { name: 'Sarah Chen', avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b1-0/0/photo-1494790108755-2616b612b1-0.jpg?w=150&h=150&fit=crop&crop=face', location: 'Woolloongabba' },
+      'user-002': { name: 'Mike Thompson', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face', location: 'South Brisbane' },
+      'user-003': { name: 'Emma Rodriguez', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face', location: 'West End' },
+      'user-004': { name: 'James Wilson', avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face', location: 'Kangaroo Point' },
+      'user-005': { name: 'Lisa Nguyen', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop&crop=face', location: 'Fortitude Valley' },
+      '40158122': { name: user?.firstName || 'You', avatar: user?.profileImageUrl || '', location: 'Brisbane' },
+    };
+    
+    return users[userId] || { name: `User ${userId.slice(-4)}`, avatar: '', location: 'Brisbane' };
+  };
 
   // Don't render if no incident
   if (!incident) {
@@ -376,21 +387,10 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
               </div>
             ) : (
               <div className="space-y-4">
-                {/* Debug info */}
-                <div className="bg-yellow-100 p-2 rounded text-xs">
-                  Debug: {comments.length} comments loaded
-                </div>
-                
-                {/* Simple rendering - just show all comments */}
-                {comments.map((comment: Comment) => (
-                  <div key={comment.id} className="bg-muted p-3 rounded-lg">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm font-medium">User {comment.userId.slice(-4)}</span>
-                      <span className="text-xs text-muted-foreground">
-                        {getTimeAgo(comment.createdAt?.toString() || '')}
-                      </span>
-                    </div>
-                    <p className="text-sm">{comment.content}</p>
+                {Object.values(groupedComments).map((group: any) => (
+                  <div key={group.comment?.id || Math.random()}>
+                    {group.comment && renderComment(group.comment)}
+                    {group.replies.map((reply: Comment) => renderComment(reply, true))}
                   </div>
                 ))}
                 
