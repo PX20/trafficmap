@@ -16,9 +16,7 @@ export interface FilterState {
   crime: boolean;
   suspicious: boolean;
   emergency: boolean;
-  impactLevel: 'all' | 'high' | 'medium';
   timeRange: 'now' | '1h' | '6h' | '24h';
-  autoRefresh: boolean;
 }
 
 export default function Home() {
@@ -34,9 +32,7 @@ export default function Home() {
     crime: true,
     suspicious: true,
     emergency: true,
-    impactLevel: 'all',
     timeRange: 'now',
-    autoRefresh: false,
   });
 
   const handleFilterChange = (key: keyof FilterState, value: boolean | string) => {

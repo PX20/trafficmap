@@ -1,7 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
@@ -233,29 +232,6 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
             </div>
           </div>
           
-          {/* Impact Level Filter */}
-          <div>
-            <h3 className="text-sm font-medium text-foreground mb-3">Impact Level</h3>
-            <RadioGroup 
-              value={filters.impactLevel} 
-              onValueChange={(value) => onFilterChange('impactLevel', value)}
-              data-testid="radio-impact-level"
-            >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="all" id="impact-all" />
-                <Label htmlFor="impact-all" className="text-sm text-foreground">All Levels</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="high" id="impact-high" />
-                <Label htmlFor="impact-high" className="text-sm text-foreground">High Impact Only</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="medium" id="impact-medium" />
-                <Label htmlFor="impact-medium" className="text-sm text-foreground">Medium & High</Label>
-              </div>
-            </RadioGroup>
-          </div>
-          
           {/* Time Range */}
           <div>
             <h3 className="text-sm font-medium text-foreground mb-3">Time Range</h3>
@@ -270,22 +246,6 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
                 <SelectItem value="24h">Last 24 Hours</SelectItem>
               </SelectContent>
             </Select>
-          </div>
-          
-          {/* Auto Refresh */}
-          <div>
-            <h3 className="text-sm font-medium text-foreground mb-3">Auto Refresh</h3>
-            <div className="flex items-center space-x-2">
-              <Checkbox 
-                id="auto-refresh"
-                checked={filters.autoRefresh}
-                onCheckedChange={(checked) => onFilterChange('autoRefresh', !!checked)}
-                data-testid="checkbox-auto-refresh"
-              />
-              <Label htmlFor="auto-refresh" className="text-sm text-foreground">
-                Enable (30 seconds)
-              </Label>
-            </div>
           </div>
           
           <div className="pt-4 border-t border-border">
