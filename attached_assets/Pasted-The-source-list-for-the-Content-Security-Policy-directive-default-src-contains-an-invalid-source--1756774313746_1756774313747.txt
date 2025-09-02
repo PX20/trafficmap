@@ -1,0 +1,217 @@
+The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+The Content-Security-Policy directive 'default-src' contains 'report-uri' as a source expression. Did you want to add it as a directive and forget a semicolon?
+The Content-Security-Policy directive 'default-src' contains 'report-uri' as a source expression. Did you want to add it as a directive and forget a semicolon?
+The Content-Security-Policy directive 'default-src' contains 'report-uri' as a source expression. Did you want to add it as a directive and forget a semicolon?
+The Content-Security-Policy directive 'default-src' contains 'report-uri' as a source expression. Did you want to add it as a directive and forget a semicolon?
+The Content-Security-Policy directive 'default-src' contains 'report-uri' as a source expression. Did you want to add it as a directive and forget a semicolon?
+The Content-Security-Policy directive 'default-src' contains 'report-uri' as a source expression. Did you want to add it as a directive and forget a semicolon?
+The Content-Security-Policy directive 'default-src' contains 'report-uri' as a source expression. Did you want to add it as a directive and forget a semicolon?
+The Content-Security-Policy directive 'default-src' contains 'report-uri' as a source expression. Did you want to add it as a directive and forget a semicolon?
+The Content-Security-Policy directive 'default-src' contains 'report-uri' as a source expression. Did you want to add it as a directive and forget a semicolon?
+The source list for Content Security Policy directive 'default-src' contains a source with an invalid path: '/api/4509669501698048/security/?sentry_key=7eb3d90eb4660416caf507087367e67e'. The query component, including the '?', will be ignored.
+The source list for Content Security Policy directive 'default-src' contains a source with an invalid path: '/api/4509669501698048/security/?sentry_key=7eb3d90eb4660416caf507087367e67e'. The query component, including the '?', will be ignored.
+The source list for Content Security Policy directive 'default-src' contains a source with an invalid path: '/api/4509669501698048/security/?sentry_key=7eb3d90eb4660416caf507087367e67e'. The query component, including the '?', will be ignored.
+The source list for Content Security Policy directive 'default-src' contains a source with an invalid path: '/api/4509669501698048/security/?sentry_key=7eb3d90eb4660416caf507087367e67e'. The query component, including the '?', will be ignored.
+The source list for Content Security Policy directive 'default-src' contains a source with an invalid path: '/api/4509669501698048/security/?sentry_key=7eb3d90eb4660416caf507087367e67e'. The query component, including the '?', will be ignored.
+The source list for Content Security Policy directive 'default-src' contains a source with an invalid path: '/api/4509669501698048/security/?sentry_key=7eb3d90eb4660416caf507087367e67e'. The query component, including the '?', will be ignored.
+The source list for Content Security Policy directive 'default-src' contains a source with an invalid path: '/api/4509669501698048/security/?sentry_key=7eb3d90eb4660416caf507087367e67e'. The query component, including the '?', will be ignored.
+The source list for Content Security Policy directive 'default-src' contains a source with an invalid path: '/api/4509669501698048/security/?sentry_key=7eb3d90eb4660416caf507087367e67e'. The query component, including the '?', will be ignored.
+The source list for Content Security Policy directive 'default-src' contains a source with an invalid path: '/api/4509669501698048/security/?sentry_key=7eb3d90eb4660416caf507087367e67e'. The query component, including the '?', will be ignored.
+TrafficMap:1  The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+TrafficMap:1  The Content-Security-Policy directive 'default-src' contains 'report-uri' as a source expression. Did you want to add it as a directive and forget a semicolon?
+TrafficMap:1  The source list for Content Security Policy directive 'default-src' contains a source with an invalid path: '/api/4509669501698048/security/?sentry_key=7eb3d90eb4660416caf507087367e67e'. The query component, including the '?', will be ignored.
+cdn.segment.com/next-integrations/actions/tiktok-pixel/920266289e7b08bf066b.js:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+index.ts:256  Failed to create PluginFactory Object
+(anonymous) @ index.ts:256
+index.ts:311  Failed to load Remote Plugin Error: Failed to load https://cdn.segment.com/next-integrations/actions/tiktok-pixel/920266289e7b08bf066b.js
+    at HTMLScriptElement.<anonymous> (load-script.ts:53:24)
+(anonymous) @ index.ts:311
+ stallwart: failed ping 1
+ stallwart: failed ping 2
+_app-8bd09477ee132add.js:38 
+      /////////////////////
+   ///////////////////////////
+  ////////@@@@@@@//////////////
+  ////////@@@@@@@//////////////
+  ////////@@@@@@@//////////////        Curious and driven?
+  ///////////////@@@@@@@///////        Work with us!
+  ///////////////@@@@@@@///////
+  ///////////////@@@@@@@///////        https://join.replit.com/hack.with.us
+  ////////@@@@@@@//////////////
+  ////////@@@@@@@//////////////
+  ////////@@@@@@#//////////////
+   ///////////////////////////
+      /////////////////////
+      
+www.googletagmanager.com/gtag/js?id=AW-11411994397:1   Failed to load resource: net::ERR_UNSAFE_REDIRECT
+www.google-analytics.com/analytics.js:1   Failed to load resource: net::ERR_UNSAFE_REDIRECT
+o1151714.ingest.sentry.io/api/6318792/envelope/?sentry_key=8aa91189a4274b5a8c9b7b01d46ea360&sentry_version=7&sentry_client=sentry.javascript.browser%2F7.112.0:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+_app-8bd09477ee132add.js:38 [LaunchDarkly] LaunchDarkly client initialized
+TrafficMap:1  Tracking Prevention blocked access to storage for https://www.gravatar.com/avatar/1d27f71628d0dec4e13729a0fff65cb1?d=blank&s=256.
+TrafficMap:1  Tracking Prevention blocked access to storage for https://www.gravatar.com/avatar/1d27f71628d0dec4e13729a0fff65cb1?d=blank&s=256.
+TrafficMap:1  Tracking Prevention blocked access to storage for https://www.gravatar.com/avatar/1d27f71628d0dec4e13729a0fff65cb1?d=blank&s=256.
+TrafficMap:1  Tracking Prevention blocked access to storage for https://www.gravatar.com/avatar/1d27f71628d0dec4e13729a0fff65cb1?d=blank&s=256.
+r.stripe.com/b:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+r.stripe.com/b:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+shared-4782f873d74ec…19e58a56f39951.js:1  Uncaught (in promise) 
+r.stripe.com/b:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+r.stripe.com/b:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+shared-4782f873d74ec…19e58a56f39951.js:1  Uncaught (in promise) 
+r.stripe.com/b:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+r.stripe.com/b:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+shared-4782f873d74ec…19e58a56f39951.js:1  Uncaught (in promise) 
+events.launchdarkly.com/events/bulk/62b35a865152ab14c5942820:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+events.launchdarkly.com/events/bulk/62b35a865152ab14c5942820:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+TrafficMap:1 Banner not shown: beforeinstallpromptevent.preventDefault() called. The page must call beforeinstallpromptevent.prompt() to show the banner.
+r.stripe.com/b:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+r.stripe.com/b:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+shared-4782f873d74ec…19e58a56f39951.js:1  Uncaught (in promise) 
+framework-744c0ebb8bbfaf85.js:1  Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+_ @ framework-744c0ebb8bbfaf85.js:1
+framework-744c0ebb8bbfaf85.js:1  Unrecognized feature: 'ambient-light-sensor'.
+_ @ framework-744c0ebb8bbfaf85.js:1
+framework-744c0ebb8bbfaf85.js:1  Unrecognized feature: 'battery'.
+_ @ framework-744c0ebb8bbfaf85.js:1
+framework-744c0ebb8bbfaf85.js:1  Unrecognized feature: 'execution-while-not-rendered'.
+_ @ framework-744c0ebb8bbfaf85.js:1
+framework-744c0ebb8bbfaf85.js:1  Unrecognized feature: 'execution-while-out-of-viewport'.
+_ @ framework-744c0ebb8bbfaf85.js:1
+framework-744c0ebb8bbfaf85.js:1  Unrecognized feature: 'layout-animations'.
+_ @ framework-744c0ebb8bbfaf85.js:1
+framework-744c0ebb8bbfaf85.js:1  Unrecognized feature: 'legacy-image-formats'.
+_ @ framework-744c0ebb8bbfaf85.js:1
+framework-744c0ebb8bbfaf85.js:1  Unrecognized feature: 'navigation-override'.
+_ @ framework-744c0ebb8bbfaf85.js:1
+framework-744c0ebb8bbfaf85.js:1  Unrecognized feature: 'oversized-images'.
+_ @ framework-744c0ebb8bbfaf85.js:1
+framework-744c0ebb8bbfaf85.js:1  Unrecognized feature: 'publickey-credentials'.
+_ @ framework-744c0ebb8bbfaf85.js:1
+framework-744c0ebb8bbfaf85.js:1  Unrecognized feature: 'speaker-selection'.
+_ @ framework-744c0ebb8bbfaf85.js:1
+framework-744c0ebb8bbfaf85.js:1  Unrecognized feature: 'unoptimized-images'.
+_ @ framework-744c0ebb8bbfaf85.js:1
+framework-744c0ebb8bbfaf85.js:1  Unrecognized feature: 'unsized-media'.
+_ @ framework-744c0ebb8bbfaf85.js:1
+framework-744c0ebb8bbfaf85.js:1  Unrecognized feature: 'pointer-lock'.
+_ @ framework-744c0ebb8bbfaf85.js:1
+framework-744c0ebb8bbfaf85.js:1  Allow attribute will take precedence over 'allowfullscreen'.
+_ @ framework-744c0ebb8bbfaf85.js:1
+framework-744c0ebb8bbfaf85.js:1  Allow attribute will take precedence over 'allowpaymentrequest'.
+_ @ framework-744c0ebb8bbfaf85.js:1
+logs.browser-intake-us5-datadoghq.com/api/v2/logs?ddsource=browser&ddtags=sdk_version%3A4.46.0%2Capi%3Abeacon%2Cenv%3Aproduction%2Cservice%3Awebsite%2Cversion%3Aac454555&dd-api-key=pub31a5047a3a4692afb84a423db984dc57&dd-evp-origin-version=4.46.0&dd-evp-origin=browser&dd-request-id=c602b71b-4aee-4b53-85b6-6c0cd07246a3:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+r.stripe.com/b:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+r.stripe.com/b:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+o1151714.ingest.sentry.io/api/6318792/envelope/?sentry_key=8aa91189a4274b5a8c9b7b01d46ea360&sentry_version=7&sentry_client=sentry.javascript.browser%2F7.112.0:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+r.stripe.com/b:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+r.stripe.com/b:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+shared-4782f873d74ec…19e58a56f39951.js:1  Uncaught (in promise) 
+logs.browser-intake-us5-datadoghq.com/api/v2/logs?ddsource=browser&ddtags=sdk_version%3A4.46.0%2Capi%3Abeacon%2Cenv%3Aproduction%2Cservice%3Awebsite%2Cversion%3Aac454555&dd-api-key=pub31a5047a3a4692afb84a423db984dc57&dd-evp-origin-version=4.46.0&dd-evp-origin=browser&dd-request-id=71951172-de90-4152-9a2f-268cdfe61c1c:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+r.stripe.com/b:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+r.stripe.com/b:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+o1151714.ingest.sentry.io/api/6318792/envelope/?sentry_key=8aa91189a4274b5a8c9b7b01d46ea360&sentry_version=7&sentry_client=sentry.javascript.browser%2F7.112.0:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+r.stripe.com/b:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+r.stripe.com/b:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+shared-4782f873d74ec…19e58a56f39951.js:1  Uncaught (in promise) 
+r.stripe.com/b:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+r.stripe.com/b:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+logs.browser-intake-us5-datadoghq.com/api/v2/logs?ddsource=browser&ddtags=sdk_version%3A4.46.0%2Capi%3Abeacon%2Cenv%3Aproduction%2Cservice%3Awebsite%2Cversion%3Aac454555&dd-api-key=pub31a5047a3a4692afb84a423db984dc57&dd-evp-origin-version=4.46.0&dd-evp-origin=browser&dd-request-id=64b2f93c-bfb8-4d40-b251-7f2461b28db1:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+o1151714.ingest.sentry.io/api/6318792/envelope/?sentry_key=8aa91189a4274b5a8c9b7b01d46ea360&sentry_version=7&sentry_client=sentry.javascript.browser%2F7.112.0:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+r.stripe.com/b:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+r.stripe.com/b:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+shared-4782f873d74ec…19e58a56f39951.js:1  Uncaught (in promise) 
+r.stripe.com/b:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+r.stripe.com/b:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+logs.browser-intake-us5-datadoghq.com/api/v2/logs?ddsource=browser&ddtags=sdk_version%3A4.46.0%2Capi%3Abeacon%2Cenv%3Aproduction%2Cservice%3Awebsite%2Cversion%3Aac454555&dd-api-key=pub31a5047a3a4692afb84a423db984dc57&dd-evp-origin-version=4.46.0&dd-evp-origin=browser&dd-request-id=77aea1ea-2b0f-4304-baf6-655ab1d8ca2c:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+o1151714.ingest.sentry.io/api/6318792/envelope/?sentry_key=8aa91189a4274b5a8c9b7b01d46ea360&sentry_version=7&sentry_client=sentry.javascript.browser%2F7.112.0:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+events.launchdarkly.com/events/bulk/62b35a865152ab14c5942820:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+events.launchdarkly.com/events/bulk/62b35a865152ab14c5942820:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+r.stripe.com/b:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+r.stripe.com/b:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+shared-4782f873d74ec05ba719e58a56f39951.js:1  Uncaught (in promise) FetchError: Error fetching https://r.stripe.com/b: Failed to fetch
+    at shared-4782f873d74ec05ba719e58a56f39951.js:1:220974
+r.stripe.com/b:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+r.stripe.com/b:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+logs.browser-intake-us5-datadoghq.com/api/v2/logs?ddsource=browser&ddtags=sdk_version%3A4.46.0%2Capi%3Abeacon%2Cenv%3Aproduction%2Cservice%3Awebsite%2Cversion%3Aac454555&dd-api-key=pub31a5047a3a4692afb84a423db984dc57&dd-evp-origin-version=4.46.0&dd-evp-origin=browser&dd-request-id=bec78e6b-8952-4491-9367-fd15e97e0eb1:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+o1151714.ingest.sentry.io/api/6318792/envelope/?sentry_key=8aa91189a4274b5a8c9b7b01d46ea360&sentry_version=7&sentry_client=sentry.javascript.browser%2F7.112.0:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+r.stripe.com/b:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+r.stripe.com/b:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+shared-4782f873d74ec05ba719e58a56f39951.js:1  Uncaught (in promise) FetchError: Error fetching https://r.stripe.com/b: Failed to fetch
+    at shared-4782f873d74ec05ba719e58a56f39951.js:1:220974
+r.stripe.com/b:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+r.stripe.com/b:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+logs.browser-intake-us5-datadoghq.com/api/v2/logs?ddsource=browser&ddtags=sdk_version%3A4.46.0%2Capi%3Abeacon%2Cenv%3Aproduction%2Cservice%3Awebsite%2Cversion%3Aac454555&dd-api-key=pub31a5047a3a4692afb84a423db984dc57&dd-evp-origin-version=4.46.0&dd-evp-origin=browser&dd-request-id=0c003233-dd9e-475f-9289-6a65ace33713:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+o1151714.ingest.sentry.io/api/6318792/envelope/?sentry_key=8aa91189a4274b5a8c9b7b01d46ea360&sentry_version=7&sentry_client=sentry.javascript.browser%2F7.112.0:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+framework-744c0ebb8bbfaf85.js:1  Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+_ @ framework-744c0ebb8bbfaf85.js:1
+events.launchdarkly.com/events/bulk/62b35a865152ab14c5942820:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+events.launchdarkly.com/events/bulk/62b35a865152ab14c5942820:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+r.stripe.com/b:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+r.stripe.com/b:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+shared-4782f873d74ec05ba719e58a56f39951.js:1  Uncaught (in promise) FetchError: Error fetching https://r.stripe.com/b: Failed to fetch
+    at shared-4782f873d74ec05ba719e58a56f39951.js:1:220974
+events.launchdarkly.com/events/bulk/62b35a865152ab14c5942820:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+events.launchdarkly.com/events/bulk/62b35a865152ab14c5942820:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+events.launchdarkly.com/events/bulk/62b35a865152ab14c5942820:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+events.launchdarkly.com/events/bulk/62b35a865152ab14c5942820:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+logs.browser-intake-us5-datadoghq.com/api/v2/logs?ddsource=browser&ddtags=sdk_version%3A4.46.0%2Capi%3Abeacon%2Cenv%3Aproduction%2Cservice%3Awebsite%2Cversion%3Aac454555&dd-api-key=pub31a5047a3a4692afb84a423db984dc57&dd-evp-origin-version=4.46.0&dd-evp-origin=browser&dd-request-id=8cf975c0-35f4-4e0f-aa7b-f53721d1e3f3:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+r.stripe.com/b:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+r.stripe.com/b:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+o1151714.ingest.sentry.io/api/6318792/envelope/?sentry_key=8aa91189a4274b5a8c9b7b01d46ea360&sentry_version=7&sentry_client=sentry.javascript.browser%2F7.112.0:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+r.stripe.com/b:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+r.stripe.com/b:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+shared-4782f873d74ec05ba719e58a56f39951.js:1  Uncaught (in promise) FetchError: Error fetching https://r.stripe.com/b: Failed to fetch
+    at shared-4782f873d74ec05ba719e58a56f39951.js:1:220974
+events.launchdarkly.com/events/diagnostic/62b35a865152ab14c5942820:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+events.launchdarkly.com/events/diagnostic/62b35a865152ab14c5942820:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+events.launchdarkly.com/events/bulk/62b35a865152ab14c5942820:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+events.launchdarkly.com/events/bulk/62b35a865152ab14c5942820:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+r.stripe.com/b:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+r.stripe.com/b:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+logs.browser-intake-us5-datadoghq.com/api/v2/logs?ddsource=browser&ddtags=sdk_version%3A4.46.0%2Capi%3Abeacon%2Cenv%3Aproduction%2Cservice%3Awebsite%2Cversion%3Aac454555&dd-api-key=pub31a5047a3a4692afb84a423db984dc57&dd-evp-origin-version=4.46.0&dd-evp-origin=browser&dd-request-id=2a04b297-de8d-47d5-8bee-2d2a9119260d:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+o1151714.ingest.sentry.io/api/6318792/envelope/?sentry_key=8aa91189a4274b5a8c9b7b01d46ea360&sentry_version=7&sentry_client=sentry.javascript.browser%2F7.112.0:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+r.stripe.com/b:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+r.stripe.com/b:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+shared-4782f873d74ec05ba719e58a56f39951.js:1  Uncaught (in promise) FetchError: Error fetching https://r.stripe.com/b: Failed to fetch
+    at shared-4782f873d74ec05ba719e58a56f39951.js:1:220974
+r.stripe.com/b:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+r.stripe.com/b:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+logs.browser-intake-us5-datadoghq.com/api/v2/logs?ddsource=browser&ddtags=sdk_version%3A4.46.0%2Capi%3Abeacon%2Cenv%3Aproduction%2Cservice%3Awebsite%2Cversion%3Aac454555&dd-api-key=pub31a5047a3a4692afb84a423db984dc57&dd-evp-origin-version=4.46.0&dd-evp-origin=browser&dd-request-id=30408903-7925-4e8f-8b56-0226451d7000:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+o1151714.ingest.sentry.io/api/6318792/envelope/?sentry_key=8aa91189a4274b5a8c9b7b01d46ea360&sentry_version=7&sentry_client=sentry.javascript.browser%2F7.112.0:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+r.stripe.com/b:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+r.stripe.com/b:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+shared-4782f873d74ec05ba719e58a56f39951.js:1  Uncaught (in promise) FetchError: Error fetching https://r.stripe.com/b: Failed to fetch
+    at shared-4782f873d74ec05ba719e58a56f39951.js:1:220974
+framework-744c0ebb8bbfaf85.js:1  Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+_ @ framework-744c0ebb8bbfaf85.js:1
+workspace_iframe.html?initialPath=%2F&id=%3Arbr%3A:32  Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+workspace_iframe.html?initialPath=%2F&id=%3Arbr%3A:32  Unrecognized feature: 'ambient-light-sensor'.
+workspace_iframe.html?initialPath=%2F&id=%3Arbr%3A:32  Unrecognized feature: 'battery'.
+workspace_iframe.html?initialPath=%2F&id=%3Arbr%3A:32  Unrecognized feature: 'execution-while-not-rendered'.
+workspace_iframe.html?initialPath=%2F&id=%3Arbr%3A:32  Unrecognized feature: 'execution-while-out-of-viewport'.
+workspace_iframe.html?initialPath=%2F&id=%3Arbr%3A:32  Unrecognized feature: 'layout-animations'.
+workspace_iframe.html?initialPath=%2F&id=%3Arbr%3A:32  Unrecognized feature: 'legacy-image-formats'.
+workspace_iframe.html?initialPath=%2F&id=%3Arbr%3A:32  Unrecognized feature: 'navigation-override'.
+workspace_iframe.html?initialPath=%2F&id=%3Arbr%3A:32  Unrecognized feature: 'oversized-images'.
+workspace_iframe.html?initialPath=%2F&id=%3Arbr%3A:32  Unrecognized feature: 'publickey-credentials'.
+workspace_iframe.html?initialPath=%2F&id=%3Arbr%3A:32  Unrecognized feature: 'speaker-selection'.
+workspace_iframe.html?initialPath=%2F&id=%3Arbr%3A:32  Unrecognized feature: 'unoptimized-images'.
+workspace_iframe.html?initialPath=%2F&id=%3Arbr%3A:32  Unrecognized feature: 'unsized-media'.
+workspace_iframe.html?initialPath=%2F&id=%3Arbr%3A:32  Allow attribute will take precedence over 'allowfullscreen'.
+workspace_iframe.html?initialPath=%2F&id=%3Arbr%3A:32  Allow attribute will take precedence over 'allowpaymentrequest'.
+/public/js/beacon.js:1   Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+Console.js:61 Modal incident: Object
+Console.js:61 Extracted incident ID: QF5S-25-111029
+Console.js:61 Fetching comments for incident ID: QF5S-25-111029
+Console.js:61  Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+Mt.forEach.n.<computed> @ Console.js:61
+Console.js:61 Comments fetched: Array(0)
+Console.js:61 Modal incident: Object
+Console.js:61 Extracted incident ID: QF5S-25-111029
