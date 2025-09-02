@@ -10,6 +10,7 @@ import Landing from "@/pages/landing";
 import Feed from "@/pages/feed";
 import Profile from "@/pages/profile";
 import UserProfile from "@/pages/user-profile";
+import Messages from "@/pages/messages";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -24,6 +25,8 @@ function Router() {
           <Route path="/feed" component={Feed} />
           <Route path="/profile" component={Profile} />
           <Route path="/users/:userId" component={UserProfile} />
+          <Route path="/messages" component={Messages} />
+          <Route path="/messages/:conversationId" component={Messages} />
         </>
       )}
       <Route component={NotFound} />

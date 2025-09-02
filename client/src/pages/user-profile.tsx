@@ -152,8 +152,8 @@ export default function UserProfile() {
                           
                           if (response.ok) {
                             const conversation = await response.json();
-                            // TODO: Navigate to messages view or open chat modal
-                            console.log('Conversation started:', conversation.id);
+                            // Navigate to the conversation
+                            window.location.href = `/messages/${conversation.id}`;
                           }
                         } catch (error) {
                           console.error('Failed to start conversation:', error);
