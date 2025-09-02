@@ -249,6 +249,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const props = incident.properties as any || {};
         const isUserReported = incident.agency === 'User Report' || incident.incidentType === 'user_reported';
         
+        // Debug logging for user-reported incidents
+        if (isUserReported) {
+          console.log('User reported incident transformation:', {
+            original: props,
+            reportedBy: props.reportedBy,
+            reporterName: props.reporterName
+          });
+        }
+        
         return {
           type: "Feature",
           properties: {
@@ -264,7 +273,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               reporterId: props.reporterId,
               reporterName: props.reporterName || props.reportedBy?.split('@')[0] || "Anonymous User",
               timeReported: props.timeReported || incident.lastUpdated,
-              photoUrl: props.photoUrl,
+              photoUrl: props.profileImageUrl || props.photoUrl,
               title: incident.title || props.title
             })
           },

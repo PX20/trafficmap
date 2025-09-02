@@ -556,6 +556,7 @@ export default function Feed() {
                     }
                     if (incident.properties?.userReported) {
                       // Extract user data from properties
+                      console.log('User reported incident properties:', incident.properties);
                       const reporterName = incident.properties?.reporterName || 'Anonymous User';
                       const photoUrl = incident.properties?.photoUrl;
                       
