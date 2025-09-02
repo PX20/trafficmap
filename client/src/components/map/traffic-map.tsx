@@ -251,16 +251,49 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
   const createIncidentPopup = (properties: any) => {
     // Check if this is a user-reported incident
     if (properties?.userReported) {
+      const photoUrl = properties?.photoUrl;
+      const photoThumbnail = photoUrl ? `
+        <div class="mb-3 rounded-lg overflow-hidden border border-gray-200">
+          <img src="${photoUrl}" alt="Incident photo" class="w-full h-24 object-cover hover:scale-105 transition-transform cursor-pointer" onclick="window.showIncidentDetails('${properties.id}', 'user-reported')" />
+        </div>
+      ` : '';
+      
+      const typeColor = getIncidentTypeColor(properties.incidentType);
+      const priorityText = properties?.severity || 'Community Report';
+      
       return `
-        <div class="p-2 min-w-[250px]">
-          <h4 class="font-semibold text-foreground mb-2">${properties.incidentType || 'Community Report'}</h4>
-          <p class="text-sm text-muted-foreground mb-2">${properties.description || 'No description provided'}</p>
-          <div class="text-xs text-muted-foreground space-y-1">
-            <div><span class="font-medium">Location:</span> ${properties.locationDescription || 'Unknown'}</div>
-            <div><span class="font-medium">Reported:</span> ${new Date(properties.createdAt).toLocaleString()}</div>
-            <div><span class="font-medium">Source:</span> <span class="text-blue-600 font-medium">Community Report</span></div>
+        <div class="p-3 min-w-[280px] max-w-[320px] bg-white rounded-lg shadow-lg border">
+          <div class="flex items-start justify-between mb-2">
+            <h4 class="font-bold text-gray-900 text-sm leading-tight">${properties.incidentType || 'Community Report'}</h4>
+            <span class="${typeColor} text-xs font-medium px-2 py-1 rounded-full ml-2 whitespace-nowrap">${priorityText}</span>
           </div>
-          <button onclick="window.showIncidentDetails('${properties.id}', 'user-reported')" class="mt-3 w-full px-3 py-1 bg-primary text-primary-foreground rounded text-sm hover:bg-primary/90">
+          ${photoThumbnail}
+          <p class="text-sm text-gray-700 mb-3 line-clamp-3">${properties.description || 'No description provided'}</p>
+          <div class="space-y-1.5 mb-3">
+            <div class="flex items-center text-xs text-gray-600">
+              <svg class="w-3 h-3 mr-1.5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path>
+              </svg>
+              <span class="truncate">${properties.locationDescription || 'Unknown location'}</span>
+            </div>
+            <div class="flex items-center text-xs text-gray-600">
+              <svg class="w-3 h-3 mr-1.5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path>
+              </svg>
+              <span>${new Date(properties.createdAt).toLocaleString()}</span>
+            </div>
+            <div class="flex items-center text-xs">
+              <svg class="w-3 h-3 mr-1.5 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              <span class="text-blue-600 font-medium">Community Report</span>
+            </div>
+          </div>
+          <button onclick="window.showIncidentDetails('${properties.id}', 'user-reported')" class="w-full px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md transition-colors flex items-center justify-center gap-1.5">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"></path>
+              <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"></path>
+            </svg>
             View Details & Comments
           </button>
         </div>
@@ -306,6 +339,27 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
     if (p === 'high' || p === 'red alert') return 'text-red-600';
     if (p === 'medium') return 'text-yellow-600';
     return 'text-green-600';
+  };
+
+  const getIncidentTypeColor = (incidentType: string) => {
+    switch (incidentType?.toLowerCase()) {
+      case 'crime':
+      case 'theft':
+      case 'violence':
+      case 'vandalism':
+        return 'bg-red-100 text-red-800';
+      case 'suspicious':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'public safety':
+      case 'road hazard':
+        return 'bg-blue-100 text-blue-800';
+      case 'fire':
+        return 'bg-orange-100 text-orange-800';
+      case 'utility':
+        return 'bg-purple-100 text-purple-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
   };
 
 

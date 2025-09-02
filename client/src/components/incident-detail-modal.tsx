@@ -373,6 +373,17 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
               </div>
             </div>
           </div>
+          
+          {/* Display incident photo if available */}
+          {incident?.properties?.photoUrl && (
+            <div className="mt-4 rounded-lg overflow-hidden border">
+              <img 
+                src={incident.properties.photoUrl} 
+                alt="Incident photo" 
+                className="w-full h-64 object-cover hover:scale-105 transition-transform cursor-pointer"
+              />
+            </div>
+          )}
         </DialogHeader>
 
         {/* Comments Section */}
