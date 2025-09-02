@@ -27,6 +27,7 @@ import {
   Send,
   Reply
 } from "lucide-react";
+import { Link } from "wouter";
 import type { Comment } from "@shared/schema";
 
 interface IncidentDetailModalProps {
@@ -234,7 +235,11 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
             <div className="bg-muted p-3 rounded-lg">
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium">{userData.name}</span>
+                  <Link href={`/users/${comment.userId}`}>
+                    <span className="text-sm font-medium text-blue-600 hover:text-blue-800 cursor-pointer hover:underline" data-testid={`link-user-${comment.userId}`}>
+                      {userData.name}
+                    </span>
+                  </Link>
                   <span className="text-xs text-muted-foreground">• {userData.location}</span>
                 </div>
                 <span className="text-xs text-muted-foreground">

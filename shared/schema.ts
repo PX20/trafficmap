@@ -139,6 +139,25 @@ export const safetyCheckIns = pgTable("safety_check_ins", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Conversations between users
+export const conversations = pgTable("conversations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  user1Id: varchar("user1_id").notNull(),
+  user2Id: varchar("user2_id").notNull(),
+  lastMessageAt: timestamp("last_message_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Messages within conversations
+export const messages = pgTable("messages", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  conversationId: varchar("conversation_id").notNull(),
+  senderId: varchar("sender_id").notNull(),
+  content: text("content").notNull(),
+  isRead: boolean("is_read").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   comments: many(comments),
@@ -146,6 +165,9 @@ export const usersRelations = relations(users, ({ many }) => ({
   emergencyContacts: many(emergencyContacts),
   commentVotes: many(commentVotes),
   safetyCheckIns: many(safetyCheckIns),
+  sentMessages: many(messages),
+  conversations1: many(conversations, { relationName: 'user1' }),
+  conversations2: many(conversations, { relationName: 'user2' }),
 }));
 
 export const incidentsRelations = relations(incidents, ({ many }) => ({
@@ -218,6 +240,31 @@ export const safetyCheckInsRelations = relations(safetyCheckIns, ({ one }) => ({
   }),
 }));
 
+export const conversationsRelations = relations(conversations, ({ one, many }) => ({
+  user1: one(users, {
+    fields: [conversations.user1Id],
+    references: [users.id],
+    relationName: 'user1',
+  }),
+  user2: one(users, {
+    fields: [conversations.user2Id],
+    references: [users.id],
+    relationName: 'user2',
+  }),
+  messages: many(messages),
+}));
+
+export const messagesRelations = relations(messages, ({ one }) => ({
+  conversation: one(conversations, {
+    fields: [messages.conversationId],
+    references: [conversations.id],
+  }),
+  sender: one(users, {
+    fields: [messages.senderId],
+    references: [users.id],
+  }),
+}));
+
 
 export const insertUserSchema = createInsertSchema(users).omit({
   createdAt: true,
@@ -266,6 +313,17 @@ export const insertSafetyCheckInSchema = createInsertSchema(safetyCheckIns).omit
   createdAt: true,
 });
 
+export const insertConversationSchema = createInsertSchema(conversations).omit({
+  id: true,
+  createdAt: true,
+  lastMessageAt: true,
+});
+
+export const insertMessageSchema = createInsertSchema(messages).omit({
+  id: true,
+  createdAt: true,
+});
+
 export type UpsertUser = typeof users.$inferInsert;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -285,3 +343,7 @@ export type CommentVote = typeof commentVotes.$inferSelect;
 export type InsertCommentVote = z.infer<typeof insertCommentVoteSchema>;
 export type SafetyCheckIn = typeof safetyCheckIns.$inferSelect;
 export type InsertSafetyCheckIn = z.infer<typeof insertSafetyCheckInSchema>;
+export type Conversation = typeof conversations.$inferSelect;
+export type InsertConversation = z.infer<typeof insertConversationSchema>;
+export type Message = typeof messages.$inferSelect;
+export type InsertMessage = z.infer<typeof insertMessageSchema>;

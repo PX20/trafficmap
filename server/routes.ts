@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { insertIncidentSchema, insertCommentSchema } from "@shared/schema";
+import { insertIncidentSchema, insertCommentSchema, insertConversationSchema, insertMessageSchema } from "@shared/schema";
 import { z } from "zod";
 import {
   ObjectStorageService,
@@ -431,6 +431,146 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting comment:", error);
       res.status(500).json({ message: "Failed to delete comment" });
+    }
+  });
+
+  // User Profile Routes
+  app.get('/api/users/:userId', isAuthenticated, async (req: any, res) => {
+    try {
+      const { userId } = req.params;
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Check privacy settings - only return public information for non-own profiles
+      const currentUserId = req.user.claims.sub;
+      if (currentUserId !== userId && user.profileVisibility === 'private') {
+        return res.status(403).json({ message: "This profile is private" });
+      }
+      
+      // Filter sensitive information for non-own profiles
+      if (currentUserId !== userId) {
+        const { phoneNumber, ...publicUser } = user;
+        return res.json(user.profileVisibility === 'public' ? user : publicUser);
+      }
+      
+      res.json(user);
+    } catch (error) {
+      console.error("Error fetching user profile:", error);
+      res.status(500).json({ message: "Failed to fetch user profile" });
+    }
+  });
+
+  // Messaging Routes
+  app.get('/api/conversations', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const conversations = await storage.getConversationsByUserId(userId);
+      res.json(conversations);
+    } catch (error) {
+      console.error("Error fetching conversations:", error);
+      res.status(500).json({ message: "Failed to fetch conversations" });
+    }
+  });
+
+  app.post('/api/conversations', isAuthenticated, async (req: any, res) => {
+    try {
+      const { otherUserId } = z.object({
+        otherUserId: z.string().min(1),
+      }).parse(req.body);
+
+      const currentUserId = req.user.claims.sub;
+      
+      // Check if conversation already exists
+      let conversation = await storage.getConversationBetweenUsers(currentUserId, otherUserId);
+      
+      if (!conversation) {
+        // Create new conversation
+        conversation = await storage.createConversation({
+          user1Id: currentUserId,
+          user2Id: otherUserId,
+        });
+      }
+      
+      res.json(conversation);
+    } catch (error) {
+      console.error("Error creating conversation:", error);
+      res.status(500).json({ message: "Failed to create conversation" });
+    }
+  });
+
+  app.get('/api/conversations/:conversationId/messages', isAuthenticated, async (req: any, res) => {
+    try {
+      const { conversationId } = req.params;
+      const userId = req.user.claims.sub;
+      
+      // Verify user has access to this conversation
+      const conversation = await storage.getConversationBetweenUsers(userId, "dummy"); // We'll check properly
+      const conversations = await storage.getConversationsByUserId(userId);
+      const hasAccess = conversations.some(c => c.id === conversationId);
+      
+      if (!hasAccess) {
+        return res.status(403).json({ message: "Access denied to this conversation" });
+      }
+      
+      const messages = await storage.getMessagesByConversationId(conversationId);
+      res.json(messages);
+    } catch (error) {
+      console.error("Error fetching messages:", error);
+      res.status(500).json({ message: "Failed to fetch messages" });
+    }
+  });
+
+  app.post('/api/conversations/:conversationId/messages', isAuthenticated, async (req: any, res) => {
+    try {
+      const { conversationId } = req.params;
+      const { content } = z.object({
+        content: z.string().min(1).max(1000),
+      }).parse(req.body);
+
+      const userId = req.user.claims.sub;
+      
+      // Verify user has access to this conversation
+      const conversations = await storage.getConversationsByUserId(userId);
+      const hasAccess = conversations.some(c => c.id === conversationId);
+      
+      if (!hasAccess) {
+        return res.status(403).json({ message: "Access denied to this conversation" });
+      }
+      
+      const message = await storage.createMessage({
+        conversationId,
+        senderId: userId,
+        content,
+      });
+      
+      res.json(message);
+    } catch (error) {
+      console.error("Error sending message:", error);
+      res.status(500).json({ message: "Failed to send message" });
+    }
+  });
+
+  app.patch('/api/conversations/:conversationId/read', isAuthenticated, async (req: any, res) => {
+    try {
+      const { conversationId } = req.params;
+      const userId = req.user.claims.sub;
+      
+      // Verify user has access to this conversation
+      const conversations = await storage.getConversationsByUserId(userId);
+      const hasAccess = conversations.some(c => c.id === conversationId);
+      
+      if (!hasAccess) {
+        return res.status(403).json({ message: "Access denied to this conversation" });
+      }
+      
+      await storage.markMessagesAsRead(conversationId, userId);
+      res.json({ message: "Messages marked as read" });
+    } catch (error) {
+      console.error("Error marking messages as read:", error);
+      res.status(500).json({ message: "Failed to mark messages as read" });
     }
   });
 

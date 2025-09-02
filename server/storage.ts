@@ -8,6 +8,8 @@ import {
   emergencyContacts,
   commentVotes,
   safetyCheckIns,
+  conversations,
+  messages,
   type User, 
   type UpsertUser,
   type InsertUser, 
@@ -26,10 +28,14 @@ import {
   type CommentVote,
   type InsertCommentVote,
   type SafetyCheckIn,
-  type InsertSafetyCheckIn
+  type InsertSafetyCheckIn,
+  type Conversation,
+  type InsertConversation,
+  type Message,
+  type InsertMessage
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, or, ne } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -79,6 +85,14 @@ export interface IStorage {
   createSafetyCheckIn(checkIn: InsertSafetyCheckIn): Promise<SafetyCheckIn>;
   getSafetyCheckIns(incidentId: string): Promise<SafetyCheckIn[]>;
   getUserSafetyCheckIns(userId: string): Promise<SafetyCheckIn[]>;
+  
+  // Messaging operations
+  getConversationsByUserId(userId: string): Promise<Conversation[]>;
+  createConversation(conversation: InsertConversation): Promise<Conversation>;
+  getConversationBetweenUsers(user1Id: string, user2Id: string): Promise<Conversation | undefined>;
+  getMessagesByConversationId(conversationId: string): Promise<Message[]>;
+  createMessage(message: InsertMessage): Promise<Message>;
+  markMessagesAsRead(conversationId: string, userId: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -361,6 +375,101 @@ export class DatabaseStorage implements IStorage {
       .from(safetyCheckIns)
       .where(eq(safetyCheckIns.userId, userId))
       .orderBy(desc(safetyCheckIns.createdAt));
+  }
+
+  // Messaging operations
+  async getConversationsByUserId(userId: string): Promise<Conversation[]> {
+    return await db
+      .select()
+      .from(conversations)
+      .where(
+        or(
+          eq(conversations.user1Id, userId),
+          eq(conversations.user2Id, userId)
+        )
+      )
+      .orderBy(desc(conversations.lastMessageAt));
+  }
+
+  async createConversation(conversation: InsertConversation): Promise<Conversation> {
+    const [newConversation] = await db
+      .insert(conversations)
+      .values({
+        ...conversation,
+        id: randomUUID(),
+        createdAt: new Date(),
+        lastMessageAt: new Date(),
+      })
+      .returning();
+    return newConversation;
+  }
+
+  async getConversationBetweenUsers(user1Id: string, user2Id: string): Promise<Conversation | undefined> {
+    const [conversation] = await db
+      .select()
+      .from(conversations)
+      .where(
+        and(
+          eq(conversations.user1Id, user1Id),
+          eq(conversations.user2Id, user2Id)
+        )
+      );
+    
+    if (conversation) {
+      return conversation;
+    }
+
+    // Check the reverse order
+    const [reverseConversation] = await db
+      .select()
+      .from(conversations)
+      .where(
+        and(
+          eq(conversations.user1Id, user2Id),
+          eq(conversations.user2Id, user1Id)
+        )
+      );
+    
+    return reverseConversation;
+  }
+
+  async getMessagesByConversationId(conversationId: string): Promise<Message[]> {
+    return await db
+      .select()
+      .from(messages)
+      .where(eq(messages.conversationId, conversationId))
+      .orderBy(desc(messages.createdAt));
+  }
+
+  async createMessage(message: InsertMessage): Promise<Message> {
+    const [newMessage] = await db
+      .insert(messages)
+      .values({
+        ...message,
+        id: randomUUID(),
+        createdAt: new Date(),
+      })
+      .returning();
+
+    // Update the conversation's last message time
+    await db
+      .update(conversations)
+      .set({ lastMessageAt: new Date() })
+      .where(eq(conversations.id, message.conversationId));
+
+    return newMessage;
+  }
+
+  async markMessagesAsRead(conversationId: string, userId: string): Promise<void> {
+    await db
+      .update(messages)
+      .set({ isRead: true })
+      .where(
+        and(
+          eq(messages.conversationId, conversationId),
+          ne(messages.senderId, userId) // Only mark as read for messages NOT sent by the current user (i.e., received messages)
+        )
+      );
   }
 
 }
