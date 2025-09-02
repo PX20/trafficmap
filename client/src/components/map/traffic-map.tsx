@@ -238,6 +238,13 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
   const createCustomMarker = (markerType: string, color: string) => {
     const getIconSvg = (type: string) => {
       switch(type.toLowerCase()) {
+        // Traffic events - all get car/traffic icon
+        case 'crash':
+        case 'hazard': 
+        case 'restriction':
+        case 'incident':
+          return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9L18.7 10H15l2.9-1.9c.5-.3.8-.8.8-1.4 0-.8-.7-1.4-1.5-1.4H12c-.8 0-1.5.6-1.5 1.4 0 .6.3 1.1.8 1.4L14.3 10H10.7L8.9 8.1c.5-.3.8-.8.8-1.4 0-.8-.7-1.4-1.5-1.4H3.8c-.8 0-1.5.6-1.5 1.4 0 .6.3 1.1.8 1.4L5 10.3C4.2 11 3.5 12 3.5 13v3c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>`;
+        // Community reports get specific icons
         case 'crime':
           return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg>`;
         case 'suspicious':
@@ -249,8 +256,7 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
         case 'community':
           return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m22 21-3-3m0 0-3-3m3 3 3 3m-3-3-3 3"/></svg>`;
         default:
-          // For traffic events (crash, hazard, restriction) - just use colored circles
-          return `<div style="background-color: ${color}; width: 12px; height: 12px; border-radius: 50%;"></div>`;
+          return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M12 8v8"/><path d="m8 12 4 4 4-4"/></svg>`;
       }
     };
 
