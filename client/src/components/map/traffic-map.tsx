@@ -94,8 +94,8 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
       
       if (region) {
         // Filter traffic events by region
-        if (eventsData?.features) {
-          const regionalEvents = eventsData.features.filter((feature: any) => {
+        if (eventsData && typeof eventsData === 'object' && 'features' in eventsData && Array.isArray((eventsData as any).features)) {
+          const regionalEvents = (eventsData as any).features.filter((feature: any) => {
             const locality = feature.properties?.road_summary?.locality || '';
             const roadName = feature.properties?.road_summary?.road_name || '';
             const locationText = `${locality} ${roadName}`.toLowerCase();
@@ -113,14 +113,14 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
           });
           
           filteredEventsData = {
-            ...eventsData,
+            ...(eventsData as any),
             features: regionalEvents
           };
         }
         
         // Filter incidents by region
-        if (incidentsData?.features) {
-          const regionalIncidents = incidentsData.features.filter((feature: any) => {
+        if (incidentsData && typeof incidentsData === 'object' && 'features' in incidentsData && Array.isArray((incidentsData as any).features)) {
+          const regionalIncidents = (incidentsData as any).features.filter((feature: any) => {
             const locality = feature.properties?.Locality || '';
             const location = feature.properties?.Location || '';
             const locationDesc = feature.properties?.locationDescription || '';
@@ -139,7 +139,7 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
           });
           
           filteredIncidentsData = {
-            ...incidentsData,
+            ...(incidentsData as any),
             features: regionalIncidents
           };
         }
