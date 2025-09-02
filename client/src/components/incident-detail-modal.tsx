@@ -59,7 +59,7 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
 
   const createCommentMutation = useMutation({
     mutationFn: async (data: { content: string; parentCommentId?: string }) => {
-      return apiRequest(`/api/incidents/${incidentId}/comments`, "POST", data);
+      return apiRequest("POST", `/api/incidents/${incidentId}/comments`, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/incidents", incidentId, "comments"] });
