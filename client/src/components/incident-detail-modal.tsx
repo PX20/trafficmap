@@ -44,13 +44,20 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
 
   // Extract incident ID from the incident object (safe to call even if incident is null)
   const incidentId = incident ? getIncidentId(incident) : null;
+  
+  // Debug logging
+  console.log('Modal incident:', incident);
+  console.log('Extracted incident ID:', incidentId);
 
   const { data: comments = [], isLoading: commentsLoading } = useQuery({
     queryKey: ["/api/incidents", incidentId, "comments"],
     queryFn: async () => {
+      console.log('Fetching comments for incident ID:', incidentId);
       const response = await fetch(`/api/incidents/${incidentId}/comments`);
       if (!response.ok) throw new Error('Failed to fetch comments');
-      return response.json();
+      const data = await response.json();
+      console.log('Comments fetched:', data);
+      return data;
     },
     enabled: isOpen && !!incidentId && !!incident,
   });
