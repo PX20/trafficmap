@@ -154,6 +154,8 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
           if (isUserReported) {
             // User-reported incidents
             const incidentType = properties?.incidentType;
+            
+            
             if (['Crime', 'Theft', 'Violence', 'Vandalism'].includes(incidentType) && filters.crime) {
               shouldShow = true;
               markerType = 'crime';
