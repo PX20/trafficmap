@@ -1,11 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { ReactNode } from "react";
 import Uppy from "@uppy/core";
 import { DashboardModal } from "@uppy/react";
 import AwsS3 from "@uppy/aws-s3";
 import type { UploadResult } from "@uppy/core";
 import { Button } from "@/components/ui/button";
-import "./uppy-styles.css";
 
 interface ObjectUploaderProps {
   maxNumberOfFiles?: number;
@@ -76,6 +75,28 @@ export function ObjectUploader({
         setShowModal(false);
       })
   );
+
+  useEffect(() => {
+    if (showModal) {
+      // Small delay to ensure modal is rendered
+      const timer = setTimeout(() => {
+        const modalElement = document.querySelector('.uppy-Dashboard-modal');
+        if (modalElement) {
+          (modalElement as HTMLElement).style.zIndex = '9999';
+          (modalElement as HTMLElement).style.position = 'fixed';
+          (modalElement as HTMLElement).style.top = '0';
+          (modalElement as HTMLElement).style.left = '0';
+          (modalElement as HTMLElement).style.right = '0';
+          (modalElement as HTMLElement).style.bottom = '0';
+          (modalElement as HTMLElement).style.background = 'rgba(0, 0, 0, 0.5)';
+          (modalElement as HTMLElement).style.display = 'flex';
+          (modalElement as HTMLElement).style.alignItems = 'center';
+          (modalElement as HTMLElement).style.justifyContent = 'center';
+        }
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [showModal]);
 
   return (
     <div>
