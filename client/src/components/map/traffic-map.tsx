@@ -68,10 +68,10 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
     };
   }, [filters.homeCoordinates]);
 
-  // Update loading state
+  // Update loading state - only wait for incidents, not slow traffic events
   useEffect(() => {
-    setIsLoading(eventsLoading || incidentsLoading);
-  }, [eventsLoading, incidentsLoading]);
+    setIsLoading(incidentsLoading);
+  }, [incidentsLoading]);
 
   // Update markers when data or filters change
   useEffect(() => {

@@ -115,17 +115,22 @@ export default function Feed() {
     },
   });
 
-  const { data: events, isLoading: eventsLoading } = useQuery({
+  const { data: eventsData, isLoading: eventsLoading } = useQuery({
     queryKey: ["/api/traffic/events"],
     queryFn: async () => {
       const response = await fetch("/api/traffic/events");
       if (!response.ok) throw new Error('Failed to fetch traffic events');
       return response.json();
     },
-    select: (data: any) => data?.features || [],
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchInterval: 10 * 60 * 1000, // 10 minutes
   });
 
-  const isLoading = incidentsLoading || eventsLoading;
+  // Extract events data
+  const events = eventsData?.features || [];
+
+  // Only consider loading if incidents are loading (since traffic events take too long)
+  const isLoading = incidentsLoading;
 
   const handleSuburbUpdate = async () => {
     if (!selectedSuburb.trim()) {
