@@ -4,6 +4,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
@@ -20,7 +22,13 @@ import {
   Eye,
   Zap,
   RefreshCw,
-  MessageCircle
+  MessageCircle,
+  Heart,
+  Share,
+  MoreHorizontal,
+  User,
+  Users,
+  TrendingUp
 } from "lucide-react";
 
 export default function Feed() {
@@ -275,43 +283,52 @@ export default function Feed() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-card border-b border-border sticky top-0 z-30">
-        <div className="max-w-4xl mx-auto px-4 py-4">
+      <header className="bg-card/80 backdrop-blur-sm border-b border-border/50 sticky top-0 z-30">
+        <div className="max-w-2xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-xl font-bold text-foreground">Safety Feed</h1>
-              <p className="text-sm text-muted-foreground">Local incidents in your area</p>
+            <div className="flex items-center gap-3">
+              <div className="bg-primary rounded-full p-2">
+                <Shield className="w-5 h-5 text-primary-foreground" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-foreground">Safety Feed</h1>
+                <p className="text-sm text-muted-foreground">Real-time community updates</p>
+              </div>
             </div>
             <Link href="/">
-              <Button variant="outline" data-testid="button-back-to-map">
+              <Button variant="outline" className="rounded-full" data-testid="button-back-to-map">
                 <MapPin className="w-4 h-4 mr-2" />
-                Back to Map
+                Map View
               </Button>
             </Link>
           </div>
         </div>
       </header>
 
-      <div className="max-w-4xl mx-auto px-4 py-6">
-        {/* Suburb Selection */}
-        <Card className="mb-6">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-semibold">Your Location</h3>
-                <p className="text-sm text-muted-foreground">
-                  Set your home suburb to see local incidents
+      <div className="max-w-2xl mx-auto px-4 py-6">
+        {/* Location Card */}
+        <Card className="mb-6 border-none shadow-lg bg-gradient-to-br from-card to-card/50">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="bg-primary/10 p-3 rounded-full">
+                <MapPin className="w-6 h-6 text-primary" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-xl font-bold text-foreground">Your Location</h3>
+                <p className="text-muted-foreground">
+                  Connect with your local community
                 </p>
               </div>
               <div className="flex items-center gap-2">
                 {rawIncidentData?.lastUpdated && (
-                  <div className="text-xs text-muted-foreground">
+                  <div className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
                     Updated {new Date(rawIncidentData.lastUpdated).toLocaleTimeString()}
                   </div>
                 )}
                 <Button
                   variant="outline"
                   size="sm"
+                  className="rounded-full"
                   onClick={() => refreshMutation.mutate()}
                   disabled={refreshMutation.isPending}
                   data-testid="button-refresh-incidents"
@@ -321,24 +338,23 @@ export default function Feed() {
                 </Button>
               </div>
             </div>
-          </CardHeader>
-          <CardContent>
             <div className="flex gap-3">
               <div className="flex-1">
-                <Label htmlFor="suburb-input">Home Suburb</Label>
                 <Input
-                  id="suburb-input"
                   value={selectedSuburb}
                   onChange={(e) => setSelectedSuburb(e.target.value)}
-                  placeholder="e.g., Brisbane City, Surfers Paradise"
+                  placeholder="Enter your suburb (e.g., Brisbane City, Surfers Paradise)"
+                  className="rounded-full border-2 focus:border-primary"
                   data-testid="input-suburb"
                 />
               </div>
-              <div className="flex items-end">
-                <Button onClick={handleSuburbUpdate} data-testid="button-update-suburb">
-                  Update
-                </Button>
-              </div>
+              <Button 
+                onClick={handleSuburbUpdate} 
+                className="rounded-full px-6"
+                data-testid="button-update-suburb"
+              >
+                Update
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -353,10 +369,15 @@ export default function Feed() {
 
         {/* No Suburb Selected */}
         {!selectedSuburb && (
-          <div className="text-center py-12">
-            <MapPin className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-foreground mb-2">Choose Your Suburb</h3>
-            <p className="text-muted-foreground">
+          <div className="text-center py-16">
+            <div className="bg-muted/30 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6">
+              <MapPin className="w-12 h-12 text-muted-foreground" />
+            </div>
+            <h3 className="text-2xl font-bold text-foreground mb-3">Welcome to Safety Feed</h3>
+            <p className="text-muted-foreground text-lg mb-2">
+              Connect with your local community and stay informed
+            </p>
+            <p className="text-sm text-muted-foreground">
               Enter your suburb above to see local safety incidents and traffic events
             </p>
           </div>
@@ -364,24 +385,36 @@ export default function Feed() {
 
         {/* Incident Feed */}
         {selectedSuburb && !isLoading && (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {allIncidents.length === 0 ? (
-              <div className="text-center py-12">
-                <Shield className="w-12 h-12 text-green-600 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-foreground mb-2">All Clear!</h3>
-                <p className="text-muted-foreground">
+              <div className="text-center py-16">
+                <div className="bg-green-50 dark:bg-green-950 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Shield className="w-12 h-12 text-green-600" />
+                </div>
+                <h3 className="text-xl font-bold text-foreground mb-3">All Clear!</h3>
+                <p className="text-muted-foreground text-lg">
                   No recent incidents reported in {selectedSuburb}
+                </p>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Check back later for updates
                 </p>
               </div>
             ) : (
               <>
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold text-foreground">
-                    Recent Activity in {selectedSuburb}
-                  </h2>
-                  <Badge variant="outline" data-testid="text-incident-count">
-                    {allIncidents.length} incidents
-                  </Badge>
+                <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950 dark:to-purple-950 rounded-xl p-6 mb-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h2 className="text-2xl font-bold text-foreground mb-2">
+                        Live Safety Feed
+                      </h2>
+                      <p className="text-muted-foreground">
+                        {selectedSuburb} • {allIncidents.length} active incidents
+                      </p>
+                    </div>
+                    <div className="bg-background rounded-full p-3">
+                      <TrendingUp className="w-6 h-6 text-primary" />
+                    </div>
+                  </div>
                 </div>
 
                 {allIncidents.map((incident, index) => {
@@ -396,47 +429,117 @@ export default function Feed() {
                     return `incident-${incident.properties?.Master_Incident_Number || incident.properties?.id || index}`;
                   };
 
+                  const getSourceInfo = (incident: any) => {
+                    if (incident.type === 'traffic') {
+                      return { name: 'QLD Traffic', type: 'Official', avatar: 'QT', color: 'bg-blue-500' };
+                    }
+                    if (incident.properties?.userReported) {
+                      return { name: 'Community Report', type: 'Resident', avatar: 'CR', color: 'bg-purple-500' };
+                    }
+                    return { name: 'Emergency Services', type: 'Official', avatar: 'ES', color: 'bg-red-500' };
+                  };
+
+                  const sourceInfo = getSourceInfo(incident);
+                  const randomLikes = Math.floor(Math.random() * 50) + 5;
+                  const randomComments = Math.floor(Math.random() * 20) + 1;
+
                   return (
                     <Card 
                       key={getUniqueKey(incident, index)} 
-                      className="hover:shadow-md transition-all duration-200 cursor-pointer hover:scale-[1.01]"
+                      className="bg-card hover:bg-card/80 border border-border hover:shadow-lg transition-all duration-300 cursor-pointer group overflow-hidden"
                       onClick={() => handleIncidentClick(incident)}
                       data-testid={`card-incident-${index}`}
                     >
-                      <CardContent className="p-4">
-                        <div className="flex items-start gap-3">
-                          {getIncidentIcon(incident)}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-2">
-                              <h4 className="font-semibold text-foreground truncate">
-                                {getIncidentTitle(incident)}
-                              </h4>
-                              {getStatusBadge(incident)}
-                            </div>
-                            
-                            <p className="text-sm text-muted-foreground mb-3">
-                              {getIncidentDescription(incident)}
-                            </p>
-                            
-                            <div className="flex items-center justify-between text-xs text-muted-foreground">
-                              <div className="flex items-center gap-4">
-                                <div className="flex items-center gap-1">
-                                  <MapPin className="w-3 h-3" />
-                                  <span className="truncate">{getIncidentLocation(incident)}</span>
+                      <CardContent className="p-0">
+                        {/* Post Header */}
+                        <div className="p-4 pb-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <Avatar className="w-10 h-10">
+                                <AvatarFallback className={`${sourceInfo.color} text-white font-semibold text-sm`}>
+                                  {sourceInfo.avatar}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <h4 className="font-semibold text-foreground text-sm">
+                                    {sourceInfo.name}
+                                  </h4>
+                                  <Badge variant="outline" className="text-xs px-2 py-0.5">
+                                    {sourceInfo.type}
+                                  </Badge>
                                 </div>
-                                <div className="flex items-center gap-1">
-                                  <Clock className="w-3 h-3" />
-                                  <span>{getTimeAgo(
+                                <p className="text-xs text-muted-foreground">
+                                  {getTimeAgo(
                                     incident.properties?.Response_Date || 
                                     incident.properties?.last_updated || 
                                     incident.properties?.createdAt
-                                  )}</span>
-                                </div>
+                                  )}
+                                </p>
                               </div>
-                              <div className="flex items-center gap-1 text-muted-foreground hover:text-primary">
-                                <MessageCircle className="w-3 h-3" />
-                                <span>Discuss</span>
+                            </div>
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                              <MoreHorizontal className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* Post Content */}
+                        <div className="px-4 pb-3">
+                          <div className="flex items-start gap-3 mb-3">
+                            <div className="p-2 rounded-full bg-muted group-hover:bg-muted/80 transition-colors">
+                              {getIncidentIcon(incident)}
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <h3 className="font-bold text-foreground text-lg">
+                                  {getIncidentTitle(incident)}
+                                </h3>
+                                {getStatusBadge(incident)}
                               </div>
+                              
+                              <p className="text-muted-foreground mb-3 leading-relaxed">
+                                {getIncidentDescription(incident)}
+                              </p>
+                              
+                              <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 rounded-lg p-3">
+                                <MapPin className="w-4 h-4 text-primary" />
+                                <span className="font-medium">{getIncidentLocation(incident)}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <Separator />
+
+                        {/* Engagement Bar */}
+                        <div className="px-4 py-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-6">
+                              <Button variant="ghost" size="sm" className="flex items-center gap-2 hover:text-red-500 transition-colors">
+                                <Heart className="w-4 h-4" />
+                                <span className="text-sm font-medium">{randomLikes}</span>
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="flex items-center gap-2 hover:text-blue-500 transition-colors"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleIncidentClick(incident);
+                                }}
+                              >
+                                <MessageCircle className="w-4 h-4" />
+                                <span className="text-sm font-medium">{randomComments}</span>
+                              </Button>
+                              <Button variant="ghost" size="sm" className="flex items-center gap-2 hover:text-green-500 transition-colors">
+                                <Share className="w-4 h-4" />
+                                <span className="text-sm font-medium">Share</span>
+                              </Button>
+                            </div>
+                            <div className="text-xs text-muted-foreground flex items-center gap-1">
+                              <Users className="w-3 h-3" />
+                              <span>{Math.floor(Math.random() * 100) + 50} views</span>
                             </div>
                           </div>
                         </div>
