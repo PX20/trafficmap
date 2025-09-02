@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { Navigation } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
 
@@ -34,6 +35,7 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
+  const [isGettingLocation, setIsGettingLocation] = useState(false);
   
   // Fetch categories and subcategories
   const { data: categories = [] } = useQuery({
@@ -91,6 +93,81 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
       });
     },
   });
+
+  const handleGetCurrentLocation = async () => {
+    if (!navigator.geolocation) {
+      toast({
+        title: "Location not available",
+        description: "Your device doesn't support GPS location services.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsGettingLocation(true);
+
+    try {
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 15000,
+          maximumAge: 300000 // 5 minutes
+        });
+      });
+
+      const coordinates = {
+        lat: position.coords.latitude,
+        lon: position.coords.longitude
+      };
+
+      // Try to reverse geocode the coordinates to get a readable address
+      try {
+        const response = await fetch(`/api/location/reverse?lat=${coordinates.lat}&lon=${coordinates.lon}`);
+        if (response.ok) {
+          const locationData = await response.json();
+          const locationText = locationData.suburb ? 
+            `${locationData.suburb} ${locationData.postcode || ''}`.trim() :
+            `${coordinates.lat.toFixed(5)}, ${coordinates.lon.toFixed(5)}`;
+
+          form.setValue('location', locationText);
+
+          toast({
+            title: "Location found!",
+            description: `Location set to ${locationText}`,
+          });
+        } else {
+          throw new Error('Reverse geocoding failed');
+        }
+      } catch (error) {
+        // Fallback to coordinates if reverse geocoding fails
+        const locationText = `${coordinates.lat.toFixed(5)}, ${coordinates.lon.toFixed(5)}`;
+        form.setValue('location', locationText);
+
+        toast({
+          title: "Location found!",
+          description: "GPS coordinates have been added to the location field.",
+        });
+      }
+    } catch (error) {
+      let errorMessage = "Unable to get your location.";
+      
+      if ((error as GeolocationPositionError).code === 1) {
+        errorMessage = "Location access denied. Please enable location services and allow access in your browser.";
+      } else if ((error as GeolocationPositionError).code === 2) {
+        errorMessage = "Location unavailable. Please check your GPS connection.";
+      } else if ((error as GeolocationPositionError).code === 3) {
+        errorMessage = "Location request timed out. Please try again.";
+      }
+
+      toast({
+        title: "Location failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setIsGettingLocation(false);
+    }
+  };
 
   const onSubmit = (data: ReportIncidentData) => {
     reportIncidentMutation.mutate(data);
@@ -207,11 +284,32 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
                 <FormItem>
                   <FormLabel>Location</FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder="Street name, intersection, or landmark"
-                      {...field}
-                      data-testid="input-incident-location"
-                    />
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="Street name, intersection, or landmark"
+                        {...field}
+                        data-testid="input-incident-location"
+                        className="flex-1"
+                      />
+                      <Button
+                        type="button"
+                        onClick={handleGetCurrentLocation}
+                        disabled={isGettingLocation}
+                        size="sm"
+                        variant="outline"
+                        className="flex items-center gap-1 px-3"
+                        data-testid="button-use-gps-location"
+                      >
+                        {isGettingLocation ? (
+                          <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <>
+                            <Navigation className="w-4 h-4" />
+                            <span className="text-xs">GPS</span>
+                          </>
+                        )}
+                      </Button>
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>

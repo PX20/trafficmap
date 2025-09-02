@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { ChevronDown, ChevronRight, Car, Shield, Construction, Zap, TreePine, Users, MapPin, Navigation } from "lucide-react";
+import { ChevronDown, ChevronRight, Car, Shield, Construction, Zap, TreePine, Users, MapPin } from "lucide-react";
 import type { FilterState } from "@/pages/home";
 import { LocationAutocomplete } from "@/components/location-autocomplete";
 import { getTrafficEvents, getIncidents } from "@/lib/traffic-api";
@@ -21,7 +21,6 @@ interface FilterSidebarProps {
 export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: FilterSidebarProps) {
   const isMobile = useIsMobile();
   const { toast } = useToast();
-  const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [expandedSections, setExpandedSections] = useState({
     traffic: false,
     'Safety & Crime': false,
@@ -83,84 +82,6 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
     incidents: incidents?.filter((i: any) => !i.properties?.userReported).length || 0,
   };
 
-  const handleGetCurrentLocation = async () => {
-    if (!navigator.geolocation) {
-      toast({
-        title: "Location not available",
-        description: "Your device doesn't support GPS location services.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsGettingLocation(true);
-
-    try {
-      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 300000 // 5 minutes
-        });
-      });
-
-      const coordinates = {
-        lat: position.coords.latitude,
-        lon: position.coords.longitude
-      };
-
-      // Try to reverse geocode the coordinates to get the suburb name
-      try {
-        const response = await fetch(`/api/location/reverse?lat=${coordinates.lat}&lon=${coordinates.lon}`);
-        if (response.ok) {
-          const locationData = await response.json();
-          const locationText = locationData.suburb ? 
-            `${locationData.suburb} ${locationData.postcode || ''}`.trim() :
-            `${coordinates.lat.toFixed(4)}, ${coordinates.lon.toFixed(4)}`;
-
-          onFilterChange('homeLocation', locationText);
-          onFilterChange('homeCoordinates', coordinates);
-          onFilterChange('locationFilter', true);
-
-          toast({
-            title: "Location found!",
-            description: `Set your home location to ${locationText}`,
-          });
-        } else {
-          throw new Error('Reverse geocoding failed');
-        }
-      } catch (error) {
-        // Fallback to coordinates if reverse geocoding fails
-        const locationText = `${coordinates.lat.toFixed(4)}, ${coordinates.lon.toFixed(4)}`;
-        onFilterChange('homeLocation', locationText);
-        onFilterChange('homeCoordinates', coordinates);
-        onFilterChange('locationFilter', true);
-
-        toast({
-          title: "Location found!",
-          description: "Your location has been set successfully.",
-        });
-      }
-    } catch (error) {
-      let errorMessage = "Unable to get your location.";
-      
-      if ((error as GeolocationPositionError).code === 1) {
-        errorMessage = "Location access denied. Please enable location services and allow access in your browser.";
-      } else if ((error as GeolocationPositionError).code === 2) {
-        errorMessage = "Location unavailable. Please check your GPS connection.";
-      } else if ((error as GeolocationPositionError).code === 3) {
-        errorMessage = "Location request timed out. Please try again.";
-      }
-
-      toast({
-        title: "Location failed",
-        description: errorMessage,
-        variant: "destructive",
-      });
-    } finally {
-      setIsGettingLocation(false);
-    }
-  };
 
   const handleRefresh = async () => {
     try {
@@ -361,45 +282,26 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
               
               <div className="space-y-2">
                 <Label className="text-xs text-muted-foreground">Set your home suburb:</Label>
-                <div className="flex gap-2">
-                  <div className="flex-1">
-                    <LocationAutocomplete
-                      value={filters.homeLocation || ''}
-                      onChange={(location, coordinates, boundingBox) => {
-                        onFilterChange('homeLocation', location);
-                        if (coordinates) {
-                          onFilterChange('homeCoordinates', coordinates);
-                        }
-                        if (boundingBox) {
-                          onFilterChange('homeBoundingBox', boundingBox);
-                        }
-                      }}
-                      onClear={() => {
-                        onFilterChange('homeLocation', '');
-                        onFilterChange('homeCoordinates', undefined);
-                        onFilterChange('homeBoundingBox', undefined);
-                        onFilterChange('locationFilter', false);
-                      }}
-                      placeholder="Enter your suburb..."
-                      disabled={false}
-                    />
-                  </div>
-                  <Button
-                    onClick={handleGetCurrentLocation}
-                    disabled={isGettingLocation}
-                    size="sm"
-                    variant="outline"
-                    className="flex items-center gap-1 px-2"
-                    data-testid="button-use-my-location"
-                  >
-                    {isGettingLocation ? (
-                      <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                      <Navigation className="w-4 h-4" />
-                    )}
-                    {!isMobile && <span className="text-xs">GPS</span>}
-                  </Button>
-                </div>
+                <LocationAutocomplete
+                  value={filters.homeLocation || ''}
+                  onChange={(location, coordinates, boundingBox) => {
+                    onFilterChange('homeLocation', location);
+                    if (coordinates) {
+                      onFilterChange('homeCoordinates', coordinates);
+                    }
+                    if (boundingBox) {
+                      onFilterChange('homeBoundingBox', boundingBox);
+                    }
+                  }}
+                  onClear={() => {
+                    onFilterChange('homeLocation', '');
+                    onFilterChange('homeCoordinates', undefined);
+                    onFilterChange('homeBoundingBox', undefined);
+                    onFilterChange('locationFilter', false);
+                  }}
+                  placeholder="Enter your suburb..."
+                  disabled={false}
+                />
               </div>
               
               {filters.homeLocation && (
