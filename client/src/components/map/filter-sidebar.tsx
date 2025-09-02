@@ -90,7 +90,7 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
           </div>
         </div>
         
-        <div className="p-4 space-y-6 overflow-y-auto h-full pb-20">
+        <div className="p-4 space-y-6 overflow-y-auto" style={{ height: 'calc(100vh - 8rem)' }}>
           {/* Event Type Filters */}
           <div>
             <h3 className="text-sm font-medium text-foreground mb-3">Traffic Events</h3>
