@@ -104,7 +104,10 @@ export function LocationAutocomplete({
   };
 
   const handleSuggestionClick = (suggestion: LocationSuggestion) => {
-    const locationText = `${suggestion.address.suburb}, ${suggestion.address.state}`;
+    const suburb = suggestion.address.suburb || '';
+    const locationText = suggestion.address.postcode ? 
+      `${suburb} ${suggestion.address.postcode}` :
+      suburb;
     setInputValue(locationText);
     setShowSuggestions(false);
     
@@ -189,7 +192,7 @@ export function LocationAutocomplete({
                     {suggestion.address.suburb}
                   </div>
                   <div className="text-xs text-muted-foreground truncate">
-                    {suggestion.address.state} {suggestion.address.postcode}
+                    {suggestion.address.postcode ? `${suggestion.address.postcode}, QLD` : 'QLD'}
                   </div>
                 </div>
               </div>

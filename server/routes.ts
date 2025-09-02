@@ -333,24 +333,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
           item.address.state && 
           (item.address.state.includes('Queensland') || item.address.state.includes('QLD'))
         )
-        .map((item: any) => ({
-          display_name: item.display_name,
-          lat: parseFloat(item.lat),
-          lon: parseFloat(item.lon),
-          address: {
-            suburb: item.address.suburb || item.address.city || item.address.town,
-            city: item.address.city,
-            state: item.address.state,
-            postcode: item.address.postcode,
-            country: item.address.country
-          },
-          boundingbox: item.boundingbox ? [
-            item.boundingbox[0], // min_lat
-            item.boundingbox[1], // max_lat
-            item.boundingbox[2], // min_lon
-            item.boundingbox[3]  // max_lon
-          ] : undefined
-        }));
+        .map((item: any) => {
+          const suburb = item.address.suburb || item.address.city || item.address.town;
+          const postcode = item.address.postcode;
+          const state = item.address.state;
+          
+          // Create a cleaner display name
+          let cleanDisplayName = suburb;
+          if (postcode) {
+            cleanDisplayName += ` ${postcode}`;
+          }
+          if (state && !state.includes('Queensland')) {
+            cleanDisplayName += `, ${state}`;
+          }
+          
+          return {
+            display_name: cleanDisplayName,
+            lat: parseFloat(item.lat),
+            lon: parseFloat(item.lon),
+            address: {
+              suburb: suburb,
+              city: item.address.city,
+              state: state,
+              postcode: postcode,
+              country: item.address.country
+            },
+            boundingbox: item.boundingbox ? [
+              item.boundingbox[0], // min_lat
+              item.boundingbox[1], // max_lat
+              item.boundingbox[2], // min_lon
+              item.boundingbox[3]  // max_lon
+            ] : undefined
+          };
+        });
 
       res.json(locationSuggestions);
 
