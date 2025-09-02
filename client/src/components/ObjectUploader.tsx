@@ -5,7 +5,7 @@ import { Dashboard } from "@uppy/react";
 import AwsS3 from "@uppy/aws-s3";
 import type { UploadResult } from "@uppy/core";
 import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
+import { X, Upload, Camera } from "lucide-react";
 
 interface ObjectUploaderProps {
   maxNumberOfFiles?: number;
@@ -104,14 +104,64 @@ export function ObjectUploader({
                 <X className="w-4 h-4" />
               </Button>
             </div>
-            <div className="p-4">
-              <Dashboard
-                uppy={uppy}
-                proudlyDisplayPoweredByUppy={false}
-                hideUploadButton={false}
-                note="Images only, up to 5MB"
-                height={400}
-              />
+            <div className="p-6">
+              {/* Custom Upload Area */}
+              <div className="border-2 border-dashed border-blue-300 rounded-xl p-12 text-center bg-blue-50 hover:bg-blue-100 transition-all duration-200 cursor-pointer group">
+                <div className="space-y-4">
+                  <div className="flex justify-center">
+                    <div className="p-3 bg-blue-100 rounded-full group-hover:bg-blue-200 transition-colors">
+                      <Upload className="w-8 h-8 text-blue-500" />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <h4 className="text-lg font-semibold text-gray-700">Choose your profile photo</h4>
+                    <p className="text-gray-500">Drag and drop an image here, or click to browse</p>
+                  </div>
+                  
+                  <Button 
+                    type="button" 
+                    className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      const fileInput = document.createElement('input');
+                      fileInput.type = 'file';
+                      fileInput.accept = 'image/*';
+                      fileInput.onchange = (event) => {
+                        const files = (event.target as HTMLInputElement).files;
+                        if (files && files.length > 0) {
+                          uppy.addFile({
+                            name: files[0].name,
+                            type: files[0].type,
+                            data: files[0],
+                          });
+                        }
+                      };
+                      fileInput.click();
+                    }}
+                  >
+                    <Camera className="w-4 h-4 mr-2" />
+                    Browse Files
+                  </Button>
+                  
+                  <p className="text-sm text-gray-400">Images only • Max 5MB • JPG, PNG, or GIF</p>
+                </div>
+              </div>
+              
+              {/* Uppy Dashboard (hidden by default, shows when files are added) */}
+              <div className="mt-4">
+                <Dashboard
+                  uppy={uppy}
+                  proudlyDisplayPoweredByUppy={false}
+                  hideUploadButton={false}
+                  height={200}
+                  theme="light"
+                  showProgressDetails={true}
+                  hideRetryButton={false}
+                  hideCancelButton={false}
+                />
+              </div>
             </div>
           </div>
         </div>
