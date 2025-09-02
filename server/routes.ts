@@ -381,6 +381,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Reverse geocoding endpoint - convert coordinates to suburb name
+  app.get("/api/location/reverse", async (req, res) => {
+    const lat = req.query.lat as string;
+    const lon = req.query.lon as string;
+
+    if (!lat || !lon) {
+      return res.status(400).json({ error: 'Latitude and longitude required' });
+    }
+
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1&extratags=1&namedetails=1`,
+        {
+          headers: {
+            'User-Agent': 'QLD Safety Monitor/1.0'
+          }
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Reverse geocoding request failed');
+      }
+
+      const data = await response.json();
+      
+      if (!data.address) {
+        return res.status(404).json({ error: 'No address found for coordinates' });
+      }
+
+      // Extract suburb name from address data  
+      const suburb = data.display_name?.split(',')[0]?.trim() ||
+                    data.address.suburb || 
+                    data.address.town || 
+                    data.address.village ||
+                    data.address.city;
+      
+      const postcode = data.address.postcode;
+      const state = data.address.state;
+
+      // Only return locations in Queensland
+      if (!state || !state.includes('Queensland')) {
+        return res.status(400).json({ error: 'Location must be in Queensland' });
+      }
+
+      res.json({
+        suburb: suburb,
+        postcode: postcode,
+        state: state,
+        display_name: data.display_name
+      });
+
+    } catch (error) {
+      console.error('Reverse geocoding error:', error);
+      res.status(500).json({ error: 'Reverse geocoding failed' });
+    }
+  });
+
   // Refresh incidents from external API (slow endpoint)
   app.post("/api/incidents/refresh", async (req, res) => {
     try {
