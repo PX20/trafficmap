@@ -65,15 +65,29 @@ export function ObjectUploader({
         maxFileSize,
         allowedFileTypes: ['image/*'],
       },
-      autoProceed: false,
+      autoProceed: true,
     })
       .use(AwsS3, {
         shouldUseMultipart: false,
         getUploadParameters: onGetUploadParameters,
       })
+      .on("file-added", () => {
+        // Show progress dashboard when file is added
+        const progressDiv = document.getElementById('uppy-progress');
+        if (progressDiv) {
+          progressDiv.style.display = 'block';
+        }
+      })
       .on("complete", (result: any) => {
         onComplete?.(result);
-        setShowModal(false);
+        // Hide progress and close modal after completion
+        setTimeout(() => {
+          const progressDiv = document.getElementById('uppy-progress');
+          if (progressDiv) {
+            progressDiv.style.display = 'none';
+          }
+          setShowModal(false);
+        }, 1500);
       })
   );
 
@@ -106,7 +120,45 @@ export function ObjectUploader({
             </div>
             <div className="p-6">
               {/* Custom Upload Area */}
-              <div className="border-2 border-dashed border-blue-300 rounded-xl p-12 text-center bg-blue-50 hover:bg-blue-100 transition-all duration-200 cursor-pointer group">
+              <div 
+                className="border-2 border-dashed border-blue-300 rounded-xl p-12 text-center bg-blue-50 hover:bg-blue-100 transition-all duration-200 cursor-pointer group"
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  e.currentTarget.classList.add('border-blue-500', 'bg-blue-100');
+                }}
+                onDragLeave={(e) => {
+                  e.preventDefault();
+                  e.currentTarget.classList.remove('border-blue-500', 'bg-blue-100');
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  e.currentTarget.classList.remove('border-blue-500', 'bg-blue-100');
+                  const files = e.dataTransfer.files;
+                  if (files && files.length > 0) {
+                    uppy.addFile({
+                      name: files[0].name,
+                      type: files[0].type,
+                      data: files[0],
+                    });
+                  }
+                }}
+                onClick={() => {
+                  const fileInput = document.createElement('input');
+                  fileInput.type = 'file';
+                  fileInput.accept = 'image/*';
+                  fileInput.onchange = (event) => {
+                    const files = (event.target as HTMLInputElement).files;
+                    if (files && files.length > 0) {
+                      uppy.addFile({
+                        name: files[0].name,
+                        type: files[0].type,
+                        data: files[0],
+                      });
+                    }
+                  };
+                  fileInput.click();
+                }}
+              >
                 <div className="space-y-4">
                   <div className="flex justify-center">
                     <div className="p-3 bg-blue-100 rounded-full group-hover:bg-blue-200 transition-colors">
@@ -117,49 +169,24 @@ export function ObjectUploader({
                   <div className="space-y-2">
                     <h4 className="text-lg font-semibold text-gray-700">Choose your profile photo</h4>
                     <p className="text-gray-500">Drag and drop an image here, or click to browse</p>
+                    <p className="text-sm text-gray-400">Images only • Max 5MB • JPG, PNG, or GIF</p>
                   </div>
-                  
-                  <Button 
-                    type="button" 
-                    className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      const fileInput = document.createElement('input');
-                      fileInput.type = 'file';
-                      fileInput.accept = 'image/*';
-                      fileInput.onchange = (event) => {
-                        const files = (event.target as HTMLInputElement).files;
-                        if (files && files.length > 0) {
-                          uppy.addFile({
-                            name: files[0].name,
-                            type: files[0].type,
-                            data: files[0],
-                          });
-                        }
-                      };
-                      fileInput.click();
-                    }}
-                  >
-                    <Camera className="w-4 h-4 mr-2" />
-                    Browse Files
-                  </Button>
-                  
-                  <p className="text-sm text-gray-400">Images only • Max 5MB • JPG, PNG, or GIF</p>
                 </div>
               </div>
               
-              {/* Uppy Dashboard (hidden by default, shows when files are added) */}
-              <div className="mt-4">
+              {/* Uppy Dashboard - only shows progress when files are uploading */}
+              <div className="mt-4" style={{ display: 'none' }} id="uppy-progress">
                 <Dashboard
                   uppy={uppy}
                   proudlyDisplayPoweredByUppy={false}
-                  hideUploadButton={false}
-                  height={200}
+                  hideUploadButton={true}
+                  height={150}
                   theme="light"
                   showProgressDetails={true}
                   hideRetryButton={false}
                   hideCancelButton={false}
+                  hidePauseResumeButton={true}
+                  hideProgressAfterFinish={false}
                 />
               </div>
             </div>
