@@ -68,7 +68,7 @@ export default function Home() {
     const savedLocation = localStorage.getItem('homeLocation');
     const savedCoordinates = localStorage.getItem('homeCoordinates'); 
     const savedBoundingBox = localStorage.getItem('homeBoundingBox');
-    const locationFilterEnabled = localStorage.getItem('locationFilter') === 'true';
+    const locationFilterSetting = localStorage.getItem('locationFilter');
     
     if (savedLocation && savedCoordinates) {
       try {
@@ -79,7 +79,8 @@ export default function Home() {
           homeLocation: savedLocation,
           homeCoordinates: coordinates,
           homeBoundingBox: boundingBox,
-          locationFilter: locationFilterEnabled
+          // Auto-enable location filtering when home location exists (default to true)
+          locationFilter: locationFilterSetting ? locationFilterSetting === 'true' : true
         }));
       } catch (error) {
         console.error('Failed to load saved location:', error);
@@ -94,7 +95,7 @@ export default function Home() {
         const savedLocation = localStorage.getItem('homeLocation');
         const savedCoordinates = localStorage.getItem('homeCoordinates');
         const savedBoundingBox = localStorage.getItem('homeBoundingBox');
-        const locationFilterEnabled = localStorage.getItem('locationFilter') === 'true';
+        const locationFilterSetting = localStorage.getItem('locationFilter');
         
         if (savedLocation && savedCoordinates) {
           try {
@@ -105,7 +106,8 @@ export default function Home() {
               homeLocation: savedLocation,
               homeCoordinates: coordinates,
               homeBoundingBox: boundingBox,
-              locationFilter: locationFilterEnabled
+              // Auto-enable location filtering when home location exists (default to true)
+              locationFilter: locationFilterSetting ? locationFilterSetting === 'true' : true
             }));
           } catch (error) {
             console.error('Failed to sync location from feed:', error);

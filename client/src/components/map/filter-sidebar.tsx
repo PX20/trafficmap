@@ -292,11 +292,14 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
                     if (boundingBox) {
                       onFilterChange('homeBoundingBox', boundingBox);
                     }
+                    // Auto-enable location filtering when a location is set
+                    onFilterChange('locationFilter', true);
                   }}
                   onClear={() => {
                     onFilterChange('homeLocation', '');
                     onFilterChange('homeCoordinates', undefined);
                     onFilterChange('homeBoundingBox', undefined);
+                    // Auto-disable location filtering when location is cleared
                     onFilterChange('locationFilter', false);
                   }}
                   placeholder="Enter your suburb..."
