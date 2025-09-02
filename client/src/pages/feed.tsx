@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { IncidentDetailModal } from "@/components/incident-detail-modal";
+import { AppHeader } from "@/components/map/app-header";
 import { 
   MapPin, 
   Clock, 
@@ -282,30 +283,10 @@ export default function Feed() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="bg-card/80 backdrop-blur-sm border-b border-border/50 sticky top-0 z-30">
-        <div className="max-w-2xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="bg-primary rounded-full p-2">
-                <Shield className="w-5 h-5 text-primary-foreground" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-foreground">Safety Feed</h1>
-                <p className="text-sm text-muted-foreground">Real-time community updates</p>
-              </div>
-            </div>
-            <Link href="/">
-              <Button variant="outline" className="rounded-full" data-testid="button-back-to-map">
-                <MapPin className="w-4 h-4 mr-2" />
-                Map View
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </header>
+      {/* Navigation Header */}
+      <AppHeader onMenuToggle={() => {}} />
 
-      <div className="max-w-2xl mx-auto px-4 py-6">
+      <div className="max-w-2xl mx-auto px-4 pt-20 pb-6">
         {/* Location Card */}
         <Card className="mb-6 border-none shadow-lg bg-gradient-to-br from-card to-card/50">
           <CardContent className="p-6">
