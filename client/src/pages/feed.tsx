@@ -219,13 +219,33 @@ export default function Feed() {
       const homeCoordinates = JSON.parse(homeCoordinatesStr);
       const homeBoundingBox = homeBoundingBoxStr ? JSON.parse(homeBoundingBoxStr) : undefined;
       
+      console.log('=== Feed Location Filtering Debug ===');
+      console.log('Home coordinates:', homeCoordinates);
+      console.log('Home bounding box:', homeBoundingBox);
+      console.log('Total incidents before filtering:', deduplicatedIncidents.length);
+      
       // Convert incidents to format expected by filterLocationsByProximity
       const incidentsWithCoords = deduplicatedIncidents
         .map((incident: any) => {
           const coords = extractCoordinatesFromGeometry(incident.geometry);
+          if (coords) {
+            console.log('Incident with coords:', {
+              title: incident.properties?.description || incident.properties?.incidentType || 'Unknown',
+              coords: coords,
+              type: incident.type
+            });
+          } else {
+            console.log('Incident without coords:', {
+              title: incident.properties?.description || incident.properties?.incidentType || 'Unknown',
+              geometry: incident.geometry,
+              type: incident.type
+            });
+          }
           return coords ? { ...incident, coordinates: coords } : null;
         })
         .filter(Boolean);
+      
+      console.log('Incidents with coordinates:', incidentsWithCoords.length);
       
       // Apply proximity filtering (15km radius)
       filteredIncidents = filterLocationsByProximity(
@@ -234,6 +254,9 @@ export default function Feed() {
         homeBoundingBox,
         15 // 15km radius
       );
+      
+      console.log('Incidents after filtering:', filteredIncidents.length);
+      console.log('=== End Debug ===');
     } catch (error) {
       console.error('Failed to apply location filtering:', error);
       // Fall back to showing all incidents if filtering fails
