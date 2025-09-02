@@ -295,7 +295,8 @@ export default function Feed() {
     }
     
     if (incident.properties?.userReported) {
-      return incident.properties?.incidentType || "Community Report";
+      // Use the actual title from the database, not the incident type
+      return incident.properties?.title || incident.properties?.description || "Community Report";
     }
     
     return incident.properties?.GroupedType || "Emergency Incident";
