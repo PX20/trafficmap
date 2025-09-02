@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import type { ReactNode } from "react";
 import Uppy from "@uppy/core";
-import { DashboardModal } from "@uppy/react";
+import { Dashboard } from "@uppy/react";
 import AwsS3 from "@uppy/aws-s3";
 import type { UploadResult } from "@uppy/core";
 import { Button } from "@/components/ui/button";
+import { X } from "lucide-react";
 
 interface ObjectUploaderProps {
   maxNumberOfFiles?: number;
@@ -76,40 +77,45 @@ export function ObjectUploader({
       })
   );
 
-  useEffect(() => {
-    if (showModal) {
-      // Small delay to ensure modal is rendered
-      const timer = setTimeout(() => {
-        const modalElement = document.querySelector('.uppy-Dashboard-modal');
-        if (modalElement) {
-          (modalElement as HTMLElement).style.zIndex = '9999';
-          (modalElement as HTMLElement).style.position = 'fixed';
-          (modalElement as HTMLElement).style.top = '0';
-          (modalElement as HTMLElement).style.left = '0';
-          (modalElement as HTMLElement).style.right = '0';
-          (modalElement as HTMLElement).style.bottom = '0';
-          (modalElement as HTMLElement).style.background = 'rgba(0, 0, 0, 0.5)';
-          (modalElement as HTMLElement).style.display = 'flex';
-          (modalElement as HTMLElement).style.alignItems = 'center';
-          (modalElement as HTMLElement).style.justifyContent = 'center';
-        }
-      }, 50);
-      return () => clearTimeout(timer);
-    }
-  }, [showModal]);
-
   return (
     <div>
       <Button onClick={() => setShowModal(true)} className={buttonClassName}>
         {children}
       </Button>
 
-      <DashboardModal
-        uppy={uppy}
-        open={showModal}
-        onRequestClose={() => setShowModal(false)}
-        proudlyDisplayPoweredByUppy={false}
-      />
+      {/* Custom Modal Overlay */}
+      {showModal && (
+        <div 
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]"
+          onClick={() => setShowModal(false)}
+        >
+          <div 
+            className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between p-4 border-b">
+              <h3 className="text-lg font-semibold">Upload Profile Photo</h3>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowModal(false)}
+                className="p-1 h-auto"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+            <div className="p-4">
+              <Dashboard
+                uppy={uppy}
+                proudlyDisplayPoweredByUppy={false}
+                hideUploadButton={false}
+                note="Images only, up to 5MB"
+                height={400}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
