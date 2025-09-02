@@ -6,14 +6,15 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { ChevronDown, ChevronRight, Car, Shield, Construction, Zap, TreePine, Users } from "lucide-react";
+import { ChevronDown, ChevronRight, Car, Shield, Construction, Zap, TreePine, Users, MapPin } from "lucide-react";
 import type { FilterState } from "@/pages/home";
+import { LocationAutocomplete } from "@/components/location-autocomplete";
 import { getTrafficEvents, getIncidents } from "@/lib/traffic-api";
 
 interface FilterSidebarProps {
   isOpen: boolean;
   filters: FilterState;
-  onFilterChange: (key: keyof FilterState, value: boolean | string) => void;
+  onFilterChange: (key: keyof FilterState, value: boolean | string | { lat: number; lon: number } | [number, number, number, number] | undefined) => void;
   onClose: () => void;
 }
 
@@ -258,6 +259,61 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
             })}
           </div>
           
+          {/* Location Filter Section */}
+          <div className="pt-4 border-t border-border">
+            <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+              <MapPin className="w-5 h-5 text-blue-500" />
+              Location Filter
+            </h2>
+            
+            <div className="space-y-4">
+              <div className="flex items-center space-x-3">
+                <Checkbox
+                  id="location-filter-enabled"
+                  checked={filters.locationFilter}
+                  onCheckedChange={(checked) => onFilterChange('locationFilter', !!checked)}
+                  data-testid="checkbox-location-filter"
+                />
+                <Label htmlFor="location-filter-enabled" className="text-sm text-foreground flex-1">
+                  Show only nearby incidents
+                </Label>
+              </div>
+              
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground">Set your home suburb:</Label>
+                <LocationAutocomplete
+                  value={filters.homeLocation || ''}
+                  onChange={(location, coordinates, boundingBox) => {
+                    onFilterChange('homeLocation', location);
+                    if (coordinates) {
+                      onFilterChange('homeCoordinates', coordinates);
+                    }
+                    if (boundingBox) {
+                      onFilterChange('homeBoundingBox', boundingBox);
+                    }
+                  }}
+                  onClear={() => {
+                    onFilterChange('homeLocation', '');
+                    onFilterChange('homeCoordinates', undefined);
+                    onFilterChange('homeBoundingBox', undefined);
+                    onFilterChange('locationFilter', false);
+                  }}
+                  placeholder="Enter your suburb..."
+                  disabled={false}
+                />
+              </div>
+              
+              {filters.homeLocation && (
+                <div className="p-3 bg-muted/30 rounded-md">
+                  <div className="text-xs text-muted-foreground mb-1">Home Location:</div>
+                  <div className="text-sm font-medium text-foreground">{filters.homeLocation}</div>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    {filters.locationFilter ? 'Filtering by nearby area' : 'Click checkbox above to enable location filtering'}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
           
           <div className="pt-4 border-t border-border">
             <Button 

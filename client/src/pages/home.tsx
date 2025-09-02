@@ -20,8 +20,13 @@ export interface FilterState {
   suspicious: boolean;
   emergency: boolean;
   timeRange: 'now' | '1h' | '6h' | '24h';
+  // Location filtering
+  locationFilter: boolean;
+  homeLocation?: string;
+  homeCoordinates?: { lat: number; lon: number };
+  homeBoundingBox?: [number, number, number, number];
   // Dynamic category filters - any string key for category IDs
-  [key: string]: boolean | string;
+  [key: string]: boolean | string | { lat: number; lon: number } | [number, number, number, number] | undefined;
 }
 
 export default function Home() {
@@ -38,6 +43,7 @@ export default function Home() {
     suspicious: true,
     emergency: true,
     timeRange: 'now',
+    locationFilter: false,
     // Dynamic category filters will be added automatically when users interact with them
   });
   
@@ -57,8 +63,44 @@ export default function Home() {
       setFilters(prev => ({ ...prev, ...categoryFilters }));
     }
   }, [categories]);
+  
+  // Load saved location from localStorage on startup
+  useEffect(() => {
+    const savedLocation = localStorage.getItem('homeLocation');
+    const savedCoordinates = localStorage.getItem('homeCoordinates'); 
+    const savedBoundingBox = localStorage.getItem('homeBoundingBox');
+    const locationFilterEnabled = localStorage.getItem('locationFilter') === 'true';
+    
+    if (savedLocation && savedCoordinates) {
+      try {
+        const coordinates = JSON.parse(savedCoordinates);
+        const boundingBox = savedBoundingBox ? JSON.parse(savedBoundingBox) : undefined;
+        setFilters(prev => ({
+          ...prev,
+          homeLocation: savedLocation,
+          homeCoordinates: coordinates,
+          homeBoundingBox: boundingBox,
+          locationFilter: locationFilterEnabled
+        }));
+      } catch (error) {
+        console.error('Failed to load saved location:', error);
+      }
+    }
+  }, []);
+  
+  // Save location to localStorage when it changes
+  useEffect(() => {
+    if (filters.homeLocation && filters.homeCoordinates) {
+      localStorage.setItem('homeLocation', filters.homeLocation);
+      localStorage.setItem('homeCoordinates', JSON.stringify(filters.homeCoordinates));
+      localStorage.setItem('locationFilter', String(filters.locationFilter));
+      if (filters.homeBoundingBox) {
+        localStorage.setItem('homeBoundingBox', JSON.stringify(filters.homeBoundingBox));
+      }
+    }
+  }, [filters.homeLocation, filters.homeCoordinates, filters.homeBoundingBox, filters.locationFilter]);
 
-  const handleFilterChange = (key: keyof FilterState, value: boolean | string) => {
+  const handleFilterChange = (key: keyof FilterState, value: boolean | string | { lat: number; lon: number } | [number, number, number, number] | undefined) => {
     setFilters(prev => ({ ...prev, [key]: value }));
   };
 

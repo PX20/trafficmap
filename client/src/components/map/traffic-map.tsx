@@ -4,6 +4,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { getTrafficEvents, getIncidents } from "@/lib/traffic-api";
 import type { FilterState } from "@/pages/home";
+import { filterLocationsByProximity, extractCoordinatesFromGeometry } from "@/lib/location-utils";
 
 // Fix Leaflet default marker icons
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -73,10 +74,60 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
     markersRef.current = [];
 
     const newMarkers: L.Marker[] = [];
+    
+    // Apply location filtering if enabled
+    let filteredEventsData = eventsData;
+    let filteredIncidentsData = incidentsData;
+    
+    if (filters.locationFilter && filters.homeCoordinates && filters.homeLocation) {
+      // Filter traffic events by proximity
+      if (eventsData?.features) {
+        const eventsWithCoords = eventsData.features
+          .map((feature: any) => {
+            const coords = extractCoordinatesFromGeometry(feature.geometry);
+            return coords ? { ...feature, coordinates: coords } : null;
+          })
+          .filter(Boolean);
+          
+        const nearbyEvents = filterLocationsByProximity(
+          eventsWithCoords,
+          filters.homeCoordinates,
+          filters.homeBoundingBox,
+          15 // 15km radius
+        );
+        
+        filteredEventsData = {
+          ...eventsData,
+          features: nearbyEvents
+        };
+      }
+      
+      // Filter incidents by proximity
+      if (incidentsData?.features) {
+        const incidentsWithCoords = incidentsData.features
+          .map((feature: any) => {
+            const coords = extractCoordinatesFromGeometry(feature.geometry);
+            return coords ? { ...feature, coordinates: coords } : null;
+          })
+          .filter(Boolean);
+          
+        const nearbyIncidents = filterLocationsByProximity(
+          incidentsWithCoords,
+          filters.homeCoordinates,
+          filters.homeBoundingBox,
+          15 // 15km radius
+        );
+        
+        filteredIncidentsData = {
+          ...incidentsData,
+          features: nearbyIncidents
+        };
+      }
+    }
 
     // Add event markers
-    if ((eventsData as any)?.features) {
-      (eventsData as any).features.forEach((feature: any) => {
+    if ((filteredEventsData as any)?.features) {
+      (filteredEventsData as any).features.forEach((feature: any) => {
         const eventType = feature.properties.event_type?.toLowerCase();
         let shouldShow = false;
 
@@ -139,8 +190,8 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
 
 
     // Add incident markers
-    if ((incidentsData as any)?.features) {
-      (incidentsData as any).features.forEach((feature: any) => {
+    if ((filteredIncidentsData as any)?.features) {
+      (filteredIncidentsData as any).features.forEach((feature: any) => {
         if (feature.geometry?.coordinates) {
           let coords: [number, number] | null = null;
           let shouldShow = false;
