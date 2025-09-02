@@ -367,7 +367,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           };
         });
 
-      res.json(locationSuggestions);
+      // Deduplicate results by suburb + postcode combination
+      const uniqueLocations = locationSuggestions.filter((location, index, arr) => {
+        const key = `${location.address.suburb}-${location.address.postcode}`;
+        return arr.findIndex(l => `${l.address.suburb}-${l.address.postcode}` === key) === index;
+      });
+
+      res.json(uniqueLocations);
 
     } catch (error) {
       console.error('Location search error:', error);
