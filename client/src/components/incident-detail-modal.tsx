@@ -376,10 +376,21 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
               </div>
             ) : (
               <div className="space-y-4">
-                {Object.values(groupedComments).map((group: any) => (
-                  <div key={group.comment?.id || Math.random()}>
-                    {group.comment && renderComment(group.comment)}
-                    {group.replies.map((reply: Comment) => renderComment(reply))}
+                {/* Debug info */}
+                <div className="bg-yellow-100 p-2 rounded text-xs">
+                  Debug: {comments.length} comments loaded
+                </div>
+                
+                {/* Simple rendering - just show all comments */}
+                {comments.map((comment: Comment) => (
+                  <div key={comment.id} className="bg-muted p-3 rounded-lg">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm font-medium">User {comment.userId.slice(-4)}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {getTimeAgo(comment.createdAt?.toString() || '')}
+                      </span>
+                    </div>
+                    <p className="text-sm">{comment.content}</p>
                   </div>
                 ))}
                 
