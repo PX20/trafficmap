@@ -58,7 +58,11 @@ export function LocationAutocomplete({
   const searchLocation = async (query: string) => {
     // Cancel previous request
     if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
+      try {
+        abortControllerRef.current.abort();
+      } catch (error) {
+        // Ignore abort errors
+      }
     }
 
     abortControllerRef.current = new AbortController();
