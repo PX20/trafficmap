@@ -64,14 +64,14 @@ export function AppHeader({ onMenuToggle }: AppHeaderProps) {
           {isAuthenticated && user && (
             <div className="flex items-center space-x-3">
               <Link href="/profile">
-                <div className="hidden md:flex items-center space-x-2 p-2 hover:bg-muted rounded-lg transition-colors cursor-pointer" data-testid="link-user-profile">
+                <div className="flex items-center space-x-2 p-2 hover:bg-muted rounded-lg transition-colors cursor-pointer" data-testid="link-user-profile">
                   <Avatar className="w-8 h-8">
                     <AvatarImage src={user.profileImageUrl || undefined} alt={user.firstName || 'User'} />
                     <AvatarFallback>
                       {user.firstName ? user.firstName[0].toUpperCase() : user.email ? user.email[0].toUpperCase() : 'U'}
                     </AvatarFallback>
                   </Avatar>
-                  <span className="text-sm text-foreground">
+                  <span className="text-sm text-foreground hidden sm:block">
                     {user.firstName || user.email}
                   </span>
                 </div>
