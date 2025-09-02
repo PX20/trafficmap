@@ -49,11 +49,16 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
   const { data: comments = [], isLoading: commentsLoading } = useQuery({
     queryKey: ["/api/incidents", incidentId, "comments"],
     queryFn: async () => {
+      console.log('🔍 Fetching comments for:', incidentId);
       const response = await fetch(`/api/incidents/${incidentId}/comments`);
       if (!response.ok) throw new Error('Failed to fetch comments');
-      return response.json();
+      const data = await response.json();
+      console.log('📝 Comments received:', data.length, 'comments');
+      return data;
     },
     enabled: isOpen && !!incidentId && !!incident,
+    staleTime: 0, // Always fetch fresh data
+    gcTime: 0, // Clear cache immediately
   });
 
   const createCommentMutation = useMutation({
@@ -309,6 +314,9 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
     }
     return acc;
   }, {});
+  
+  console.log('🔧 Grouped comments:', groupedComments);
+  console.log('💬 Total comments array:', comments);
 
   // Don't render if no incident
   if (!incident) {
