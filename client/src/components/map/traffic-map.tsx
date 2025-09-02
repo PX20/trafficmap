@@ -152,19 +152,37 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
           
           
           if (isUserReported) {
-            // User-reported incidents
-            const incidentType = properties?.incidentType;
+            // User-reported incidents with new hierarchical categories
+            const categoryId = properties?.categoryId;
             
-            
-            if (['Crime', 'Theft', 'Violence', 'Vandalism'].includes(incidentType) && filters.crime) {
-              shouldShow = true;
-              markerType = 'crime';
-            } else if (incidentType === 'Suspicious' && filters.suspicious) {
-              shouldShow = true;
-              markerType = 'suspicious';
-            } else if (['Public Safety', 'Fire', 'Utility', 'Road Hazard'].includes(incidentType) && filters.emergency) {
-              shouldShow = true;
-              markerType = 'emergency';
+            if (categoryId) {
+              // Check if this category is enabled in filters
+              if (filters[categoryId]) {
+                shouldShow = true;
+                // Determine marker type based on category (you can customize these)
+                if (categoryId.includes('safety') || categoryId.includes('crime')) {
+                  markerType = 'crime';
+                } else if (categoryId.includes('emergency')) {
+                  markerType = 'emergency'; 
+                } else if (categoryId.includes('suspicious')) {
+                  markerType = 'suspicious';
+                } else {
+                  markerType = 'incident'; // default
+                }
+              }
+            } else {
+              // Fallback for legacy incidents without categoryId
+              const incidentType = properties?.incidentType;
+              if (['Crime', 'Theft', 'Violence', 'Vandalism'].includes(incidentType) && filters.crime) {
+                shouldShow = true;
+                markerType = 'crime';
+              } else if (incidentType === 'Suspicious' && filters.suspicious) {
+                shouldShow = true;
+                markerType = 'suspicious';
+              } else if (['Public Safety', 'Fire', 'Utility', 'Road Hazard'].includes(incidentType) && filters.emergency) {
+                shouldShow = true;
+                markerType = 'emergency';
+              }
             }
           } else {
             // Official emergency incidents

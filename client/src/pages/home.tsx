@@ -9,14 +9,18 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
 
 export interface FilterState {
+  // Keep existing traffic events filters
   crashes: boolean;
   hazards: boolean;
   restrictions: boolean;
   incidents: boolean;
+  // Legacy user report filters (for backward compatibility)
   crime: boolean;
   suspicious: boolean;
   emergency: boolean;
   timeRange: 'now' | '1h' | '6h' | '24h';
+  // Dynamic category filters - any string key for category IDs
+  [key: string]: boolean | string;
 }
 
 export default function Home() {
@@ -33,6 +37,7 @@ export default function Home() {
     suspicious: true,
     emergency: true,
     timeRange: 'now',
+    // Dynamic category filters will be added automatically when users interact with them
   });
 
   const handleFilterChange = (key: keyof FilterState, value: boolean | string) => {
