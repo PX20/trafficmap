@@ -325,16 +325,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const data = await response.json();
       
+      console.log('Raw Nominatim response for debug:', JSON.stringify(data[0]?.address, null, 2));
+      
       // Transform to our format and filter for Queensland suburbs
       const locationSuggestions = data
         .filter((item: any) => 
           item.address && 
-          (item.address.suburb || item.address.city || item.address.town) &&
+          (item.address.suburb || item.address.city || item.address.town || item.address.village) &&
           item.address.state && 
           (item.address.state.includes('Queensland') || item.address.state.includes('QLD'))
         )
         .map((item: any) => {
-          const suburb = item.address.suburb || item.address.city || item.address.town;
+          // Prioritize actual suburb/town names over administrative areas
+          const suburb = item.address.suburb || 
+                        item.address.town || 
+                        item.address.village ||
+                        item.address.city;
           const postcode = item.address.postcode;
           
           return {
