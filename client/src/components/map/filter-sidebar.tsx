@@ -64,13 +64,13 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
       {/* Backdrop for mobile */}
       {isMobile && isOpen && (
         <div 
-          className="fixed inset-0 bg-black/50 z-15"
+          className="fixed inset-0 bg-black/50 z-30"
           onClick={onClose}
         />
       )}
       
       <aside 
-        className={`absolute top-16 left-0 bottom-0 w-80 bg-card border-r border-border z-20 shadow-lg transform transition-transform duration-300 ${
+        className={`fixed top-16 left-0 bottom-0 w-80 bg-card border-r border-border z-40 shadow-lg transform transition-transform duration-300 ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         } ${isMobile ? 'w-full' : ''}`}
       >
