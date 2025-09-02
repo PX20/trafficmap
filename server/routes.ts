@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { insertIncidentSchema, insertCommentSchema, insertConversationSchema, insertMessageSchema } from "@shared/schema";
+import { insertIncidentSchema, insertCommentSchema, insertConversationSchema, insertMessageSchema, insertNotificationSchema } from "@shared/schema";
 import { z } from "zod";
 import {
   ObjectStorageService,
@@ -368,6 +368,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { incidentId } = req.params;
       const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
       
       const validatedData = insertCommentSchema.parse({
         ...req.body,
@@ -376,6 +377,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       const comment = await storage.createComment(validatedData);
+      
+      // Create notification for replies
+      if (comment.parentCommentId) {
+        // This is a reply - notify the original comment author
+        const parentComment = await storage.getCommentById(comment.parentCommentId);
+        if (parentComment && parentComment.userId !== userId) {
+          const displayName = user?.displayName || user?.firstName || 'Someone';
+          await storage.createNotification({
+            userId: parentComment.userId,
+            type: 'comment_reply',
+            title: 'New Reply',
+            message: `${displayName} replied to your comment`,
+            entityId: comment.id,
+            entityType: 'comment',
+            fromUserId: userId,
+          });
+        }
+      }
+      
       res.status(201).json(comment);
     } catch (error) {
       console.error("Error creating comment:", error);
@@ -571,6 +591,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error marking messages as read:", error);
       res.status(500).json({ message: "Failed to mark messages as read" });
+    }
+  });
+
+  // Notification Routes
+  app.get('/api/notifications', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const limit = parseInt(req.query.limit as string) || 50;
+      const notifications = await storage.getNotifications(userId, limit);
+      res.json(notifications);
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+      res.status(500).json({ message: "Failed to fetch notifications" });
+    }
+  });
+
+  app.get('/api/notifications/unread-count', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const count = await storage.getUnreadNotificationCount(userId);
+      res.json(count);
+    } catch (error) {
+      console.error("Error fetching unread notification count:", error);
+      res.status(500).json({ message: "Failed to fetch unread notification count" });
+    }
+  });
+
+  app.patch('/api/notifications/:notificationId/read', isAuthenticated, async (req: any, res) => {
+    try {
+      const { notificationId } = req.params;
+      await storage.markNotificationAsRead(notificationId);
+      res.json({ message: "Notification marked as read" });
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+      res.status(500).json({ message: "Failed to mark notification as read" });
+    }
+  });
+
+  app.patch('/api/notifications/read-all', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      await storage.markAllNotificationsAsRead(userId);
+      res.json({ message: "All notifications marked as read" });
+    } catch (error) {
+      console.error("Error marking all notifications as read:", error);
+      res.status(500).json({ message: "Failed to mark all notifications as read" });
+    }
+  });
+
+  app.get('/api/messages/unread-count', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const count = await storage.getUnreadMessageCount(userId);
+      res.json(count);
+    } catch (error) {
+      console.error("Error fetching unread message count:", error);
+      res.status(500).json({ message: "Failed to fetch unread message count" });
     }
   });
 

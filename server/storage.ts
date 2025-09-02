@@ -10,6 +10,7 @@ import {
   safetyCheckIns,
   conversations,
   messages,
+  notifications,
   type User, 
   type UpsertUser,
   type InsertUser, 
@@ -32,7 +33,9 @@ import {
   type Conversation,
   type InsertConversation,
   type Message,
-  type InsertMessage
+  type InsertMessage,
+  type Notification,
+  type InsertNotification
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, or, ne } from "drizzle-orm";
@@ -64,6 +67,7 @@ export interface IStorage {
   createComment(comment: InsertComment): Promise<Comment>;
   updateComment(id: string, comment: Partial<Comment>): Promise<Comment | undefined>;
   deleteComment(id: string): Promise<boolean>;
+  getCommentById(id: string): Promise<Comment | undefined>;
   
   // Comment voting operations
   voteOnComment(vote: InsertCommentVote): Promise<CommentVote>;
@@ -93,6 +97,14 @@ export interface IStorage {
   getMessagesByConversationId(conversationId: string): Promise<Message[]>;
   createMessage(message: InsertMessage): Promise<Message>;
   markMessagesAsRead(conversationId: string, userId: string): Promise<void>;
+  getUnreadMessageCount(userId: string): Promise<number>;
+  
+  // Notification operations
+  getNotifications(userId: string, limit?: number): Promise<Notification[]>;
+  getUnreadNotificationCount(userId: string): Promise<number>;
+  createNotification(notification: InsertNotification): Promise<Notification>;
+  markNotificationAsRead(notificationId: string): Promise<void>;
+  markAllNotificationsAsRead(userId: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -229,6 +241,14 @@ export class DatabaseStorage implements IStorage {
   async deleteComment(id: string): Promise<boolean> {
     const result = await db.delete(comments).where(eq(comments.id, id));
     return (result.rowCount ?? 0) > 0;
+  }
+
+  async getCommentById(id: string): Promise<Comment | undefined> {
+    const [comment] = await db
+      .select()
+      .from(comments)
+      .where(eq(comments.id, id));
+    return comment;
   }
 
   // Enhanced user profile operations
@@ -470,6 +490,76 @@ export class DatabaseStorage implements IStorage {
           ne(messages.senderId, userId) // Only mark as read for messages NOT sent by the current user (i.e., received messages)
         )
       );
+  }
+
+  async getUnreadMessageCount(userId: string): Promise<number> {
+    const conversations = await this.getConversationsByUserId(userId);
+    let unreadCount = 0;
+    
+    for (const conversation of conversations) {
+      const unreadMessages = await db
+        .select()
+        .from(messages)
+        .where(
+          and(
+            eq(messages.conversationId, conversation.id),
+            eq(messages.isRead, false),
+            ne(messages.senderId, userId)
+          )
+        );
+      unreadCount += unreadMessages.length;
+    }
+    
+    return unreadCount;
+  }
+
+  // Notification operations
+  async getNotifications(userId: string, limit: number = 50): Promise<Notification[]> {
+    return await db
+      .select()
+      .from(notifications)
+      .where(eq(notifications.userId, userId))
+      .orderBy(desc(notifications.createdAt))
+      .limit(limit);
+  }
+
+  async getUnreadNotificationCount(userId: string): Promise<number> {
+    const result = await db
+      .select()
+      .from(notifications)
+      .where(
+        and(
+          eq(notifications.userId, userId),
+          eq(notifications.isRead, false)
+        )
+      );
+    return result.length;
+  }
+
+  async createNotification(notification: InsertNotification): Promise<Notification> {
+    const [newNotification] = await db
+      .insert(notifications)
+      .values({
+        ...notification,
+        id: randomUUID(),
+        createdAt: new Date(),
+      })
+      .returning();
+    return newNotification;
+  }
+
+  async markNotificationAsRead(notificationId: string): Promise<void> {
+    await db
+      .update(notifications)
+      .set({ isRead: true })
+      .where(eq(notifications.id, notificationId));
+  }
+
+  async markAllNotificationsAsRead(userId: string): Promise<void> {
+    await db
+      .update(notifications)
+      .set({ isRead: true })
+      .where(eq(notifications.userId, userId));
   }
 
 }

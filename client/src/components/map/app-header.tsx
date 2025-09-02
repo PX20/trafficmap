@@ -1,8 +1,10 @@
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Link, useLocation } from "wouter";
-import { Map, List } from "lucide-react";
+import { Map, List, Bell, MessageCircle } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 
 interface AppHeaderProps {
   onMenuToggle: () => void;
@@ -11,6 +13,18 @@ interface AppHeaderProps {
 export function AppHeader({ onMenuToggle }: AppHeaderProps) {
   const { user, isAuthenticated } = useAuth();
   const [location] = useLocation();
+
+  // Get unread notification count
+  const { data: unreadNotifications = 0 } = useQuery<number>({
+    queryKey: ['/api/notifications/unread-count'],
+    enabled: isAuthenticated,
+  });
+
+  // Get unread message count
+  const { data: unreadMessages = 0 } = useQuery<number>({
+    queryKey: ['/api/messages/unread-count'],
+    enabled: isAuthenticated,
+  });
 
   return (
     <header className="absolute top-0 left-0 right-0 z-20 bg-card/95 backdrop-blur-sm border-b border-border">
@@ -60,6 +74,49 @@ export function AppHeader({ onMenuToggle }: AppHeaderProps) {
             <span className="hidden md:block">Live</span>
           </div>
           
+          {/* Notifications and Messages */}
+          {isAuthenticated && (
+            <div className="flex items-center space-x-2">
+              {/* Notification Bell */}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="relative h-8 w-8 p-0"
+                data-testid="button-notifications"
+              >
+                <Bell className="w-4 h-4" />
+                {unreadNotifications > 0 && (
+                  <Badge 
+                    variant="destructive" 
+                    className="absolute -top-1 -right-1 h-5 w-5 text-xs p-0 flex items-center justify-center"
+                  >
+                    {unreadNotifications > 99 ? '99+' : unreadNotifications}
+                  </Badge>
+                )}
+              </Button>
+              
+              {/* Messages Icon */}
+              <Link href="/messages">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="relative h-8 w-8 p-0"
+                  data-testid="button-messages"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  {unreadMessages > 0 && (
+                    <Badge 
+                      variant="destructive" 
+                      className="absolute -top-1 -right-1 h-5 w-5 text-xs p-0 flex items-center justify-center"
+                    >
+                      {unreadMessages > 99 ? '99+' : unreadMessages}
+                    </Badge>
+                  )}
+                </Button>
+              </Link>
+            </div>
+          )}
+
           {/* User Info and Logout */}
           {isAuthenticated && user && (
             <div className="flex items-center space-x-3">

@@ -158,6 +158,20 @@ export const messages = pgTable("messages", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Notifications system for tracking user activities
+export const notifications = pgTable("notifications", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(), // Who receives the notification
+  type: varchar("type").notNull(), // 'comment_reply' | 'new_comment' | 'mention' | 'message'
+  title: varchar("title").notNull(),
+  message: text("message").notNull(),
+  entityId: varchar("entity_id"), // ID of the related item (comment, incident, message, etc.)
+  entityType: varchar("entity_type"), // 'comment' | 'incident' | 'message'
+  fromUserId: varchar("from_user_id"), // Who triggered the notification
+  isRead: boolean("is_read").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   comments: many(comments),
@@ -168,6 +182,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   sentMessages: many(messages),
   conversations1: many(conversations, { relationName: 'user1' }),
   conversations2: many(conversations, { relationName: 'user2' }),
+  notifications: many(notifications),
 }));
 
 export const incidentsRelations = relations(incidents, ({ many }) => ({
@@ -265,6 +280,17 @@ export const messagesRelations = relations(messages, ({ one }) => ({
   }),
 }));
 
+export const notificationsRelations = relations(notifications, ({ one }) => ({
+  user: one(users, {
+    fields: [notifications.userId],
+    references: [users.id],
+  }),
+  fromUser: one(users, {
+    fields: [notifications.fromUserId],
+    references: [users.id],
+  }),
+}));
+
 
 export const insertUserSchema = createInsertSchema(users).omit({
   createdAt: true,
@@ -324,6 +350,11 @@ export const insertMessageSchema = createInsertSchema(messages).omit({
   createdAt: true,
 });
 
+export const insertNotificationSchema = createInsertSchema(notifications).omit({
+  id: true,
+  createdAt: true,
+});
+
 export type UpsertUser = typeof users.$inferInsert;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -347,3 +378,5 @@ export type Conversation = typeof conversations.$inferSelect;
 export type InsertConversation = z.infer<typeof insertConversationSchema>;
 export type Message = typeof messages.$inferSelect;
 export type InsertMessage = z.infer<typeof insertMessageSchema>;
+export type Notification = typeof notifications.$inferSelect;
+export type InsertNotification = z.infer<typeof insertNotificationSchema>;
