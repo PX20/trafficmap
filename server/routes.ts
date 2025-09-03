@@ -390,9 +390,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
 
       // Deduplicate results by suburb + postcode combination
-      const uniqueLocations = locationSuggestions.filter((location, index, arr) => {
+      const uniqueLocations = locationSuggestions.filter((location: any, index: number, arr: any[]) => {
         const key = `${location.address.suburb}-${location.address.postcode}`;
-        return arr.findIndex(l => `${l.address.suburb}-${l.address.postcode}` === key) === index;
+        return arr.findIndex((l: any) => `${l.address.suburb}-${l.address.postcode}` === key) === index;
       });
 
       res.json(uniqueLocations);
