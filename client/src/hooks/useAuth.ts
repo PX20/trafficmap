@@ -16,10 +16,6 @@ export function useAuth() {
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData) => {
       const res = await apiRequest("POST", "/api/login", credentials);
-      if (!res.ok) {
-        const error = await res.text();
-        throw new Error(error || "Login failed");
-      }
       return await res.json();
     },
     onSuccess: (user: SelectUser) => {
@@ -41,10 +37,6 @@ export function useAuth() {
   const registerMutation = useMutation({
     mutationFn: async (credentials: InsertUser) => {
       const res = await apiRequest("POST", "/api/register", credentials);
-      if (!res.ok) {
-        const error = await res.text();
-        throw new Error(error || "Registration failed");
-      }
       return await res.json();
     },
     onSuccess: (user: SelectUser) => {
