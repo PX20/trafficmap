@@ -13,7 +13,8 @@ import UserProfile from "@/pages/user-profile";
 import Messages from "@/pages/messages";
 
 function Router() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { user, isLoading } = useAuth();
+  const isAuthenticated = !!user;
 
   return (
     <Switch>
