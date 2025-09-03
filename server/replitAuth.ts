@@ -86,7 +86,7 @@ export async function setupAuth(app: Express) {
 
   // Support both production domains and localhost for development
   const domains = process.env.REPLIT_DOMAINS?.split(",") || [];
-  const allDomains = [...domains, "localhost", "7c2800e2-dc85-4b8d-b4f0-349225d230ba.janeway.prod.repl.run"];
+  const allDomains = [...domains, "localhost", "7c2800e2-dc85-4b8d-b4f0-349225d230ba.janeway.prod.repl.run", "07484835-201d-4254-8d4d-d43ff0f457fe.janeway.prod.repl.run"];
   
   for (const domain of allDomains) {
     const isLocalhost = domain === "localhost";
