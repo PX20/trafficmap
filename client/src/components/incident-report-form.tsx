@@ -41,7 +41,6 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
   // Fetch categories and subcategories
   const { data: categories = [] } = useQuery({
     queryKey: ["/api/categories"],
-    enabled: isOpen,
     select: (data: any) => data || [],
   });
   
