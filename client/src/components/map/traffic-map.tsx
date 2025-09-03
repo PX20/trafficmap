@@ -329,24 +329,39 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
   };
 
   const createEventPopup = (properties: any) => {
-    // Get short description (max 80 chars)
-    const shortDesc = (properties.description || properties.event_type || 'Traffic Event')
-      .substring(0, 80) + ((properties.description || '').length > 80 ? '...' : '');
+    // Get event type for better categorization
+    const eventType = properties.event_type || properties.description || 'Traffic Event';
+    const shortDesc = eventType.substring(0, 60) + (eventType.length > 60 ? '...' : '');
+    
+    // Get severity level and color
+    const getSeverityInfo = (desc: string) => {
+      const lower = desc.toLowerCase();
+      if (lower.includes('crash') || lower.includes('accident') || lower.includes('closed')) {
+        return { level: 'High', color: 'bg-red-50 text-red-700 border-red-200', badgeColor: 'bg-red-100 text-red-700' };
+      } else if (lower.includes('roadwork') || lower.includes('construction')) {
+        return { level: 'Medium', color: 'bg-amber-50 text-amber-700 border-amber-200', badgeColor: 'bg-amber-100 text-amber-700' };
+      } else {
+        return { level: 'Info', color: 'bg-blue-50 text-blue-700 border-blue-200', badgeColor: 'bg-blue-100 text-blue-700' };
+      }
+    };
+    
+    const severityInfo = getSeverityInfo(eventType);
+    const roadName = properties.road_summary?.road_name || properties.location || 'Unknown Road';
     
     return `
-      <div class="p-3 min-w-[280px] max-w-[320px] bg-white rounded-lg shadow-sm border">
-        <!-- User Header -->
-        <div class="flex items-center justify-between mb-3">
-          <div class="flex items-center gap-2">
-            <div class="w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
-              <span class="text-white font-bold text-xs">TMR</span>
+      <div class="p-4 min-w-[300px] max-w-[350px] bg-white rounded-xl shadow-lg border border-gray-200 font-sans">
+        <!-- Header with TMR Badge -->
+        <div class="flex items-start justify-between mb-4">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center shadow-md">
+              <span class="text-white font-bold text-sm">TMR</span>
             </div>
             <div class="flex-1 min-w-0">
-              <div class="flex items-center gap-2">
-                <span class="font-medium text-sm truncate">TMR Queensland</span>
-                <span class="text-xs bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded">Official</span>
+              <div class="flex items-center gap-2 mb-1">
+                <span class="font-semibold text-gray-900 text-sm">TMR Queensland</span>
+                <span class="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-full font-medium">Official</span>
               </div>
-              <div class="flex items-center gap-1 text-xs text-gray-600">
+              <div class="flex items-center gap-1 text-xs text-gray-500">
                 <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                   <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path>
                 </svg>
@@ -354,42 +369,58 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
               </div>
             </div>
           </div>
+          <span class="text-xs px-2 py-1 rounded-full font-medium ${severityInfo.badgeColor}">${severityInfo.level}</span>
         </div>
         
-        <!-- Content -->
-        <div class="mb-3">
-          <h4 class="font-semibold text-gray-900 text-sm mb-1 line-clamp-2">${shortDesc}</h4>
-          <div class="flex items-center gap-1 text-xs text-gray-600">
-            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path>
-            </svg>
-            <span class="truncate">${properties.road_summary?.road_name || 'Unknown Road'}</span>
-          </div>
-        </div>
-        
-        <!-- Social Bar -->
-        <div class="flex items-center justify-between py-2 border-t border-gray-100">
-          <div class="flex items-center space-x-3">
-            <button class="flex items-center space-x-1 text-gray-500 hover:text-red-500">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+        <!-- Incident Content -->
+        <div class="mb-4">
+          <div class="p-3 rounded-lg ${severityInfo.color} border mb-3">
+            <h4 class="font-semibold text-sm mb-2 leading-relaxed">${shortDesc}</h4>
+            <div class="flex items-center gap-2 text-xs">
+              <svg class="w-4 h-4 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path>
               </svg>
+              <span class="font-medium text-gray-700">${roadName}</span>
+            </div>
+          </div>
+          
+          <!-- Additional Info -->
+          ${properties.impact_description ? `
+            <div class="text-xs text-gray-600 bg-gray-50 p-2 rounded-md border-l-2 border-orange-400">
+              <strong>Impact:</strong> ${properties.impact_description.substring(0, 100)}
+            </div>
+          ` : ''}
+        </div>
+        
+        <!-- Interactive Footer -->
+        <div class="flex items-center justify-between pt-3 border-t border-gray-100">
+          <div class="flex items-center gap-4">
+            <button class="flex items-center gap-2 text-gray-600 hover:text-red-500 transition-colors group">
+              <div class="p-1 rounded-full group-hover:bg-red-50 transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                </svg>
+              </div>
               <span class="text-sm font-medium">8</span>
             </button>
-            <button onclick="window.showIncidentDetails('${properties.id}', 'traffic')" class="flex items-center space-x-1 text-gray-500 hover:text-blue-500">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
-              </svg>
+            <button onclick="window.showIncidentDetails('${properties.id}', 'traffic')" class="flex items-center gap-2 text-gray-600 hover:text-blue-500 transition-colors group">
+              <div class="p-1 rounded-full group-hover:bg-blue-50 transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                </svg>
+              </div>
               <span class="text-sm font-medium">3</span>
             </button>
-            <button class="flex items-center space-x-1 text-gray-500 hover:text-green-500">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path>
-              </svg>
+            <button class="flex items-center gap-2 text-gray-600 hover:text-green-500 transition-colors group">
+              <div class="p-1 rounded-full group-hover:bg-green-50 transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path>
+                </svg>
+              </div>
               <span class="text-sm">Share</span>
             </button>
           </div>
-          <button onclick="window.showIncidentDetails('${properties.id}', 'traffic')" class="text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded">
+          <button onclick="window.showIncidentDetails('${properties.id}', 'traffic')" class="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white text-xs font-medium px-4 py-2 rounded-full transition-all shadow-md hover:shadow-lg">
             View More
           </button>
         </div>
@@ -413,19 +444,19 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
       const priorityText = properties?.severity || 'Community Report';
       
       return `
-        <div class="p-3 min-w-[280px] max-w-[320px] bg-white rounded-lg shadow-sm border">
+        <div class="p-4 min-w-[300px] max-w-[350px] bg-white rounded-xl shadow-lg border border-gray-200 font-sans">
           <!-- User Header -->
-          <div class="flex items-center justify-between mb-3">
-            <div class="flex items-center gap-2">
-              <div class="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center">
-                <span class="text-white font-bold text-xs">${(properties.reporterName || 'User').slice(0, 2).toUpperCase()}</span>
+          <div class="flex items-start justify-between mb-4">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-md ring-2 ring-purple-100">
+                <span class="text-white font-bold text-sm">${(properties.reporterName || 'User').slice(0, 2).toUpperCase()}</span>
               </div>
               <div class="flex-1 min-w-0">
-                <div class="flex items-center gap-2">
-                  <span class="font-medium text-sm truncate">${properties.reporterName || 'Anonymous'}</span>
-                  <span class="text-xs bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded">Community</span>
+                <div class="flex items-center gap-2 mb-1">
+                  <span class="font-semibold text-gray-900 text-sm">${properties.reporterName || 'Community Reporter'}</span>
+                  <span class="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full font-medium">Community</span>
                 </div>
-                <div class="flex items-center gap-1 text-xs text-gray-600">
+                <div class="flex items-center gap-1 text-xs text-gray-500">
                   <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path>
                   </svg>
@@ -433,42 +464,64 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
                 </div>
               </div>
             </div>
+            <span class="text-xs px-2 py-1 rounded-full font-medium ${getIncidentTypeColor(properties.incidentType)}">${properties.incidentType || 'Report'}</span>
           </div>
           
           <!-- Content -->
-          <div class="mb-3">
-            <h4 class="font-semibold text-gray-900 text-sm mb-1 line-clamp-2">${properties.title || properties.incidentType || 'Community Report'}</h4>
-            <div class="flex items-center gap-1 text-xs text-gray-600 mb-2">
-              <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path>
-              </svg>
-              <span class="truncate">${properties.locationDescription || 'Unknown location'}</span>
-            </div>
-          </div>
-          ${photoThumbnail}
-          
-          <!-- Social Bar -->
-          <div class="flex items-center justify-between py-2 border-t border-gray-100">
-            <div class="flex items-center space-x-3">
-              <button class="flex items-center space-x-1 text-gray-500 hover:text-red-500">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+          <div class="mb-4">
+            <div class="p-3 rounded-lg bg-purple-50 text-purple-900 border border-purple-200 mb-3">
+              <h4 class="font-semibold text-sm mb-2 leading-relaxed">${properties.title || properties.incidentType || 'Community Report'}</h4>
+              <div class="flex items-center gap-2 text-xs text-purple-700">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path>
                 </svg>
+                <span class="font-medium">${properties.locationDescription || 'Community Location'}</span>
+              </div>
+            </div>
+            
+            ${properties.description ? `
+              <div class="text-xs text-gray-700 bg-gray-50 p-3 rounded-md border-l-2 border-purple-400">
+                <div class="font-medium text-gray-800 mb-1">Description:</div>
+                <div class="leading-relaxed">${properties.description.substring(0, 120) + (properties.description.length > 120 ? '...' : '')}</div>
+              </div>
+            ` : ''}
+          </div>
+          
+          <!-- Photo if available -->
+          ${photoThumbnail ? `
+            <div class="mb-4">
+              ${photoThumbnail.replace('class="mb-3', 'class="mb-0')}
+            </div>
+          ` : ''}
+          
+          <!-- Interactive Footer -->
+          <div class="flex items-center justify-between pt-3 border-t border-gray-100">
+            <div class="flex items-center gap-4">
+              <button class="flex items-center gap-2 text-gray-600 hover:text-red-500 transition-colors group">
+                <div class="p-1 rounded-full group-hover:bg-red-50 transition-colors">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                  </svg>
+                </div>
                 <span class="text-sm font-medium">12</span>
               </button>
-              <button onclick="window.showIncidentDetails('${properties.id}', 'user-reported')" class="flex items-center space-x-1 text-gray-500 hover:text-blue-500">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
-                </svg>
+              <button onclick="window.showIncidentDetails('${properties.id}', 'user-reported')" class="flex items-center gap-2 text-gray-600 hover:text-blue-500 transition-colors group">
+                <div class="p-1 rounded-full group-hover:bg-blue-50 transition-colors">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                  </svg>
+                </div>
                 <span class="text-sm font-medium">6</span>
               </button>
-              <button class="flex items-center space-x-1 text-gray-500 hover:text-green-500">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path>
-                </svg>
+              <button class="flex items-center gap-2 text-gray-600 hover:text-green-500 transition-colors group">
+                <div class="p-1 rounded-full group-hover:bg-green-50 transition-colors">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path>
+                  </svg>
+                </div>
               </button>
             </div>
-            <button onclick="window.showIncidentDetails('${properties.id}', 'user-reported')" class="text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded">
+            <button onclick="window.showIncidentDetails('${properties.id}', 'user-reported')" class="bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white text-xs font-medium px-4 py-2 rounded-full transition-all shadow-md hover:shadow-lg">
               View More
             </button>
           </div>
@@ -496,19 +549,19 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
       .substring(0, 60) + ((properties.GroupedType || '').length > 60 ? '...' : '');
     
     return `
-      <div class="p-3 min-w-[280px] max-w-[320px] bg-white rounded-lg shadow-sm border">
+      <div class="p-4 min-w-[300px] max-w-[350px] bg-white rounded-xl shadow-lg border border-gray-200 font-sans">
         <!-- Agency Header -->
-        <div class="flex items-center justify-between mb-3">
-          <div class="flex items-center gap-2">
-            <div class="w-8 h-8 rounded-full bg-gradient-to-br ${agencyInfo.color} flex items-center justify-center">
-              <span class="text-white font-bold text-xs">${agencyInfo.avatar}</span>
+        <div class="flex items-start justify-between mb-4">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-gradient-to-br ${agencyInfo.color} flex items-center justify-center shadow-md ring-2 ring-red-100">
+              <span class="text-white font-bold text-sm">${agencyInfo.avatar}</span>
             </div>
             <div class="flex-1 min-w-0">
-              <div class="flex items-center gap-2">
-                <span class="font-medium text-sm truncate">${agencyInfo.name}</span>
-                <span class="text-xs bg-red-100 text-red-700 px-1.5 py-0.5 rounded">Official</span>
+              <div class="flex items-center gap-2 mb-1">
+                <span class="font-semibold text-gray-900 text-sm">${agencyInfo.name}</span>
+                <span class="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full font-medium">Official</span>
               </div>
-              <div class="flex items-center gap-1 text-xs text-gray-600">
+              <div class="flex items-center gap-1 text-xs text-gray-500">
                 <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                   <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path>
                 </svg>
@@ -516,46 +569,31 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
               </div>
             </div>
           </div>
+          <div class="flex items-center gap-1">
+            <div class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+            <span class="text-xs text-red-600 font-medium">Active</span>
+          </div>
         </div>
         
         <!-- Content -->
-        <div class="mb-3">
-          <h4 class="font-semibold text-red-700 text-sm mb-1 line-clamp-2">${shortIncidentDesc}</h4>
-          <div class="flex items-center gap-1 text-xs text-gray-600">
-            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path>
-            </svg>
-            <span class="truncate">${properties.Location || properties.Locality || 'Unknown location'}</span>
+        <div class="mb-4">
+          <div class="p-3 rounded-lg bg-red-50 text-red-900 border border-red-200 mb-3">
+            <h4 class="font-semibold text-sm mb-2 leading-relaxed">${shortIncidentDesc}</h4>
+            <div class="flex items-center gap-2 text-xs text-red-700">
+              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path>
+              </svg>
+              <span class="font-medium">${properties.Location || properties.Locality || 'Emergency Location'}</span>
+            </div>
           </div>
-        </div>
-        
-        <!-- Social Bar -->
-        <div class="flex items-center justify-between py-2 border-t border-gray-100">
-          <div class="flex items-center space-x-3">
-            <button class="flex items-center space-x-1 text-gray-500 hover:text-red-500">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
-              </svg>
-              <span class="text-sm font-medium">18</span>
-            </button>
-            <button onclick="window.showIncidentDetails('${properties.Master_Incident_Number || properties.id}', 'emergency')" class="flex items-center space-x-1 text-gray-500 hover:text-blue-500">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
-              </svg>
-              <span class="text-sm font-medium">4</span>
-            </button>
-            <button class="flex items-center space-x-1 text-gray-500 hover:text-green-500">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path>
-              </svg>
-            </button>
-          </div>
-          <button onclick="window.showIncidentDetails('${properties.Master_Incident_Number || properties.id}', 'emergency')" class="text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded">
-            View More
-          </button>
-        </div>
-      </div>
-    `;
+          
+          <!-- Emergency Details -->
+          ${properties.Priority && properties.Priority !== 'Unknown' ? `
+            <div class="text-xs bg-amber-50 p-3 rounded-md border-l-2 border-red-400 mb-2">
+              <div class="font-medium text-gray-800 mb-1">Priority Level:</div>
+              <div class="text-amber-700 font-semibold">${properties.Priority}</div>
+            </div>
+          ` : ''}\n          \n          ${properties.Status && properties.Status !== 'Unknown' ? `\n            <div class="text-xs text-gray-700 bg-gray-50 p-2 rounded-md">\n              <span class="font-medium">Status:</span> ${properties.Status}\n            </div>\n          ` : ''}\n        </div>\n        \n        <!-- Interactive Footer -->\n        <div class="flex items-center justify-between pt-3 border-t border-gray-100">\n          <div class="flex items-center gap-4">\n            <button class="flex items-center gap-2 text-gray-600 hover:text-red-500 transition-colors group">\n              <div class="p-1 rounded-full group-hover:bg-red-50 transition-colors">\n                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">\n                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>\n                </svg>\n              </div>\n              <span class="text-sm font-medium">18</span>\n            </button>\n            <button onclick="window.showIncidentDetails('${properties.Master_Incident_Number || properties.id}', 'emergency')" class="flex items-center gap-2 text-gray-600 hover:text-blue-500 transition-colors group">\n              <div class="p-1 rounded-full group-hover:bg-blue-50 transition-colors">\n                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">\n                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>\n                </svg>\n              </div>\n              <span class="text-sm font-medium">4</span>\n            </button>\n            <button class="flex items-center gap-2 text-gray-600 hover:text-green-500 transition-colors group">\n              <div class="p-1 rounded-full group-hover:bg-green-50 transition-colors">\n                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">\n                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path>\n                </svg>\n              </div>\n            </button>\n          </div>\n          <button onclick="window.showIncidentDetails('${properties.Master_Incident_Number || properties.id}', 'emergency')" class="bg-gradient-to-r ${agencyInfo.color} hover:shadow-lg text-white text-xs font-medium px-4 py-2 rounded-full transition-all shadow-md">\n            View More\n          </button>\n        </div>\n      </div>\n    `;
   };
 
   const getPriorityColor = (priority: string) => {
