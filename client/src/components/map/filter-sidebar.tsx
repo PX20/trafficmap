@@ -54,6 +54,11 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
     select: (data: any) => data || [],
   });
 
+  const { data: subcategories = [] } = useQuery({
+    queryKey: ["/api/subcategories"],
+    select: (data: any) => data || [],
+  });
+
 
   // Count incidents by category
   const getCategoryCount = (categoryId: string) => {
@@ -253,6 +258,27 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
                         {getCategoryCount(category.id)}
                       </span>
                     </div>
+                    
+                    {/* Individual Subcategories */}
+                    {subcategories
+                      .filter((sub: any) => sub.categoryId === category.id)
+                      .sort((a: any, b: any) => a.order - b.order)
+                      .map((subcategory: any) => (
+                        <div key={subcategory.id} className="flex items-center space-x-3 ml-4">
+                          <Checkbox 
+                            id={`filter-subcategory-${subcategory.id}`}
+                            checked={filters[subcategory.id as keyof FilterState] === true}
+                            onCheckedChange={(checked) => onFilterChange(subcategory.id as keyof FilterState, !!checked)}
+                            data-testid={`checkbox-filter-${subcategory.name.toLowerCase().replace(/\s+/g, '-')}`}
+                          />
+                          <Label htmlFor={`filter-subcategory-${subcategory.id}`} className="text-sm text-foreground flex-1">
+                            {subcategory.name}
+                          </Label>
+                          <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
+                            {subcategory.reportCount || 0}
+                          </span>
+                        </div>
+                      ))}
                   </div>
                 )}
               </div>

@@ -51,8 +51,13 @@ export default function Home() {
     queryKey: ["/api/categories"],
     select: (data: any) => data || [],
   });
+
+  const { data: subcategories = [] } = useQuery({
+    queryKey: ["/api/subcategories"],
+    select: (data: any) => data || [],
+  });
   
-  // Initialize all category filters to true when categories are loaded
+  // Initialize all category and subcategory filters to true when loaded
   useEffect(() => {
     if (categories.length > 0) {
       const categoryFilters: Record<string, boolean> = {};
@@ -62,6 +67,16 @@ export default function Home() {
       setFilters(prev => ({ ...prev, ...categoryFilters }));
     }
   }, [categories]);
+
+  useEffect(() => {
+    if (subcategories.length > 0) {
+      const subcategoryFilters: Record<string, boolean> = {};
+      subcategories.forEach((subcategory: any) => {
+        subcategoryFilters[subcategory.id] = true;
+      });
+      setFilters(prev => ({ ...prev, ...subcategoryFilters }));
+    }
+  }, [subcategories]);
   
   // Load saved location from localStorage on startup
   useEffect(() => {
