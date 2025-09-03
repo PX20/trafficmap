@@ -48,8 +48,12 @@ export default function Feed() {
       setSelectedSuburb(savedLocation);
     } else if (user?.homeSuburb) {
       setSelectedSuburb(user.homeSuburb);
+    } else if (user?.primarySuburb) {
+      setSelectedSuburb(user.primarySuburb);
+      // Also sync this to localStorage so location filter is enabled
+      syncLocationToStorage(user.primarySuburb);
     }
-  }, [user?.homeSuburb]);
+  }, [user?.homeSuburb, user?.primarySuburb]);
   
   // Listen for localStorage changes (when location changes on map)
   useEffect(() => {
