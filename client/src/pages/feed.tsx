@@ -363,14 +363,8 @@ export default function Feed() {
 
   const getStatusBadge = (incident: any) => {
     if (incident.type === 'traffic') {
-      const priority = incident.properties?.event_priority?.toLowerCase();
-      if (priority === 'high' || priority === 'red alert') {
-        return <Badge variant="destructive">High Impact</Badge>;
-      }
-      if (priority === 'medium') {
-        return <Badge variant="secondary">Medium Impact</Badge>;
-      }
-      return <Badge variant="outline">Low Impact</Badge>;
+      // Traffic incidents don't need impact badges
+      return null;
     }
     
     if (incident.properties?.userReported) {

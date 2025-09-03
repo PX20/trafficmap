@@ -81,12 +81,6 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
           
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
-              <span className="text-muted-foreground">Impact:</span>
-              <Badge className={`ml-2 ${getPriorityColor(props.event_priority)}`}>
-                {props.event_priority || 'Unknown'}
-              </Badge>
-            </div>
-            <div>
               <span className="text-muted-foreground">Reported:</span>
               <span className="ml-1" data-testid="text-event-reported">
                 {formatDate(props.published)}
