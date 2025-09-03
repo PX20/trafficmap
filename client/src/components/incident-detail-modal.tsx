@@ -455,13 +455,6 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
                   {getIncidentDescription(incident)}
                 </div>
                 
-                {/* Additional Traffic Information */}
-                {incident.type === 'traffic' && incident.properties?.information && (
-                  <div className="bg-blue-50 dark:bg-blue-950 p-3 rounded-lg border-l-4 border-blue-400">
-                    <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-1">Traffic Information</h4>
-                    <p className="text-sm text-blue-800 dark:text-blue-200">{incident.properties.information}</p>
-                  </div>
-                )}
                 
                 {/* Traffic Advice */}
                 {incident.type === 'traffic' && incident.properties?.advice && (

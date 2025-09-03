@@ -235,6 +235,56 @@ export default function Feed() {
 
   // Apply regional filtering if location is selected
   let filteredIncidents = deduplicatedIncidents;
+  
+  if (showRegionalUpdates && selectedSuburb) {
+    const region = findRegionBySuburb(selectedSuburb);
+    
+    if (region) {
+      filteredIncidents = deduplicatedIncidents.filter((incident: any) => {
+        // Filter traffic events by region
+        if (incident.type === 'traffic') {
+          const locality = incident.properties?.road_summary?.locality || '';
+          const roadName = incident.properties?.road_summary?.road_name || '';
+          const locationText = `${locality} ${roadName}`.toLowerCase();
+          
+          return region.suburbs.some(suburb => {
+            const suburbLower = suburb.toLowerCase();
+            return locationText.includes(suburbLower) ||
+                   suburbLower.includes(locationText);
+          });
+        }
+        
+        // Filter emergency incidents by region
+        if (!incident.properties?.userReported && incident.type !== 'traffic') {
+          const locality = incident.properties?.Locality || '';
+          const location = incident.properties?.Location || '';
+          const locationDesc = incident.properties?.locationDescription || '';
+          const locationText = `${locality} ${location} ${locationDesc}`.toLowerCase();
+          
+          return region.suburbs.some(suburb => {
+            const suburbLower = suburb.toLowerCase();
+            return locationText.includes(suburbLower) ||
+                   suburbLower.includes(locationText);
+          });
+        }
+        
+        // For user-reported incidents, check if they match the region
+        if (incident.properties?.userReported) {
+          const location = incident.properties?.location || '';
+          const suburb = incident.properties?.suburb || '';
+          const locationText = `${location} ${suburb}`.toLowerCase();
+          
+          return region.suburbs.some(suburbRegion => {
+            const suburbLower = suburbRegion.toLowerCase();
+            return locationText.includes(suburbLower) ||
+                   suburbLower.includes(locationText);
+          });
+        }
+        
+        return true; // Include other incident types by default
+      });
+    }
+  }
 
   // Sort by most recent first  
   const allIncidents = filteredIncidents.sort((a, b) => {
