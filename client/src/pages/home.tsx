@@ -88,8 +88,19 @@ export default function Home() {
     }
   }, []);
   
-  // Listen for localStorage changes from feed page
+  // Listen for location changes from other pages (custom events + storage events)
   useEffect(() => {
+    const handleLocationChange = (event: CustomEvent) => {
+      const { location, coordinates, boundingBox } = event.detail;
+      setFilters(prev => ({
+        ...prev,
+        homeLocation: location,
+        homeCoordinates: coordinates,
+        homeBoundingBox: boundingBox,
+        locationFilter: true
+      }));
+    };
+    
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'homeLocation') {
         const savedLocation = localStorage.getItem('homeLocation');
@@ -125,11 +136,15 @@ export default function Home() {
       }
     };
     
+    window.addEventListener('locationChanged', handleLocationChange as EventListener);
     window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    return () => {
+      window.removeEventListener('locationChanged', handleLocationChange as EventListener);
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, []);
   
-  // Save location to localStorage when it changes
+  // Save location to localStorage when it changes and dispatch custom event
   useEffect(() => {
     if (filters.homeLocation && filters.homeCoordinates) {
       localStorage.setItem('homeLocation', filters.homeLocation);
@@ -138,6 +153,15 @@ export default function Home() {
       if (filters.homeBoundingBox) {
         localStorage.setItem('homeBoundingBox', JSON.stringify(filters.homeBoundingBox));
       }
+      
+      // Dispatch custom event to notify other pages of location change
+      window.dispatchEvent(new CustomEvent('locationChanged', {
+        detail: {
+          location: filters.homeLocation,
+          coordinates: filters.homeCoordinates,
+          boundingBox: filters.homeBoundingBox
+        }
+      }));
     }
   }, [filters.homeLocation, filters.homeCoordinates, filters.homeBoundingBox, filters.locationFilter]);
 

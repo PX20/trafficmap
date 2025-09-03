@@ -60,19 +60,30 @@ export default function Feed() {
     }
   }, [user?.homeSuburb, user?.primarySuburb]);
   
-  // Listen for localStorage changes (when location changes on map)
+  // Listen for location changes from map page (custom events + storage events)
   useEffect(() => {
+    const handleLocationChange = (event: CustomEvent) => {
+      const { location } = event.detail;
+      if (location) {
+        setSelectedSuburb(location);
+      }
+    };
+    
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'homeLocation' && e.newValue) {
         setSelectedSuburb(e.newValue);
       }
     };
     
+    window.addEventListener('locationChanged', handleLocationChange as EventListener);
     window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    return () => {
+      window.removeEventListener('locationChanged', handleLocationChange as EventListener);
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, []);
   
-  // Function to sync location to localStorage (so map gets updated)
+  // Function to sync location to localStorage and notify other pages
   const syncLocationToStorage = (location: string, coordinates?: { lat: number; lon: number }, boundingBox?: [number, number, number, number]) => {
     if (location) {
       localStorage.setItem('homeLocation', location);
@@ -83,6 +94,16 @@ export default function Feed() {
       if (boundingBox) {
         localStorage.setItem('homeBoundingBox', JSON.stringify(boundingBox));
       }
+      
+      // Dispatch custom event to notify other pages immediately (same tab)
+      window.dispatchEvent(new CustomEvent('locationChanged', {
+        detail: {
+          location,
+          coordinates,
+          boundingBox
+        }
+      }));
+      
       // Trigger storage event for other tabs/components
       window.dispatchEvent(new StorageEvent('storage', {
         key: 'homeLocation',
