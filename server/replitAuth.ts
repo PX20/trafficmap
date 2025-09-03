@@ -84,14 +84,18 @@ export async function setupAuth(app: Express) {
     verified(null, user);
   };
 
-  for (const domain of process.env
-    .REPLIT_DOMAINS!.split(",")) {
+  // Support both production domains and localhost for development
+  const domains = process.env.REPLIT_DOMAINS?.split(",") || [];
+  const allDomains = [...domains, "localhost"];
+  
+  for (const domain of allDomains) {
+    const isLocalhost = domain === "localhost";
     const strategy = new Strategy(
       {
         name: `replitauth:${domain}`,
         config,
         scope: "openid email profile offline_access",
-        callbackURL: `https://${domain}/api/callback`,
+        callbackURL: `${isLocalhost ? 'http://localhost:5000' : `https://${domain}`}/api/callback`,
       },
       verify,
     );
@@ -109,10 +113,19 @@ export async function setupAuth(app: Express) {
   });
 
   app.get("/api/callback", (req, res, next) => {
+    console.log("OAuth callback received for hostname:", req.hostname);
+    console.log("Query params:", req.query);
+    
     passport.authenticate(`replitauth:${req.hostname}`, {
       successReturnToOrRedirect: "/",
       failureRedirect: "/api/login",
-    })(req, res, next);
+    })(req, res, (err) => {
+      if (err) {
+        console.error("OAuth callback error:", err);
+        return res.redirect("/api/login");
+      }
+      next();
+    });
   });
 
   app.get("/api/logout", (req, res) => {
