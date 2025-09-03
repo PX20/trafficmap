@@ -5,32 +5,27 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
 import NotFound from "@/pages/not-found";
-import Home from "@/pages/home";
 import Landing from "@/pages/landing";
-import Feed from "@/pages/feed";
-import Profile from "@/pages/profile";
-import UserProfile from "@/pages/user-profile";
-import Messages from "@/pages/messages";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-lg">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Landing />;
+  }
+
   return (
-    <Switch>
-      {isLoading || !isAuthenticated ? (
-        <Route path="/" component={Landing} />
-      ) : (
-        <>
-          <Route path="/" component={Home} />
-          <Route path="/feed" component={Feed} />
-          <Route path="/profile" component={Profile} />
-          <Route path="/users/:userId" component={UserProfile} />
-          <Route path="/messages" component={Messages} />
-          <Route path="/messages/:conversationId" component={Messages} />
-        </>
-      )}
-      <Route component={NotFound} />
-    </Switch>
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="text-lg">Authenticated! Home page would load here.</div>
+    </div>
   );
 }
 
