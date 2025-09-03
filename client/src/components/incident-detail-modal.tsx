@@ -25,7 +25,10 @@ import {
   Zap,
   MessageCircle,
   Send,
-  Reply
+  Reply,
+  Heart,
+  Share2,
+  MoreHorizontal
 } from "lucide-react";
 import { Link } from "wouter";
 import type { Comment } from "@shared/schema";
@@ -393,54 +396,26 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-0">
-        <DialogHeader className="p-6 pb-0">
-          {/* Source Info Header */}
-          <div className="flex items-center justify-between mb-4">
+      <DialogContent className="max-w-md max-h-[80vh] flex flex-col p-0" data-testid="modal-incident-details">
+        <DialogHeader className="p-4 pb-2">
+          {/* Compact User Header */}
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Avatar className="w-10 h-10 ring-2 ring-primary/20">
                 <AvatarFallback className={`${getSourceInfo(incident).color} text-white font-bold text-sm shadow-lg`}>
                   {getSourceInfo(incident).avatar}
                 </AvatarFallback>
               </Avatar>
-              <div>
-                <h4 className="font-semibold text-foreground text-sm">
-                  {getSourceInfo(incident).name}
-                </h4>
-                <Badge 
-                  variant={incident.properties?.userReported ? "secondary" : "default"} 
-                  className={`text-xs px-2 py-1 font-medium ${
-                    incident.properties?.userReported 
-                      ? 'bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-700' 
-                      : 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-700'
-                  }`}
-                >
-                  {getSourceInfo(incident).type}
-                </Badge>
-              </div>
-            </div>
-          </div>
-          
-          <div className="flex items-start gap-3">
-            {getIncidentIcon(incident)}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-2">
-                <DialogTitle className="truncate">
-                  {getIncidentTitle(incident)}
-                </DialogTitle>
-                {getStatusBadge(incident)}
-              </div>
-              
-              <p className="text-sm text-muted-foreground mb-3">
-                {getIncidentDescription(incident)}
-              </p>
-              
-              <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                <div className="flex items-center gap-1">
-                  <MapPin className="w-3 h-3" />
-                  <span className="truncate">{getIncidentLocation(incident)}</span>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <h4 className="font-medium text-foreground text-sm truncate">
+                    {getSourceInfo(incident).name}
+                  </h4>
+                  <Badge variant="secondary" className="text-xs px-1.5 py-0.5 shrink-0">
+                    {getSourceInfo(incident).type.split(' ')[0]}
+                  </Badge>
                 </div>
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <Clock className="w-3 h-3" />
                   <span>{getTimeAgo(
                     incident.properties?.Response_Date || 
@@ -450,27 +425,70 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
                 </div>
               </div>
             </div>
+            <Button variant="ghost" size="sm" className="w-8 h-8 p-0 shrink-0">
+              <MoreHorizontal className="w-4 h-4" />
+            </Button>
+          </div>
+        </DialogHeader>
+        
+        {/* Compact Content */}
+        <div className="px-4 py-3 space-y-3">
+          <div className="flex items-start gap-2">
+            <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+              {getIncidentIcon(incident)}
+            </div>
+            <div className="flex-1 min-w-0">
+              <DialogTitle className="text-base font-semibold mb-1 line-clamp-2">
+                {getIncidentTitle(incident)}
+              </DialogTitle>
+              <div className="flex items-center gap-1 text-sm text-muted-foreground mb-2">
+                <MapPin className="w-3 h-3" />
+                <span className="line-clamp-1">{getIncidentLocation(incident)}</span>
+              </div>
+            </div>
           </div>
           
-          {/* Display incident photo if available */}
+          {/* Thumbnail Image */}
           {incident?.properties?.photoUrl && (
-            <div className="mt-4 rounded-lg overflow-hidden border">
+            <div className="rounded-lg overflow-hidden bg-muted">
               <img 
                 src={`/api/compress-image?path=${encodeURIComponent(incident.properties.photoUrl)}`}
                 alt="Incident photo" 
-                className="w-full h-64 object-cover hover:scale-105 transition-transform cursor-pointer"
+                className="w-full h-48 object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                data-testid="img-incident-photo"
               />
             </div>
           )}
-        </DialogHeader>
+          
+          {/* Social Interaction Bar */}
+          <div className="flex items-center justify-between py-2 border-t border-b">
+            <div className="flex items-center space-x-4">
+              <Button variant="ghost" size="sm" className="flex items-center space-x-1 text-muted-foreground hover:text-red-500">
+                <Heart className="w-4 h-4" />
+                <span className="text-sm font-medium">24</span>
+              </Button>
+              <Button variant="ghost" size="sm" className="flex items-center space-x-1 text-muted-foreground hover:text-blue-500">
+                <MessageCircle className="w-4 h-4" />
+                <span className="text-sm font-medium">{comments.length || 0}</span>
+              </Button>
+              <Button variant="ghost" size="sm" className="flex items-center space-x-1 text-muted-foreground hover:text-green-500">
+                <Share2 className="w-4 h-4" />
+                <span className="text-sm font-medium">Share</span>
+              </Button>
+            </div>
+            <Button size="sm" variant="outline">
+              View Full Details
+            </Button>
+          </div>
+        </div>
 
-        {/* Comments Section */}
-        <div className="flex-1 overflow-y-auto px-6 pb-6">
-          <div className="border-t pt-4">
-            <div className="flex items-center gap-2 mb-4">
+        {/* Compact Comments Section */}
+        <div className="flex-1 overflow-y-auto px-4 pb-4">
+          <div className="pt-3">
+            <div className="flex items-center gap-2 mb-3">
               <MessageCircle className="w-4 h-4" />
-              <h3 className="font-medium">
-                Discussion ({comments.length})
+              <h3 className="font-medium text-sm">
+                Comments ({comments.length})
               </h3>
             </div>
 
@@ -496,13 +514,13 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
               </div>
             )}
 
-            {/* New Comment Form */}
+            {/* Compact Comment Form */}
             {isAuthenticated ? (
-              <div className="mt-4 pt-4 border-t">
-                <div className="flex gap-3">
-                  <Avatar className="w-8 h-8">
+              <div className="mt-3 pt-3 border-t">
+                <div className="flex gap-2">
+                  <Avatar className="w-7 h-7">
                     <AvatarImage src={user?.profileImageUrl || undefined} />
-                    <AvatarFallback>
+                    <AvatarFallback className="text-xs">
                       {user?.firstName?.[0] || user?.email?.[0] || 'U'}
                     </AvatarFallback>
                   </Avatar>
@@ -510,26 +528,27 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
                     <Textarea
                       value={newComment}
                       onChange={(e) => setNewComment(e.target.value)}
-                      placeholder="Share your thoughts about this incident..."
-                      rows={3}
-                      className="mb-2"
+                      placeholder="Add a comment..."
+                      rows={2}
+                      className="mb-2 text-sm"
                       data-testid="textarea-new-comment"
                     />
                     <Button
+                      size="sm"
                       onClick={handleCommentSubmit}
                       disabled={!newComment.trim() || createCommentMutation.isPending}
                       data-testid="button-post-comment"
                     >
-                      <Send className="w-4 h-4 mr-2" />
-                      {createCommentMutation.isPending ? 'Posting...' : 'Post Comment'}
+                      <Send className="w-3 h-3 mr-1" />
+                      {createCommentMutation.isPending ? 'Posting...' : 'Post'}
                     </Button>
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="mt-4 pt-4 border-t text-center">
-                <p className="text-sm text-muted-foreground">
-                  Please log in to join the discussion
+              <div className="mt-3 pt-3 border-t text-center">
+                <p className="text-xs text-muted-foreground">
+                  Log in to comment
                 </p>
               </div>
             )}
