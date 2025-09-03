@@ -2,6 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { MessageCircle, Heart, Share2, MapPin, Clock, AlertTriangle, Car, Shield, Eye, Zap } from "lucide-react";
 
 interface EventModalProps {
   eventId: string | null;
@@ -9,29 +11,126 @@ interface EventModalProps {
 }
 
 export function EventModal({ eventId, onClose }: EventModalProps) {
-  const { data: eventsData } = useQuery({
+  const { data: trafficData } = useQuery({
     queryKey: ["/api/traffic/events"],
   });
+  
+  const { data: incidentsData } = useQuery({
+    queryKey: ["/api/incidents"],
+  });
 
-  const event = (eventsData as any)?.features?.find((f: any) => f.properties.id.toString() === eventId);
+  // Find event in either traffic or incidents data
+  let event = null;
+  let eventType = 'traffic';
+  
+  if ((trafficData as any)?.features) {
+    event = (trafficData as any).features.find((f: any) => f.properties.id?.toString() === eventId);
+  }
+  
+  if (!event && (incidentsData as any)?.features) {
+    event = (incidentsData as any).features.find((f: any) => 
+      f.properties.id?.toString() === eventId ||
+      f.properties.Master_Incident_Number === eventId
+    );
+    eventType = 'incident';
+  }
 
   if (!event) return null;
 
   const props = event.properties;
-  const getEventIcon = (eventType: string) => {
-    if (eventType?.toLowerCase() === 'crash') {
-      return (
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
-        </svg>
-      );
+  const isUserReported = props.userReported;
+  const isTrafficEvent = eventType === 'traffic';
+  const getIncidentIcon = () => {
+    if (isTrafficEvent) {
+      const eventTypeStr = props.event_type?.toLowerCase();
+      if (eventTypeStr === 'crash') return <Car className="w-5 h-5 text-red-500" />;
+      if (eventTypeStr === 'hazard') return <AlertTriangle className="w-5 h-5 text-yellow-500" />;
+      return <AlertTriangle className="w-5 h-5 text-orange-500" />;
     }
-    return (
-      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-      </svg>
-    );
+    
+    if (isUserReported) {
+      const incidentType = props.incidentType;
+      if (['Crime', 'Theft', 'Violence', 'Vandalism'].includes(incidentType)) {
+        return <Shield className="w-5 h-5 text-purple-600" />;
+      }
+      if (incidentType === 'Suspicious') {
+        return <Eye className="w-5 h-5 text-amber-600" />;
+      }
+      return <Zap className="w-5 h-5 text-indigo-600" />;
+    }
+    
+    return <AlertTriangle className="w-5 h-5 text-red-600" />;
   };
+  
+  const getAgencyColor = (agency: string) => {
+    if (agency === 'TMR') return 'text-orange-600';
+    if (agency === 'QFES') return 'text-red-600';
+    if (agency === 'QPS') return 'text-blue-600';
+    if (agency === 'QAS') return 'text-green-600';
+    if (agency === 'ESQ') return 'text-red-600';
+    return 'text-purple-600'; // Community
+  };
+  
+  const getReporterInfo = () => {
+    if (isUserReported) {
+      return {
+        name: props.reporterName || 'Anonymous',
+        agency: 'Community',
+        initials: (props.reporterName || 'A').slice(0, 2).toUpperCase()
+      };
+    }
+    
+    if (isTrafficEvent) {
+      return {
+        name: 'TMR Queensland',
+        agency: 'TMR',
+        initials: 'TMR'
+      };
+    }
+    
+    // Emergency incident - determine agency
+    const groupedType = props.GroupedType || '';
+    if (groupedType.includes('FIRE')) {
+      return { name: 'QLD Fire & Emergency', agency: 'QFES', initials: 'QFES' };
+    }
+    if (groupedType.includes('POLICE')) {
+      return { name: 'QLD Police Service', agency: 'QPS', initials: 'QPS' };
+    }
+    if (groupedType.includes('AMBULANCE')) {
+      return { name: 'QLD Ambulance Service', agency: 'QAS', initials: 'QAS' };
+    }
+    return { name: 'Emergency Services QLD', agency: 'ESQ', initials: 'ESQ' };
+  };
+  
+  const getTitle = () => {
+    if (isTrafficEvent) {
+      return props.description || props.event_type || "Traffic Event";
+    }
+    if (isUserReported) {
+      return props.title || props.description || "Community Report";
+    }
+    return props.GroupedType || "Emergency Incident";
+  };
+  
+  const getLocation = () => {
+    if (isTrafficEvent) {
+      return `${props.road_summary?.road_name || 'Unknown Road'}, ${props.road_summary?.locality || 'Unknown Area'}`;
+    }
+    if (isUserReported) {
+      return props.locationDescription || props.Location || 'Unknown location';
+    }
+    return `${props.Location || 'Unknown location'}, ${props.Locality || ''}`;
+  };
+  
+  const getThumbnail = () => {
+    if (isUserReported && props.photoUrl) {
+      return props.photoUrl;
+    }
+    return null;
+  };
+  
+  const reporterInfo = getReporterInfo();
+  const thumbnail = getThumbnail();
 
   const getPriorityColor = (priority: string) => {
     const p = priority?.toLowerCase();
@@ -53,67 +152,80 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
 
   return (
     <Dialog open={!!eventId} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg" data-testid="modal-event-details">
-        <DialogHeader>
-          <DialogTitle className="text-lg font-semibold text-foreground">
-            {props.description || props.event_type}
-          </DialogTitle>
+      <DialogContent className="max-w-md" data-testid="modal-event-details">
+        <DialogHeader className="pb-3">
+          {/* Reporter Info Header */}
+          <div className="flex items-center space-x-3">
+            <Avatar className="w-10 h-10">
+              <AvatarFallback className={`text-sm font-medium ${getAgencyColor(reporterInfo.agency)}`}>
+                {reporterInfo.initials}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1">
+              <p className="text-sm font-medium text-foreground">{reporterInfo.name}</p>
+              <div className="flex items-center space-x-2 text-xs text-muted-foreground">
+                <Clock className="w-3 h-3" />
+                <span data-testid="text-event-time">
+                  {formatDate(props.published || props.Response_Date || props.createdAt || props.timeReported)}
+                </span>
+              </div>
+            </div>
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-muted`}>
+              {getIncidentIcon()}
+            </div>
+          </div>
         </DialogHeader>
         
-        <div className="space-y-4">
-          <div className="flex items-start space-x-3">
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-              props.event_type?.toLowerCase() === 'crash' 
-                ? 'bg-red-100 text-red-600 dark:bg-red-950 dark:text-red-400' 
-                : 'bg-yellow-100 text-yellow-600 dark:bg-yellow-950 dark:text-yellow-400'
-            }`}>
-              {getEventIcon(props.event_type)}
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-medium text-foreground">
-                {props.information || props.description}
-              </p>
-              <p className="text-sm text-muted-foreground mt-1">
-                {props.road_summary?.road_name}, {props.road_summary?.locality}
-              </p>
+        <div className="space-y-3">
+          {/* Title and Summary */}
+          <div>
+            <DialogTitle className="text-base font-semibold text-foreground mb-1 line-clamp-2">
+              {getTitle()}
+            </DialogTitle>
+            <div className="flex items-center space-x-1 text-sm text-muted-foreground">
+              <MapPin className="w-3 h-3" />
+              <span className="line-clamp-1">{getLocation()}</span>
             </div>
           </div>
-          
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <span className="text-muted-foreground">Reported:</span>
-              <span className="ml-1" data-testid="text-event-reported">
-                {formatDate(props.published)}
-              </span>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Status:</span>
-              <span className="ml-1 font-medium" data-testid="text-event-status">
-                {props.status}
-              </span>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Source:</span>
-              <span className="ml-1" data-testid="text-event-source">
-                {props.source?.provided_by || props.source?.source_name || 'TMR'}
-              </span>
-            </div>
-          </div>
-          
-          {props.advice && (
-            <div className="bg-muted p-3 rounded-lg">
-              <p className="text-sm text-muted-foreground" data-testid="text-event-advice">
-                {props.advice}
-              </p>
+
+          {/* Image Thumbnail */}
+          {thumbnail && (
+            <div className="rounded-lg overflow-hidden bg-muted">
+              <img 
+                src={thumbnail} 
+                alt="Incident photo" 
+                className="w-full h-32 object-cover"
+                data-testid="img-incident-thumbnail"
+              />
             </div>
           )}
-          
-          <div className="flex space-x-2">
-            <Button className="flex-1" data-testid="button-get-directions">
-              Get Directions
+
+          {/* Compact Status Info */}
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <Badge variant="secondary" className="text-xs">
+              {isTrafficEvent ? props.event_type : (props.CurrentStatus || props.status || reporterInfo.agency)}
+            </Badge>
+            <span className="text-xs">
+              {isTrafficEvent ? 'Traffic Update' : (isUserReported ? 'Community Report' : 'Emergency Response')}
+            </span>
+          </div>
+
+          {/* Social Interaction Bar */}
+          <div className="flex items-center justify-between py-2 border-t">
+            <Button variant="ghost" size="sm" className="flex items-center space-x-1 text-muted-foreground hover:text-foreground">
+              <MessageCircle className="w-4 h-4" />
+              <span className="text-xs">12</span>
             </Button>
-            <Button variant="outline" data-testid="button-share-event">
-              Share
+            <Button variant="ghost" size="sm" className="flex items-center space-x-1 text-muted-foreground hover:text-foreground">
+              <Heart className="w-4 h-4" />
+              <span className="text-xs">24</span>
+            </Button>
+            <Button variant="ghost" size="sm" className="flex items-center space-x-1 text-muted-foreground hover:text-foreground">
+              <Share2 className="w-4 h-4" />
+              <span className="text-xs">Share</span>
+            </Button>
+            <Button size="sm" data-testid="button-view-details">
+              View Details
             </Button>
           </div>
         </div>

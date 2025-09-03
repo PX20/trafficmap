@@ -212,22 +212,8 @@ export default function Feed() {
   
   const deduplicatedIncidents = Array.from(incidentMap.values());
 
-  // Debug: Log the types of incidents we have
-  console.log('📊 Feed Debug - Raw incidents by type:');
-  console.log('- Emergency incidents:', deduplicatedIncidents.filter(i => i.type === 'incident' && !i.properties?.userReported).length);
-  console.log('- Community reports:', deduplicatedIncidents.filter(i => i.properties?.userReported).length);
-  console.log('- Traffic events:', deduplicatedIncidents.filter(i => i.type === 'traffic').length);
-  console.log('- Total incidents:', deduplicatedIncidents.length);
-
-  // Apply regional filtering if location is selected (but more permissive for debugging)
+  // Apply regional filtering if location is selected
   let filteredIncidents = deduplicatedIncidents;
-  
-  console.log('📊 Debug: Total incidents before filtering:', deduplicatedIncidents.length);
-  console.log('🔍 Location filter - selectedSuburb:', selectedSuburb, 'showRegionalUpdates:', showRegionalUpdates);
-  
-  // For now, show ALL incidents regardless of location to test display
-  // TODO: Implement better location filtering later
-  console.log('🔍 Final filtered incidents count:', filteredIncidents.length);
 
   // Sort by most recent first  
   const allIncidents = filteredIncidents.sort((a, b) => {
