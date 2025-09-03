@@ -142,7 +142,12 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
             
             
             {/* Individual Category Sections */}
-            {(categories as any[]).map((category: any) => {
+            {categories.length === 0 ? (
+              <div className="text-sm text-muted-foreground p-4 text-center">
+                Loading categories...
+              </div>
+            ) : (
+              categories.map((category: any) => {
               const getCategoryIcon = (name: string) => {
                 if (name.includes('Safety') || name.includes('Crime')) return <Shield className="w-4 h-4" style={{ color: category.color }} />;
                 if (name.includes('Infrastructure') || name.includes('Hazards')) return <Construction className="w-4 h-4" style={{ color: category.color }} />;
@@ -206,7 +211,8 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
                 )}
               </div>
             );
-            })}
+            })
+            )}
           </div>
           
           {/* Location Filter Section */}
