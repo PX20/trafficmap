@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { LocationAutocomplete } from "@/components/location-autocomplete";
@@ -563,7 +564,7 @@ export default function Feed() {
                       </h2>
                       <p className="text-muted-foreground">
                         {selectedSuburb}
-                        {locationFilterEnabled && selectedSuburb ? (() => {
+                        {showRegionalUpdates && selectedSuburb ? (() => {
                           const region = findRegionBySuburb(selectedSuburb);
                           return region ? ` (${region.name} region)` : '';
                         })() : ''} • {allIncidents.length} active incidents
@@ -590,10 +591,10 @@ export default function Feed() {
                   const getSourceInfo = (incident: any) => {
                     if (incident.type === 'traffic') {
                       return { 
-                        name: 'QLD Traffic', 
-                        type: 'Official', 
-                        avatar: 'QT', 
-                        color: 'bg-gradient-to-br from-blue-500 to-blue-600',
+                        name: 'Transport and Main Roads', 
+                        type: 'TMR Official', 
+                        avatar: 'TMR', 
+                        color: 'bg-gradient-to-br from-orange-500 to-orange-600',
                         photoUrl: null
                       };
                     }
@@ -615,13 +616,45 @@ export default function Feed() {
                         photoUrl: photoUrl
                       };
                     }
-                    return { 
-                      name: 'Emergency Services', 
-                      type: 'Official', 
-                      avatar: 'ES', 
-                      color: 'bg-gradient-to-br from-red-500 to-red-600',
-                      photoUrl: null
-                    };
+                    // Determine specific emergency service based on incident data
+                    const eventType = incident.properties?.Event_Type?.toLowerCase() || '';
+                    const description = incident.properties?.description?.toLowerCase() || '';
+                    const location = incident.properties?.Location || '';
+                    
+                    if (eventType.includes('fire') || eventType.includes('burn') || eventType.includes('hazmat') || description.includes('fire')) {
+                      return { 
+                        name: 'Queensland Fire & Emergency', 
+                        type: 'QFES Official', 
+                        avatar: 'QFE', 
+                        color: 'bg-gradient-to-br from-red-500 to-red-600',
+                        photoUrl: null
+                      };
+                    } else if (eventType.includes('police') || eventType.includes('crime') || eventType.includes('traffic enforcement') || description.includes('police')) {
+                      return { 
+                        name: 'Queensland Police Service', 
+                        type: 'QPS Official', 
+                        avatar: 'QPS', 
+                        color: 'bg-gradient-to-br from-blue-700 to-blue-800',
+                        photoUrl: null
+                      };
+                    } else if (eventType.includes('medical') || eventType.includes('ambulance') || eventType.includes('cardiac') || description.includes('medical') || description.includes('ambulance')) {
+                      return { 
+                        name: 'Queensland Ambulance Service', 
+                        type: 'QAS Official', 
+                        avatar: 'QAS', 
+                        color: 'bg-gradient-to-br from-green-600 to-green-700',
+                        photoUrl: null
+                      };
+                    } else {
+                      // Default to general emergency services
+                      return { 
+                        name: 'Emergency Services Queensland', 
+                        type: 'ESQ Official', 
+                        avatar: 'ESQ', 
+                        color: 'bg-gradient-to-br from-red-500 to-red-600',
+                        photoUrl: null
+                      };
+                    }
                   };
 
                   const sourceInfo = getSourceInfo(incident);
