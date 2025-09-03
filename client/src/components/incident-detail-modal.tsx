@@ -177,14 +177,8 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
     if (!incident) return <Badge variant="outline">Unknown</Badge>;
     
     if (incident.type === 'traffic') {
-      const priority = incident.properties?.event_priority?.toLowerCase();
-      if (priority === 'high' || priority === 'red alert') {
-        return <Badge variant="destructive">High Impact</Badge>;
-      }
-      if (priority === 'medium') {
-        return <Badge variant="secondary">Medium Impact</Badge>;
-      }
-      return <Badge variant="outline">Low Impact</Badge>;
+      // Traffic incidents don't need impact badges
+      return null;
     }
     
     if (incident.properties?.userReported) {
@@ -334,6 +328,64 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
     return users[userId] || { name: `User ${userId.slice(-4)}`, avatar: '', location: 'Brisbane' };
   };
 
+  const getSourceInfo = (incident: any) => {
+    if (incident.properties?.userReported) {
+      // Extract user data from properties
+      const reporterName = incident.properties?.reporterName || incident.properties?.reportedBy?.split('@')[0] || 'Anonymous User';
+      return { 
+        name: reporterName, 
+        type: 'Community Report', 
+        avatar: reporterName.split(' ').map((word: string) => word.charAt(0).toUpperCase()).join('').slice(0, 2), 
+        color: 'bg-gradient-to-br from-purple-500 to-purple-600'
+      };
+    }
+    
+    // Determine government agency based on incident type and source
+    if (incident.type === 'traffic') {
+      return { 
+        name: 'Transport and Main Roads', 
+        type: 'TMR Official', 
+        avatar: 'TMR', 
+        color: 'bg-gradient-to-br from-orange-500 to-orange-600'
+      };
+    }
+    
+    // Emergency incident - determine specific service
+    const eventType = incident.properties?.Event_Type?.toLowerCase() || '';
+    const description = incident.properties?.description?.toLowerCase() || '';
+    
+    if (eventType.includes('fire') || eventType.includes('burn') || eventType.includes('hazmat') || description.includes('fire')) {
+      return { 
+        name: 'Queensland Fire & Emergency', 
+        type: 'QFES Official', 
+        avatar: 'QFE', 
+        color: 'bg-gradient-to-br from-red-500 to-red-600'
+      };
+    } else if (eventType.includes('police') || eventType.includes('crime') || eventType.includes('traffic enforcement') || description.includes('police')) {
+      return { 
+        name: 'Queensland Police Service', 
+        type: 'QPS Official', 
+        avatar: 'QPS', 
+        color: 'bg-gradient-to-br from-blue-700 to-blue-800'
+      };
+    } else if (eventType.includes('medical') || eventType.includes('ambulance') || eventType.includes('cardiac') || description.includes('medical') || description.includes('ambulance')) {
+      return { 
+        name: 'Queensland Ambulance Service', 
+        type: 'QAS Official', 
+        avatar: 'QAS', 
+        color: 'bg-gradient-to-br from-green-600 to-green-700'
+      };
+    } else {
+      // Default to general emergency services
+      return { 
+        name: 'Emergency Services Queensland', 
+        type: 'ESQ Official', 
+        avatar: 'ESQ', 
+        color: 'bg-gradient-to-br from-red-500 to-red-600'
+      };
+    }
+  };
+
   // Don't render if no incident
   if (!incident) {
     return null;
@@ -343,6 +395,32 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-0">
         <DialogHeader className="p-6 pb-0">
+          {/* Source Info Header */}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <Avatar className="w-10 h-10 ring-2 ring-primary/20">
+                <AvatarFallback className={`${getSourceInfo(incident).color} text-white font-bold text-sm shadow-lg`}>
+                  {getSourceInfo(incident).avatar}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <h4 className="font-semibold text-foreground text-sm">
+                  {getSourceInfo(incident).name}
+                </h4>
+                <Badge 
+                  variant={incident.properties?.userReported ? "secondary" : "default"} 
+                  className={`text-xs px-2 py-1 font-medium ${
+                    incident.properties?.userReported 
+                      ? 'bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-700' 
+                      : 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-700'
+                  }`}
+                >
+                  {getSourceInfo(incident).type}
+                </Badge>
+              </div>
+            </div>
+          </div>
+          
           <div className="flex items-start gap-3">
             {getIncidentIcon(incident)}
             <div className="flex-1 min-w-0">
