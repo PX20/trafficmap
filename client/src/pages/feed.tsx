@@ -586,8 +586,11 @@ export default function Feed() {
                   };
 
                   const sourceInfo = getSourceInfo(incident);
-                  const randomLikes = Math.floor(Math.random() * 50) + 5;
-                  const randomComments = Math.floor(Math.random() * 20) + 1;
+                  
+                  // Only show engagement for user-reported incidents
+                  const isUserReported = incident.properties?.userReported;
+                  const actualComments = incident.properties?.commentCount || 0;
+                  const actualLikes = incident.properties?.likeCount || 0;
 
                   return (
                     <Card 
@@ -671,14 +674,18 @@ export default function Feed() {
 
                         <Separator />
 
-                        {/* Engagement Bar */}
+                        {/* Action Bar */}
                         <div className="px-4 py-4 bg-gradient-to-r from-background to-muted/20">
                           <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-8">
-                              <Button variant="ghost" size="sm" className="flex items-center gap-3 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950 transition-all duration-200 rounded-full px-4 py-2">
-                                <Heart className="w-5 h-5" />
-                                <span className="text-sm font-semibold">{randomLikes}</span>
-                              </Button>
+                            <div className="flex items-center gap-4">
+                              {isUserReported && (
+                                <>
+                                  <Button variant="ghost" size="sm" className="flex items-center gap-3 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950 transition-all duration-200 rounded-full px-4 py-2">
+                                    <Heart className="w-5 h-5" />
+                                    {actualLikes > 0 && <span className="text-sm font-semibold">{actualLikes}</span>}
+                                  </Button>
+                                </>
+                              )}
                               <Button 
                                 variant="ghost" 
                                 size="sm" 
@@ -689,16 +696,14 @@ export default function Feed() {
                                 }}
                               >
                                 <MessageCircle className="w-5 h-5" />
-                                <span className="text-sm font-semibold">{randomComments}</span>
+                                <span className="text-sm font-semibold">
+                                  {isUserReported && actualComments > 0 ? actualComments : 'View Details'}
+                                </span>
                               </Button>
                               <Button variant="ghost" size="sm" className="flex items-center gap-3 hover:text-green-500 hover:bg-green-50 dark:hover:bg-green-950 transition-all duration-200 rounded-full px-4 py-2">
                                 <Share className="w-5 h-5" />
                                 <span className="text-sm font-semibold">Share</span>
                               </Button>
-                            </div>
-                            <div className="text-sm text-muted-foreground flex items-center gap-2 bg-muted/60 rounded-full px-3 py-2">
-                              <Users className="w-4 h-4" />
-                              <span className="font-medium">{Math.floor(Math.random() * 100) + 50} views</span>
                             </div>
                           </div>
                         </div>
