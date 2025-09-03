@@ -4,10 +4,10 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { LocationAutocomplete } from "@/components/location-autocomplete";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
@@ -40,6 +40,7 @@ export default function Feed() {
   const [selectedSuburb, setSelectedSuburb] = useState("");
   const [selectedIncident, setSelectedIncident] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showRegionalUpdates, setShowRegionalUpdates] = useState(true); // Default to true
   
   // Load saved location from localStorage on startup (sync with map home location)
   useEffect(() => {
@@ -210,10 +211,9 @@ export default function Feed() {
   // Apply regional filtering if location is selected
   let filteredIncidents = deduplicatedIncidents;
   
-  // Check if location filtering should be applied
-  const locationFilterEnabled = localStorage.getItem('locationFilter') === 'true';
-  
-  if (locationFilterEnabled && selectedSuburb) {
+  if (selectedSuburb) {
+    if (showRegionalUpdates) {
+      // Show regional updates - filter by region
     // Find the region for the selected suburb
     const region = findRegionBySuburb(selectedSuburb);
     
@@ -264,6 +264,36 @@ export default function Feed() {
       });
       
       console.log(`Filtered ${deduplicatedIncidents.length} → ${filteredIncidents.length} incidents for ${region.name} region`);
+    } else {
+      // Show only exact suburb - filter by exact location match
+      console.log(`Filtering incidents for exact suburb: ${selectedSuburb}`);
+      filteredIncidents = deduplicatedIncidents.filter((incident: any) => {
+        let incidentLocation = '';
+        
+        if (incident.type === 'traffic') {
+          incidentLocation = incident.properties?.road_summary?.locality || '';
+        } else if (incident.properties?.userReported) {
+          incidentLocation = incident.properties?.locationDescription || 
+                            incident.properties?.Location || '';
+        } else {
+          // Emergency incidents
+          incidentLocation = incident.properties?.Locality || 
+                            incident.properties?.Location || '';
+        }
+        
+        // Check for exact suburb match
+        if (incidentLocation) {
+          const locationLower = incidentLocation.toLowerCase();
+          const selectedSuburbLower = selectedSuburb.toLowerCase();
+          return locationLower.includes(selectedSuburbLower) ||
+                 selectedSuburbLower.includes(locationLower);
+        }
+        
+        return false;
+      });
+      
+      console.log(`Filtered ${deduplicatedIncidents.length} → ${filteredIncidents.length} incidents for exact suburb: ${selectedSuburb}`);
+    }
     } else {
       console.log(`No region found for ${selectedSuburb}, showing all incidents`);
     }
@@ -461,6 +491,21 @@ export default function Feed() {
                 Update
               </Button>
             </div>
+            
+            {/* Regional Updates Checkbox */}
+            {selectedSuburb && (
+              <div className="flex items-center space-x-3 mt-4 pt-3 border-t border-border/50">
+                <Checkbox
+                  id="feed-regional-updates"
+                  checked={showRegionalUpdates}
+                  onCheckedChange={(checked) => setShowRegionalUpdates(!!checked)}
+                  data-testid="checkbox-regional-updates"
+                />
+                <Label htmlFor="feed-regional-updates" className="text-sm text-foreground flex-1">
+                  Updates from my region
+                </Label>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -499,7 +544,7 @@ export default function Feed() {
                 <h3 className="text-xl font-bold text-foreground mb-3">All Clear!</h3>
                 <p className="text-muted-foreground text-lg">
                   No recent incidents reported in {selectedSuburb}
-                  {locationFilterEnabled && selectedSuburb ? (() => {
+                  {showRegionalUpdates && selectedSuburb ? (() => {
                     const region = findRegionBySuburb(selectedSuburb);
                     return region ? ` (${region.name} region)` : '';
                   })() : ''}

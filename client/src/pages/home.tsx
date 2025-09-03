@@ -42,7 +42,7 @@ export default function Home() {
     suspicious: true,
     emergency: true,
     timeRange: 'now',
-    locationFilter: false,
+    locationFilter: true,
     // Dynamic category filters will be added automatically when users interact with them
   });
   
