@@ -23,11 +23,11 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
   const { toast } = useToast();
   const [expandedSections, setExpandedSections] = useState({
     traffic: false,
-    'Safety & Crime': false,
-    'Infrastructure & Hazards': false,
-    'Emergency Situations': false,
-    'Wildlife & Nature': false,
-    'Community Issues': false,
+    'Safety & Crime': true,
+    'Infrastructure & Hazards': true,
+    'Emergency Situations': true,
+    'Wildlife & Nature': true,
+    'Community Issues': true,
   });
   
   const toggleSection = (section: string) => {
@@ -140,83 +140,6 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
           <div>
             <h2 className="text-lg font-semibold text-foreground mb-4">Incident Types</h2>
             
-            {/* Traffic - Collapsible */}
-            <div className="mb-4">
-              <button
-                onClick={() => toggleSection('traffic')}
-                className="flex items-center justify-between w-full p-2 text-left hover:bg-muted/50 rounded-md transition-colors"
-              >
-                <h3 className="text-sm font-medium text-foreground flex items-center gap-2">
-                  <Car className="w-4 h-4 text-blue-500" />
-                  Traffic
-                </h3>
-                {expandedSections.traffic ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-              </button>
-              
-              {expandedSections.traffic && (
-                <div className="mt-3 ml-4 space-y-3">
-                  <div className="flex items-center space-x-3">
-                    <Checkbox 
-                      id="filter-crashes"
-                      checked={filters.crashes}
-                      onCheckedChange={(checked) => onFilterChange('crashes', !!checked)}
-                      data-testid="checkbox-filter-crashes"
-                    />
-                    <Label htmlFor="filter-crashes" className="text-sm text-foreground flex-1">
-                      Crashes
-                    </Label>
-                    <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full" data-testid="text-count-crashes">
-                      {eventCounts.crashes}
-                    </span>
-                  </div>
-                  
-                  <div className="flex items-center space-x-3">
-                    <Checkbox 
-                      id="filter-hazards"
-                      checked={filters.hazards}
-                      onCheckedChange={(checked) => onFilterChange('hazards', !!checked)}
-                      data-testid="checkbox-filter-hazards"
-                    />
-                    <Label htmlFor="filter-hazards" className="text-sm text-foreground flex-1">
-                      Hazards
-                    </Label>
-                    <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full" data-testid="text-count-hazards">
-                      {eventCounts.hazards}
-                    </span>
-                  </div>
-                  
-                  <div className="flex items-center space-x-3">
-                    <Checkbox 
-                      id="filter-restrictions"
-                      checked={filters.restrictions}
-                      onCheckedChange={(checked) => onFilterChange('restrictions', !!checked)}
-                      data-testid="checkbox-filter-restrictions"
-                    />
-                    <Label htmlFor="filter-restrictions" className="text-sm text-foreground flex-1">
-                      Road Restrictions
-                    </Label>
-                    <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full" data-testid="text-count-restrictions">
-                      {eventCounts.restrictions}
-                    </span>
-                  </div>
-                  
-                  <div className="flex items-center space-x-3">
-                    <Checkbox 
-                      id="filter-incidents"
-                      checked={filters.incidents}
-                      onCheckedChange={(checked) => onFilterChange('incidents', !!checked)}
-                      data-testid="checkbox-filter-incidents"
-                    />
-                    <Label htmlFor="filter-incidents" className="text-sm text-foreground flex-1">
-                      Official Emergencies
-                    </Label>
-                    <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full" data-testid="text-count-incidents">
-                      {eventCounts.incidents}
-                    </span>
-                  </div>
-                </div>
-              )}
-            </div>
             
             {/* Individual Category Sections */}
             {(categories as any[]).map((category: any) => {
