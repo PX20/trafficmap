@@ -151,7 +151,13 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
     if (!incident) return "Unknown location";
     
     if (incident.type === 'traffic') {
-      return incident.properties?.road_summary?.road_name || incident.properties?.road_summary?.locality || "Unknown location";
+      const roadName = incident.properties?.road_summary?.road_name || '';
+      const locality = incident.properties?.road_summary?.locality || '';
+      
+      if (roadName && locality) {
+        return `${roadName}, ${locality}`;
+      }
+      return roadName || locality || "Unknown location";
     }
     
     if (incident.properties?.userReported) {
@@ -397,7 +403,7 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-md max-h-[80vh] flex flex-col p-0" data-testid="modal-incident-details">
-        <DialogHeader className="p-4 pb-2">
+        <DialogHeader className="p-4 pb-2 flex-shrink-0">
           {/* Compact User Header */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -431,9 +437,11 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
           </div>
         </DialogHeader>
         
-        {/* Full Incident Details */}
-        <div className="px-4 py-3 space-y-4">
-          <div className="flex items-start gap-3">
+        {/* Scrollable Content Container */}
+        <div className="flex-1 overflow-y-auto">
+          {/* Full Incident Details */}
+          <div className="px-4 py-3 space-y-4">
+            <div className="flex items-start gap-3">
             <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
               {getIncidentIcon(incident)}
             </div>
@@ -528,11 +536,10 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
               </Button>
             </div>
           </div>
-        </div>
-
-        {/* Compact Comments Section */}
-        <div className="flex-1 overflow-y-auto px-4 pb-4">
-          <div className="pt-3">
+          
+          {/* Compact Comments Section */}
+          <div className="px-4 pb-4">
+            <div className="pt-3">
             <div className="flex items-center gap-2 mb-3">
               <MessageCircle className="w-4 h-4" />
               <h3 className="font-medium text-sm">
@@ -600,6 +607,8 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
                 </p>
               </div>
             )}
+            </div>
+          </div>
           </div>
         </div>
       </DialogContent>
