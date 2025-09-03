@@ -747,8 +747,6 @@ export default function Feed() {
                           </div>
                         </div>
 
-                        <Separator />
-
                         <Separator className="opacity-50" />
 
                         {/* Action Bar - Social Media Style */}
