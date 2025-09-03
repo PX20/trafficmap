@@ -431,24 +431,83 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
           </div>
         </DialogHeader>
         
-        {/* Compact Content */}
-        <div className="px-4 py-3 space-y-3">
-          <div className="flex items-start gap-2">
-            <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+        {/* Full Incident Details */}
+        <div className="px-4 py-3 space-y-4">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
               {getIncidentIcon(incident)}
             </div>
             <div className="flex-1 min-w-0">
-              <DialogTitle className="text-base font-semibold mb-1 line-clamp-2">
-                {getIncidentTitle(incident)}
-              </DialogTitle>
-              <div className="flex items-center gap-1 text-sm text-muted-foreground mb-2">
-                <MapPin className="w-3 h-3" />
-                <span className="line-clamp-1">{getIncidentLocation(incident)}</span>
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <DialogTitle className="text-lg font-semibold leading-tight">
+                  {getIncidentTitle(incident)}
+                </DialogTitle>
+                {getStatusBadge(incident)}
+              </div>
+              <div className="flex items-center gap-1 text-sm text-muted-foreground mb-3">
+                <MapPin className="w-4 h-4" />
+                <span>{getIncidentLocation(incident)}</span>
+              </div>
+              
+              {/* Full Description */}
+              <div className="space-y-3">
+                <div className="text-sm text-foreground leading-relaxed">
+                  {getIncidentDescription(incident)}
+                </div>
+                
+                {/* Additional Traffic Information */}
+                {incident.type === 'traffic' && incident.properties?.information && (
+                  <div className="bg-blue-50 dark:bg-blue-950 p-3 rounded-lg border-l-4 border-blue-400">
+                    <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-1">Traffic Information</h4>
+                    <p className="text-sm text-blue-800 dark:text-blue-200">{incident.properties.information}</p>
+                  </div>
+                )}
+                
+                {/* Traffic Advice */}
+                {incident.type === 'traffic' && incident.properties?.advice && (
+                  <div className="bg-amber-50 dark:bg-amber-950 p-3 rounded-lg border-l-4 border-amber-400">
+                    <h4 className="font-medium text-amber-900 dark:text-amber-100 mb-1">Advice</h4>
+                    <p className="text-sm text-amber-800 dark:text-amber-200">{incident.properties.advice}</p>
+                  </div>
+                )}
+                
+                {/* Emergency Incident Details */}
+                {!incident.properties?.userReported && incident.type !== 'traffic' && (
+                  <div className="space-y-2">
+                    {incident.properties?.Priority && incident.properties.Priority !== 'Unknown' && (
+                      <div className="bg-red-50 dark:bg-red-950 p-3 rounded-lg border-l-4 border-red-400">
+                        <h4 className="font-medium text-red-900 dark:text-red-100 mb-1">Priority Level</h4>
+                        <p className="text-sm text-red-800 dark:text-red-200 font-medium">{incident.properties.Priority}</p>
+                      </div>
+                    )}
+                    
+                    {incident.properties?.CurrentStatus && incident.properties.CurrentStatus !== 'Unknown' && (
+                      <div className="bg-gray-50 dark:bg-gray-900 p-3 rounded-lg border-l-4 border-gray-400">
+                        <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-1">Current Status</h4>
+                        <p className="text-sm text-gray-800 dark:text-gray-200">{incident.properties.CurrentStatus}</p>
+                      </div>
+                    )}
+                    
+                    {incident.properties?.Master_Incident_Number && (
+                      <div className="text-xs text-muted-foreground">
+                        <strong>Incident #:</strong> {incident.properties.Master_Incident_Number}
+                      </div>
+                    )}
+                  </div>
+                )}
+                
+                {/* Community Report Details */}
+                {incident.properties?.userReported && incident.properties?.description && (
+                  <div className="bg-purple-50 dark:bg-purple-950 p-3 rounded-lg border-l-4 border-purple-400">
+                    <h4 className="font-medium text-purple-900 dark:text-purple-100 mb-1">Reporter Details</h4>
+                    <p className="text-sm text-purple-800 dark:text-purple-200">{incident.properties.description}</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
           
-          {/* Thumbnail Image */}
+          {/* Incident Photo */}
           {incident?.properties?.photoUrl && (
             <div className="rounded-lg overflow-hidden bg-muted">
               <img 
@@ -461,24 +520,21 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
           )}
           
           {/* Social Interaction Bar */}
-          <div className="flex items-center justify-between py-2 border-t border-b">
+          <div className="flex items-center justify-between py-3 border-t border-b">
             <div className="flex items-center space-x-4">
-              <Button variant="ghost" size="sm" className="flex items-center space-x-1 text-muted-foreground hover:text-red-500">
+              <Button variant="ghost" size="sm" className="flex items-center space-x-2 text-muted-foreground hover:text-red-500 transition-colors">
                 <Heart className="w-4 h-4" />
                 <span className="text-sm font-medium">24</span>
               </Button>
-              <Button variant="ghost" size="sm" className="flex items-center space-x-1 text-muted-foreground hover:text-blue-500">
+              <Button variant="ghost" size="sm" className="flex items-center space-x-2 text-muted-foreground hover:text-blue-500 transition-colors">
                 <MessageCircle className="w-4 h-4" />
                 <span className="text-sm font-medium">{comments.length || 0}</span>
               </Button>
-              <Button variant="ghost" size="sm" className="flex items-center space-x-1 text-muted-foreground hover:text-green-500">
+              <Button variant="ghost" size="sm" className="flex items-center space-x-2 text-muted-foreground hover:text-green-500 transition-colors">
                 <Share2 className="w-4 h-4" />
-                <span className="text-sm font-medium">Share</span>
+                <span className="text-sm">Share</span>
               </Button>
             </div>
-            <Button size="sm" variant="outline">
-              View Full Details
-            </Button>
           </div>
         </div>
 
