@@ -343,7 +343,13 @@ export default function Feed() {
 
   const getIncidentLocation = (incident: any) => {
     if (incident.type === 'traffic') {
-      return incident.properties?.road_summary?.road_name || incident.properties?.road_summary?.locality || "Unknown location";
+      const roadName = incident.properties?.road_summary?.road_name || '';
+      const locality = incident.properties?.road_summary?.locality || '';
+      
+      if (roadName && locality) {
+        return `${roadName}, ${locality}`;
+      }
+      return roadName || locality || "Unknown location";
     }
     
     if (incident.properties?.userReported) {
