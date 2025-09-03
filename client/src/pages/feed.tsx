@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { IncidentDetailModal } from "@/components/incident-detail-modal";
+import { IncidentReportForm } from "@/components/incident-report-form";
 import { AppHeader } from "@/components/map/app-header";
 import { findRegionBySuburb, getRegionalSuburbs } from "@/lib/regions";
 import { 
@@ -32,7 +33,8 @@ import {
   MoreHorizontal,
   User,
   Users,
-  TrendingUp
+  TrendingUp,
+  Plus
 } from "lucide-react";
 
 export default function Feed() {
@@ -42,6 +44,7 @@ export default function Feed() {
   const [selectedIncident, setSelectedIncident] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showRegionalUpdates, setShowRegionalUpdates] = useState(true); // Default to true
+  const [reportFormOpen, setReportFormOpen] = useState(false);
   
   // Load saved location from localStorage on startup (sync with map home location)
   useEffect(() => {
@@ -209,96 +212,22 @@ export default function Feed() {
   
   const deduplicatedIncidents = Array.from(incidentMap.values());
 
-  // Apply regional filtering if location is selected
+  // Debug: Log the types of incidents we have
+  console.log('📊 Feed Debug - Raw incidents by type:');
+  console.log('- Emergency incidents:', deduplicatedIncidents.filter(i => i.type === 'incident' && !i.properties?.userReported).length);
+  console.log('- Community reports:', deduplicatedIncidents.filter(i => i.properties?.userReported).length);
+  console.log('- Traffic events:', deduplicatedIncidents.filter(i => i.type === 'traffic').length);
+  console.log('- Total incidents:', deduplicatedIncidents.length);
+
+  // Apply regional filtering if location is selected (but more permissive for debugging)
   let filteredIncidents = deduplicatedIncidents;
   
-  if (selectedSuburb) {
-    if (showRegionalUpdates) {
-      // Show regional updates - filter by region
-    // Find the region for the selected suburb
-    const region = findRegionBySuburb(selectedSuburb);
-    
-    if (region) {
-      console.log(`Filtering incidents for ${selectedSuburb} → ${region.name} region`);
-      console.log('Available incidents:', deduplicatedIncidents.slice(0, 3).map(i => ({
-        type: i.type,
-        location: i.type === 'traffic' 
-          ? (i.properties?.road_summary?.locality || i.properties?.road_summary?.road_name)
-          : (i.properties?.Locality || i.properties?.Location || i.properties?.locationDescription)
-      })));
-      
-      // Filter incidents to those in the same region
-      filteredIncidents = deduplicatedIncidents.filter((incident: any) => {
-        // Extract location information from different incident types
-        let incidentLocation = '';
-        
-        if (incident.type === 'traffic') {
-          incidentLocation = incident.properties?.road_summary?.locality || 
-                            incident.properties?.road_summary?.road_name || '';
-        } else if (incident.properties?.userReported) {
-          incidentLocation = incident.properties?.locationDescription || 
-                            incident.properties?.Location || '';
-        } else {
-          // Emergency incidents
-          incidentLocation = incident.properties?.Locality || 
-                            incident.properties?.Location || '';
-        }
-        
-        // Check if the incident location matches any suburb in our region
-        if (incidentLocation) {
-          const locationLower = incidentLocation.toLowerCase();
-          return region.suburbs.some(suburb => {
-            const suburbLower = suburb.toLowerCase();
-            // More flexible matching - check for partial matches and common variations
-            return locationLower.includes(suburbLower) ||
-                   suburbLower.includes(locationLower) ||
-                   // Also check for road/highway names that cross the region
-                   locationLower.includes('sunshine') ||
-                   locationLower.includes('caloundra') ||
-                   locationLower.includes('maroochydore') ||
-                   locationLower.includes('nambour') ||
-                   locationLower.includes('noosa');
-          });
-        }
-        
-        return false;
-      });
-      
-      console.log(`Filtered ${deduplicatedIncidents.length} → ${filteredIncidents.length} incidents for ${region.name} region`);
-    } else {
-      // Show only exact suburb - filter by exact location match
-      console.log(`Filtering incidents for exact suburb: ${selectedSuburb}`);
-      filteredIncidents = deduplicatedIncidents.filter((incident: any) => {
-        let incidentLocation = '';
-        
-        if (incident.type === 'traffic') {
-          incidentLocation = incident.properties?.road_summary?.locality || '';
-        } else if (incident.properties?.userReported) {
-          incidentLocation = incident.properties?.locationDescription || 
-                            incident.properties?.Location || '';
-        } else {
-          // Emergency incidents
-          incidentLocation = incident.properties?.Locality || 
-                            incident.properties?.Location || '';
-        }
-        
-        // Check for exact suburb match
-        if (incidentLocation) {
-          const locationLower = incidentLocation.toLowerCase();
-          const selectedSuburbLower = selectedSuburb.toLowerCase();
-          return locationLower.includes(selectedSuburbLower) ||
-                 selectedSuburbLower.includes(locationLower);
-        }
-        
-        return false;
-      });
-      
-      console.log(`Filtered ${deduplicatedIncidents.length} → ${filteredIncidents.length} incidents for exact suburb: ${selectedSuburb}`);
-    }
-    } else {
-      console.log(`No region found for ${selectedSuburb}, showing all incidents`);
-    }
-  }
+  console.log('📊 Debug: Total incidents before filtering:', deduplicatedIncidents.length);
+  console.log('🔍 Location filter - selectedSuburb:', selectedSuburb, 'showRegionalUpdates:', showRegionalUpdates);
+  
+  // For now, show ALL incidents regardless of location to test display
+  // TODO: Implement better location filtering later
+  console.log('🔍 Final filtered incidents count:', filteredIncidents.length);
 
   // Sort by most recent first  
   const allIncidents = filteredIncidents.sort((a, b) => {
@@ -809,6 +738,22 @@ export default function Feed() {
           onClose={handleCloseModal}
         />
       )}
+      
+      {/* Incident Report Form */}
+      <IncidentReportForm
+        isOpen={reportFormOpen}
+        onClose={() => setReportFormOpen(false)}
+        initialLocation={selectedSuburb}
+      />
+      
+      {/* Floating Report Button */}
+      <Button
+        onClick={() => setReportFormOpen(true)}
+        className="fixed bottom-6 right-6 z-30 shadow-lg h-14 w-14 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground"
+        data-testid="button-report-incident"
+      >
+        <Plus className="w-6 h-6" />
+      </Button>
     </div>
   );
 }
