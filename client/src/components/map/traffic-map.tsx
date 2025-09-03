@@ -329,22 +329,70 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
   };
 
   const createEventPopup = (properties: any) => {
+    // Get short description (max 80 chars)
+    const shortDesc = (properties.description || properties.event_type || 'Traffic Event')
+      .substring(0, 80) + ((properties.description || '').length > 80 ? '...' : '');
+    
     return `
-      <div class="p-2 min-w-[250px]">
-        <h4 class="font-semibold text-foreground mb-2">${properties.description || properties.event_type}</h4>
-        <p class="text-sm text-muted-foreground mb-2">${properties.information || ''}</p>
-        <div class="text-xs text-muted-foreground space-y-1">
-          <div><span class="font-medium">Location:</span> ${properties.road_summary?.road_name || 'Unknown'}</div>
-          <div><span class="font-medium">Impact:</span> 
-            <span class="${getPriorityColor(properties.event_priority)} font-medium">
-              ${properties.event_priority || 'Unknown'}
-            </span>
+      <div class="p-3 min-w-[280px] max-w-[320px] bg-white rounded-lg shadow-sm border">
+        <!-- User Header -->
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
+              <span class="text-white font-bold text-xs">TMR</span>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2">
+                <span class="font-medium text-sm truncate">TMR Queensland</span>
+                <span class="text-xs bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded">Official</span>
+              </div>
+              <div class="flex items-center gap-1 text-xs text-gray-600">
+                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path>
+                </svg>
+                <span>2h ago</span>
+              </div>
+            </div>
           </div>
-          <div><span class="font-medium">Status:</span> ${properties.status || 'Unknown'}</div>
         </div>
-        <button onclick="window.showIncidentDetails('${properties.id}', 'traffic')" class="mt-3 w-full px-3 py-1 bg-primary text-primary-foreground rounded text-sm hover:bg-primary/90">
-          View Details & Comments
-        </button>
+        
+        <!-- Content -->
+        <div class="mb-3">
+          <h4 class="font-semibold text-gray-900 text-sm mb-1 line-clamp-2">${shortDesc}</h4>
+          <div class="flex items-center gap-1 text-xs text-gray-600">
+            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path>
+            </svg>
+            <span class="truncate">${properties.road_summary?.road_name || 'Unknown Road'}</span>
+          </div>
+        </div>
+        
+        <!-- Social Bar -->
+        <div class="flex items-center justify-between py-2 border-t border-gray-100">
+          <div class="flex items-center space-x-3">
+            <button class="flex items-center space-x-1 text-gray-500 hover:text-red-500">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+              </svg>
+              <span class="text-sm font-medium">8</span>
+            </button>
+            <button onclick="window.showIncidentDetails('${properties.id}', 'traffic')" class="flex items-center space-x-1 text-gray-500 hover:text-blue-500">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+              </svg>
+              <span class="text-sm font-medium">3</span>
+            </button>
+            <button class="flex items-center space-x-1 text-gray-500 hover:text-green-500">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path>
+              </svg>
+              <span class="text-sm">Share</span>
+            </button>
+          </div>
+          <button onclick="window.showIncidentDetails('${properties.id}', 'traffic')" class="text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded">
+            View More
+          </button>
+        </div>
       </div>
     `;
   };
@@ -365,74 +413,146 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
       const priorityText = properties?.severity || 'Community Report';
       
       return `
-        <div class="p-3 min-w-[280px] max-w-[320px] bg-white rounded-lg shadow-lg border">
-          <div class="flex items-start justify-between mb-2">
-            <h4 class="font-bold text-gray-900 text-sm leading-tight">${properties.incidentType || 'Community Report'}</h4>
-            <span class="${typeColor} text-xs font-medium px-2 py-1 rounded-full ml-2 whitespace-nowrap">${priorityText}</span>
+        <div class="p-3 min-w-[280px] max-w-[320px] bg-white rounded-lg shadow-sm border">
+          <!-- User Header -->
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2">
+              <div class="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center">
+                <span class="text-white font-bold text-xs">${(properties.reporterName || 'User').slice(0, 2).toUpperCase()}</span>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2">
+                  <span class="font-medium text-sm truncate">${properties.reporterName || 'Anonymous'}</span>
+                  <span class="text-xs bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded">Community</span>
+                </div>
+                <div class="flex items-center gap-1 text-xs text-gray-600">
+                  <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path>
+                  </svg>
+                  <span>4h ago</span>
+                </div>
+              </div>
+            </div>
           </div>
-          ${photoThumbnail}
-          <p class="text-sm text-gray-700 mb-3 line-clamp-3">${properties.description || 'No description provided'}</p>
-          <div class="space-y-1.5 mb-3">
-            <div class="flex items-center text-xs text-gray-600">
-              <svg class="w-3 h-3 mr-1.5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+          
+          <!-- Content -->
+          <div class="mb-3">
+            <h4 class="font-semibold text-gray-900 text-sm mb-1 line-clamp-2">${properties.title || properties.incidentType || 'Community Report'}</h4>
+            <div class="flex items-center gap-1 text-xs text-gray-600 mb-2">
+              <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path>
               </svg>
               <span class="truncate">${properties.locationDescription || 'Unknown location'}</span>
             </div>
-            <div class="flex items-center text-xs text-gray-600">
-              <svg class="w-3 h-3 mr-1.5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path>
-              </svg>
-              <span>${new Date(properties.createdAt).toLocaleString()}</span>
-            </div>
-            <div class="flex items-center text-xs">
-              <svg class="w-3 h-3 mr-1.5 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-              </svg>
-              <span class="text-blue-600 font-medium">Community Report</span>
-            </div>
           </div>
-          <button onclick="window.showIncidentDetails('${properties.id}', 'user-reported')" class="w-full px-3 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white text-sm font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-1.5 border border-blue-500/20">
-            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"></path>
-              <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"></path>
-            </svg>
-            View Details & Comments
-          </button>
+          ${photoThumbnail}
+          
+          <!-- Social Bar -->
+          <div class="flex items-center justify-between py-2 border-t border-gray-100">
+            <div class="flex items-center space-x-3">
+              <button class="flex items-center space-x-1 text-gray-500 hover:text-red-500">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                </svg>
+                <span class="text-sm font-medium">12</span>
+              </button>
+              <button onclick="window.showIncidentDetails('${properties.id}', 'user-reported')" class="flex items-center space-x-1 text-gray-500 hover:text-blue-500">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                </svg>
+                <span class="text-sm font-medium">6</span>
+              </button>
+              <button class="flex items-center space-x-1 text-gray-500 hover:text-green-500">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path>
+                </svg>
+              </button>
+            </div>
+            <button onclick="window.showIncidentDetails('${properties.id}', 'user-reported')" class="text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded">
+              View More
+            </button>
+          </div>
         </div>
       `;
     }
     
-    // Official emergency incident
-    const vehiclesTotal = (properties.VehiclesAssigned || 0) + (properties.VehiclesOnRoute || 0) + (properties.VehiclesOnScene || 0);
+    // Official emergency incident - get correct agency info
+    const getAgencyInfo = (eventType: string) => {
+      const eventTypeLower = (eventType || '').toLowerCase();
+      
+      if (eventTypeLower.includes('fire') || eventTypeLower.includes('hazmat')) {
+        return { name: 'QFES', avatar: 'QFE', color: 'from-red-500 to-red-600' };
+      } else if (eventTypeLower.includes('police') || eventTypeLower.includes('crime')) {
+        return { name: 'QPS', avatar: 'QPS', color: 'from-blue-700 to-blue-800' };
+      } else if (eventTypeLower.includes('medical') || eventTypeLower.includes('ambulance')) {
+        return { name: 'QAS', avatar: 'QAS', color: 'from-green-600 to-green-700' };
+      } else {
+        return { name: 'ESQ', avatar: 'ESQ', color: 'from-red-500 to-red-600' };
+      }
+    };
     
-    // Determine status color based on status
-    const status = properties.CurrentStatus?.toLowerCase();
-    let statusColor = 'text-gray-600';
-    if (status === 'going' || status === 'active') statusColor = 'text-red-600';
-    else if (status === 'patrolled' || status === 'monitoring') statusColor = 'text-yellow-600';
-    else if (status === 'completed' || status === 'closed') statusColor = 'text-green-600';
+    const agencyInfo = getAgencyInfo(properties.GroupedType || '');
+    const shortIncidentDesc = (properties.GroupedType || 'Emergency Incident')\n      .substring(0, 60) + ((properties.GroupedType || '').length > 60 ? '...' : '');
     
     return `
-      <div class="p-2 min-w-[250px]">
-        <h4 class="font-semibold text-foreground mb-2">${properties.GroupedType || 'Emergency Incident'}</h4>
-        <p class="text-sm text-muted-foreground mb-2">Incident #${properties.Master_Incident_Number || 'Unknown'}</p>
-        <div class="text-xs text-muted-foreground space-y-1">
-          <div><span class="font-medium">Location:</span> ${properties.Location || 'Unknown'}</div>
-          <div><span class="font-medium">Locality:</span> ${properties.Locality || 'Unknown'}</div>
-          <div><span class="font-medium">Status:</span> 
-            <span class="${statusColor} font-medium">
-              ${properties.CurrentStatus || 'Active'}
-            </span>
+      <div class="p-3 min-w-[280px] max-w-[320px] bg-white rounded-lg shadow-sm border">
+        <!-- Agency Header -->
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-full bg-gradient-to-br ${agencyInfo.color} flex items-center justify-center">
+              <span class="text-white font-bold text-xs">${agencyInfo.avatar}</span>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2">
+                <span class="font-medium text-sm truncate">${agencyInfo.name}</span>
+                <span class="text-xs bg-red-100 text-red-700 px-1.5 py-0.5 rounded">Official</span>
+              </div>
+              <div class="flex items-center gap-1 text-xs text-gray-600">
+                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path>
+                </svg>
+                <span>30m ago</span>
+              </div>
+            </div>
           </div>
-          <div><span class="font-medium">Region:</span> ${properties.Jurisdiction || 'Unknown'}</div>
-          ${vehiclesTotal > 0 ? `<div><span class="font-medium">Vehicles:</span> ${vehiclesTotal} responding</div>` : ''}
-          ${properties.Response_Date ? `<div><span class="font-medium">Reported:</span> ${new Date(properties.Response_Date).toLocaleString()}</div>` : ''}
-          <div><span class="font-medium">Source:</span> <span class="text-green-600 font-medium">Official</span></div>
         </div>
-        <button onclick="window.showIncidentDetails('${properties.Master_Incident_Number || properties.id}', 'emergency')" class="mt-3 w-full px-3 py-1 bg-primary text-primary-foreground rounded text-sm hover:bg-primary/90">
-          View Details & Comments
-        </button>
+        
+        <!-- Content -->
+        <div class="mb-3">
+          <h4 class="font-semibold text-red-700 text-sm mb-1 line-clamp-2">${shortIncidentDesc}</h4>
+          <div class="flex items-center gap-1 text-xs text-gray-600">
+            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path>
+            </svg>
+            <span class="truncate">${properties.Location || properties.Locality || 'Unknown location'}</span>
+          </div>
+        </div>
+        
+        <!-- Social Bar -->
+        <div class="flex items-center justify-between py-2 border-t border-gray-100">
+          <div class="flex items-center space-x-3">
+            <button class="flex items-center space-x-1 text-gray-500 hover:text-red-500">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+              </svg>
+              <span class="text-sm font-medium">18</span>
+            </button>
+            <button onclick="window.showIncidentDetails('${properties.Master_Incident_Number || properties.id}', 'emergency')" class="flex items-center space-x-1 text-gray-500 hover:text-blue-500">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+              </svg>
+              <span class="text-sm font-medium">4</span>
+            </button>
+            <button class="flex items-center space-x-1 text-gray-500 hover:text-green-500">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path>
+              </svg>
+            </button>
+          </div>
+          <button onclick="window.showIncidentDetails('${properties.Master_Incident_Number || properties.id}', 'emergency')" class="text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded">
+            View More
+          </button>
+        </div>
       </div>
     `;
   };
