@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Navigation } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
+import { LocationAutocomplete } from "@/components/location-autocomplete";
 
 const reportIncidentSchema = z.object({
   categoryId: z.string().min(1, "Category is required"),
@@ -41,6 +42,7 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
   const { data: categories = [] } = useQuery({
     queryKey: ["/api/categories"],
     enabled: isOpen,
+    select: (data: any) => data || [],
   });
   
   const { data: subcategories = [] } = useQuery({
@@ -285,12 +287,19 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
                   <FormLabel>Location</FormLabel>
                   <FormControl>
                     <div className="flex gap-2">
-                      <Input
-                        placeholder="Street name, intersection, or landmark"
-                        {...field}
-                        data-testid="input-incident-location"
-                        className="flex-1"
-                      />
+                      <div className="flex-1">
+                        <LocationAutocomplete
+                          value={field.value}
+                          onChange={(location) => {
+                            field.onChange(location);
+                          }}
+                          onClear={() => {
+                            field.onChange("");
+                          }}
+                          placeholder="Enter street address, intersection, or landmark..."
+                          disabled={false}
+                        />
+                      </div>
                       <Button
                         type="button"
                         onClick={handleGetCurrentLocation}
