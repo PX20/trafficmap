@@ -492,7 +492,8 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
     };
     
     const agencyInfo = getAgencyInfo(properties.GroupedType || '');
-    const shortIncidentDesc = (properties.GroupedType || 'Emergency Incident')\n      .substring(0, 60) + ((properties.GroupedType || '').length > 60 ? '...' : '');
+    const shortIncidentDesc = (properties.GroupedType || 'Emergency Incident')
+      .substring(0, 60) + ((properties.GroupedType || '').length > 60 ? '...' : '');
     
     return `
       <div class="p-3 min-w-[280px] max-w-[320px] bg-white rounded-lg shadow-sm border">
