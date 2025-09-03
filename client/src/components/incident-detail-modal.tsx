@@ -524,7 +524,6 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
             <div className="flex items-center space-x-4">
               <Button variant="ghost" size="sm" className="flex items-center space-x-2 text-muted-foreground hover:text-red-500 transition-colors">
                 <Heart className="w-4 h-4" />
-                <span className="text-sm font-medium">24</span>
               </Button>
               <Button variant="ghost" size="sm" className="flex items-center space-x-2 text-muted-foreground hover:text-blue-500 transition-colors">
                 <MessageCircle className="w-4 h-4" />
