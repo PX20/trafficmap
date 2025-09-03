@@ -18,14 +18,34 @@ const PUBLIC_API_KEY = "3e83add325cbb69ac4d8e5bf433d770b";
 
 // Traffic data cache to avoid hitting rate limits
 const trafficCache = {
-  events: { data: null as any, lastFetch: 0 }
+  events: { data: null as any, lastFetch: 0 },
+  sunshineCoast: { data: null as any, lastFetch: 0 }
 };
 
 const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes in milliseconds
+const SUNSHINE_COAST_CACHE_DURATION = 60 * 60 * 1000; // 1 hour for Sunshine Coast
 const RETRY_DELAY = 30 * 1000; // 30 seconds delay on rate limit
 
-function isCacheValid(cacheEntry: any): boolean {
-  return cacheEntry.data && (Date.now() - cacheEntry.lastFetch) < CACHE_DURATION;
+// Sunshine Coast suburbs for filtering
+const SUNSHINE_COAST_SUBURBS = [
+  'caloundra', 'mooloolaba', 'noosa', 'maroochydore', 'nambour', 'cooroy', 
+  'tewantin', 'buderim', 'sippy downs', 'kawana', 'pelican waters', 
+  'kings beach', 'moffat beach', 'dicky beach', 'currimundi', 'bokarina',
+  'warana', 'wurtulla', 'landsborough', 'beerwah', 'glass house mountains'
+];
+
+function isCacheValid(cacheEntry: any, duration: number = CACHE_DURATION): boolean {
+  return cacheEntry.data && (Date.now() - cacheEntry.lastFetch) < duration;
+}
+
+function isSunshineCoastLocation(feature: any): boolean {
+  const locality = feature.properties?.road_summary?.locality?.toLowerCase() || '';
+  const roadName = feature.properties?.road_summary?.road_name?.toLowerCase() || '';
+  const location = `${locality} ${roadName}`.toLowerCase();
+  
+  return SUNSHINE_COAST_SUBURBS.some(suburb => 
+    location.includes(suburb) || locality.includes(suburb)
+  );
 }
 
 async function fetchWithRetry(url: string, retryDelay: number = RETRY_DELAY): Promise<Response> {
@@ -135,14 +155,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get traffic events from QLD Traffic API (with caching)
+  // Get traffic events from QLD Traffic API (with enhanced caching)
   app.get("/api/traffic/events", async (req, res) => {
     try {
       const { suburb } = req.query;
       let data;
+      
+      // Check if this is a Sunshine Coast request
+      const isSunshineCoastRequest = suburb && 
+        SUNSHINE_COAST_SUBURBS.some(scSuburb => 
+          (suburb as string).toLowerCase().includes(scSuburb)
+        );
 
-      // Check if we have valid cached data
-      if (isCacheValid(trafficCache.events)) {
+      // Use Sunshine Coast specific cache if applicable
+      if (isSunshineCoastRequest && isCacheValid(trafficCache.sunshineCoast, SUNSHINE_COAST_CACHE_DURATION)) {
+        console.log("Using cached Sunshine Coast traffic data");
+        data = trafficCache.sunshineCoast.data;
+      } else if (!isSunshineCoastRequest && isCacheValid(trafficCache.events)) {
         console.log("Using cached traffic events data");
         data = trafficCache.events.data;
       } else {
@@ -158,17 +187,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           data = await response.json();
           
-          // Update cache
+          // Update general cache
           trafficCache.events = {
             data: data,
             lastFetch: Date.now()
           };
           
+          // Also update Sunshine Coast specific cache with filtered data
+          if (data.features) {
+            const sunshineCoastEvents = {
+              ...data,
+              features: data.features.filter(isSunshineCoastLocation)
+            };
+            trafficCache.sunshineCoast = {
+              data: sunshineCoastEvents,
+              lastFetch: Date.now()
+            };
+            console.log(`Cached ${sunshineCoastEvents.features.length} Sunshine Coast events for 1 hour`);
+          }
+          
         } catch (error) {
           // If fetch fails and we have old cached data, use it
-          if (trafficCache.events.data) {
+          const fallbackCache = isSunshineCoastRequest ? trafficCache.sunshineCoast : trafficCache.events;
+          if (fallbackCache.data) {
             console.log("API fetch failed, using stale cached data");
-            data = trafficCache.events.data;
+            data = fallbackCache.data;
           } else {
             throw error;
           }
