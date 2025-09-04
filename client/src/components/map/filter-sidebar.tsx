@@ -40,6 +40,7 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
   const { data: events, refetch: refetchEvents } = useQuery({
     queryKey: ["/api/traffic/events"],
     queryFn: getTrafficEvents,
+    select: (data: any) => data?.features || [],
   });
 
   const { data: incidents, refetch: refetchIncidents } = useQuery({
