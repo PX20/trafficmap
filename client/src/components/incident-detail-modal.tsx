@@ -45,6 +45,8 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
   const [newComment, setNewComment] = useState("");
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyText, setReplyText] = useState("");
+  const [isLiked, setIsLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(0);
 
   // Extract incident ID from the incident object (safe to call even if incident is null)
   const incidentId = incident ? getIncidentId(incident) : null;
@@ -96,7 +98,42 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
       }
     }
   };
-  
+
+  // Like functionality
+  const handleLike = () => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Please log in",
+        description: "You need to log in to like incidents",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLiked(!isLiked);
+    setLikeCount(prev => isLiked ? prev - 1 : prev + 1);
+    
+    toast({
+      title: isLiked ? "Unliked" : "Liked",
+      description: isLiked ? "Removed from your liked incidents" : "Added to your liked incidents",
+    });
+  };
+
+  // Initialize like count when modal opens (demo data)
+  useEffect(() => {
+    if (isOpen && incident && incidentId) {
+      // Demo like counts - in real app this would come from API
+      const demoLikeCounts: Record<string, number> = {
+        'crash': Math.floor(Math.random() * 50) + 5,
+        'incident': Math.floor(Math.random() * 30) + 3,
+        'emergency': Math.floor(Math.random() * 100) + 20,
+      };
+      
+      const eventType = incident.type || 'incident';
+      setLikeCount(demoLikeCounts[eventType] || Math.floor(Math.random() * 20) + 1);
+      setIsLiked(false); // Reset like state for demo
+    }
+  }, [isOpen, incident, incidentId]);
 
   const { data: comments = [], isLoading: commentsLoading } = useQuery({
     queryKey: ["/api/incidents", incidentId, "comments"],
@@ -585,8 +622,21 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
           {/* Social Interaction Bar */}
           <div className="flex items-center justify-between py-3 border-t border-b">
             <div className="flex items-center space-x-4">
-              <Button variant="ghost" size="sm" className="flex items-center space-x-2 text-muted-foreground hover:text-red-500 transition-colors">
-                <Heart className="w-4 h-4" />
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className={`flex items-center space-x-2 transition-colors ${
+                  isLiked 
+                    ? 'text-red-500 hover:text-red-600' 
+                    : 'text-muted-foreground hover:text-red-500'
+                }`}
+                onClick={handleLike}
+                data-testid="button-like-incident"
+              >
+                <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
+                {likeCount > 0 && (
+                  <span className="text-sm font-medium">{likeCount}</span>
+                )}
               </Button>
               <Button variant="ghost" size="sm" className="flex items-center space-x-2 text-muted-foreground hover:text-blue-500 transition-colors">
                 <MessageCircle className="w-4 h-4" />
