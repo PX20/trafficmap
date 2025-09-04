@@ -30,6 +30,7 @@ export interface FilterState {
 }
 
 export default function Home() {
+  // Safety Monitor - Main Home Component
   const isMobile = useIsMobile();
   const [sidebarOpen, setSidebarOpen] = useState(!isMobile);
   const [selectedIncident, setSelectedIncident] = useState<any>(null);

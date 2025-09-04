@@ -192,7 +192,7 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
     markersRef.current = newMarkers;
   }, [eventsData, incidentsData, filters]);
 
-  // Incident categorization function (same logic as filter sidebar) 
+  // Incident categorization function
   const categorizeIncident = (incident: any) => {
     const props = incident.properties || {};
     
