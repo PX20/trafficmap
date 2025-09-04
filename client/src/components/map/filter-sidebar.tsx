@@ -114,11 +114,21 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
     if (!filters.locationFilter || !filters.homeBoundingBox || !events) return events || [];
     
     const [minLon, minLat, maxLon, maxLat] = filters.homeBoundingBox;
+    
     return events.filter((event: any) => {
       const coords = event.geometry?.coordinates;
       if (!coords || coords.length !== 2) return false;
+      
       const [lon, lat] = coords;
-      return lon >= minLon && lon <= maxLon && lat >= minLat && lat <= maxLat;
+      
+      // Add some buffer to the bounding box to be less strict
+      const buffer = 0.1; // About 10km buffer
+      const inBounds = lon >= (minLon - buffer) && 
+                      lon <= (maxLon + buffer) && 
+                      lat >= (minLat - buffer) && 
+                      lat <= (maxLat + buffer);
+      
+      return inBounds;
     });
   };
 
@@ -209,7 +219,10 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
                   <Car className="w-4 h-4 text-blue-600" />
                   <h3 className="text-sm font-medium text-foreground">Live Traffic</h3>
                   <span className="text-xs text-muted-foreground bg-blue-100 text-blue-800 px-2 py-1 rounded-full ml-auto">
-                    {eventCounts.crashes + eventCounts.hazards + eventCounts.restrictions}
+                    {filters.locationFilter ? 
+                      (eventCounts.crashes + eventCounts.hazards + eventCounts.restrictions) :
+                      eventCounts.totalStatewide
+                    }
                   </span>
                 </div>
                 {expandedSections.traffic ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
