@@ -50,7 +50,7 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
       const response = await fetch(url);
       if (!response.ok) throw new Error('Failed to fetch traffic events');
       const data = await response.json();
-      console.log('Traffic events response:', data?.features?.length || 0, 'events');
+      console.log('Traffic events response:', data?.features?.length || 0, 'events for', suburb || 'statewide');
       return data;
     },
     select: (data: any) => data?.features || [],

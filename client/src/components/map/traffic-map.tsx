@@ -27,7 +27,18 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
   const [isLoading, setIsLoading] = useState(true);
 
   const { data: eventsData, isLoading: eventsLoading } = useQuery({
-    queryKey: ["/api/traffic/events"],
+    queryKey: ["/api/traffic/events", filters.homeLocation],
+    queryFn: async () => {
+      // Extract just the suburb name from location like "Caloundra 4551" -> "Caloundra"  
+      const suburb = filters.homeLocation?.split(' ')[0] || '';
+      const url = suburb 
+        ? `/api/traffic/events?suburb=${encodeURIComponent(suburb)}`
+        : '/api/traffic/events';
+      
+      const response = await fetch(url);
+      if (!response.ok) throw new Error('Failed to fetch traffic events');
+      return response.json();
+    },
     refetchInterval: filters.autoRefresh ? 30000 : false,
   });
 
@@ -85,66 +96,9 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
 
     const newMarkers: L.Marker[] = [];
     
-    // Apply regional filtering if enabled
+    // Events are already filtered by region on the backend when homeLocation is set
     let filteredEventsData = eventsData;
     let filteredIncidentsData = incidentsData;
-    
-    if (filters.locationFilter && filters.homeLocation) {
-      const region = findRegionBySuburb(filters.homeLocation);
-      
-      if (region) {
-        // Filter traffic events by region
-        if (eventsData && typeof eventsData === 'object' && 'features' in eventsData && Array.isArray((eventsData as any).features)) {
-          const regionalEvents = (eventsData as any).features.filter((feature: any) => {
-            const locality = feature.properties?.road_summary?.locality || '';
-            const roadName = feature.properties?.road_summary?.road_name || '';
-            const locationText = `${locality} ${roadName}`.toLowerCase();
-            
-            return region.suburbs.some(suburb => {
-              const suburbLower = suburb.toLowerCase();
-              return locationText.includes(suburbLower) ||
-                     suburbLower.includes(locationText) ||
-                     locationText.includes('sunshine') ||
-                     locationText.includes('caloundra') ||
-                     locationText.includes('maroochydore') ||
-                     locationText.includes('nambour') ||
-                     locationText.includes('noosa');
-            });
-          });
-          
-          filteredEventsData = {
-            ...(eventsData as any),
-            features: regionalEvents
-          };
-        }
-        
-        // Filter incidents by region
-        if (incidentsData && typeof incidentsData === 'object' && 'features' in incidentsData && Array.isArray((incidentsData as any).features)) {
-          const regionalIncidents = (incidentsData as any).features.filter((feature: any) => {
-            const locality = feature.properties?.Locality || '';
-            const location = feature.properties?.Location || '';
-            const locationDesc = feature.properties?.locationDescription || '';
-            const locationText = `${locality} ${location} ${locationDesc}`.toLowerCase();
-            
-            return region.suburbs.some(suburb => {
-              const suburbLower = suburb.toLowerCase();
-              return locationText.includes(suburbLower) ||
-                     suburbLower.includes(locationText) ||
-                     locationText.includes('sunshine') ||
-                     locationText.includes('caloundra') ||
-                     locationText.includes('maroochydore') ||
-                     locationText.includes('nambour') ||
-                     locationText.includes('noosa');
-            });
-          });
-          
-          filteredIncidentsData = {
-            ...(incidentsData as any),
-            features: regionalIncidents
-          };
-        }
-      }
-    }
 
     // Add event markers
     if ((filteredEventsData as any)?.features) {
