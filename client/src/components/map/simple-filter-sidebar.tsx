@@ -109,9 +109,6 @@ export function SimpleFilterSidebar({ isOpen, filters, onFilterChange, onClose }
                   <Label htmlFor="filter-tmr" className="text-sm text-foreground flex-1">
                     TMR Traffic Events
                   </Label>
-                  <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
-                    {counts.tmr}
-                  </span>
                 </div>
                 
                 <div className="flex items-center space-x-3">
@@ -124,9 +121,6 @@ export function SimpleFilterSidebar({ isOpen, filters, onFilterChange, onClose }
                   <Label htmlFor="filter-esq" className="text-sm text-foreground flex-1">
                     ESQ Emergency Data
                   </Label>
-                  <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
-                    {counts.esq}
-                  </span>
                 </div>
                 
                 <div className="flex items-center space-x-3">
@@ -139,9 +133,6 @@ export function SimpleFilterSidebar({ isOpen, filters, onFilterChange, onClose }
                   <Label htmlFor="filter-qfes" className="text-sm text-foreground flex-1">
                     QFES Fire & Emergency
                   </Label>
-                  <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
-                    {counts.qfes}
-                  </span>
                 </div>
               </div>
             )}
@@ -172,9 +163,6 @@ export function SimpleFilterSidebar({ isOpen, filters, onFilterChange, onClose }
                   <Label htmlFor="filter-user-safety" className="text-sm text-foreground flex-1">
                     Safety & Crime
                   </Label>
-                  <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
-                    {counts.userSafetyCrime}
-                  </span>
                 </div>
                 
                 <div className="flex items-center space-x-3">
@@ -187,9 +175,6 @@ export function SimpleFilterSidebar({ isOpen, filters, onFilterChange, onClose }
                   <Label htmlFor="filter-user-wildlife" className="text-sm text-foreground flex-1">
                     Wildlife & Nature
                   </Label>
-                  <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
-                    {counts.userWildlife}
-                  </span>
                 </div>
 
                 <div className="flex items-center space-x-3">
@@ -202,9 +187,6 @@ export function SimpleFilterSidebar({ isOpen, filters, onFilterChange, onClose }
                   <Label htmlFor="filter-user-community" className="text-sm text-foreground flex-1">
                     Community Issues
                   </Label>
-                  <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
-                    {counts.userCommunity}
-                  </span>
                 </div>
 
                 <div className="flex items-center space-x-3">
@@ -217,9 +199,6 @@ export function SimpleFilterSidebar({ isOpen, filters, onFilterChange, onClose }
                   <Label htmlFor="filter-user-traffic" className="text-sm text-foreground flex-1">
                     Road & Traffic
                   </Label>
-                  <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
-                    {counts.userTraffic}
-                  </span>
                 </div>
               </div>
             )}
