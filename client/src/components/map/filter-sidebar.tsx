@@ -111,18 +111,21 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
   
   // Filter events by region if location filter is enabled
   const getRegionalEvents = () => {
-    if (!filters.locationFilter || !filters.homeBoundingBox || !events) return events || [];
+    if (!filters.locationFilter || !events) return events || [];
+    
+    // If no bounding box is set, return all events (fallback)
+    if (!filters.homeBoundingBox) return events || [];
     
     const [minLon, minLat, maxLon, maxLat] = filters.homeBoundingBox;
     
-    return events.filter((event: any) => {
+    const filtered = events.filter((event: any) => {
       const coords = event.geometry?.coordinates;
       if (!coords || coords.length !== 2) return false;
       
       const [lon, lat] = coords;
       
-      // Add some buffer to the bounding box to be less strict
-      const buffer = 0.1; // About 10km buffer
+      // Use a larger buffer for more inclusive regional filtering
+      const buffer = 0.2; // About 20km buffer for regional coverage
       const inBounds = lon >= (minLon - buffer) && 
                       lon <= (maxLon + buffer) && 
                       lat >= (minLat - buffer) && 
@@ -130,6 +133,8 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
       
       return inBounds;
     });
+    
+    return filtered;
   };
 
   const regionalEvents = getRegionalEvents();
@@ -219,10 +224,7 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
                   <Car className="w-4 h-4 text-blue-600" />
                   <h3 className="text-sm font-medium text-foreground">Live Traffic</h3>
                   <span className="text-xs text-muted-foreground bg-blue-100 text-blue-800 px-2 py-1 rounded-full ml-auto">
-                    {filters.locationFilter ? 
-                      (eventCounts.crashes + eventCounts.hazards + eventCounts.restrictions) :
-                      eventCounts.totalStatewide
-                    }
+                    {eventCounts.crashes + eventCounts.hazards + eventCounts.restrictions}
                   </span>
                 </div>
                 {expandedSections.traffic ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
