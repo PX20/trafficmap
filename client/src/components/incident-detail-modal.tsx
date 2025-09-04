@@ -28,7 +28,8 @@ import {
   Reply,
   Heart,
   Share2,
-  MoreHorizontal
+  MoreHorizontal,
+  CheckCircle
 } from "lucide-react";
 import { Link } from "wouter";
 import type { Comment } from "@shared/schema";
@@ -42,11 +43,58 @@ interface IncidentDetailModalProps {
 export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetailModalProps) {
   const { user, isAuthenticated } = useAuth();
   const { toast } = useToast();
+
+  // Mark Complete mutation
+  const markCompleteMutation = useMutation({
+    mutationFn: async () => {
+      if (!incidentId) throw new Error('No incident ID');
+      return apiRequest(`/api/incidents/${incidentId}/status`, {
+        method: 'PATCH',
+        body: { status: 'completed' }
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Update successful",
+        description: "Your community update has been marked as resolved",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/incidents'] });
+      onClose();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update incident status",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleMarkComplete = () => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Please log in",
+        description: "You need to log in to update incidents",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    markCompleteMutation.mutate();
+  };
   const [newComment, setNewComment] = useState("");
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyText, setReplyText] = useState("");
   const [isLiked, setIsLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
+
+  // Check if current user is the creator of this incident
+  const isIncidentCreator = user && incident && 
+    incident.properties?.reporterId === user.id;
+  
+  // Check if incident is already completed
+  const isIncidentCompleted = incident && 
+    (incident.status === 'completed' || incident.properties?.status === 'completed');
 
   // Extract incident ID from the incident object (safe to call even if incident is null)
   const incidentId = incident ? getIncidentId(incident) : null;
@@ -721,6 +769,25 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
                     </div>
                     <span className="text-sm font-semibold">Share</span>
                   </Button>
+                  
+                  {/* Mark Complete Button - only show for incident creator and not already completed */}
+                  {isIncidentCreator && !isIncidentCompleted && incident.properties?.userReported && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="group flex items-center gap-2 px-4 py-2 rounded-xl bg-white hover:bg-teal-50 border border-gray-200 hover:border-teal-300 text-gray-600 hover:text-teal-600 transition-all duration-200 shadow-sm hover:shadow-md"
+                      onClick={handleMarkComplete}
+                      disabled={markCompleteMutation.isPending}
+                      data-testid="button-mark-complete"
+                    >
+                      <div className="w-5 h-5 bg-teal-500 rounded-lg flex items-center justify-center">
+                        <CheckCircle className="w-3 h-3 text-white" />
+                      </div>
+                      <span className="text-sm font-semibold">
+                        {markCompleteMutation.isPending ? 'Updating...' : 'Mark Resolved'}
+                      </span>
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>

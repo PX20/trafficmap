@@ -65,9 +65,11 @@ export interface IStorage {
   updateTrafficEvent(id: string, event: Partial<TrafficEvent>): Promise<TrafficEvent | undefined>;
   deleteTrafficEvent(id: string): Promise<boolean>;
   getIncidents(): Promise<Incident[]>;
+  getIncident(id: string): Promise<Incident | undefined>;
   getRecentIncidents(limit: number): Promise<Incident[]>;
   createIncident(incident: InsertIncident): Promise<Incident>;
   updateIncident(id: string, incident: Partial<Incident>): Promise<Incident | undefined>;
+  updateIncidentStatus(id: string, status: string): Promise<Incident | undefined>;
   deleteIncident(id: string): Promise<boolean>;
   
   // Comment operations
@@ -200,6 +202,11 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(incidents);
   }
 
+  async getIncident(id: string): Promise<Incident | undefined> {
+    const [incident] = await db.select().from(incidents).where(eq(incidents.id, id));
+    return incident;
+  }
+
   async getRecentIncidents(limit: number): Promise<Incident[]> {
     return await db
       .select()
@@ -225,6 +232,15 @@ export class DatabaseStorage implements IStorage {
     const [updated] = await db
       .update(incidents)
       .set({ ...incident, lastUpdated: new Date() })
+      .where(eq(incidents.id, id))
+      .returning();
+    return updated;
+  }
+
+  async updateIncidentStatus(id: string, status: string): Promise<Incident | undefined> {
+    const [updated] = await db
+      .update(incidents)
+      .set({ status, lastUpdated: new Date() })
       .where(eq(incidents.id, id))
       .returning();
     return updated;

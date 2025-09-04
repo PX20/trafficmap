@@ -696,6 +696,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update incident status - only allow creator to mark complete
+  app.patch("/api/incidents/:id/status", isAuthenticated, async (req: any, res) => {
+    try {
+      const incidentId = req.params.id;
+      const { status } = req.body;
+      const userId = req.user.claims.sub;
+
+      if (!status || !['active', 'completed'].includes(status)) {
+        return res.status(400).json({ error: "Status must be 'active' or 'completed'" });
+      }
+
+      // Get the incident to check if user is the creator
+      const incident = await storage.getIncident(incidentId);
+      if (!incident) {
+        return res.status(404).json({ error: "Incident not found" });
+      }
+
+      // Check if user is the creator (stored in properties.reporterId)
+      const reporterId = (incident.properties as any)?.reporterId;
+      if (reporterId !== userId) {
+        return res.status(403).json({ error: "Only the incident creator can update status" });
+      }
+
+      // Update the incident status
+      await storage.updateIncidentStatus(incidentId, status);
+      
+      res.json({ success: true, message: "Incident status updated successfully" });
+    } catch (error) {
+      console.error("Error updating incident status:", error);
+      res.status(500).json({ error: "Failed to update incident status" });
+    }
+  });
 
   // Comments API endpoints
   app.get("/api/incidents/:incidentId/comments", async (req, res) => {
