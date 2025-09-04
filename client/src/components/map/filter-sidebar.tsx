@@ -74,28 +74,48 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
 
   // Count incidents by category
   const getCategoryCount = (categoryId: string) => {
-    let userIncidents = incidents?.filter((i: any) => i.properties?.userReported && i.properties?.categoryId === categoryId) || [];
+    if (!incidents || !Array.isArray(incidents)) return 0;
     
-    // For wildlife category, also count legacy incidents that should be wildlife
-    if (categoryId === 'd03f47a9-10fb-4656-ae73-92e959d7566a') { // Wildlife & Nature ID
-      const legacyWildlifeIncidents = incidents?.filter((i: any) => {
+    const categoryMap = {
+      '792759f4-1b98-4665-b14c-44a54e9969e9': 'safety', // Safety & Crime
+      '9b1d58d9-cfd1-4c31-93e9-754276a5f265': 'infrastructure', // Infrastructure & Hazards  
+      '54d31da5-fc10-4ad2-8eca-04bac680e668': 'emergency', // Emergency Situations
+      'd03f47a9-10fb-4656-ae73-92e959d7566a': 'wildlife', // Wildlife & Nature
+      'deaca906-3561-4f80-b79f-ed99561c3b04': 'community', // Community Issues
+    };
+    
+    const targetType = categoryMap[categoryId as keyof typeof categoryMap];
+    
+    let count = incidents.filter((i: any) => {
+      const props = i.properties;
+      // Count by both categoryId and incidentType
+      return props?.categoryId === categoryId || 
+             props?.incidentType === targetType ||
+             props?.type === targetType;
+    }).length;
+    
+    // For wildlife category, also count legacy incidents
+    if (categoryId === 'd03f47a9-10fb-4656-ae73-92e959d7566a') {
+      const legacyWildlife = incidents.filter((i: any) => {
         const props = i.properties;
-        if (!props?.userReported || props?.categoryId) return false;
+        if (props?.categoryId || props?.incidentType) return false;
         const description = props?.description?.toLowerCase() || '';
-        const wildlifeType = props?.wildlifeType;
-        return wildlifeType || description.includes('snake') || description.includes('python') || 
+        return description.includes('snake') || description.includes('python') || 
                description.includes('animal') || description.includes('wildlife');
-      }) || [];
-      userIncidents = [...userIncidents, ...legacyWildlifeIncidents];
+      }).length;
+      count += legacyWildlife;
     }
     
-    return userIncidents.length;
+    return count;
   };
   
   const eventCounts = {
-    crashes: events?.filter((e: any) => e.properties.event_type === "Crash").length || 0,
-    hazards: events?.filter((e: any) => e.properties.event_type === "Hazard").length || 0,
-    restrictions: events?.filter((e: any) => e.properties.event_type === "Roadworks" || e.properties.event_type === "Special event").length || 0,
+    crashes: events?.filter((e: any) => e.properties?.event_type === "Crash" || e.properties?.eventType === "Crash").length || 0,
+    hazards: events?.filter((e: any) => e.properties?.event_type === "Hazard" || e.properties?.eventType === "Hazard").length || 0,
+    restrictions: events?.filter((e: any) => 
+      e.properties?.event_type === "Roadworks" || e.properties?.event_type === "Special event" ||
+      e.properties?.eventType === "Roadworks" || e.properties?.eventType === "Special event"
+    ).length || 0,
     incidents: incidents?.filter((i: any) => !i.properties?.userReported).length || 0,
   };
 
@@ -148,10 +168,80 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
         </div>
         
         <div className="p-4 space-y-6 overflow-y-auto" style={{ height: 'calc(100vh - 8rem)' }}>
+          {/* Traffic Events Section */}
+          <div>
+            <h2 className="text-lg font-semibold text-foreground mb-4">Traffic Events</h2>
+            
+            <button
+              onClick={() => toggleSection('traffic')}
+              className="flex items-center justify-between w-full p-2 text-left hover:bg-muted/50 rounded-md transition-colors mb-3"
+            >
+              <h3 className="text-sm font-medium text-foreground flex items-center gap-2">
+                <Car className="w-4 h-4 text-blue-600" />
+                Live Traffic
+              </h3>
+              {expandedSections.traffic ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+            </button>
+            
+            {expandedSections.traffic && (
+              <div className="ml-4 space-y-3">
+                <div className="flex items-center space-x-3">
+                  <Checkbox 
+                    id="filter-traffic-crashes"
+                    checked={filters.crashes === true}
+                    onCheckedChange={(checked) => onFilterChange('crashes', !!checked)}
+                    data-testid="checkbox-filter-crashes"
+                  />
+                  <Label htmlFor="filter-traffic-crashes" className="text-sm text-foreground flex-1">
+                    Crashes
+                  </Label>
+                  <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
+                    {eventCounts.crashes}
+                  </span>
+                </div>
+                
+                <div className="flex items-center space-x-3">
+                  <Checkbox 
+                    id="filter-traffic-hazards"
+                    checked={filters.hazards === true}
+                    onCheckedChange={(checked) => onFilterChange('hazards', !!checked)}
+                    data-testid="checkbox-filter-hazards"
+                  />
+                  <Label htmlFor="filter-traffic-hazards" className="text-sm text-foreground flex-1">
+                    Road Hazards
+                  </Label>
+                  <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
+                    {eventCounts.hazards}
+                  </span>
+                </div>
+                
+                <div className="flex items-center space-x-3">
+                  <Checkbox 
+                    id="filter-traffic-restrictions"
+                    checked={filters.restrictions === true}
+                    onCheckedChange={(checked) => onFilterChange('restrictions', !!checked)}
+                    data-testid="checkbox-filter-restrictions"
+                  />
+                  <Label htmlFor="filter-traffic-restrictions" className="text-sm text-foreground flex-1">
+                    Roadworks & Events
+                  </Label>
+                  <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
+                    {eventCounts.restrictions}
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+          
           {/* Incident Types - Main Section */}
           <div>
             <h2 className="text-lg font-semibold text-foreground mb-4">Incident Types</h2>
             
+            
+            {/* Debug info */}
+            <div className="text-xs text-gray-500 mb-2">
+              Categories: {categories?.length || 0} | Incidents: {incidents?.length || 0}
+            </div>
             
             {/* Individual Category Sections */}
             {categoriesLoading ? (
@@ -162,7 +252,7 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
               <div className="text-sm text-red-500 p-4 text-center">
                 Error loading categories: {categoriesError.message}
               </div>
-            ) : categories.length === 0 ? (
+            ) : !categories || categories.length === 0 ? (
               <div className="text-sm text-muted-foreground p-4 text-center">
                 No categories found
               </div>
