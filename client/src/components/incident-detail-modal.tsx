@@ -325,16 +325,30 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
 
   // User data mapping
   const getUserData = (userId: string) => {
+    // Check if this is the current logged-in user
+    if (user && userId === user.id) {
+      const displayName = user.displayName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username || 'You';
+      return {
+        name: displayName,
+        avatar: user.profileImageUrl || '',
+        location: user.homeSuburb || user.primarySuburb || 'Brisbane'
+      };
+    }
+    
+    // Mock users for demo purposes
     const users: Record<string, { name: string; avatar: string; location: string }> = {
       'user-001': { name: 'Sarah Chen', avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b1-0/0/photo-1494790108755-2616b612b1-0.jpg?w=150&h=150&fit=crop&crop=face', location: 'Woolloongabba' },
       'user-002': { name: 'Mike Thompson', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face', location: 'South Brisbane' },
       'user-003': { name: 'Emma Rodriguez', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face', location: 'West End' },
       'user-004': { name: 'James Wilson', avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face', location: 'Kangaroo Point' },
       'user-005': { name: 'Lisa Nguyen', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop&crop=face', location: 'Fortitude Valley' },
-      '40158122': { name: user?.firstName || 'You', avatar: user?.profileImageUrl || '', location: 'Brisbane' },
     };
     
-    return users[userId] || { name: `User ${userId.slice(-4)}`, avatar: '', location: 'Brisbane' };
+    return users[userId] || { 
+      name: `Community Member`, 
+      avatar: '', 
+      location: 'Queensland' 
+    };
   };
 
   const getSourceInfo = (incident: any) => {

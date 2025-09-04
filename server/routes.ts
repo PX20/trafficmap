@@ -681,11 +681,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { incidentId } = req.params;
       
       // Check if user object exists and has expected structure
-      console.log("DEBUG: req.user exists?", !!req.user);
-      console.log("DEBUG: req.user.id exists?", !!(req.user && req.user.id));
-      console.log("DEBUG: req.user.id value:", req.user?.id);
-      console.log("DEBUG: typeof req.user.id:", typeof req.user?.id);
-      
       if (!req.user || !req.user.id) {
         console.error("User object missing or malformed:", req.user);
         return res.status(401).json({ message: "User authentication failed" });
