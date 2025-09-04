@@ -125,7 +125,16 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
             });
 
             const popupContent = createEventPopup(feature.properties);
-            marker.bindPopup(popupContent);
+            marker.bindPopup(popupContent, {
+              maxWidth: 400,
+              maxHeight: 500,
+              autoPan: true,
+              autoPanPadding: [20, 20],
+              offset: [0, -10],
+              closeButton: true,
+              autoClose: true,
+              closeOnEscapeKey: true
+            });
 
             marker.addTo(mapInstanceRef.current!);
             newMarkers.push(marker);
@@ -181,7 +190,16 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
             });
 
             const popupContent = createIncidentPopup(feature.properties);
-            marker.bindPopup(popupContent);
+            marker.bindPopup(popupContent, {
+              maxWidth: 400,
+              maxHeight: 500,
+              autoPan: true,
+              autoPanPadding: [20, 20],
+              offset: [0, -10],
+              closeButton: true,
+              autoClose: true,
+              closeOnEscapeKey: true
+            });
 
             marker.addTo(mapInstanceRef.current!);
             newMarkers.push(marker);
