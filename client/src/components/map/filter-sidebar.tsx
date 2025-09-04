@@ -182,41 +182,49 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
     
     // Count incidents (QFES + community)
     if (incidents && Array.isArray(incidents)) {
-      count += incidents.filter((incident: any) => {
+      const matchingIncidents = incidents.filter((incident: any) => {
         const categorizedId = categorizeIncident(incident);
+        if (categoryId === 'deaca906-3561-4f80-b79f-ed99561c3b04' && categorizedId === categoryId) {
+          console.log('Community Issues incident found:', incident);
+        }
         return categorizedId === categoryId;
-      }).length;
+      });
+      count += matchingIncidents.length;
     }
     
     // Count traffic events  
     if (events && Array.isArray(events)) {
-      count += events.filter((event: any) => {
+      const matchingEvents = events.filter((event: any) => {
         const categorizedId = categorizeIncident(event);
+        if (categoryId === 'deaca906-3561-4f80-b79f-ed99561c3b04' && categorizedId === categoryId) {
+          console.log('Community Issues traffic event found:', event);
+        }
         return categorizedId === categoryId;
-      }).length;
+      });
+      count += matchingEvents.length;
     }
     
     return count;
   };
   
   const eventCounts = {
-    crashes: events?.filter((e: any) => {
+    crashes: Array.isArray(events) ? events.filter((e: any) => {
       const eventType = e.properties?.event_type || e.properties?.eventType || e.properties?.type;
       return eventType === "Crash" || eventType === "crash";
-    }).length || 0,
-    hazards: events?.filter((e: any) => {
+    }).length : 0,
+    hazards: Array.isArray(events) ? events.filter((e: any) => {
       const eventType = e.properties?.event_type || e.properties?.eventType || e.properties?.type;
       return eventType === "Hazard" || eventType === "hazard";
-    }).length || 0,
-    restrictions: events?.filter((e: any) => {
+    }).length : 0,
+    restrictions: Array.isArray(events) ? events.filter((e: any) => {
       const eventType = e.properties?.event_type || e.properties?.eventType || e.properties?.type;
       return eventType === "Roadworks" || eventType === "roadworks" || 
              eventType === "Special event" || eventType === "special_event";
-    }).length || 0,
-    officialIncidents: incidents?.filter((i: any) => !i.properties?.userReported).length || 0,
-    userReports: incidents?.filter((i: any) => i.properties?.userReported).length || 0,
-    totalEvents: (events?.length || 0) + (incidents?.length || 0),
-    totalStatewide: events?.length || 0,
+    }).length : 0,
+    officialIncidents: Array.isArray(incidents) ? incidents.filter((i: any) => !i.properties?.userReported).length : 0,
+    userReports: Array.isArray(incidents) ? incidents.filter((i: any) => i.properties?.userReported).length : 0,
+    totalEvents: (Array.isArray(events) ? events.length : 0) + (Array.isArray(incidents) ? incidents.length : 0),
+    totalStatewide: Array.isArray(events) ? events.length : 0,
   };
 
 
