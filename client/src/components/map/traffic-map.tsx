@@ -180,6 +180,16 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
           // Categorize incident using same logic as filter sidebar
           const categoryId = categorizeIncident(feature);
           
+          // Debug logging for incident filtering
+          console.log('Map filtering incident:', {
+            title: feature.properties?.title || 'No title',
+            categoryId,
+            filterEnabled: filters[categoryId as keyof typeof filters],
+            datasource: feature.properties?.datasource,
+            groupedType: feature.properties?.GroupedType,
+            location: feature.geometry?.coordinates
+          });
+          
           // Check if this category/subcategory is enabled in filters
           shouldShow = filters[categoryId as keyof typeof filters] === true;
           
