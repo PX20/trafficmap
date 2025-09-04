@@ -394,7 +394,7 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
         <!-- Simple Footer -->
         <div class="flex items-center justify-between py-2 border-t border-gray-100">
           <div class="flex items-center gap-3">
-            <button onclick="window.likeIncident('${properties.id}', 'traffic')" class="flex items-center gap-1 text-gray-500 hover:text-red-500 transition-colors like-button" data-incident-id="${properties.id}">
+            <button onclick="window.likeIncident('${properties.id}', 'traffic', event)" class="flex items-center gap-1 text-gray-500 hover:text-red-500 transition-colors like-button" data-incident-id="${properties.id}">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
               </svg>
@@ -484,7 +484,7 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
           <!-- Interactive Footer -->
           <div class="flex items-center justify-between pt-3 border-t border-gray-100">
             <div class="flex items-center gap-4">
-              <button onclick="window.likeIncident('${properties.id}', 'user-reported')" class="flex items-center gap-2 text-gray-600 hover:text-red-500 transition-colors group like-button" data-incident-id="${properties.id}">
+              <button onclick="window.likeIncident('${properties.id}', 'user-reported', event)" class="flex items-center gap-2 text-gray-600 hover:text-red-500 transition-colors group like-button" data-incident-id="${properties.id}">
                 <div class="p-1 rounded-full group-hover:bg-red-50 transition-colors">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
@@ -583,7 +583,7 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
         <!-- Interactive Footer -->
         <div class="flex items-center justify-between pt-3 border-t border-gray-100">
           <div class="flex items-center gap-4">
-            <button onclick="window.likeIncident('${properties.Master_Incident_Number || properties.id}', 'emergency')" class="flex items-center gap-2 text-gray-600 hover:text-red-500 transition-colors group like-button" data-incident-id="${properties.Master_Incident_Number || properties.id}">
+            <button onclick="window.likeIncident('${properties.Master_Incident_Number || properties.id}', 'emergency', event)" class="flex items-center gap-2 text-gray-600 hover:text-red-500 transition-colors group like-button" data-incident-id="${properties.Master_Incident_Number || properties.id}">
               <div class="p-1 rounded-full group-hover:bg-red-50 transition-colors">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
@@ -645,12 +645,31 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
   // Setup global functions for popup interactions
   useEffect(() => {
     // Add like functionality
-    (window as any).likeIncident = (incidentId: string, incidentType: string) => {
+    (window as any).likeIncident = (incidentId: string, incidentType: string, event: Event) => {
       // Simple like functionality - could be enhanced to save to database
-      const button = document.querySelector(`[data-incident-id="${incidentId}"] .like-button`);
-      if (button) {
-        button.classList.toggle('text-red-500');
-        button.classList.toggle('text-gray-500');
+      const button = event.target as HTMLElement;
+      const heartIcon = button.querySelector('svg') || button.closest('button')?.querySelector('svg');
+      
+      if (heartIcon) {
+        if (heartIcon.classList.contains('text-gray-500') || heartIcon.parentElement?.classList.contains('text-gray-500')) {
+          // Change to liked state (red)
+          heartIcon.setAttribute('fill', 'currentColor');
+          heartIcon.classList.remove('text-gray-500', 'text-gray-600');
+          heartIcon.classList.add('text-red-500');
+          if (heartIcon.parentElement) {
+            heartIcon.parentElement.classList.remove('text-gray-500', 'text-gray-600', 'hover:text-red-500');
+            heartIcon.parentElement.classList.add('text-red-500');
+          }
+        } else {
+          // Change to unliked state (gray)
+          heartIcon.setAttribute('fill', 'none');
+          heartIcon.classList.remove('text-red-500');
+          heartIcon.classList.add('text-gray-500', 'hover:text-red-500');
+          if (heartIcon.parentElement) {
+            heartIcon.parentElement.classList.remove('text-red-500');
+            heartIcon.parentElement.classList.add('text-gray-500', 'hover:text-red-500');
+          }
+        }
       }
     };
     
