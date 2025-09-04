@@ -657,6 +657,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/incidents/:incidentId/comments", isAuthenticated, async (req: any, res) => {
     try {
       const { incidentId } = req.params;
+      
+      // Check if user object exists and has expected structure
+      if (!req.user || !req.user.claims || !req.user.claims.sub) {
+        console.error("User object missing or malformed:", req.user);
+        return res.status(401).json({ message: "User authentication failed" });
+      }
+      
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
       
@@ -899,6 +906,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/notifications/unread-count', isAuthenticated, async (req: any, res) => {
     try {
+      if (!req.user || !req.user.claims || !req.user.claims.sub) {
+        return res.status(401).json({ message: "User authentication failed" });
+      }
+      
       const userId = req.user.claims.sub;
       const count = await storage.getUnreadNotificationCount(userId);
       res.json(count);
@@ -932,6 +943,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/messages/unread-count', isAuthenticated, async (req: any, res) => {
     try {
+      if (!req.user || !req.user.claims || !req.user.claims.sub) {
+        return res.status(401).json({ message: "User authentication failed" });
+      }
+      
       const userId = req.user.claims.sub;
       const count = await storage.getUnreadMessageCount(userId);
       res.json(count);
