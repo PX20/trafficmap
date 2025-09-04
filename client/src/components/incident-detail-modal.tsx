@@ -48,6 +48,54 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
 
   // Extract incident ID from the incident object (safe to call even if incident is null)
   const incidentId = incident ? getIncidentId(incident) : null;
+
+  // Share functionality
+  const handleShare = async () => {
+    if (!incident || !incidentId) return;
+
+    const shareUrl = `${window.location.origin}?incident=${encodeURIComponent(incidentId)}`;
+    const shareTitle = getIncidentTitle(incident);
+    const shareText = `${shareTitle} - ${getIncidentLocation(incident)}`;
+
+    // Try native Web Share API first (mobile devices)
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: shareTitle,
+          text: shareText,
+          url: shareUrl,
+        });
+        toast({
+          title: "Shared successfully",
+          description: "Incident details have been shared",
+        });
+        return;
+      } catch (error) {
+        // User cancelled sharing or error occurred, fall back to clipboard
+      }
+    }
+
+    // Fallback to clipboard copy (desktop browsers)
+    try {
+      await navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
+      toast({
+        title: "Link copied",
+        description: "Incident link has been copied to your clipboard",
+      });
+    } catch (error) {
+      // Final fallback - show URL in a prompt
+      const fallbackText = `${shareText}\n${shareUrl}`;
+      if (window.prompt) {
+        window.prompt("Copy this link to share the incident:", fallbackText);
+      } else {
+        toast({
+          title: "Share link",
+          description: shareUrl,
+          duration: 10000,
+        });
+      }
+    }
+  };
   
 
   const { data: comments = [], isLoading: commentsLoading } = useQuery({
@@ -544,7 +592,13 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
                 <MessageCircle className="w-4 h-4" />
                 <span className="text-sm font-medium">{comments.length || 0}</span>
               </Button>
-              <Button variant="ghost" size="sm" className="flex items-center space-x-2 text-muted-foreground hover:text-green-500 transition-colors">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="flex items-center space-x-2 text-muted-foreground hover:text-green-500 transition-colors"
+                onClick={handleShare}
+                data-testid="button-share-incident"
+              >
                 <Share2 className="w-4 h-4" />
                 <span className="text-sm">Share</span>
               </Button>
