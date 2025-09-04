@@ -5,7 +5,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { ChevronDown, ChevronRight, Car, Shield, Users, MapPin, Flame } from "lucide-react";
+import { ChevronDown, ChevronRight, Car, Shield, Users, MapPin, Flame, Zap, Trees } from "lucide-react";
 import type { FilterState } from "@/pages/home";
 import { LocationAutocomplete } from "@/components/location-autocomplete";
 import { useTrafficData } from "@/hooks/use-traffic-data";
@@ -106,6 +106,7 @@ export function SimpleFilterSidebar({ isOpen, filters, onFilterChange, onClose }
                     onCheckedChange={(checked) => onFilterChange('showTrafficEvents', !!checked)}
                     data-testid="checkbox-filter-tmr"
                   />
+                  <Car className="w-4 h-4 text-orange-500" />
                   <Label htmlFor="filter-tmr" className="text-sm text-foreground flex-1">
                     TMR Traffic Events
                   </Label>
@@ -118,6 +119,7 @@ export function SimpleFilterSidebar({ isOpen, filters, onFilterChange, onClose }
                     onCheckedChange={(checked) => onFilterChange('showIncidents', !!checked)}
                     data-testid="checkbox-filter-esq"
                   />
+                  <Zap className="w-4 h-4 text-blue-500" />
                   <Label htmlFor="filter-esq" className="text-sm text-foreground flex-1">
                     ESQ Emergency Data
                   </Label>
@@ -130,6 +132,7 @@ export function SimpleFilterSidebar({ isOpen, filters, onFilterChange, onClose }
                     onCheckedChange={(checked) => onFilterChange('showQFES', !!checked)}
                     data-testid="checkbox-filter-qfes"
                   />
+                  <Flame className="w-4 h-4 text-red-500" />
                   <Label htmlFor="filter-qfes" className="text-sm text-foreground flex-1">
                     QFES Fire & Emergency
                   </Label>
@@ -160,6 +163,7 @@ export function SimpleFilterSidebar({ isOpen, filters, onFilterChange, onClose }
                     onCheckedChange={(checked) => onFilterChange('showUserSafetyCrime', !!checked)}
                     data-testid="checkbox-filter-user-safety"
                   />
+                  <Shield className="w-4 h-4 text-purple-500" />
                   <Label htmlFor="filter-user-safety" className="text-sm text-foreground flex-1">
                     Safety & Crime
                   </Label>
@@ -172,6 +176,7 @@ export function SimpleFilterSidebar({ isOpen, filters, onFilterChange, onClose }
                     onCheckedChange={(checked) => onFilterChange('showUserWildlife', !!checked)}
                     data-testid="checkbox-filter-user-wildlife"
                   />
+                  <Trees className="w-4 h-4 text-green-600" />
                   <Label htmlFor="filter-user-wildlife" className="text-sm text-foreground flex-1">
                     Wildlife & Nature
                   </Label>
@@ -184,6 +189,7 @@ export function SimpleFilterSidebar({ isOpen, filters, onFilterChange, onClose }
                     onCheckedChange={(checked) => onFilterChange('showUserCommunity', !!checked)}
                     data-testid="checkbox-filter-user-community"
                   />
+                  <Users className="w-4 h-4 text-gray-500" />
                   <Label htmlFor="filter-user-community" className="text-sm text-foreground flex-1">
                     Community Issues
                   </Label>
@@ -196,6 +202,7 @@ export function SimpleFilterSidebar({ isOpen, filters, onFilterChange, onClose }
                     onCheckedChange={(checked) => onFilterChange('showUserTraffic', !!checked)}
                     data-testid="checkbox-filter-user-traffic"
                   />
+                  <Car className="w-4 h-4 text-orange-500" />
                   <Label htmlFor="filter-user-traffic" className="text-sm text-foreground flex-1">
                     Road & Traffic
                   </Label>
