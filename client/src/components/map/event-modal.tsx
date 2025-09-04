@@ -166,11 +166,7 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
               <div className="flex items-center space-x-2 text-xs text-muted-foreground">
                 <Clock className="w-3 h-3" />
                 <span data-testid="text-event-time">
-                  {(() => {
-                    const timestamp = props.published || props.Response_Date || props.createdAt || props.timeReported;
-                    console.log('Popup timestamp for incident', props.Master_Incident_Number || props.id, ':', timestamp);
-                    return formatDate(timestamp);
-                  })()}
+                  {formatDate(props.published || props.Response_Date || props.createdAt || props.timeReported)}
                 </span>
               </div>
             </div>

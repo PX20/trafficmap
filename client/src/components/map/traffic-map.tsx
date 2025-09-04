@@ -374,6 +374,21 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
     });
   };
 
+  const formatEventTime = (dateStr: string) => {
+    if (!dateStr) return "Unknown time";
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffMins < 1) return "Just now";
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    return `${diffDays}d ago`;
+  };
+
   const createEventPopup = (properties: any) => {
     // Get event type and limit to 25 characters with ellipsis
     const eventType = properties.event_type || properties.description || 'Traffic Event';
@@ -401,7 +416,7 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
                 <svg class="w-3.5 h-3.5 text-orange-500" fill="currentColor" viewBox="0 0 20 20">
                   <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path>
                 </svg>
-                <span class="font-medium">2h ago</span>
+                <span class="font-medium">${formatEventTime(properties.published || properties.Response_Date || properties.createdAt || properties.timeReported)}</span>
               </div>
               <span class="px-2 py-0.5 bg-orange-100 text-orange-700 rounded-full text-xs font-medium">Live</span>
             </div>
@@ -488,7 +503,7 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
                   <svg class="w-3.5 h-3.5 text-purple-500" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path>
                   </svg>
-                  <span class="font-medium">4h ago</span>
+                  <span class="font-medium">${formatEventTime(properties.timeReported || properties.createdAt || properties.Response_Date)}</span>
                 </div>
                 <span class="px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full text-xs font-medium">Community</span>
               </div>
@@ -593,7 +608,7 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
                 <svg class="w-3.5 h-3.5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
                   <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path>
                 </svg>
-                <span class="font-medium">30m ago</span>
+                <span class="font-medium">${formatEventTime(properties.Response_Date || properties.createdAt || properties.published)}</span>
               </div>
               <span class="px-2 py-0.5 bg-red-100 text-red-700 rounded-full text-xs font-medium">Active</span>
             </div>
