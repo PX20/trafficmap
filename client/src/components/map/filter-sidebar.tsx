@@ -110,13 +110,22 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
   };
   
   const eventCounts = {
-    crashes: events?.filter((e: any) => e.properties?.event_type === "Crash" || e.properties?.eventType === "Crash").length || 0,
-    hazards: events?.filter((e: any) => e.properties?.event_type === "Hazard" || e.properties?.eventType === "Hazard").length || 0,
-    restrictions: events?.filter((e: any) => 
-      e.properties?.event_type === "Roadworks" || e.properties?.event_type === "Special event" ||
-      e.properties?.eventType === "Roadworks" || e.properties?.eventType === "Special event"
-    ).length || 0,
-    incidents: incidents?.filter((i: any) => !i.properties?.userReported).length || 0,
+    crashes: events?.filter((e: any) => {
+      const eventType = e.properties?.event_type || e.properties?.eventType || e.properties?.type;
+      return eventType === "Crash" || eventType === "crash";
+    }).length || 0,
+    hazards: events?.filter((e: any) => {
+      const eventType = e.properties?.event_type || e.properties?.eventType || e.properties?.type;
+      return eventType === "Hazard" || eventType === "hazard";
+    }).length || 0,
+    restrictions: events?.filter((e: any) => {
+      const eventType = e.properties?.event_type || e.properties?.eventType || e.properties?.type;
+      return eventType === "Roadworks" || eventType === "roadworks" || 
+             eventType === "Special event" || eventType === "special_event";
+    }).length || 0,
+    officialIncidents: incidents?.filter((i: any) => !i.properties?.userReported).length || 0,
+    userReports: incidents?.filter((i: any) => i.properties?.userReported).length || 0,
+    totalEvents: (events?.length || 0) + (incidents?.length || 0),
   };
 
 
@@ -173,9 +182,12 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
             <h2 className="text-lg font-semibold text-foreground mb-4">Incident Types</h2>
             
             
-            {/* Debug info */}
-            <div className="text-xs text-gray-500 mb-2">
-              Categories: {categories?.length || 0} | Incidents: {incidents?.length || 0}
+            {/* Data source info */}
+            <div className="text-xs text-gray-500 mb-4 p-2 bg-muted/30 rounded">
+              📊 <strong>Data Sources:</strong><br/>
+              🌏 Official QLD Traffic: {events?.length || 0} statewide events<br/>
+              🏘️ Community Reports: {eventCounts.userReports} local incidents<br/>
+              📍 Total on Map: {eventCounts.totalEvents} items
             </div>
             
             {/* Traffic Events Section */}
