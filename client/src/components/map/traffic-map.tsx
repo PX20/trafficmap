@@ -292,19 +292,35 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
     return 'deaca906-3561-4f80-b79f-ed99561c3b04'; // Community Issues
   };
 
-  const getMarkerColor = (eventType: string) => {
-    const colors = {
-      'crash': '#ef4444',
-      'hazard': '#f59e0b',
-      'roadworks': '#f97316',
-      'special event': '#f97316',
-      'incident': '#dc2626',
-      'crime': '#9333ea',
-      'suspicious': '#f59e0b',
-      'emergency': '#4f46e5',
-      'weather': '#10b981'
-    };
-    return colors[eventType as keyof typeof colors] || '#6b7280';
+  const getMarkerColor = (markerType: string) => {
+    // Simplified color scheme - one color per category
+    switch(markerType.toLowerCase()) {
+      // Traffic events - all get orange (TMR)
+      case 'crash':
+      case 'hazard': 
+      case 'restriction':
+      case 'incident':
+      case 'traffic':
+      case 'roadworks':
+      case 'special event':
+        return '#f97316'; // Orange - matches TMR filter icon
+      // Crime and safety - purple
+      case 'crime':
+      case 'suspicious':
+        return '#9333ea'; // Purple - matches safety filter icon
+      // Emergency - blue for ESQ
+      case 'emergency':
+        return '#4f46e5'; // Blue - matches emergency filter icon
+      // Wildlife - green
+      case 'wildlife':
+        return '#16a34a'; // Green - matches wildlife filter icon
+      // Community issues - gray
+      case 'community':
+        return '#6b7280'; // Gray - matches community filter icon
+      // Default
+      default:
+        return '#6b7280'; // Gray
+    }
   };
 
   const createCustomMarker = (markerType: string, color: string) => {
