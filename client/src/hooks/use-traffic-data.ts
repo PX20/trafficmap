@@ -1,12 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
+import type { FilterState } from "@/pages/home";
 
 export interface ProcessedTrafficData {
   events: any[];
   incidents: any[];
   counts: {
-    tmr: number;
-    esq: number;
-    qfes: number;
+    total: number;
+    trafficEvents: number;
+    emergencyIncidents: number;
+    qfesIncidents: number;
     userSafetyCrime: number;
     userWildlife: number;
     userCommunity: number;
@@ -14,18 +16,6 @@ export interface ProcessedTrafficData {
   };
   filteredEvents: any[];
   filteredIncidents: any[];
-}
-
-export interface FilterState {
-  homeLocation?: string;
-  showTrafficEvents?: boolean;
-  showIncidents?: boolean;
-  showQFES?: boolean;
-  showUserSafetyCrime?: boolean;
-  showUserWildlife?: boolean;
-  showUserCommunity?: boolean;
-  showUserTraffic?: boolean;
-  autoRefresh?: boolean;
 }
 
 // Shared helper function to identify QFES incidents
@@ -130,22 +120,31 @@ export function useTrafficData(filters: FilterState): ProcessedTrafficData {
   const localEsqIncidents = localNonUserIncidents.filter(incident => !isQFESIncident(incident));
   
   // Calculate counts based on LOCAL data (for filter sidebar)
+  const trafficEvents = localEvents.length;
+  const emergencyIncidents = localEsqIncidents.length;
+  const qfesIncidents = localQfesIncidents.length;
+  const userSafetyCrime = localIncidents.filter((i: any) => 
+    i.properties?.userReported && i.properties?.incidentType === 'crime'
+  ).length;
+  const userWildlife = localIncidents.filter((i: any) => 
+    i.properties?.userReported && i.properties?.incidentType === 'wildlife'
+  ).length;
+  const userCommunity = localIncidents.filter((i: any) => 
+    i.properties?.userReported && !['crime', 'wildlife', 'traffic'].includes(i.properties?.incidentType)
+  ).length;
+  const userTraffic = localIncidents.filter((i: any) => 
+    i.properties?.userReported && i.properties?.incidentType === 'traffic'
+  ).length;
+  
   const counts = {
-    tmr: localEvents.length,
-    esq: localEsqIncidents.length,
-    qfes: localQfesIncidents.length,
-    userSafetyCrime: localIncidents.filter((i: any) => 
-      i.properties?.userReported && i.properties?.incidentType === 'crime'
-    ).length,
-    userWildlife: localIncidents.filter((i: any) => 
-      i.properties?.userReported && i.properties?.incidentType === 'wildlife'
-    ).length,
-    userCommunity: localIncidents.filter((i: any) => 
-      i.properties?.userReported && !['crime', 'wildlife', 'traffic'].includes(i.properties?.incidentType)
-    ).length,
-    userTraffic: localIncidents.filter((i: any) => 
-      i.properties?.userReported && i.properties?.incidentType === 'traffic'
-    ).length,
+    total: trafficEvents + emergencyIncidents + qfesIncidents + userSafetyCrime + userWildlife + userCommunity + userTraffic,
+    trafficEvents,
+    emergencyIncidents,
+    qfesIncidents,
+    userSafetyCrime,
+    userWildlife,
+    userCommunity,
+    userTraffic,
   };
 
   // Apply filtering for display based on ALL data (for map)
