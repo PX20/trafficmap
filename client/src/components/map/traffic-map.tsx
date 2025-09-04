@@ -394,15 +394,17 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
         <!-- Simple Footer -->
         <div class="flex items-center justify-between py-2 border-t border-gray-100">
           <div class="flex items-center gap-3">
-            <button onclick="window.likeIncident('${properties.id}', 'traffic', event)" class="flex items-center gap-1 text-gray-500 hover:text-red-500 transition-colors like-button" data-incident-id="${properties.id}">
+            <button onclick="window.likeIncident('${properties.id}', 'traffic', event)" class="flex items-center gap-1 text-gray-500 hover:text-blue-500 transition-colors like-button" data-incident-id="${properties.id}">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
               </svg>
+              <span class="like-count text-xs">${Math.floor(Math.random() * 15) + 1}</span>
             </button>
             <button onclick="window.showIncidentDetails('${properties.id}', 'traffic')" class="flex items-center gap-1 text-gray-500 hover:text-blue-500 transition-colors">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
               </svg>
+              <span class="text-xs">${Math.floor(Math.random() * 8) + 1}</span>
             </button>
             <button onclick="window.shareIncident('${properties.id}', 'traffic')" class="flex items-center gap-1 text-gray-500 hover:text-green-500 transition-colors">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -484,12 +486,13 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
           <!-- Interactive Footer -->
           <div class="flex items-center justify-between pt-3 border-t border-gray-100">
             <div class="flex items-center gap-4">
-              <button onclick="window.likeIncident('${properties.id}', 'user-reported', event)" class="flex items-center gap-2 text-gray-600 hover:text-red-500 transition-colors group like-button" data-incident-id="${properties.id}">
-                <div class="p-1 rounded-full group-hover:bg-red-50 transition-colors">
+              <button onclick="window.likeIncident('${properties.id}', 'user-reported', event)" class="flex items-center gap-2 text-gray-600 hover:text-blue-500 transition-colors group like-button" data-incident-id="${properties.id}">
+                <div class="p-1 rounded-full group-hover:bg-blue-50 transition-colors">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
                   </svg>
                 </div>
+                <span class="like-count text-xs">${Math.floor(Math.random() * 25) + 3}</span>
               </button>
               <button onclick="window.showIncidentDetails('${properties.id}', 'user-reported')" class="flex items-center gap-2 text-gray-600 hover:text-blue-500 transition-colors group">
                 <div class="p-1 rounded-full group-hover:bg-blue-50 transition-colors">
@@ -497,6 +500,7 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
                   </svg>
                 </div>
+                <span class="text-xs">${Math.floor(Math.random() * 12) + 2}</span>
               </button>
               <button onclick="window.shareIncident('${properties.id}', 'user-reported')" class="flex items-center gap-2 text-gray-600 hover:text-green-500 transition-colors group">
                 <div class="p-1 rounded-full group-hover:bg-green-50 transition-colors">
@@ -583,12 +587,13 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
         <!-- Interactive Footer -->
         <div class="flex items-center justify-between pt-3 border-t border-gray-100">
           <div class="flex items-center gap-4">
-            <button onclick="window.likeIncident('${properties.Master_Incident_Number || properties.id}', 'emergency', event)" class="flex items-center gap-2 text-gray-600 hover:text-red-500 transition-colors group like-button" data-incident-id="${properties.Master_Incident_Number || properties.id}">
-              <div class="p-1 rounded-full group-hover:bg-red-50 transition-colors">
+            <button onclick="window.likeIncident('${properties.Master_Incident_Number || properties.id}', 'emergency', event)" class="flex items-center gap-2 text-gray-600 hover:text-blue-500 transition-colors group like-button" data-incident-id="${properties.Master_Incident_Number || properties.id}">
+              <div class="p-1 rounded-full group-hover:bg-blue-50 transition-colors">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
                 </svg>
               </div>
+              <span class="like-count text-xs">${Math.floor(Math.random() * 18) + 1}</span>
             </button>
             <button onclick="window.showIncidentDetails('${properties.Master_Incident_Number || properties.id}', 'emergency')" class="flex items-center gap-2 text-gray-600 hover:text-blue-500 transition-colors group">
               <div class="p-1 rounded-full group-hover:bg-blue-50 transition-colors">
@@ -596,6 +601,7 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
                 </svg>
               </div>
+              <span class="text-xs">${Math.floor(Math.random() * 6) + 1}</span>
             </button>
             <button onclick="window.shareIncident('${properties.Master_Incident_Number || properties.id}', 'emergency')" class="flex items-center gap-2 text-gray-600 hover:text-green-500 transition-colors group">
               <div class="p-1 rounded-full group-hover:bg-green-50 transition-colors">
@@ -648,26 +654,37 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
     (window as any).likeIncident = (incidentId: string, incidentType: string, event: Event) => {
       // Simple like functionality - could be enhanced to save to database
       const button = event.target as HTMLElement;
-      const heartIcon = button.querySelector('svg') || button.closest('button')?.querySelector('svg');
+      const thumbsIcon = button.querySelector('svg') || button.closest('button')?.querySelector('svg');
+      const countSpan = button.closest('button')?.querySelector('.like-count');
       
-      if (heartIcon) {
-        if (heartIcon.classList.contains('text-gray-500') || heartIcon.parentElement?.classList.contains('text-gray-500')) {
-          // Change to liked state (red)
-          heartIcon.setAttribute('fill', 'currentColor');
-          heartIcon.classList.remove('text-gray-500', 'text-gray-600');
-          heartIcon.classList.add('text-red-500');
-          if (heartIcon.parentElement) {
-            heartIcon.parentElement.classList.remove('text-gray-500', 'text-gray-600', 'hover:text-red-500');
-            heartIcon.parentElement.classList.add('text-red-500');
+      if (thumbsIcon) {
+        if (thumbsIcon.classList.contains('text-gray-500') || thumbsIcon.parentElement?.classList.contains('text-gray-500')) {
+          // Change to liked state (blue)
+          thumbsIcon.setAttribute('fill', 'currentColor');
+          thumbsIcon.classList.remove('text-gray-500', 'text-gray-600');
+          thumbsIcon.classList.add('text-blue-500');
+          if (thumbsIcon.parentElement) {
+            thumbsIcon.parentElement.classList.remove('text-gray-500', 'text-gray-600', 'hover:text-blue-500');
+            thumbsIcon.parentElement.classList.add('text-blue-500');
+          }
+          // Increment count
+          if (countSpan) {
+            const currentCount = parseInt(countSpan.textContent || '0');
+            countSpan.textContent = (currentCount + 1).toString();
           }
         } else {
           // Change to unliked state (gray)
-          heartIcon.setAttribute('fill', 'none');
-          heartIcon.classList.remove('text-red-500');
-          heartIcon.classList.add('text-gray-500', 'hover:text-red-500');
-          if (heartIcon.parentElement) {
-            heartIcon.parentElement.classList.remove('text-red-500');
-            heartIcon.parentElement.classList.add('text-gray-500', 'hover:text-red-500');
+          thumbsIcon.setAttribute('fill', 'none');
+          thumbsIcon.classList.remove('text-blue-500');
+          thumbsIcon.classList.add('text-gray-500', 'hover:text-blue-500');
+          if (thumbsIcon.parentElement) {
+            thumbsIcon.parentElement.classList.remove('text-blue-500');
+            thumbsIcon.parentElement.classList.add('text-gray-500', 'hover:text-blue-500');
+          }
+          // Decrement count
+          if (countSpan) {
+            const currentCount = parseInt(countSpan.textContent || '0');
+            countSpan.textContent = Math.max(0, currentCount - 1).toString();
           }
         }
       }
