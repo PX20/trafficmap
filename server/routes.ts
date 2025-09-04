@@ -327,10 +327,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
               title: incident.title || props.title
             })
           },
-          geometry: incident.geometry || {
-            type: "Point",
-            coordinates: [153.0251, -27.4698] // Default to Brisbane
-          }
+          geometry: (() => {
+            // Use the robust coordinate extraction function
+            const { extractCoordinatesFromGeometry } = require('./region-utils');
+            const coords = extractCoordinatesFromGeometry(incident.geometry);
+            
+            if (coords) {
+              // Valid coordinates found, use them (convert back to [lng, lat] for GeoJSON)
+              const [lat, lng] = coords;
+              return {
+                type: "Point", 
+                coordinates: [lng, lat]
+              };
+            } else {
+              // No valid coordinates, use Brisbane default
+              return {
+                type: "Point",
+                coordinates: [153.0251, -27.4698] // Default to Brisbane
+              };
+            }
+          })()
         };
       });
       

@@ -232,8 +232,6 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
 
               marker.addTo(mapInstanceRef.current!);
               newMarkers.push(marker);
-            } else {
-              console.log('Incident missing coordinates:', feature.properties?.Master_Incident_Number || feature.properties?.id, feature.properties);
             }
           }
         }
