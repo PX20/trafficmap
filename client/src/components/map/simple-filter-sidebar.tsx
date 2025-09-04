@@ -33,8 +33,18 @@ export function SimpleFilterSidebar({ isOpen, filters, onFilterChange, onClose }
   };
   
   const { data: events, refetch: refetchEvents } = useQuery({
-    queryKey: ["/api/traffic/events"],
-    queryFn: getTrafficEvents,
+    queryKey: ["/api/traffic/events", filters.homeLocation],
+    queryFn: async () => {
+      // Extract just the suburb name from location like "Caloundra 4551" -> "Caloundra"  
+      const suburb = filters.homeLocation?.split(' ')[0] || '';
+      const url = suburb 
+        ? `/api/traffic/events?suburb=${encodeURIComponent(suburb)}`
+        : '/api/traffic/events';
+      
+      const response = await fetch(url);
+      if (!response.ok) throw new Error('Failed to fetch traffic events');
+      return response.json();
+    },
     select: (data: any) => {
       const features = data?.features || [];
       return Array.isArray(features) ? features : [];
