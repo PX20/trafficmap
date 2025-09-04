@@ -514,169 +514,226 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md max-h-[80vh] flex flex-col p-0" data-testid="modal-incident-details">
-        <DialogHeader className="p-4 pb-2 flex-shrink-0">
-          {/* Compact User Header */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Avatar className="w-10 h-10 ring-2 ring-primary/20">
-                <AvatarFallback className={`${getSourceInfo(incident).color} text-white font-bold text-sm shadow-lg`}>
+      <DialogContent className="max-w-lg max-h-[85vh] flex flex-col p-0 bg-gradient-to-br from-white via-gray-50 to-white border-0 shadow-2xl overflow-hidden" data-testid="modal-incident-details">
+        {/* Decorative Background Elements */}
+        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-200/30 to-purple-200/30 rounded-full blur-2xl"></div>
+        <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-br from-orange-200/20 to-pink-200/20 rounded-full blur-lg"></div>
+        
+        <DialogHeader className="relative p-6 pb-4 flex-shrink-0 bg-gradient-to-r from-gray-50/80 to-white/80 backdrop-blur-sm">
+          {/* Enhanced Header */}
+          <div className="flex items-center gap-4">
+            <div className="relative">
+              <Avatar className="w-14 h-14 ring-4 ring-white shadow-xl">
+                <AvatarFallback className={`${getSourceInfo(incident).color} text-white font-bold text-lg`}>
                   {getSourceInfo(incident).avatar}
                 </AvatarFallback>
               </Avatar>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <h4 className="font-medium text-foreground text-sm truncate">
-                    {getSourceInfo(incident).name}
-                  </h4>
-                  <Badge variant="secondary" className="text-xs px-1.5 py-0.5 shrink-0">
-                    {getSourceInfo(incident).type.split(' ')[0]}
-                  </Badge>
-                </div>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <Clock className="w-3 h-3" />
-                  <span>{getTimeAgo(
+              <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white animate-pulse"></div>
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-3 mb-1">
+                <h4 className="font-bold text-gray-900 text-lg truncate">
+                  {getSourceInfo(incident).name}
+                </h4>
+                <Badge variant="secondary" className="px-3 py-1 bg-gradient-to-r from-blue-100 to-purple-100 text-blue-700 border-blue-200 font-medium">
+                  {getSourceInfo(incident).type.split(' ')[0]}
+                </Badge>
+              </div>
+              <div className="flex items-center gap-3 text-sm text-gray-600">
+                <div className="flex items-center gap-1">
+                  <Clock className="w-4 h-4 text-blue-500" />
+                  <span className="font-medium">{getTimeAgo(
                     incident.properties?.Response_Date || 
                     incident.properties?.last_updated || 
                     incident.properties?.createdAt
                   )}</span>
                 </div>
+                <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">Live</span>
               </div>
             </div>
-            <Button variant="ghost" size="sm" className="w-8 h-8 p-0 shrink-0">
-              <MoreHorizontal className="w-4 h-4" />
+            <Button variant="ghost" size="sm" className="w-10 h-10 p-0 shrink-0 rounded-full hover:bg-gray-100">
+              <MoreHorizontal className="w-5 h-5 text-gray-500" />
             </Button>
           </div>
         </DialogHeader>
         
-        {/* Scrollable Content Container */}
-        <div className="flex-1 overflow-y-auto">
-          {/* Full Incident Details */}
-          <div className="px-4 py-3 space-y-4">
-            <div className="flex items-start gap-3">
-            <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
-              {getIncidentIcon(incident)}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-start justify-between gap-2 mb-2">
-                <DialogTitle className="text-lg font-semibold leading-tight">
-                  {getIncidentTitle(incident)}
-                </DialogTitle>
-                {getStatusBadge(incident)}
-              </div>
-              <div className="flex items-center gap-1 text-sm text-muted-foreground mb-3">
-                <MapPin className="w-4 h-4" />
-                <span>{getIncidentLocation(incident)}</span>
-              </div>
+        {/* Enhanced Scrollable Content Container */}
+        <div className="relative flex-1 overflow-y-auto">
+          {/* Main Incident Card */}
+          <div className="p-6 space-y-6">
+            <div className="relative p-6 rounded-2xl bg-gradient-to-br from-white via-gray-50 to-white border border-gray-100 shadow-lg overflow-hidden">
+              {/* Content decorative elements */}
+              <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-blue-200/20 to-purple-200/20 rounded-full blur-lg"></div>
               
-              {/* Full Description */}
-              <div className="space-y-3">
-                <div className="text-sm text-foreground leading-relaxed">
-                  {getIncidentDescription(incident)}
+              <div className="relative flex items-start gap-4">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-lg">
+                  {getIncidentIcon(incident)}
                 </div>
-                
-                
-                {/* Traffic Advice */}
-                {incident.type === 'traffic' && incident.properties?.advice && (
-                  <div className="bg-amber-50 dark:bg-amber-950 p-3 rounded-lg border-l-4 border-amber-400">
-                    <h4 className="font-medium text-amber-900 dark:text-amber-100 mb-1">Advice</h4>
-                    <p className="text-sm text-amber-800 dark:text-amber-200">{incident.properties.advice}</p>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between gap-3 mb-3">
+                    <DialogTitle className="text-xl font-bold text-gray-900 leading-tight">
+                      {getIncidentTitle(incident)}
+                    </DialogTitle>
+                    {getStatusBadge(incident)}
                   </div>
-                )}
+                  <div className="flex items-center gap-2 text-sm text-gray-700 mb-4">
+                    <div className="p-1.5 bg-blue-500 rounded-lg">
+                      <MapPin className="w-3.5 h-3.5 text-white" />
+                    </div>
+                    <span className="font-semibold">{getIncidentLocation(incident)}</span>
+                  </div>
+                  
+                  {/* Enhanced Description */}
+                  <div className="space-y-4">
+                    <div className="text-sm text-gray-700 leading-relaxed bg-white/80 p-4 rounded-xl border border-gray-200">
+                      {getIncidentDescription(incident)}
+                    </div>
                 
-                {/* Emergency Incident Details */}
-                {!incident.properties?.userReported && incident.type !== 'traffic' && (
-                  <div className="space-y-2">
-                    {incident.properties?.Priority && incident.properties.Priority !== 'Unknown' && (
-                      <div className="bg-red-50 dark:bg-red-950 p-3 rounded-lg border-l-4 border-red-400">
-                        <h4 className="font-medium text-red-900 dark:text-red-100 mb-1">Priority Level</h4>
-                        <p className="text-sm text-red-800 dark:text-red-200 font-medium">{incident.properties.Priority}</p>
+                
+                    {/* Enhanced Traffic Advice */}
+                    {incident.type === 'traffic' && incident.properties?.advice && (
+                      <div className="relative p-4 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 overflow-hidden">
+                        <div className="absolute top-0 right-0 w-12 h-12 bg-gradient-to-br from-amber-200/30 to-orange-200/30 rounded-full blur-lg"></div>
+                        <div className="relative flex items-start gap-3">
+                          <div className="p-2 bg-amber-500 rounded-lg">
+                            <AlertTriangle className="w-4 h-4 text-white" />
+                          </div>
+                          <div>
+                            <h4 className="font-bold text-amber-900 mb-2 text-base">Advice</h4>
+                            <p className="text-sm text-amber-800 font-medium leading-relaxed">{incident.properties.advice}</p>
+                          </div>
+                        </div>
                       </div>
                     )}
-                    
-                    {incident.properties?.CurrentStatus && incident.properties.CurrentStatus !== 'Unknown' && (
-                      <div className="bg-gray-50 dark:bg-gray-900 p-3 rounded-lg border-l-4 border-gray-400">
-                        <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-1">Current Status</h4>
-                        <p className="text-sm text-gray-800 dark:text-gray-200">{incident.properties.CurrentStatus}</p>
-                      </div>
-                    )}
-                    
-                    {incident.properties?.Master_Incident_Number && (
-                      <div className="text-xs text-muted-foreground">
-                        <strong>Incident #:</strong> {incident.properties.Master_Incident_Number}
-                      </div>
-                    )}
-                  </div>
-                )}
                 
-                {/* Community Report Details */}
-                {incident.properties?.userReported && incident.properties?.description && (
-                  <div className="bg-purple-50 dark:bg-purple-950 p-3 rounded-lg border-l-4 border-purple-400">
-                    <h4 className="font-medium text-purple-900 dark:text-purple-100 mb-1">Reporter Details</h4>
-                    <p className="text-sm text-purple-800 dark:text-purple-200">{incident.properties.description}</p>
+                    {/* Enhanced Emergency Incident Details */}
+                    {!incident.properties?.userReported && incident.type !== 'traffic' && (
+                      <div className="space-y-3">
+                        {incident.properties?.Priority && incident.properties.Priority !== 'Unknown' && (
+                          <div className="relative p-4 rounded-xl bg-gradient-to-r from-red-50 to-pink-50 border border-red-200 overflow-hidden">
+                            <div className="absolute top-0 right-0 w-12 h-12 bg-gradient-to-br from-red-200/30 to-pink-200/30 rounded-full blur-lg"></div>
+                            <div className="relative flex items-start gap-3">
+                              <div className="p-2 bg-red-500 rounded-lg">
+                                <Zap className="w-4 h-4 text-white" />
+                              </div>
+                              <div>
+                                <h4 className="font-bold text-red-900 mb-2 text-base">Priority Level</h4>
+                                <p className="text-lg text-red-800 font-bold">{incident.properties.Priority}</p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                        
+                        {incident.properties?.CurrentStatus && incident.properties.CurrentStatus !== 'Unknown' && (
+                          <div className="relative p-4 rounded-xl bg-gradient-to-r from-gray-50 to-blue-50 border border-gray-200 overflow-hidden">
+                            <div className="relative flex items-start gap-3">
+                              <div className="p-2 bg-gray-500 rounded-lg">
+                                <Eye className="w-4 h-4 text-white" />
+                              </div>
+                              <div>
+                                <h4 className="font-bold text-gray-900 mb-2 text-base">Current Status</h4>
+                                <p className="text-sm text-gray-800 font-semibold">{incident.properties.CurrentStatus}</p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                        
+                        {incident.properties?.Master_Incident_Number && (
+                          <div className="text-xs text-gray-500 bg-gray-100 p-2 rounded-lg">
+                            <strong>Incident #:</strong> {incident.properties.Master_Incident_Number}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                
+                    {/* Enhanced Community Report Details */}
+                    {incident.properties?.userReported && incident.properties?.description && (
+                      <div className="relative p-4 rounded-xl bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 overflow-hidden">
+                        <div className="absolute top-0 right-0 w-12 h-12 bg-gradient-to-br from-purple-200/30 to-indigo-200/30 rounded-full blur-lg"></div>
+                        <div className="relative flex items-start gap-3">
+                          <div className="p-2 bg-purple-500 rounded-lg">
+                            <MessageCircle className="w-4 h-4 text-white" />
+                          </div>
+                          <div>
+                            <h4 className="font-bold text-purple-900 mb-2 text-base">Reporter Details</h4>
+                            <p className="text-sm text-purple-800 font-medium leading-relaxed">{incident.properties.description}</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                )}
+                </div>
               </div>
             </div>
-          </div>
           
-          {/* Incident Photo */}
-          {incident?.properties?.photoUrl && (
-            <div className="rounded-lg overflow-hidden bg-muted">
-              <img 
-                src={`/api/compress-image?path=${encodeURIComponent(incident.properties.photoUrl)}`}
-                alt="Incident photo" 
-                className="w-full h-48 object-cover cursor-pointer hover:opacity-90 transition-opacity"
-                data-testid="img-incident-photo"
-              />
-            </div>
-          )}
+            {/* Enhanced Incident Photo */}
+            {incident?.properties?.photoUrl && (
+              <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 shadow-lg">
+                <img 
+                  src={`/api/compress-image?path=${encodeURIComponent(incident.properties.photoUrl)}`}
+                  alt="Incident photo" 
+                  className="w-full h-56 object-cover cursor-pointer hover:scale-105 transition-transform duration-300"
+                  data-testid="img-incident-photo"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+              </div>
+            )}
           
-          {/* Social Interaction Bar */}
-          <div className="flex items-center justify-between py-3 border-t border-b">
-            <div className="flex items-center space-x-4">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className={`flex items-center space-x-2 transition-colors ${
-                  isLiked 
-                    ? 'text-red-500 hover:text-red-600' 
-                    : 'text-muted-foreground hover:text-red-500'
-                }`}
-                onClick={handleLike}
-                data-testid="button-like-incident"
-              >
-                <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
-                {likeCount > 0 && (
-                  <span className="text-sm font-medium">{likeCount}</span>
-                )}
-              </Button>
-              <Button variant="ghost" size="sm" className="flex items-center space-x-2 text-muted-foreground hover:text-blue-500 transition-colors">
-                <MessageCircle className="w-4 h-4" />
-                <span className="text-sm font-medium">{comments.length || 0}</span>
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="flex items-center space-x-2 text-muted-foreground hover:text-green-500 transition-colors"
-                onClick={handleShare}
-                data-testid="button-share-incident"
-              >
-                <Share2 className="w-4 h-4" />
-                <span className="text-sm">Share</span>
-              </Button>
+            {/* Enhanced Social Interaction Bar */}
+            <div className="relative p-4 rounded-2xl bg-gradient-to-r from-white/80 to-gray-50/80 backdrop-blur-sm border border-gray-200 shadow-sm">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className={`group flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md ${
+                      isLiked 
+                        ? 'bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100' 
+                        : 'bg-white hover:bg-blue-50 border border-gray-200 hover:border-blue-300 text-gray-600 hover:text-blue-600'
+                    }`}
+                    onClick={handleLike}
+                    data-testid="button-like-incident"
+                  >
+                    <div className="w-5 h-5 bg-blue-500 rounded-lg flex items-center justify-center">
+                      <Heart className="w-3 h-3 text-white" />
+                    </div>
+                    {likeCount > 0 && (
+                      <span className="text-sm font-semibold">{likeCount}</span>
+                    )}
+                  </Button>
+                  <Button variant="ghost" size="sm" className="group flex items-center gap-2 px-4 py-2 rounded-xl bg-white hover:bg-purple-50 border border-gray-200 hover:border-purple-300 text-gray-600 hover:text-purple-600 transition-all duration-200 shadow-sm hover:shadow-md">
+                    <div className="w-5 h-5 bg-purple-500 rounded-lg flex items-center justify-center">
+                      <MessageCircle className="w-3 h-3 text-white" />
+                    </div>
+                    <span className="text-sm font-semibold">{comments.length || 0}</span>
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="group flex items-center gap-2 px-4 py-2 rounded-xl bg-white hover:bg-green-50 border border-gray-200 hover:border-green-300 text-gray-600 hover:text-green-600 transition-all duration-200 shadow-sm hover:shadow-md"
+                    onClick={handleShare}
+                    data-testid="button-share-incident"
+                  >
+                    <div className="w-5 h-5 bg-green-500 rounded-lg flex items-center justify-center">
+                      <Share2 className="w-3 h-3 text-white" />
+                    </div>
+                    <span className="text-sm font-semibold">Share</span>
+                  </Button>
+                </div>
+              </div>
             </div>
-          </div>
           
-          {/* Compact Comments Section */}
-          <div className="px-4 pb-4">
-            <div className="pt-3">
-            <div className="flex items-center gap-2 mb-3">
-              <MessageCircle className="w-4 h-4" />
-              <h3 className="font-medium text-sm">
-                Comments ({comments.length})
-              </h3>
-            </div>
+            {/* Enhanced Comments Section */}
+            <div className="relative p-4 rounded-2xl bg-gradient-to-br from-gray-50/80 to-white/80 border border-gray-200 shadow-sm">
+              <div className="mb-4">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg">
+                    <MessageCircle className="w-4 h-4 text-white" />
+                  </div>
+                  <h3 className="font-bold text-gray-900 text-lg">
+                    Comments ({comments.length})
+                  </h3>
+                </div>
 
             {commentsLoading ? (
               <div className="text-center py-4">
