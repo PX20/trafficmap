@@ -44,9 +44,20 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
 
 
   const { data: incidentsData, isLoading: incidentsLoading } = useQuery({
-    queryKey: ["/api/incidents"],
-    queryFn: getIncidents,
+    queryKey: ["/api/incidents", filters.homeLocation],
+    queryFn: async () => {
+      // Extract suburb name same way as traffic events for consistency
+      const suburb = filters.homeLocation?.split(' ')[0] || '';
+      const url = suburb 
+        ? `/api/incidents?suburb=${encodeURIComponent(suburb)}`
+        : '/api/incidents';
+      
+      const response = await fetch(url);
+      if (!response.ok) throw new Error('Failed to fetch incidents');
+      return response.json();
+    },
     refetchInterval: filters.autoRefresh ? 60000 : false,
+    select: (data: any) => data?.features || [],
   });
 
 
@@ -179,16 +190,6 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
           
           // Categorize incident using same logic as filter sidebar
           const categoryId = categorizeIncident(feature);
-          
-          // Debug logging for incident filtering
-          console.log('Map filtering incident:', {
-            title: feature.properties?.title || 'No title',
-            categoryId,
-            filterEnabled: filters[categoryId as keyof typeof filters],
-            datasource: feature.properties?.datasource,
-            groupedType: feature.properties?.GroupedType,
-            location: feature.geometry?.coordinates
-          });
           
           // Check if this category/subcategory is enabled in filters
           shouldShow = filters[categoryId as keyof typeof filters] === true;

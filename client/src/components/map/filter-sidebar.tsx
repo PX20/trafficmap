@@ -197,20 +197,10 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
     
     // Count incidents (QFES + community)
     if (incidents && Array.isArray(incidents)) {
-      const incidentMatches = incidents.filter((incident: any) => {
+      count += incidents.filter((incident: any) => {
         const categorizedId = categorizeIncident(incident);
-        const matches = categorizedId === categoryId;
-        if (categoryId === '54d31da5-fc10-4ad2-8eca-04bac680e668' && matches) {
-          console.log('Filter sidebar counting emergency incident:', {
-            title: incident.properties?.title || 'No title',
-            groupedType: incident.properties?.GroupedType,
-            categorizedId,
-            matches
-          });
-        }
-        return matches;
-      });
-      count += incidentMatches.length;
+        return categorizedId === categoryId;
+      }).length;
     }
     
     // Count traffic events  
