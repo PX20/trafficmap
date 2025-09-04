@@ -47,8 +47,38 @@ const isQFESIncident = (incident: any) => {
 };
 
 export function useTrafficData(filters: FilterState): ProcessedTrafficData {
-  // Fetch traffic events with location filtering
-  const { data: eventsData } = useQuery({
+  // Fetch ALL traffic events (no location filtering for map display)
+  const { data: allEventsData } = useQuery({
+    queryKey: ["/api/traffic/events"],
+    queryFn: async () => {
+      const response = await fetch('/api/traffic/events');
+      if (!response.ok) throw new Error('Failed to fetch traffic events');
+      return response.json();
+    },
+    select: (data: any) => {
+      const features = data?.features || [];
+      return Array.isArray(features) ? features : [];
+    },
+    refetchInterval: filters.autoRefresh ? 30000 : false,
+  });
+
+  // Fetch ALL incidents (no location filtering for map display)
+  const { data: allIncidentsData } = useQuery({
+    queryKey: ["/api/incidents"],
+    queryFn: async () => {
+      const response = await fetch('/api/incidents');
+      if (!response.ok) throw new Error('Failed to fetch incidents');
+      return response.json();
+    },
+    select: (data: any) => {
+      const features = data?.features || [];
+      return Array.isArray(features) ? features : [];
+    },
+    refetchInterval: filters.autoRefresh ? 60000 : false,
+  });
+
+  // Fetch location-filtered data for counting (filter sidebar)
+  const { data: localEventsData } = useQuery({
     queryKey: ["/api/traffic/events", filters.homeLocation],
     queryFn: async () => {
       const suburb = filters.homeLocation?.split(' ')[0] || '';
@@ -67,8 +97,7 @@ export function useTrafficData(filters: FilterState): ProcessedTrafficData {
     refetchInterval: filters.autoRefresh ? 30000 : false,
   });
 
-  // Fetch incidents with location filtering
-  const { data: incidentsData } = useQuery({
+  const { data: localIncidentsData } = useQuery({
     queryKey: ["/api/incidents", filters.homeLocation],
     queryFn: async () => {
       const suburb = filters.homeLocation?.split(' ')[0] || '';
@@ -87,38 +116,42 @@ export function useTrafficData(filters: FilterState): ProcessedTrafficData {
     refetchInterval: filters.autoRefresh ? 60000 : false,
   });
 
-  // Process the data
-  const events = Array.isArray(eventsData) ? eventsData : [];
-  const incidents = Array.isArray(incidentsData) ? incidentsData : [];
+  // All data for map display
+  const allEvents = Array.isArray(allEventsData) ? allEventsData : [];
+  const allIncidents = Array.isArray(allIncidentsData) ? allIncidentsData : [];
   
-  // Categorize incidents
-  const nonUserIncidents = incidents.filter((i: any) => !i.properties?.userReported);
-  const qfesIncidents = nonUserIncidents.filter(isQFESIncident);
-  const esqIncidents = nonUserIncidents.filter(incident => !isQFESIncident(incident));
+  // Local data for counting in sidebar
+  const localEvents = Array.isArray(localEventsData) ? localEventsData : [];
+  const localIncidents = Array.isArray(localIncidentsData) ? localIncidentsData : [];
   
-  // Calculate counts
+  // Categorize LOCAL incidents for counting in sidebar
+  const localNonUserIncidents = localIncidents.filter((i: any) => !i.properties?.userReported);
+  const localQfesIncidents = localNonUserIncidents.filter(isQFESIncident);
+  const localEsqIncidents = localNonUserIncidents.filter(incident => !isQFESIncident(incident));
+  
+  // Calculate counts based on LOCAL data (for filter sidebar)
   const counts = {
-    tmr: events.length,
-    esq: esqIncidents.length,
-    qfes: qfesIncidents.length,
-    userSafetyCrime: incidents.filter((i: any) => 
+    tmr: localEvents.length,
+    esq: localEsqIncidents.length,
+    qfes: localQfesIncidents.length,
+    userSafetyCrime: localIncidents.filter((i: any) => 
       i.properties?.userReported && i.properties?.incidentType === 'crime'
     ).length,
-    userWildlife: incidents.filter((i: any) => 
+    userWildlife: localIncidents.filter((i: any) => 
       i.properties?.userReported && i.properties?.incidentType === 'wildlife'
     ).length,
-    userCommunity: incidents.filter((i: any) => 
+    userCommunity: localIncidents.filter((i: any) => 
       i.properties?.userReported && !['crime', 'wildlife', 'traffic'].includes(i.properties?.incidentType)
     ).length,
-    userTraffic: incidents.filter((i: any) => 
+    userTraffic: localIncidents.filter((i: any) => 
       i.properties?.userReported && i.properties?.incidentType === 'traffic'
     ).length,
   };
 
-  // Apply filtering for display
-  const filteredEvents = events.filter(() => filters.showTrafficEvents === true);
+  // Apply filtering for display based on ALL data (for map)
+  const filteredEvents = allEvents.filter(() => filters.showTrafficEvents === true);
   
-  const filteredIncidents = incidents.filter((incident: any) => {
+  const filteredIncidents = allIncidents.filter((incident: any) => {
     const isUserReported = incident.properties?.userReported;
     
     if (isUserReported) {
@@ -145,8 +178,8 @@ export function useTrafficData(filters: FilterState): ProcessedTrafficData {
   });
 
   return {
-    events,
-    incidents,
+    events: allEvents,
+    incidents: allIncidents,
     counts,
     filteredEvents,
     filteredIncidents
