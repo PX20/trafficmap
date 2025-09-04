@@ -57,15 +57,9 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
   });
 
   const { data: incidents, refetch: refetchIncidents } = useQuery({
-    queryKey: ["/api/incidents", filters.homeLocation],
+    queryKey: ["/api/incidents"],
     queryFn: async () => {
-      // Extract suburb name same way as traffic events for consistency
-      const suburb = filters.homeLocation?.split(' ')[0] || '';
-      const url = suburb 
-        ? `/api/incidents?suburb=${encodeURIComponent(suburb)}`
-        : '/api/incidents';
-      
-      const response = await fetch(url);
+      const response = await fetch('/api/incidents');
       if (!response.ok) throw new Error('Failed to fetch incidents');
       return response.json();
     },
