@@ -245,11 +245,9 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
               markerType = 'incident'; // default
             }
           } else {
-            // Official emergency incidents
-            if (filters.incidents) {
-              shouldShow = true;
-              markerType = 'incident';
-            }
+            // Official emergency incidents - always show them
+            shouldShow = true;
+            markerType = 'incident';
           }
           
           if (shouldShow) {
