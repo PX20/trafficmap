@@ -44,8 +44,18 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
 
 
   const { data: incidentsData, isLoading: incidentsLoading } = useQuery({
-    queryKey: ["/api/incidents"],
-    queryFn: getIncidents,
+    queryKey: ["/api/incidents", filters.homeLocation],
+    queryFn: async () => {
+      // Extract just the suburb name from location like "Caloundra 4551" -> "Caloundra"  
+      const suburb = filters.homeLocation?.split(' ')[0] || '';
+      const url = suburb 
+        ? `/api/incidents?suburb=${encodeURIComponent(suburb)}`
+        : '/api/incidents';
+      
+      const response = await fetch(url);
+      if (!response.ok) throw new Error('Failed to fetch incidents');
+      return response.json();
+    },
     refetchInterval: filters.autoRefresh ? 60000 : false,
   });
 
