@@ -681,12 +681,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { incidentId } = req.params;
       
       // Check if user object exists and has expected structure
-      if (!req.user || !req.user.claims || !req.user.claims.sub) {
+      if (!req.user || !req.user.id) {
         console.error("User object missing or malformed:", req.user);
         return res.status(401).json({ message: "User authentication failed" });
       }
       
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const user = await storage.getUser(userId);
       
       const validatedData = insertCommentSchema.parse({
