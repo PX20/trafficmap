@@ -1,9 +1,8 @@
-// Queensland regions and their suburbs mapping
+// Server-side region utilities for coordinate-based filtering
 export interface Region {
   id: string;
   name: string;
   suburbs: string[];
-  // Polygon boundary coordinates [lng, lat] for precise geographical filtering
   boundary?: Array<[number, number]>;
 }
 
@@ -85,111 +84,8 @@ export const QLD_REGIONS: Region[] = [
       [152.6, -27.5],    // West (Springfield area)
       [152.5, -27.0]     // Close polygon
     ]
-  },
-  {
-    id: 'ipswich',
-    name: 'Ipswich',
-    suburbs: [
-      'Ipswich', 'Ipswich CBD', 'Booval', 'Bundamba', 'Dinmore',
-      'Riverview', 'Karalee', 'Springfield', 'Springfield Central',
-      'Springfield Lakes', 'Augustine Heights', 'Redbank', 'Goodna',
-      'Collingwood Park', 'Redbank Plains', 'Bellbird Park', 'Brookwater',
-      'Ripley', 'Bellvista', 'Providence', 'Deebing Heights'
-    ]
-  },
-  {
-    id: 'logan',
-    name: 'Logan',
-    suburbs: [
-      'Logan', 'Logan Central', 'Logan Village', 'Springwood', 'Daisy Hill',
-      'Shailer Park', 'Beenleigh', 'Eagleby', 'Waterford', 'Holmview',
-      'Bahrs Scrub', 'Windaroo', 'Yarrabilba', 'Park Ridge', 'Jimboomba',
-      'Beaudesert', 'Tamborine', 'Mount Tamborine', 'Canungra'
-    ]
-  },
-  {
-    id: 'moreton-bay',
-    name: 'Moreton Bay',
-    suburbs: [
-      'Caboolture', 'Morayfield', 'Burpengary', 'Narangba', 'Deception Bay',
-      'Redcliffe', 'Clontarf', 'Margate', 'Woody Point', 'Scarborough',
-      'Newport', 'Rothwell', 'North Lakes', 'Mango Hill', 'Griffin',
-      'Murrumba Downs', 'Kallangur', 'Petrie', 'Lawnton', 'Strathpine'
-    ]
-  },
-  {
-    id: 'cairns',
-    name: 'Cairns',
-    suburbs: [
-      'Cairns', 'Cairns City', 'Cairns North', 'Edge Hill', 'Whitfield',
-      'Redlynch', 'Stratford', 'Freshwater', 'Brinsmead', 'Kamerunga',
-      'Smithfield', 'Trinity Beach', 'Palm Cove', 'Ellis Beach',
-      'Port Douglas', 'Mossman', 'Kuranda', 'Mareeba', 'Atherton'
-    ]
-  },
-  {
-    id: 'townsville',
-    name: 'Townsville',
-    suburbs: [
-      'Townsville', 'Townsville City', 'South Townsville', 'West End',
-      'North Ward', 'Railway Estate', 'Hermit Park', 'Aitkenvale',
-      'Mysterton', 'Cranbrook', 'Annandale', 'Kirwan', 'Thuringowa',
-      'Condon', 'Deeragun', 'Bohle Plains', 'Mount Louisa', 'Douglas'
-    ]
-  },
-  {
-    id: 'toowoomba',
-    name: 'Toowoomba',
-    suburbs: [
-      'Toowoomba', 'Toowoomba City', 'South Toowoomba', 'East Toowoomba',
-      'West Toowoomba', 'North Toowoomba', 'Newtown', 'Harristown',
-      'Kearneys Spring', 'Mount Lofty', 'Highfields', 'Crows Nest',
-      'Dalby', 'Chinchilla', 'Miles', 'Wandoan'
-    ]
-  },
-  {
-    id: 'rockhampton',
-    name: 'Rockhampton',
-    suburbs: [
-      'Rockhampton', 'Rockhampton City', 'North Rockhampton', 'West Rockhampton',
-      'South Rockhampton', 'Berserker', 'Norman Gardens', 'Kawana',
-      'Park Avenue', 'Frenchville', 'Mount Archer', 'Yeppoon',
-      'Emu Park', 'Rosslyn Bay', 'Keppel Sands'
-    ]
   }
 ];
-
-// Find which region a suburb belongs to
-export function findRegionBySuburb(suburb: string): Region | null {
-  const normalizedSuburb = suburb.toLowerCase().trim();
-  
-  for (const region of QLD_REGIONS) {
-    const matchingSuburb = region.suburbs.find(s => 
-      s.toLowerCase().includes(normalizedSuburb) || 
-      normalizedSuburb.includes(s.toLowerCase())
-    );
-    
-    if (matchingSuburb) {
-      return region;
-    }
-  }
-  
-  return null;
-}
-
-// Get all suburbs in the same region as the given suburb
-export function getRegionalSuburbs(suburb: string): string[] {
-  const region = findRegionBySuburb(suburb);
-  return region ? region.suburbs : [suburb];
-}
-
-// Check if two suburbs are in the same region
-export function areInSameRegion(suburb1: string, suburb2: string): boolean {
-  const region1 = findRegionBySuburb(suburb1);
-  const region2 = findRegionBySuburb(suburb2);
-  
-  return !!(region1 && region2 && region1.id === region2.id);
-}
 
 // Point-in-polygon algorithm using ray casting
 export function isPointInPolygon(point: [number, number], polygon: Array<[number, number]>): boolean {
@@ -206,6 +102,24 @@ export function isPointInPolygon(point: [number, number], polygon: Array<[number
   }
   
   return inside;
+}
+
+// Find region by suburb name (text fallback)
+export function findRegionBySuburb(suburb: string): Region | null {
+  const normalizedSuburb = suburb.toLowerCase().trim();
+  
+  for (const region of QLD_REGIONS) {
+    const matchingSuburb = region.suburbs.find(s => 
+      s.toLowerCase().includes(normalizedSuburb) || 
+      normalizedSuburb.includes(s.toLowerCase())
+    );
+    
+    if (matchingSuburb) {
+      return region;
+    }
+  }
+  
+  return null;
 }
 
 // Get region from coordinates (lat/lng) with text fallback
@@ -252,7 +166,7 @@ export function extractCoordinatesFromGeometry(geometry: any): [number, number] 
       }
     }
     
-    // Handle legacy format from your traffic map component
+    // Handle legacy format from traffic map component
     if (geometry.geometries?.[0]?.coordinates) {
       const coords = geometry.geometries[0].coordinates;
       if (coords.length === 2) {
@@ -265,4 +179,42 @@ export function extractCoordinatesFromGeometry(geometry: any): [number, number] 
   }
   
   return null;
+}
+
+// Check if feature matches region (uses coordinates first, then text)
+export function isFeatureInRegion(feature: any, targetRegion: Region): boolean {
+  // Try coordinate-based matching first
+  const coordinates = extractCoordinatesFromGeometry(feature.geometry);
+  if (coordinates) {
+    const [lat, lng] = coordinates;
+    if (targetRegion.boundary && isPointInPolygon([lng, lat], targetRegion.boundary)) {
+      return true;
+    }
+  }
+  
+  // Fallback to text-based matching
+  const props = feature.properties || {};
+  
+  // For traffic events
+  const locality = props.road_summary?.locality || '';
+  const roadName = props.road_summary?.road_name || '';
+  const locationText = `${locality} ${roadName}`.toLowerCase();
+  
+  // For incidents  
+  const incidentLocality = props.Locality || '';
+  const incidentLocation = props.Location || '';
+  const locationDesc = props.locationDescription || '';
+  const incidentLocationText = `${incidentLocality} ${incidentLocation} ${locationDesc}`.toLowerCase();
+  
+  // For user-reported incidents
+  const userLocation = props.location || '';
+  const userSuburb = props.suburb || '';
+  const userLocationText = `${userLocation} ${userSuburb}`.toLowerCase();
+  
+  const allLocationText = `${locationText} ${incidentLocationText} ${userLocationText}`.toLowerCase();
+  
+  return targetRegion.suburbs.some(suburb => {
+    const suburbLower = suburb.toLowerCase();
+    return allLocationText.includes(suburbLower) || suburbLower.includes(allLocationText);
+  });
 }

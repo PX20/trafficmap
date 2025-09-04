@@ -12,6 +12,13 @@ import express from "express";
 import path from "path";
 import sharp from "sharp";
 import fs from "fs";
+import { 
+  findRegionBySuburb, 
+  getRegionFromCoordinates, 
+  isFeatureInRegion, 
+  extractCoordinatesFromGeometry,
+  QLD_REGIONS
+} from "./region-utils";
 
 const API_BASE_URL = "https://api.qldtraffic.qld.gov.au";
 const PUBLIC_API_KEY = "3e83add325cbb69ac4d8e5bf433d770b";
