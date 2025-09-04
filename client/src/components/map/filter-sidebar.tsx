@@ -23,11 +23,11 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
   const { toast } = useToast();
   const [expandedSections, setExpandedSections] = useState({
     traffic: false,
-    'Safety & Crime': true,
-    'Infrastructure & Hazards': true,
-    'Emergency Situations': true,
-    'Wildlife & Nature': true,
-    'Community Issues': true,
+    'Safety & Crime': false,
+    'Infrastructure & Hazards': false,
+    'Emergency Situations': false,
+    'Wildlife & Nature': false,
+    'Community Issues': false,
   });
   
   const toggleSection = (section: string) => {
@@ -168,71 +168,6 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
         </div>
         
         <div className="p-4 space-y-6 overflow-y-auto" style={{ height: 'calc(100vh - 8rem)' }}>
-          {/* Traffic Events Section */}
-          <div>
-            <h2 className="text-lg font-semibold text-foreground mb-4">Traffic Events</h2>
-            
-            <button
-              onClick={() => toggleSection('traffic')}
-              className="flex items-center justify-between w-full p-2 text-left hover:bg-muted/50 rounded-md transition-colors mb-3"
-            >
-              <h3 className="text-sm font-medium text-foreground flex items-center gap-2">
-                <Car className="w-4 h-4 text-blue-600" />
-                Live Traffic
-              </h3>
-              {expandedSections.traffic ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-            </button>
-            
-            {expandedSections.traffic && (
-              <div className="ml-4 space-y-3">
-                <div className="flex items-center space-x-3">
-                  <Checkbox 
-                    id="filter-traffic-crashes"
-                    checked={filters.crashes === true}
-                    onCheckedChange={(checked) => onFilterChange('crashes', !!checked)}
-                    data-testid="checkbox-filter-crashes"
-                  />
-                  <Label htmlFor="filter-traffic-crashes" className="text-sm text-foreground flex-1">
-                    Crashes
-                  </Label>
-                  <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
-                    {eventCounts.crashes}
-                  </span>
-                </div>
-                
-                <div className="flex items-center space-x-3">
-                  <Checkbox 
-                    id="filter-traffic-hazards"
-                    checked={filters.hazards === true}
-                    onCheckedChange={(checked) => onFilterChange('hazards', !!checked)}
-                    data-testid="checkbox-filter-hazards"
-                  />
-                  <Label htmlFor="filter-traffic-hazards" className="text-sm text-foreground flex-1">
-                    Road Hazards
-                  </Label>
-                  <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
-                    {eventCounts.hazards}
-                  </span>
-                </div>
-                
-                <div className="flex items-center space-x-3">
-                  <Checkbox 
-                    id="filter-traffic-restrictions"
-                    checked={filters.restrictions === true}
-                    onCheckedChange={(checked) => onFilterChange('restrictions', !!checked)}
-                    data-testid="checkbox-filter-restrictions"
-                  />
-                  <Label htmlFor="filter-traffic-restrictions" className="text-sm text-foreground flex-1">
-                    Roadworks & Events
-                  </Label>
-                  <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
-                    {eventCounts.restrictions}
-                  </span>
-                </div>
-              </div>
-            )}
-          </div>
-          
           {/* Incident Types - Main Section */}
           <div>
             <h2 className="text-lg font-semibold text-foreground mb-4">Incident Types</h2>
@@ -243,6 +178,69 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
               Categories: {categories?.length || 0} | Incidents: {incidents?.length || 0}
             </div>
             
+            {/* Traffic Events Section */}
+            <div className="mb-4">
+              <button
+                onClick={() => toggleSection('traffic')}
+                className="flex items-center justify-between w-full p-2 text-left hover:bg-muted/50 rounded-md transition-colors"
+              >
+                <h3 className="text-sm font-medium text-foreground flex items-center gap-2">
+                  <Car className="w-4 h-4 text-blue-600" />
+                  Live Traffic
+                </h3>
+                {expandedSections.traffic ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+              </button>
+              
+              {expandedSections.traffic && (
+                <div className="mt-3 ml-4 space-y-3">
+                  <div className="flex items-center space-x-3">
+                    <Checkbox 
+                      id="filter-traffic-crashes"
+                      checked={filters.crashes === true}
+                      onCheckedChange={(checked) => onFilterChange('crashes', !!checked)}
+                      data-testid="checkbox-filter-crashes"
+                    />
+                    <Label htmlFor="filter-traffic-crashes" className="text-sm text-foreground flex-1">
+                      Crashes
+                    </Label>
+                    <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
+                      {eventCounts.crashes}
+                    </span>
+                  </div>
+                  
+                  <div className="flex items-center space-x-3">
+                    <Checkbox 
+                      id="filter-traffic-hazards"
+                      checked={filters.hazards === true}
+                      onCheckedChange={(checked) => onFilterChange('hazards', !!checked)}
+                      data-testid="checkbox-filter-hazards"
+                    />
+                    <Label htmlFor="filter-traffic-hazards" className="text-sm text-foreground flex-1">
+                      Road Hazards
+                    </Label>
+                    <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
+                      {eventCounts.hazards}
+                    </span>
+                  </div>
+                  
+                  <div className="flex items-center space-x-3">
+                    <Checkbox 
+                      id="filter-traffic-restrictions"
+                      checked={filters.restrictions === true}
+                      onCheckedChange={(checked) => onFilterChange('restrictions', !!checked)}
+                      data-testid="checkbox-filter-restrictions"
+                    />
+                    <Label htmlFor="filter-traffic-restrictions" className="text-sm text-foreground flex-1">
+                      Roadworks & Events
+                    </Label>
+                    <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
+                      {eventCounts.restrictions}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* Individual Category Sections */}
             {categoriesLoading ? (
               <div className="text-sm text-muted-foreground p-4 text-center">
