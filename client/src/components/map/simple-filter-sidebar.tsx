@@ -5,7 +5,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { ChevronDown, ChevronRight, Car, Shield, Users, MapPin } from "lucide-react";
+import { ChevronDown, ChevronRight, Car, Shield, Users, MapPin, Flame } from "lucide-react";
 import type { FilterState } from "@/pages/home";
 import { LocationAutocomplete } from "@/components/location-autocomplete";
 import { getTrafficEvents } from "@/lib/traffic-api";
@@ -70,22 +70,47 @@ export function SimpleFilterSidebar({ isOpen, filters, onFilterChange, onClose }
     },
   });
   
+  // Helper function to identify QFES incidents
+  const isQFESIncident = (incident: any) => {
+    const incidentType = incident.properties?.incidentType?.toLowerCase() || '';
+    const groupedType = incident.properties?.GroupedType?.toLowerCase() || '';
+    const description = incident.properties?.description?.toLowerCase() || '';
+    
+    // QFES handles fire, smoke, chemical/hazmat incidents
+    return incidentType.includes('fire') || 
+           incidentType.includes('smoke') || 
+           incidentType.includes('chemical') || 
+           incidentType.includes('hazmat') ||
+           groupedType.includes('fire') || 
+           groupedType.includes('smoke') || 
+           groupedType.includes('chemical') || 
+           groupedType.includes('hazmat') ||
+           description.includes('fire') || 
+           description.includes('smoke');
+  };
+
   // Simple source-based counting
+  const allIncidents = Array.isArray(incidents) ? incidents : [];
+  const nonUserIncidents = allIncidents.filter((i: any) => !i.properties?.userReported);
+  const qfesIncidents = nonUserIncidents.filter(isQFESIncident);
+  const esqIncidents = nonUserIncidents.filter(incident => !isQFESIncident(incident));
+  
   const counts = {
     tmr: Array.isArray(events) ? events.length : 0,
-    esq: Array.isArray(incidents) ? incidents.filter((i: any) => !i.properties?.userReported).length : 0,
-    userSafetyCrime: Array.isArray(incidents) ? incidents.filter((i: any) => 
+    esq: esqIncidents.length,
+    qfes: qfesIncidents.length,
+    userSafetyCrime: allIncidents.filter((i: any) => 
       i.properties?.userReported && i.properties?.incidentType === 'crime'
-    ).length : 0,
-    userWildlife: Array.isArray(incidents) ? incidents.filter((i: any) => 
+    ).length,
+    userWildlife: allIncidents.filter((i: any) => 
       i.properties?.userReported && i.properties?.incidentType === 'wildlife'
-    ).length : 0,
-    userCommunity: Array.isArray(incidents) ? incidents.filter((i: any) => 
+    ).length,
+    userCommunity: allIncidents.filter((i: any) => 
       i.properties?.userReported && !['crime', 'wildlife', 'traffic'].includes(i.properties?.incidentType)
-    ).length : 0,
-    userTraffic: Array.isArray(incidents) ? incidents.filter((i: any) => 
+    ).length,
+    userTraffic: allIncidents.filter((i: any) => 
       i.properties?.userReported && i.properties?.incidentType === 'traffic'
-    ).length : 0,
+    ).length,
   };
 
   const handleRefresh = async () => {
@@ -182,6 +207,21 @@ export function SimpleFilterSidebar({ isOpen, filters, onFilterChange, onClose }
                   </Label>
                   <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
                     {counts.esq}
+                  </span>
+                </div>
+                
+                <div className="flex items-center space-x-3">
+                  <Checkbox 
+                    id="filter-qfes"
+                    checked={filters.showQFES === true}
+                    onCheckedChange={(checked) => onFilterChange('showQFES', !!checked)}
+                    data-testid="checkbox-filter-qfes"
+                  />
+                  <Label htmlFor="filter-qfes" className="text-sm text-foreground flex-1">
+                    QFES Fire & Emergency
+                  </Label>
+                  <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
+                    {counts.qfes}
                   </span>
                 </div>
               </div>

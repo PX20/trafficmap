@@ -106,9 +106,8 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
         const eventType = feature.properties.event_type?.toLowerCase();
         let shouldShow = false;
 
-        if (eventType === "crash" && filters.crashes) shouldShow = true;
-        if (eventType === "hazard" && filters.hazards) shouldShow = true;
-        if ((eventType === "roadworks" || eventType === "special event") && filters.restrictions) shouldShow = true;
+        // Use source-based filtering for traffic events (TMR data)
+        shouldShow = filters.showTrafficEvents === true;
 
         // Apply impact filter
         if (shouldShow && filters.impactLevel !== 'all') {
@@ -176,12 +175,36 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
           const properties = feature.properties;
           const isUserReported = properties?.userReported;
           
+          // Helper function to identify QFES incidents (same as filter sidebar)
+          const isQFESIncident = (incident: any) => {
+            const incidentType = incident.properties?.incidentType?.toLowerCase() || '';
+            const groupedType = incident.properties?.GroupedType?.toLowerCase() || '';
+            const description = incident.properties?.description?.toLowerCase() || '';
+            
+            return incidentType.includes('fire') || 
+                   incidentType.includes('smoke') || 
+                   incidentType.includes('chemical') || 
+                   incidentType.includes('hazmat') ||
+                   groupedType.includes('fire') || 
+                   groupedType.includes('smoke') || 
+                   groupedType.includes('chemical') || 
+                   groupedType.includes('hazmat') ||
+                   description.includes('fire') || 
+                   description.includes('smoke');
+          };
           
-          // Categorize incident using same logic as filter sidebar
-          const categoryId = categorizeIncident(feature);
-          
-          // Check if this category/subcategory is enabled in filters
-          shouldShow = filters[categoryId as keyof typeof filters] === true;
+          // Source-based filtering (matching filter sidebar logic)
+          if (isUserReported) {
+            shouldShow = filters.showUserReports === true;
+          } else {
+            // Official incidents - check if QFES or other ESQ
+            const isQFES = isQFESIncident(feature);
+            if (isQFES) {
+              shouldShow = filters.showQFES === true;
+            } else {
+              shouldShow = filters.showIncidents === true; // ESQ (non-QFES)
+            }
+          }
           
           if (isUserReported) {
             // User-reported incidents - determine marker type based on incident content
@@ -201,15 +224,12 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
               markerType = 'incident'; // default
             }
           } else {
-            // Official emergency incidents - determine type based on category
-            if (categoryId === '54d31da5-fc10-4ad2-8eca-04bac680e668') { // Emergency Situations
-              markerType = 'emergency';
-            } else if (categoryId === '792759f4-1b98-4665-b14c-44a54e9969e9') { // Safety & Crime
-              markerType = 'crime';
-            } else if (categoryId === '9b1d58d9-cfd1-4c31-93e9-754276a5f265') { // Infrastructure & Hazards
-              markerType = 'traffic';
+            // Official emergency incidents - determine type based on source
+            const isQFES = isQFESIncident(feature);
+            if (isQFES) {
+              markerType = 'emergency'; // QFES fire/emergency incidents
             } else {
-              markerType = 'incident'; // default
+              markerType = 'emergency'; // Other ESQ emergency incidents
             }
           }
           

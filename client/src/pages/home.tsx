@@ -11,7 +11,8 @@ import { useQuery } from "@tanstack/react-query";
 export interface FilterState {
   // Simplified source-based filters
   showTrafficEvents: boolean;  // TMR traffic data
-  showIncidents: boolean;      // ESQ emergency data  
+  showIncidents: boolean;      // ESQ emergency data (excluding QFES)
+  showQFES: boolean;           // QFES fire & emergency data
   showUserReports: boolean;    // All user reports
   timeRange: 'now' | '1h' | '6h' | '24h';
   // Location filtering
@@ -31,6 +32,7 @@ export default function Home() {
   const [filters, setFilters] = useState<FilterState>({
     showTrafficEvents: true,
     showIncidents: true,
+    showQFES: true,
     showUserReports: true,
     timeRange: 'now',
     locationFilter: true,
