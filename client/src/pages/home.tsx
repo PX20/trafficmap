@@ -194,7 +194,7 @@ export default function Home() {
     <div className="relative h-screen overflow-hidden bg-background">
       <AppHeader onMenuToggle={toggleSidebar} />
       
-      <SimpleFilterSidebar 
+      <SimpleFilterSidebar
         isOpen={sidebarOpen}
         filters={filters}
         onFilterChange={handleFilterChange}
