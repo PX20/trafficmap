@@ -297,17 +297,21 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
       return '792759f4-1b98-4665-b14c-44a54e9969e9'; // Safety & Crime
     }
     
-    // Emergency Situations - Fire, Medical, Ambulance  
+    // Emergency Situations - Fire, Medical, Ambulance, Rescue
     if (groupedType.includes('fire') || 
         groupedType.includes('medical') ||
         groupedType.includes('ambulance') ||
+        groupedType.includes('rescue') ||
         eventType.includes('fire') ||
         eventType.includes('medical') ||
+        eventType.includes('rescue') ||
         description.includes('fire') ||
         description.includes('medical') ||
         description.includes('emergency') ||
+        description.includes('rescue') ||
         title.includes('fire') ||
-        title.includes('medical')) {
+        title.includes('medical') ||
+        title.includes('rescue')) {
       return '54d31da5-fc10-4ad2-8eca-04bac680e668'; // Emergency Situations
     }
     
