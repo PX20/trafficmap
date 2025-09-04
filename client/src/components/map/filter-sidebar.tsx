@@ -184,9 +184,6 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
     if (incidents && Array.isArray(incidents)) {
       const matchingIncidents = incidents.filter((incident: any) => {
         const categorizedId = categorizeIncident(incident);
-        if (categoryId === 'deaca906-3561-4f80-b79f-ed99561c3b04' && categorizedId === categoryId) {
-          console.log('Community Issues incident found:', incident);
-        }
         return categorizedId === categoryId;
       });
       count += matchingIncidents.length;
@@ -196,9 +193,6 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
     if (events && Array.isArray(events)) {
       const matchingEvents = events.filter((event: any) => {
         const categorizedId = categorizeIncident(event);
-        if (categoryId === 'deaca906-3561-4f80-b79f-ed99561c3b04' && categorizedId === categoryId) {
-          console.log('Community Issues traffic event found:', event);
-        }
         return categorizedId === categoryId;
       });
       count += matchingEvents.length;
