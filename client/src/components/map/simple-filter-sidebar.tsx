@@ -8,7 +8,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { ChevronDown, ChevronRight, Car, Shield, Users, MapPin, Flame } from "lucide-react";
 import type { FilterState } from "@/pages/home";
 import { LocationAutocomplete } from "@/components/location-autocomplete";
-import { getTrafficEvents } from "@/lib/traffic-api";
+import { useTrafficData } from "@/hooks/use-traffic-data";
 
 interface SimpleFilterSidebarProps {
   isOpen: boolean;
@@ -32,94 +32,13 @@ export function SimpleFilterSidebar({ isOpen, filters, onFilterChange, onClose }
     }));
   };
   
-  const { data: events, refetch: refetchEvents } = useQuery({
-    queryKey: ["/api/traffic/events", filters.homeLocation],
-    queryFn: async () => {
-      // Extract just the suburb name from location like "Caloundra 4551" -> "Caloundra"  
-      const suburb = filters.homeLocation?.split(' ')[0] || '';
-      const url = suburb 
-        ? `/api/traffic/events?suburb=${encodeURIComponent(suburb)}`
-        : '/api/traffic/events';
-      
-      const response = await fetch(url);
-      if (!response.ok) throw new Error('Failed to fetch traffic events');
-      return response.json();
-    },
-    select: (data: any) => {
-      const features = data?.features || [];
-      return Array.isArray(features) ? features : [];
-    },
-  });
-
-  const { data: incidents, refetch: refetchIncidents } = useQuery({
-    queryKey: ["/api/incidents", filters.homeLocation],
-    queryFn: async () => {
-      // Extract just the suburb name from location like "Caloundra 4551" -> "Caloundra"  
-      const suburb = filters.homeLocation?.split(' ')[0] || '';
-      const url = suburb 
-        ? `/api/incidents?suburb=${encodeURIComponent(suburb)}`
-        : '/api/incidents';
-      
-      const response = await fetch(url);
-      if (!response.ok) throw new Error('Failed to fetch incidents');
-      return response.json();
-    },
-    select: (data: any) => {
-      const features = data?.features || [];
-      return Array.isArray(features) ? features : [];
-    },
-  });
-  
-  // Helper function to identify QFES incidents
-  const isQFESIncident = (incident: any) => {
-    const incidentType = incident.properties?.incidentType?.toLowerCase() || '';
-    const groupedType = incident.properties?.GroupedType?.toLowerCase() || '';
-    const description = incident.properties?.description?.toLowerCase() || '';
-    
-    // QFES handles fire, smoke, chemical/hazmat incidents
-    return incidentType.includes('fire') || 
-           incidentType.includes('smoke') || 
-           incidentType.includes('chemical') || 
-           incidentType.includes('hazmat') ||
-           groupedType.includes('fire') || 
-           groupedType.includes('smoke') || 
-           groupedType.includes('chemical') || 
-           groupedType.includes('hazmat') ||
-           description.includes('fire') || 
-           description.includes('smoke');
-  };
-
-  // Simple source-based counting
-  const allIncidents = Array.isArray(incidents) ? incidents : [];
-  const nonUserIncidents = allIncidents.filter((i: any) => !i.properties?.userReported);
-  const qfesIncidents = nonUserIncidents.filter(isQFESIncident);
-  const esqIncidents = nonUserIncidents.filter(incident => !isQFESIncident(incident));
-  
-  const counts = {
-    tmr: Array.isArray(events) ? events.length : 0,
-    esq: esqIncidents.length,
-    qfes: qfesIncidents.length,
-    userSafetyCrime: allIncidents.filter((i: any) => 
-      i.properties?.userReported && i.properties?.incidentType === 'crime'
-    ).length,
-    userWildlife: allIncidents.filter((i: any) => 
-      i.properties?.userReported && i.properties?.incidentType === 'wildlife'
-    ).length,
-    userCommunity: allIncidents.filter((i: any) => 
-      i.properties?.userReported && !['crime', 'wildlife', 'traffic'].includes(i.properties?.incidentType)
-    ).length,
-    userTraffic: allIncidents.filter((i: any) => 
-      i.properties?.userReported && i.properties?.incidentType === 'traffic'
-    ).length,
-  };
+  // Use shared data processing hook
+  const { counts } = useTrafficData(filters);
 
   const handleRefresh = async () => {
     try {
-      await Promise.all([refetchEvents(), refetchIncidents()]);
-      toast({
-        title: "Data updated",
-        description: "Safety data has been refreshed successfully.",
-      });
+      // Force refetch by invalidating the query cache
+      window.location.reload();
     } catch (error) {
       toast({
         title: "Update failed",

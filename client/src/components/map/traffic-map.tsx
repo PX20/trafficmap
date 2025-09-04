@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { getTrafficEvents, getIncidents } from "@/lib/traffic-api";
+import { useTrafficData } from "@/hooks/use-traffic-data";
 import type { FilterState } from "@/pages/home";
 import { findRegionBySuburb } from "@/lib/regions";
 import { extractCoordinatesFromGeometry } from "@/lib/location-utils";
@@ -26,38 +26,14 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
   const markersRef = useRef<L.Marker[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const { data: eventsData, isLoading: eventsLoading } = useQuery({
-    queryKey: ["/api/traffic/events", filters.homeLocation],
-    queryFn: async () => {
-      // Extract just the suburb name from location like "Caloundra 4551" -> "Caloundra"  
-      const suburb = filters.homeLocation?.split(' ')[0] || '';
-      const url = suburb 
-        ? `/api/traffic/events?suburb=${encodeURIComponent(suburb)}`
-        : '/api/traffic/events';
-      
-      const response = await fetch(url);
-      if (!response.ok) throw new Error('Failed to fetch traffic events');
-      return response.json();
-    },
-    refetchInterval: filters.autoRefresh ? 30000 : false,
-  });
-
-
-  const { data: incidentsData, isLoading: incidentsLoading } = useQuery({
-    queryKey: ["/api/incidents", filters.homeLocation],
-    queryFn: async () => {
-      // Extract just the suburb name from location like "Caloundra 4551" -> "Caloundra"  
-      const suburb = filters.homeLocation?.split(' ')[0] || '';
-      const url = suburb 
-        ? `/api/incidents?suburb=${encodeURIComponent(suburb)}`
-        : '/api/incidents';
-      
-      const response = await fetch(url);
-      if (!response.ok) throw new Error('Failed to fetch incidents');
-      return response.json();
-    },
-    refetchInterval: filters.autoRefresh ? 60000 : false,
-  });
+  // Use shared data processing hook for perfect synchronization with filter sidebar
+  const { filteredEvents, filteredIncidents } = useTrafficData(filters);
+  
+  // Convert to expected format for backward compatibility
+  const eventsData = { features: filteredEvents };
+  const incidentsData = { features: filteredIncidents };
+  const eventsLoading = false;
+  const incidentsLoading = false;
 
 
   // Initialize map
@@ -110,27 +86,12 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
     let filteredEventsData = eventsData;
     let filteredIncidentsData = incidentsData;
 
-    // Add event markers
+    // Add event markers (already filtered by shared hook)
     if ((filteredEventsData as any)?.features) {
       (filteredEventsData as any).features.forEach((feature: any) => {
         const eventType = feature.properties.event_type?.toLowerCase();
-        let shouldShow = false;
 
-        // Use source-based filtering for traffic events (TMR data)
-        shouldShow = filters.showTrafficEvents === true;
-
-        // Apply impact filter
-        if (shouldShow && filters.impactLevel !== 'all') {
-          const priority = feature.properties.event_priority?.toLowerCase();
-          if (filters.impactLevel === 'high' && priority !== 'high' && priority !== 'red alert') {
-            shouldShow = false;
-          }
-          if (filters.impactLevel === 'medium' && priority !== 'high' && priority !== 'medium' && priority !== 'red alert') {
-            shouldShow = false;
-          }
-        }
-
-        if (shouldShow && feature.geometry) {
+        if (feature.geometry) {
           let coords: [number, number] | null = null;
           
           // Handle different geometry types
@@ -173,59 +134,16 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
     }
 
 
-    // Add incident markers
+    // Add incident markers (already filtered by shared hook)
     if ((filteredIncidentsData as any)?.features) {
       (filteredIncidentsData as any).features.forEach((feature: any) => {
         if (feature.geometry?.coordinates) {
           let coords: [number, number] | null = null;
-          let shouldShow = false;
           let markerType = 'incident';
           
-          // Determine incident category and if it should be shown
+          // Determine incident category for marker styling
           const properties = feature.properties;
           const isUserReported = properties?.userReported;
-          
-          // Helper function to identify QFES incidents (same as filter sidebar)
-          const isQFESIncident = (incident: any) => {
-            const incidentType = incident.properties?.incidentType?.toLowerCase() || '';
-            const groupedType = incident.properties?.GroupedType?.toLowerCase() || '';
-            const description = incident.properties?.description?.toLowerCase() || '';
-            
-            return incidentType.includes('fire') || 
-                   incidentType.includes('smoke') || 
-                   incidentType.includes('chemical') || 
-                   incidentType.includes('hazmat') ||
-                   groupedType.includes('fire') || 
-                   groupedType.includes('smoke') || 
-                   groupedType.includes('chemical') || 
-                   groupedType.includes('hazmat') ||
-                   description.includes('fire') || 
-                   description.includes('smoke');
-          };
-          
-          // Source-based filtering (matching filter sidebar logic)
-          if (isUserReported) {
-            // Check individual user report filters based on incident type
-            const incidentType = properties?.incidentType;
-            
-            if (incidentType === 'crime') {
-              shouldShow = filters.showUserSafetyCrime === true;
-            } else if (incidentType === 'wildlife') {
-              shouldShow = filters.showUserWildlife === true;
-            } else if (incidentType === 'traffic') {
-              shouldShow = filters.showUserTraffic === true;
-            } else {
-              shouldShow = filters.showUserCommunity === true; // Default for other types
-            }
-          } else {
-            // Official incidents - check if QFES or other ESQ
-            const isQFES = isQFESIncident(feature);
-            if (isQFES) {
-              shouldShow = filters.showQFES === true;
-            } else {
-              shouldShow = filters.showIncidents === true; // ESQ (non-QFES)
-            }
-          }
           
           if (isUserReported) {
             // User-reported incidents - determine marker type based on incident content
@@ -245,35 +163,28 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
               markerType = 'incident'; // default
             }
           } else {
-            // Official emergency incidents - determine type based on source
-            const isQFES = isQFESIncident(feature);
-            if (isQFES) {
-              markerType = 'emergency'; // QFES fire/emergency incidents
-            } else {
-              markerType = 'emergency'; // Other ESQ emergency incidents
-            }
+            // Official emergency incidents - all are emergency type
+            markerType = 'emergency';
           }
           
-          if (shouldShow) {
-            // Handle different geometry types for incidents
-            if (feature.geometry.type === 'Point') {
-              coords = [feature.geometry.coordinates[1], feature.geometry.coordinates[0]];
-            } else if (feature.geometry.type === 'MultiPoint' && feature.geometry.coordinates?.[0]) {
-              const point = feature.geometry.coordinates[0];
-              coords = [point[1], point[0]];
-            }
-            
-            if (coords) {
-              const marker = L.marker(coords, {
-                icon: createCustomMarker(markerType, getMarkerColor(markerType))
-              });
+          // Handle different geometry types for incidents (data already filtered)
+          if (feature.geometry.type === 'Point') {
+            coords = [feature.geometry.coordinates[1], feature.geometry.coordinates[0]];
+          } else if (feature.geometry.type === 'MultiPoint' && feature.geometry.coordinates?.[0]) {
+            const point = feature.geometry.coordinates[0];
+            coords = [point[1], point[0]];
+          }
+          
+          if (coords) {
+            const marker = L.marker(coords, {
+              icon: createCustomMarker(markerType, getMarkerColor(markerType))
+            });
 
-              const popupContent = createIncidentPopup(feature.properties);
-              marker.bindPopup(popupContent);
+            const popupContent = createIncidentPopup(feature.properties);
+            marker.bindPopup(popupContent);
 
-              marker.addTo(mapInstanceRef.current!);
-              newMarkers.push(marker);
-            }
+            marker.addTo(mapInstanceRef.current!);
+            newMarkers.push(marker);
           }
         }
       });
