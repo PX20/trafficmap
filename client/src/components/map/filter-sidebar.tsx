@@ -23,12 +23,8 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
   const isMobile = useIsMobile();
   const { toast } = useToast();
   const [expandedSections, setExpandedSections] = useState({
-    traffic: false,
-    'Safety & Crime': false,
-    'Infrastructure & Hazards': false,
-    'Emergency Situations': false,
-    'Wildlife & Nature': false,
-    'Community Issues': false,
+    'Agency Data': false,
+    'User Reports': false,
   });
   
   const toggleSection = (section: string) => {
@@ -84,149 +80,32 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
   });
 
 
-  // Unified incident categorization function for all incident types
-  const categorizeIncident = (incident: any) => {
-    const props = incident.properties || {};
+  // Simple source-based filtering
+  const getSourceCounts = () => {
+    const counts = {
+      // Agency Data Sources
+      tmr: Array.isArray(events) ? events.length : 0,
+      esq: Array.isArray(incidents) ? incidents.filter((i: any) => !i.properties?.userReported).length : 0,
+      
+      // User Report Categories  
+      userSafetyCrime: Array.isArray(incidents) ? incidents.filter((i: any) => 
+        i.properties?.userReported && i.properties?.incidentType === 'crime'
+      ).length : 0,
+      userWildlife: Array.isArray(incidents) ? incidents.filter((i: any) => 
+        i.properties?.userReported && i.properties?.incidentType === 'wildlife'
+      ).length : 0,
+      userCommunity: Array.isArray(incidents) ? incidents.filter((i: any) => 
+        i.properties?.userReported && !['crime', 'wildlife', 'traffic'].includes(i.properties?.incidentType)
+      ).length : 0,
+      userTraffic: Array.isArray(incidents) ? incidents.filter((i: any) => 
+        i.properties?.userReported && i.properties?.incidentType === 'traffic'
+      ).length : 0,
+    };
     
-    const datasource = props.datasource?.source_name || props.source || props.datasource || 'unknown';
-    const providedBy = props.datasource?.provided_by || '';
-    
-    // Handle traffic events from QLD Traffic API
-    const trafficEventType = props.event_type || props.eventType || props.type;
-    if (trafficEventType) {
-      const eventTypeLower = trafficEventType.toLowerCase();
-      // All traffic events go to Infrastructure & Hazards
-      if (eventTypeLower === 'crash' || eventTypeLower === 'hazard' || 
-          eventTypeLower === 'roadworks' || eventTypeLower === 'special_event' ||
-          eventTypeLower === 'special event') {
-        return '9b1d58d9-cfd1-4c31-93e9-754276a5f265'; // Infrastructure & Hazards
-      }
-    }
-    
-    // For user-reported incidents, use their categoryId
-    if (props.userReported && props.categoryId) {
-      return props.categoryId;
-    }
-    
-    // Handle ESQ (Emergency Services Queensland) incidents
-    if (datasource === 'ESQ' || providedBy?.includes('Emergency') || props.source === 'ESQ') {
-      return '54d31da5-fc10-4ad2-8eca-04bac680e668'; // Emergency Situations
-    }
-    
-    // Handle TMR (Transport and Main Roads) incidents  
-    if (datasource === 'TMR' || datasource === 'EPS' || providedBy?.includes('Transport') || providedBy?.includes('Main Roads') || props.source === 'TMR') {
-      return '9b1d58d9-cfd1-4c31-93e9-754276a5f265'; // Infrastructure & Hazards
-    }
-    
-    // Handle QPS (Queensland Police Service) incidents
-    if (datasource === 'QPS' || providedBy?.includes('Police') || props.source === 'QPS') {
-      return '792759f4-1b98-4665-b14c-44a54e9969e9'; // Safety & Crime
-    }
-    
-    // For QFES incidents, categorize based on GroupedType and other properties
-    const groupedType = props.GroupedType?.toLowerCase() || '';
-    const eventType = props.Event_Type?.toLowerCase() || '';
-    const description = (props.description || '').toLowerCase();
-    const title = (incident.title || '').toLowerCase();
-    
-    // Safety & Crime - Police incidents, suspicious activity, break-ins
-    if (groupedType.includes('police') || 
-        eventType.includes('police') ||
-        description.includes('suspicious') ||
-        description.includes('break') ||
-        description.includes('theft') ||
-        description.includes('crime') ||
-        title.includes('police')) {
-      return '792759f4-1b98-4665-b14c-44a54e9969e9'; // Safety & Crime
-    }
-    
-    // Emergency Situations - Fire, Medical, Ambulance, Rescue
-    if (groupedType.includes('fire') || 
-        groupedType.includes('medical') ||
-        groupedType.includes('ambulance') ||
-        groupedType.includes('rescue') ||
-        eventType.includes('fire') ||
-        eventType.includes('medical') ||
-        eventType.includes('rescue') ||
-        description.includes('fire') ||
-        description.includes('medical') ||
-        description.includes('emergency') ||
-        description.includes('rescue') ||
-        title.includes('fire') ||
-        title.includes('medical') ||
-        title.includes('rescue')) {
-      return '54d31da5-fc10-4ad2-8eca-04bac680e668'; // Emergency Situations
-    }
-    
-    // Infrastructure & Hazards - Road hazards, infrastructure issues, traffic
-    if (description.includes('hazard') ||
-        description.includes('infrastructure') ||
-        description.includes('road') ||
-        description.includes('traffic') ||
-        title.includes('hazard') ||
-        title.includes('infrastructure') ||
-        title.includes('road')) {
-      return '9b1d58d9-cfd1-4c31-93e9-754276a5f265'; // Infrastructure & Hazards
-    }
-    
-    // Wildlife & Nature - Animal related incidents
-    if (description.includes('snake') ||
-        description.includes('python') ||
-        description.includes('animal') ||
-        description.includes('wildlife') ||
-        title.includes('animal') ||
-        title.includes('wildlife')) {
-      return 'd03f47a9-10fb-4656-ae73-92e959d7566a'; // Wildlife & Nature
-    }
-    
-    // Default to Community Issues for uncategorized incidents
-    return 'deaca906-3561-4f80-b79f-ed99561c3b04'; // Community Issues
-  };
-
-  // Count incidents by category using unified categorization (includes traffic events + incidents)
-  const getCategoryCount = (categoryId: string) => {
-    let count = 0;
-    
-    // Count incidents (QFES + community)
-    if (incidents && Array.isArray(incidents)) {
-      const matchingIncidents = incidents.filter((incident: any) => {
-        const categorizedId = categorizeIncident(incident);
-        return categorizedId === categoryId;
-      });
-      count += matchingIncidents.length;
-    }
-    
-    // Count traffic events  
-    if (events && Array.isArray(events)) {
-      const matchingEvents = events.filter((event: any) => {
-        const categorizedId = categorizeIncident(event);
-        return categorizedId === categoryId;
-      });
-      count += matchingEvents.length;
-    }
-    
-    return count;
+    return counts;
   };
   
-  const eventCounts = {
-    crashes: Array.isArray(events) ? events.filter((e: any) => {
-      const eventType = e.properties?.event_type || e.properties?.eventType || e.properties?.type;
-      return eventType === "Crash" || eventType === "crash";
-    }).length : 0,
-    hazards: Array.isArray(events) ? events.filter((e: any) => {
-      const eventType = e.properties?.event_type || e.properties?.eventType || e.properties?.type;
-      return eventType === "Hazard" || eventType === "hazard";
-    }).length : 0,
-    restrictions: Array.isArray(events) ? events.filter((e: any) => {
-      const eventType = e.properties?.event_type || e.properties?.eventType || e.properties?.type;
-      return eventType === "Roadworks" || eventType === "roadworks" || 
-             eventType === "Special event" || eventType === "special_event";
-    }).length : 0,
-    officialIncidents: Array.isArray(incidents) ? incidents.filter((i: any) => !i.properties?.userReported).length : 0,
-    userReports: Array.isArray(incidents) ? incidents.filter((i: any) => i.properties?.userReported).length : 0,
-    totalEvents: (Array.isArray(events) ? events.length : 0) + (Array.isArray(incidents) ? incidents.length : 0),
-    totalStatewide: Array.isArray(events) ? events.length : 0,
-  };
+  const sourceCounts = getSourceCounts();
 
 
   const handleRefresh = async () => {

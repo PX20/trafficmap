@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { TrafficMap } from "@/components/map/traffic-map";
-import { FilterSidebar } from "@/components/map/filter-sidebar";
+import { SimpleFilterSidebar } from "@/components/map/simple-filter-sidebar";
 import { AppHeader } from "@/components/map/app-header";
 import { IncidentDetailModal } from "@/components/incident-detail-modal";
 import { IncidentReportForm } from "@/components/incident-report-form";
@@ -9,15 +9,10 @@ import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 
 export interface FilterState {
-  // Keep existing traffic events filters
-  crashes: boolean;
-  hazards: boolean;
-  restrictions: boolean;
-  incidents: boolean;
-  // Legacy user report filters (for backward compatibility)
-  crime: boolean;
-  suspicious: boolean;
-  emergency: boolean;
+  // Simplified source-based filters
+  showTrafficEvents: boolean;  // TMR traffic data
+  showIncidents: boolean;      // ESQ emergency data  
+  showUserReports: boolean;    // All user reports
   timeRange: 'now' | '1h' | '6h' | '24h';
   // Location filtering
   locationFilter: boolean;
@@ -34,13 +29,9 @@ export default function Home() {
   const [selectedIncident, setSelectedIncident] = useState<any>(null);
   const [reportFormOpen, setReportFormOpen] = useState(false);
   const [filters, setFilters] = useState<FilterState>({
-    crashes: true,
-    hazards: true,
-    restrictions: true,
-    incidents: true,
-    crime: true,
-    suspicious: true,
-    emergency: true,
+    showTrafficEvents: true,
+    showIncidents: true,
+    showUserReports: true,
     timeRange: 'now',
     locationFilter: true,
     // Dynamic category filters will be added automatically when users interact with them
@@ -192,7 +183,7 @@ export default function Home() {
     <div className="relative h-screen overflow-hidden bg-background">
       <AppHeader onMenuToggle={toggleSidebar} />
       
-      <FilterSidebar 
+      <SimpleFilterSidebar 
         isOpen={sidebarOpen}
         filters={filters}
         onFilterChange={handleFilterChange}
