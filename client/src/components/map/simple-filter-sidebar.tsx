@@ -73,8 +73,6 @@ export function SimpleFilterSidebar({ isOpen, filters, onFilterChange, onClose }
         <div className="p-4 border-b border-border flex items-center justify-between bg-muted/50">
           <h1 className="text-lg font-semibold text-foreground">Safety Filters</h1>
           <Button
-            variant="ghost"
-            size="sm"
             onClick={handleRefresh}
             className="text-muted-foreground hover:text-foreground"
           >
@@ -104,7 +102,7 @@ export function SimpleFilterSidebar({ isOpen, filters, onFilterChange, onClose }
                   <Checkbox 
                     id="filter-tmr"
                     checked={filters.showTrafficEvents === true}
-                    onCheckedChange={(checked) => onFilterChange('showTrafficEvents', !!checked)}
+                    onCheckedChange={(checked: boolean) => onFilterChange('showTrafficEvents', !!checked)}
                     data-testid="checkbox-filter-tmr"
                   />
                   <Car className="w-4 h-4 text-orange-500" />
@@ -117,7 +115,7 @@ export function SimpleFilterSidebar({ isOpen, filters, onFilterChange, onClose }
                   <Checkbox 
                     id="filter-esq"
                     checked={filters.showIncidents === true}
-                    onCheckedChange={(checked) => onFilterChange('showIncidents', !!checked)}
+                    onCheckedChange={(checked: boolean) => onFilterChange('showIncidents', !!checked)}
                     data-testid="checkbox-filter-esq"
                   />
                   <Zap className="w-4 h-4 text-blue-500" />
@@ -130,7 +128,7 @@ export function SimpleFilterSidebar({ isOpen, filters, onFilterChange, onClose }
                   <Checkbox 
                     id="filter-qfes"
                     checked={filters.showQFES === true}
-                    onCheckedChange={(checked) => onFilterChange('showQFES', !!checked)}
+                    onCheckedChange={(checked: boolean) => onFilterChange('showQFES', !!checked)}
                     data-testid="checkbox-filter-qfes"
                   />
                   <Flame className="w-4 h-4 text-red-500" />
@@ -161,7 +159,7 @@ export function SimpleFilterSidebar({ isOpen, filters, onFilterChange, onClose }
                   <Checkbox 
                     id="filter-user-safety"
                     checked={filters.showUserSafetyCrime === true}
-                    onCheckedChange={(checked) => onFilterChange('showUserSafetyCrime', !!checked)}
+                    onCheckedChange={(checked: boolean) => onFilterChange('showUserSafetyCrime', !!checked)}
                     data-testid="checkbox-filter-user-safety"
                   />
                   <Shield className="w-4 h-4 text-purple-500" />
@@ -174,7 +172,7 @@ export function SimpleFilterSidebar({ isOpen, filters, onFilterChange, onClose }
                   <Checkbox 
                     id="filter-user-wildlife"
                     checked={filters.showUserWildlife === true}
-                    onCheckedChange={(checked) => onFilterChange('showUserWildlife', !!checked)}
+                    onCheckedChange={(checked: boolean) => onFilterChange('showUserWildlife', !!checked)}
                     data-testid="checkbox-filter-user-wildlife"
                   />
                   <Trees className="w-4 h-4 text-green-600" />
@@ -187,7 +185,7 @@ export function SimpleFilterSidebar({ isOpen, filters, onFilterChange, onClose }
                   <Checkbox 
                     id="filter-user-community"
                     checked={filters.showUserCommunity === true}
-                    onCheckedChange={(checked) => onFilterChange('showUserCommunity', !!checked)}
+                    onCheckedChange={(checked: boolean) => onFilterChange('showUserCommunity', !!checked)}
                     data-testid="checkbox-filter-user-community"
                   />
                   <Users className="w-4 h-4 text-gray-500" />
@@ -200,7 +198,7 @@ export function SimpleFilterSidebar({ isOpen, filters, onFilterChange, onClose }
                   <Checkbox 
                     id="filter-user-traffic"
                     checked={filters.showUserTraffic === true}
-                    onCheckedChange={(checked) => onFilterChange('showUserTraffic', !!checked)}
+                    onCheckedChange={(checked: boolean) => onFilterChange('showUserTraffic', !!checked)}
                     data-testid="checkbox-filter-user-traffic"
                   />
                   <Car className="w-4 h-4 text-orange-500" />

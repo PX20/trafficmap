@@ -216,7 +216,6 @@ export default function Home() {
       <Button
         onClick={() => setReportFormOpen(true)}
         className="fixed bottom-6 left-6 z-30 shadow-lg"
-        size="lg"
         data-testid="button-report-incident"
       >
         <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
