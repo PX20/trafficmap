@@ -543,9 +543,11 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
                 <div className="flex items-center gap-1">
                   <Clock className="w-4 h-4 text-blue-500" />
                   <span className="font-medium">{getTimeAgo(
+                    incident.properties?.published || 
                     incident.properties?.Response_Date || 
-                    incident.properties?.last_updated || 
-                    incident.properties?.createdAt
+                    incident.properties?.createdAt || 
+                    incident.properties?.timeReported ||
+                    incident.properties?.last_updated
                   )}</span>
                 </div>
                 <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">Live</span>
