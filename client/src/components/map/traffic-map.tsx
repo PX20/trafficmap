@@ -394,7 +394,7 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
         <!-- Simple Footer -->
         <div class="flex items-center justify-between py-2 border-t border-gray-100">
           <div class="flex items-center gap-3">
-            <button class="flex items-center gap-1 text-gray-500 hover:text-red-500 transition-colors">
+            <button onclick="window.likeIncident('${properties.id}', 'traffic')" class="flex items-center gap-1 text-gray-500 hover:text-red-500 transition-colors like-button" data-incident-id="${properties.id}">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
               </svg>
@@ -404,7 +404,7 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
               </svg>
             </button>
-            <button class="flex items-center gap-1 text-gray-500 hover:text-green-500 transition-colors">
+            <button onclick="window.shareIncident('${properties.id}', 'traffic')" class="flex items-center gap-1 text-gray-500 hover:text-green-500 transition-colors">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path>
               </svg>
@@ -484,7 +484,7 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
           <!-- Interactive Footer -->
           <div class="flex items-center justify-between pt-3 border-t border-gray-100">
             <div class="flex items-center gap-4">
-              <button class="flex items-center gap-2 text-gray-600 hover:text-red-500 transition-colors group">
+              <button onclick="window.likeIncident('${properties.id}', 'user-reported')" class="flex items-center gap-2 text-gray-600 hover:text-red-500 transition-colors group like-button" data-incident-id="${properties.id}">
                 <div class="p-1 rounded-full group-hover:bg-red-50 transition-colors">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
@@ -498,7 +498,7 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
                   </svg>
                 </div>
               </button>
-              <button class="flex items-center gap-2 text-gray-600 hover:text-green-500 transition-colors group">
+              <button onclick="window.shareIncident('${properties.id}', 'user-reported')" class="flex items-center gap-2 text-gray-600 hover:text-green-500 transition-colors group">
                 <div class="p-1 rounded-full group-hover:bg-green-50 transition-colors">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path>
@@ -583,7 +583,7 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
         <!-- Interactive Footer -->
         <div class="flex items-center justify-between pt-3 border-t border-gray-100">
           <div class="flex items-center gap-4">
-            <button class="flex items-center gap-2 text-gray-600 hover:text-red-500 transition-colors group">
+            <button onclick="window.likeIncident('${properties.Master_Incident_Number || properties.id}', 'emergency')" class="flex items-center gap-2 text-gray-600 hover:text-red-500 transition-colors group like-button" data-incident-id="${properties.Master_Incident_Number || properties.id}">
               <div class="p-1 rounded-full group-hover:bg-red-50 transition-colors">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
@@ -597,7 +597,7 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
                 </svg>
               </div>
             </button>
-            <button class="flex items-center gap-2 text-gray-600 hover:text-green-500 transition-colors group">
+            <button onclick="window.shareIncident('${properties.Master_Incident_Number || properties.id}', 'emergency')" class="flex items-center gap-2 text-gray-600 hover:text-green-500 transition-colors group">
               <div class="p-1 rounded-full group-hover:bg-green-50 transition-colors">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path>
@@ -644,6 +644,34 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
 
   // Setup global functions for popup interactions
   useEffect(() => {
+    // Add like functionality
+    (window as any).likeIncident = (incidentId: string, incidentType: string) => {
+      // Simple like functionality - could be enhanced to save to database
+      const button = document.querySelector(`[data-incident-id="${incidentId}"] .like-button`);
+      if (button) {
+        button.classList.toggle('text-red-500');
+        button.classList.toggle('text-gray-500');
+      }
+    };
+    
+    // Add share functionality
+    (window as any).shareIncident = (incidentId: string, incidentType: string) => {
+      // Simple share functionality
+      const url = window.location.href;
+      if (navigator.share) {
+        navigator.share({
+          title: 'QLD Safety Monitor - Incident Alert',
+          text: `Check out this ${incidentType} incident on QLD Safety Monitor`,
+          url: url
+        });
+      } else {
+        // Fallback to clipboard copy
+        navigator.clipboard.writeText(url).then(() => {
+          alert('Incident link copied to clipboard!');
+        });
+      }
+    };
+    
     (window as any).showIncidentDetails = (incidentId: string, incidentType: string) => {
       // Find the incident data and pass it to the modal
       let incident = null;

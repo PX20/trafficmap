@@ -14,17 +14,9 @@ export function AppHeader({ onMenuToggle }: AppHeaderProps) {
   const { user, isAuthenticated } = useAuth();
   const [location] = useLocation();
 
-  // Get unread notification count
-  const { data: unreadNotifications = 0 } = useQuery<number>({
-    queryKey: ['/api/notifications/unread-count'],
-    enabled: isAuthenticated,
-  });
-
-  // Get unread message count
-  const { data: unreadMessages = 0 } = useQuery<number>({
-    queryKey: ['/api/messages/unread-count'],
-    enabled: isAuthenticated,
-  });
+  // Temporarily disable notification and message count queries until APIs are implemented
+  const unreadNotifications = 0;
+  const unreadMessages = 0;
 
   return (
     <header className="absolute top-0 left-0 right-0 z-20 bg-card/95 backdrop-blur-sm border-b border-border">
