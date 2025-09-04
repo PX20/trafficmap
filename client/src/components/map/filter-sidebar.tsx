@@ -86,38 +86,101 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
   });
 
 
-  // Count incidents by category
+  // Unified incident categorization function for all incident types
+  const categorizeIncident = (incident: any) => {
+    const props = incident.properties || {};
+    
+    // Handle traffic events from QLD Traffic API
+    const trafficEventType = props.event_type || props.eventType || props.type;
+    if (trafficEventType) {
+      const eventTypeLower = trafficEventType.toLowerCase();
+      // All traffic events go to Infrastructure & Hazards
+      if (eventTypeLower === 'crash' || eventTypeLower === 'hazard' || 
+          eventTypeLower === 'roadworks' || eventTypeLower === 'special_event' ||
+          eventTypeLower === 'special event') {
+        return '9b1d58d9-cfd1-4c31-93e9-754276a5f265'; // Infrastructure & Hazards
+      }
+    }
+    
+    // For user-reported incidents, use their categoryId
+    if (props.userReported && props.categoryId) {
+      return props.categoryId;
+    }
+    
+    // For QFES incidents, categorize based on GroupedType and other properties
+    const groupedType = props.GroupedType?.toLowerCase() || '';
+    const eventType = props.Event_Type?.toLowerCase() || '';
+    const description = (props.description || '').toLowerCase();
+    const title = (incident.title || '').toLowerCase();
+    
+    // Safety & Crime - Police incidents, suspicious activity, break-ins
+    if (groupedType.includes('police') || 
+        eventType.includes('police') ||
+        description.includes('suspicious') ||
+        description.includes('break') ||
+        description.includes('theft') ||
+        description.includes('crime') ||
+        title.includes('police')) {
+      return '792759f4-1b98-4665-b14c-44a54e9969e9'; // Safety & Crime
+    }
+    
+    // Emergency Situations - Fire, Medical, Ambulance  
+    if (groupedType.includes('fire') || 
+        groupedType.includes('medical') ||
+        groupedType.includes('ambulance') ||
+        eventType.includes('fire') ||
+        eventType.includes('medical') ||
+        description.includes('fire') ||
+        description.includes('medical') ||
+        description.includes('emergency') ||
+        title.includes('fire') ||
+        title.includes('medical')) {
+      return '54d31da5-fc10-4ad2-8eca-04bac680e668'; // Emergency Situations
+    }
+    
+    // Infrastructure & Hazards - Road hazards, infrastructure issues, traffic
+    if (description.includes('hazard') ||
+        description.includes('infrastructure') ||
+        description.includes('road') ||
+        description.includes('traffic') ||
+        title.includes('hazard') ||
+        title.includes('infrastructure') ||
+        title.includes('road')) {
+      return '9b1d58d9-cfd1-4c31-93e9-754276a5f265'; // Infrastructure & Hazards
+    }
+    
+    // Wildlife & Nature - Animal related incidents
+    if (description.includes('snake') ||
+        description.includes('python') ||
+        description.includes('animal') ||
+        description.includes('wildlife') ||
+        title.includes('animal') ||
+        title.includes('wildlife')) {
+      return 'd03f47a9-10fb-4656-ae73-92e959d7566a'; // Wildlife & Nature
+    }
+    
+    // Default to Community Issues for uncategorized incidents
+    return 'deaca906-3561-4f80-b79f-ed99561c3b04'; // Community Issues
+  };
+
+  // Count incidents by category using unified categorization (includes traffic events + incidents)
   const getCategoryCount = (categoryId: string) => {
-    if (!incidents || !Array.isArray(incidents)) return 0;
+    let count = 0;
     
-    const categoryMap = {
-      '792759f4-1b98-4665-b14c-44a54e9969e9': 'safety', // Safety & Crime
-      '9b1d58d9-cfd1-4c31-93e9-754276a5f265': 'infrastructure', // Infrastructure & Hazards  
-      '54d31da5-fc10-4ad2-8eca-04bac680e668': 'emergency', // Emergency Situations
-      'd03f47a9-10fb-4656-ae73-92e959d7566a': 'wildlife', // Wildlife & Nature
-      'deaca906-3561-4f80-b79f-ed99561c3b04': 'community', // Community Issues
-    };
-    
-    const targetType = categoryMap[categoryId as keyof typeof categoryMap];
-    
-    let count = incidents.filter((i: any) => {
-      const props = i.properties;
-      // Count by both categoryId and incidentType
-      return props?.categoryId === categoryId || 
-             props?.incidentType === targetType ||
-             props?.type === targetType;
-    }).length;
-    
-    // For wildlife category, also count legacy incidents
-    if (categoryId === 'd03f47a9-10fb-4656-ae73-92e959d7566a') {
-      const legacyWildlife = incidents.filter((i: any) => {
-        const props = i.properties;
-        if (props?.categoryId || props?.incidentType) return false;
-        const description = props?.description?.toLowerCase() || '';
-        return description.includes('snake') || description.includes('python') || 
-               description.includes('animal') || description.includes('wildlife');
+    // Count incidents (QFES + community)
+    if (incidents && Array.isArray(incidents)) {
+      count += incidents.filter((incident: any) => {
+        const categorizedId = categorizeIncident(incident);
+        return categorizedId === categoryId;
       }).length;
-      count += legacyWildlife;
+    }
+    
+    // Count traffic events  
+    if (events && Array.isArray(events)) {
+      count += events.filter((event: any) => {
+        const categorizedId = categorizeIncident(event);
+        return categorizedId === categoryId;
+      }).length;
     }
     
     return count;
