@@ -82,10 +82,10 @@ export default function AuthPage() {
         <div className="space-y-6 text-center lg:text-left">
           <div className="space-y-2">
             <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-white">
-              QLD Safety Monitor
+              QLD Community Connect
             </h1>
             <p className="text-xl text-gray-600 dark:text-gray-300">
-              Real-time safety and incident monitoring for Queensland communities
+              Stay informed and connected with your Queensland community
             </p>
           </div>
 
@@ -93,22 +93,22 @@ export default function AuthPage() {
             <div className="flex items-center space-x-3 p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
               <Shield className="h-8 w-8 text-blue-600" />
               <div>
-                <h3 className="font-semibold text-gray-900 dark:text-white">Emergency Alerts</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-300">Live emergency updates</p>
+                <h3 className="font-semibold text-gray-900 dark:text-white">Local Updates</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Stay informed about your area</p>
               </div>
             </div>
             <div className="flex items-center space-x-3 p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
               <AlertTriangle className="h-8 w-8 text-orange-600" />
               <div>
-                <h3 className="font-semibold text-gray-900 dark:text-white">Traffic Events</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-300">Real-time traffic data</p>
+                <h3 className="font-semibold text-gray-900 dark:text-white">Road Conditions</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Current traffic updates</p>
               </div>
             </div>
             <div className="flex items-center space-x-3 p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
               <Users className="h-8 w-8 text-green-600" />
               <div>
-                <h3 className="font-semibold text-gray-900 dark:text-white">Community Reports</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-300">User-generated incidents</p>
+                <h3 className="font-semibold text-gray-900 dark:text-white">Community Sharing</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Neighbor updates and tips</p>
               </div>
             </div>
             <div className="flex items-center space-x-3 p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
@@ -134,7 +134,7 @@ export default function AuthPage() {
                 <CardHeader>
                   <CardTitle>Welcome Back</CardTitle>
                   <CardDescription>
-                    Sign in to your account to access safety monitoring features
+                    Sign in to your account to stay connected with your community
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -188,7 +188,7 @@ export default function AuthPage() {
                 <CardHeader>
                   <CardTitle>Create Account</CardTitle>
                   <CardDescription>
-                    Join the QLD Safety Monitor community to report and track safety incidents
+                    Join the QLD Community Connect to share updates and stay informed
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
