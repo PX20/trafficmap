@@ -329,7 +329,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           },
           geometry: (() => {
             // Use the robust coordinate extraction function
-            const { extractCoordinatesFromGeometry } = require('./region-utils');
             const coords = extractCoordinatesFromGeometry(incident.geometry);
             
             if (coords) {
