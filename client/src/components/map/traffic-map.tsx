@@ -352,9 +352,9 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
       // Wildlife - green
       case 'wildlife':
         return '#16a34a'; // Green - matches wildlife filter icon
-      // Community issues - gray
+      // Community issues - teal
       case 'community':
-        return '#6b7280'; // Gray - matches community filter icon
+        return '#0d9488'; // Teal - distinct from completion grey
       // Default
       default:
         return '#6b7280'; // Gray
