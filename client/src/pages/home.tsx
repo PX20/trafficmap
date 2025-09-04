@@ -14,6 +14,11 @@ export interface FilterState {
   showIncidents: boolean;      // ESQ emergency data (excluding QFES)
   showQFES: boolean;           // QFES fire & emergency data
   showUserReports: boolean;    // All user reports
+  // Individual user report filters
+  showUserSafetyCrime: boolean;
+  showUserWildlife: boolean;
+  showUserCommunity: boolean;
+  showUserTraffic: boolean;
   timeRange: 'now' | '1h' | '6h' | '24h';
   // Location filtering
   locationFilter: boolean;
@@ -34,6 +39,10 @@ export default function Home() {
     showIncidents: true,
     showQFES: true,
     showUserReports: true,
+    showUserSafetyCrime: true,
+    showUserWildlife: true,
+    showUserCommunity: true,
+    showUserTraffic: true,
     timeRange: 'now',
     locationFilter: true,
     // Dynamic category filters will be added automatically when users interact with them

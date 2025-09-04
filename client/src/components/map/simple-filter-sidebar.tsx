@@ -21,8 +21,8 @@ export function SimpleFilterSidebar({ isOpen, filters, onFilterChange, onClose }
   const isMobile = useIsMobile();
   const { toast } = useToast();
   const [expandedSections, setExpandedSections] = useState({
-    'Agency Data': false,
-    'User Reports': false,
+    'Agency Data': true,
+    'User Reports': true,
   });
   
   const toggleSection = (section: string) => {
@@ -246,8 +246,8 @@ export function SimpleFilterSidebar({ isOpen, filters, onFilterChange, onClose }
                 <div className="flex items-center space-x-3">
                   <Checkbox 
                     id="filter-user-safety"
-                    checked={filters.showUserReports === true}
-                    onCheckedChange={(checked) => onFilterChange('showUserReports', !!checked)}
+                    checked={filters.showUserSafetyCrime === true}
+                    onCheckedChange={(checked) => onFilterChange('showUserSafetyCrime', !!checked)}
                     data-testid="checkbox-filter-user-safety"
                   />
                   <Label htmlFor="filter-user-safety" className="text-sm text-foreground flex-1">
@@ -261,8 +261,8 @@ export function SimpleFilterSidebar({ isOpen, filters, onFilterChange, onClose }
                 <div className="flex items-center space-x-3">
                   <Checkbox 
                     id="filter-user-wildlife"
-                    checked={filters.showUserReports === true}
-                    onCheckedChange={(checked) => onFilterChange('showUserReports', !!checked)}
+                    checked={filters.showUserWildlife === true}
+                    onCheckedChange={(checked) => onFilterChange('showUserWildlife', !!checked)}
                     data-testid="checkbox-filter-user-wildlife"
                   />
                   <Label htmlFor="filter-user-wildlife" className="text-sm text-foreground flex-1">
@@ -276,8 +276,8 @@ export function SimpleFilterSidebar({ isOpen, filters, onFilterChange, onClose }
                 <div className="flex items-center space-x-3">
                   <Checkbox 
                     id="filter-user-community"
-                    checked={filters.showUserReports === true}
-                    onCheckedChange={(checked) => onFilterChange('showUserReports', !!checked)}
+                    checked={filters.showUserCommunity === true}
+                    onCheckedChange={(checked) => onFilterChange('showUserCommunity', !!checked)}
                     data-testid="checkbox-filter-user-community"
                   />
                   <Label htmlFor="filter-user-community" className="text-sm text-foreground flex-1">
@@ -291,8 +291,8 @@ export function SimpleFilterSidebar({ isOpen, filters, onFilterChange, onClose }
                 <div className="flex items-center space-x-3">
                   <Checkbox 
                     id="filter-user-traffic"
-                    checked={filters.showUserReports === true}
-                    onCheckedChange={(checked) => onFilterChange('showUserReports', !!checked)}
+                    checked={filters.showUserTraffic === true}
+                    onCheckedChange={(checked) => onFilterChange('showUserTraffic', !!checked)}
                     data-testid="checkbox-filter-user-traffic"
                   />
                   <Label htmlFor="filter-user-traffic" className="text-sm text-foreground flex-1">

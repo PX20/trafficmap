@@ -195,7 +195,18 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
           
           // Source-based filtering (matching filter sidebar logic)
           if (isUserReported) {
-            shouldShow = filters.showUserReports === true;
+            // Check individual user report filters based on incident type
+            const incidentType = properties?.incidentType;
+            
+            if (incidentType === 'crime') {
+              shouldShow = filters.showUserSafetyCrime === true;
+            } else if (incidentType === 'wildlife') {
+              shouldShow = filters.showUserWildlife === true;
+            } else if (incidentType === 'traffic') {
+              shouldShow = filters.showUserTraffic === true;
+            } else {
+              shouldShow = filters.showUserCommunity === true; // Default for other types
+            }
           } else {
             // Official incidents - check if QFES or other ESQ
             const isQFES = isQFESIncident(feature);
