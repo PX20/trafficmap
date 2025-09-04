@@ -235,9 +235,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // Transform and store events in local storage for caching
+      // Transform and store events in local storage for caching (filter out cleared events)
+      let trafficStoredCount = 0;
+      let trafficFilteredCount = 0;
       if (data.features) {
         for (const feature of data.features) {
+          const status = feature.properties.status?.toLowerCase() || 'active';
+          
+          // Skip cleared, resolved, or completed traffic events
+          if (status === 'cleared' || status === 'resolved' || status === 'completed' || status === 'closed') {
+            trafficFilteredCount++;
+            continue;
+          }
+          
           const event = {
             id: feature.properties.id.toString(),
             eventType: feature.properties.event_type,
@@ -259,6 +269,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           };
           
           await storage.updateTrafficEvent(event.id, event) || await storage.createTrafficEvent(event);
+          trafficStoredCount++;
+        }
+        
+        if (trafficFilteredCount > 0) {
+          console.log(`Filtered out ${trafficFilteredCount} cleared/completed traffic events`);
         }
       }
       
@@ -553,11 +568,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const existingIncidents = await storage.getIncidents();
       const userIncidents = existingIncidents.filter(inc => (inc.properties as any)?.userReported);
       
-      // Store new emergency incidents
+      // Store new emergency incidents (filter out completed/closed ones)
       let storedCount = 0;
+      let filteredCount = 0;
       if (data.features) {
         for (const feature of data.features) {
           const props = feature.properties;
+          const status = props.CurrentStatus?.toLowerCase() || 'active';
+          
+          // Skip completed, closed, or resolved incidents
+          if (status === 'completed' || status === 'closed' || status === 'resolved' || status === 'cleared') {
+            filteredCount++;
+            continue;
+          }
+          
           const incident = {
             id: props.OBJECTID?.toString() || randomUUID(),
             incidentType: props.GroupedType || 'Incident',
@@ -583,8 +607,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json({ 
         success: true, 
-        message: `Successfully refreshed ${storedCount} emergency incidents`,
-        count: storedCount
+        message: `Successfully refreshed ${storedCount} active emergency incidents (filtered out ${filteredCount} completed/closed)`,
+        count: storedCount,
+        filtered: filteredCount
       });
     } catch (error) {
       console.error("Error refreshing incidents:", error);
