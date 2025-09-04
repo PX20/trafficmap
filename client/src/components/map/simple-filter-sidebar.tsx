@@ -32,7 +32,7 @@ export function SimpleFilterSidebar({ isOpen, filters, onFilterChange, onClose }
     }));
   };
   
-  // Use shared data processing hook
+  // Use shared data processing hook 
   const { counts } = useTrafficData(filters);
 
   const handleRefresh = async () => {
