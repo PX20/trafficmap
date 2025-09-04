@@ -49,14 +49,26 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
   });
   
   // Fetch hierarchical categories
-  const { data: categories = [] } = useQuery({
+  const { data: categories = [], isLoading: categoriesLoading, error: categoriesError } = useQuery({
     queryKey: ["/api/categories"],
-    select: (data: any) => data || [],
+    queryFn: async () => {
+      const response = await fetch("/api/categories");
+      if (!response.ok) throw new Error('Failed to fetch categories');
+      return response.json();
+    },
+    retry: 3,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
-  const { data: subcategories = [] } = useQuery({
+  const { data: subcategories = [], isLoading: subcategoriesLoading } = useQuery({
     queryKey: ["/api/subcategories"],
-    select: (data: any) => data || [],
+    queryFn: async () => {
+      const response = await fetch("/api/subcategories");
+      if (!response.ok) throw new Error('Failed to fetch subcategories');
+      return response.json();
+    },
+    retry: 3,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
 
@@ -142,9 +154,17 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
             
             
             {/* Individual Category Sections */}
-            {categories.length === 0 ? (
+            {categoriesLoading ? (
               <div className="text-sm text-muted-foreground p-4 text-center">
                 Loading categories...
+              </div>
+            ) : categoriesError ? (
+              <div className="text-sm text-red-500 p-4 text-center">
+                Error loading categories: {categoriesError.message}
+              </div>
+            ) : categories.length === 0 ? (
+              <div className="text-sm text-muted-foreground p-4 text-center">
+                No categories found
               </div>
             ) : (
               categories.map((category: any) => {
