@@ -52,9 +52,15 @@ export function SimpleFilterSidebar({ isOpen, filters, onFilterChange, onClose }
   });
 
   const { data: incidents, refetch: refetchIncidents } = useQuery({
-    queryKey: ["/api/incidents"],
+    queryKey: ["/api/incidents", filters.homeLocation],
     queryFn: async () => {
-      const response = await fetch('/api/incidents');
+      // Extract just the suburb name from location like "Caloundra 4551" -> "Caloundra"  
+      const suburb = filters.homeLocation?.split(' ')[0] || '';
+      const url = suburb 
+        ? `/api/incidents?suburb=${encodeURIComponent(suburb)}`
+        : '/api/incidents';
+      
+      const response = await fetch(url);
       if (!response.ok) throw new Error('Failed to fetch incidents');
       return response.json();
     },
