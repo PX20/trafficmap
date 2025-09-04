@@ -188,7 +188,7 @@ export function SimpleFilterSidebar({ isOpen, filters, onFilterChange, onClose }
                     onCheckedChange={(checked: boolean) => onFilterChange('showUserCommunity', !!checked)}
                     data-testid="checkbox-filter-user-community"
                   />
-                  <Users className="w-4 h-4 text-gray-500" />
+                  <Users className="w-4 h-4 text-teal-600" />
                   <Label htmlFor="filter-user-community" className="text-sm text-foreground flex-1">
                     Community Issues
                   </Label>

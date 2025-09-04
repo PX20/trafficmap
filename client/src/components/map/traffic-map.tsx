@@ -315,18 +315,7 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
     if (properties) {
       const status = (properties.status || properties.CurrentStatus || '').toLowerCase();
       
-      // Debug: Log status values to see what we're actually getting
-      if (properties.Master_Incident_Number || properties.id) {
-        console.log('Incident status check:', {
-          id: properties.Master_Incident_Number || properties.id,
-          status: properties.status,
-          CurrentStatus: properties.CurrentStatus,
-          normalizedStatus: status
-        });
-      }
-      
       if (status === 'completed' || status === 'closed' || status === 'resolved' || status === 'cleared' || status === 'patrolled') {
-        console.log('Found completed incident - marking grey:', properties.Master_Incident_Number || properties.id);
         return '#9ca3af'; // Grey for completed incidents
       }
     }
