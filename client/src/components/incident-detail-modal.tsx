@@ -53,11 +53,17 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
 
   // Share functionality
   const handleShare = async () => {
-    if (!incident || !incidentId) return;
+    console.log("Share button clicked!", { incident, incidentId });
+    if (!incident || !incidentId) {
+      console.log("No incident or incidentId");
+      return;
+    }
 
     const shareUrl = `${window.location.origin}?incident=${encodeURIComponent(incidentId)}`;
     const shareTitle = getIncidentTitle(incident);
     const shareText = `${shareTitle} - ${getIncidentLocation(incident)}`;
+
+    console.log("Share data:", { shareUrl, shareTitle, shareText });
 
     // Try native Web Share API first (mobile devices)
     if (navigator.share) {
@@ -67,12 +73,14 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
           text: shareText,
           url: shareUrl,
         });
+        console.log("Native share successful");
         toast({
           title: "Shared successfully",
           description: "Incident details have been shared",
         });
         return;
       } catch (error) {
+        console.log("Native share failed:", error);
         // User cancelled sharing or error occurred, fall back to clipboard
       }
     }
@@ -80,11 +88,13 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
     // Fallback to clipboard copy (desktop browsers)
     try {
       await navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
+      console.log("Clipboard copy successful");
       toast({
         title: "Link copied",
         description: "Incident link has been copied to your clipboard",
       });
     } catch (error) {
+      console.log("Clipboard copy failed:", error);
       // Final fallback - show URL in a prompt
       const fallbackText = `${shareText}\n${shareUrl}`;
       if (window.prompt) {
@@ -101,7 +111,9 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
 
   // Like functionality
   const handleLike = () => {
+    console.log("Like button clicked!", { isAuthenticated, incident });
     if (!isAuthenticated) {
+      console.log("User not authenticated");
       toast({
         title: "Please log in",
         description: "You need to log in to like incidents",
@@ -113,6 +125,7 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
     setIsLiked(!isLiked);
     setLikeCount(prev => isLiked ? prev - 1 : prev + 1);
     
+    console.log("Showing like toast");
     toast({
       title: isLiked ? "Unliked" : "Liked",
       description: isLiked ? "Removed from your liked incidents" : "Added to your liked incidents",
