@@ -100,6 +100,9 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
   const categorizeIncident = (incident: any) => {
     const props = incident.properties || {};
     
+    const datasource = props.datasource?.source_name || props.source || props.datasource || 'unknown';
+    const providedBy = props.datasource?.provided_by || '';
+    
     // Handle traffic events from QLD Traffic API
     const trafficEventType = props.event_type || props.eventType || props.type;
     if (trafficEventType) {
@@ -115,6 +118,21 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
     // For user-reported incidents, use their categoryId
     if (props.userReported && props.categoryId) {
       return props.categoryId;
+    }
+    
+    // Handle ESQ (Emergency Services Queensland) incidents
+    if (datasource === 'ESQ' || providedBy?.includes('Emergency') || props.source === 'ESQ') {
+      return '54d31da5-fc10-4ad2-8eca-04bac680e668'; // Emergency Situations
+    }
+    
+    // Handle TMR (Transport and Main Roads) incidents  
+    if (datasource === 'TMR' || datasource === 'EPS' || providedBy?.includes('Transport') || providedBy?.includes('Main Roads') || props.source === 'TMR') {
+      return '9b1d58d9-cfd1-4c31-93e9-754276a5f265'; // Infrastructure & Hazards
+    }
+    
+    // Handle QPS (Queensland Police Service) incidents
+    if (datasource === 'QPS' || providedBy?.includes('Police') || props.source === 'QPS') {
+      return '792759f4-1b98-4665-b14c-44a54e9969e9'; // Safety & Crime
     }
     
     // For QFES incidents, categorize based on GroupedType and other properties
@@ -386,7 +404,16 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
                       <Checkbox 
                         id={`filter-category-${category.id}`}
                         checked={filters[category.id as keyof FilterState] === true}
-                        onCheckedChange={(checked) => onFilterChange(category.id as keyof FilterState, !!checked)}
+                        onCheckedChange={(checked) => {
+                          // Update the main category filter
+                          onFilterChange(category.id as keyof FilterState, !!checked);
+                          
+                          // Update all subcategories under this category
+                          const categorySubcategories = subcategories.filter((sub: any) => sub.categoryId === category.id);
+                          categorySubcategories.forEach((subcategory: any) => {
+                            onFilterChange(subcategory.id as keyof FilterState, !!checked);
+                          });
+                        }}
                         data-testid={`checkbox-filter-${category.name.toLowerCase().replace(/\s+/g, '-')}`}
                       />
                       <Label htmlFor={`filter-category-${category.id}`} className="text-sm text-foreground flex-1">
