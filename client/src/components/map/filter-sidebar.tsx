@@ -194,26 +194,23 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
     return count;
   };
   
-  // Events are already filtered by region on the backend when homeLocation is set
-  const regionalEvents = events;
-
   const eventCounts = {
-    crashes: regionalEvents?.filter((e: any) => {
+    crashes: events?.filter((e: any) => {
       const eventType = e.properties?.event_type || e.properties?.eventType || e.properties?.type;
       return eventType === "Crash" || eventType === "crash";
     }).length || 0,
-    hazards: regionalEvents?.filter((e: any) => {
+    hazards: events?.filter((e: any) => {
       const eventType = e.properties?.event_type || e.properties?.eventType || e.properties?.type;
       return eventType === "Hazard" || eventType === "hazard";
     }).length || 0,
-    restrictions: regionalEvents?.filter((e: any) => {
+    restrictions: events?.filter((e: any) => {
       const eventType = e.properties?.event_type || e.properties?.eventType || e.properties?.type;
       return eventType === "Roadworks" || eventType === "roadworks" || 
              eventType === "Special event" || eventType === "special_event";
     }).length || 0,
     officialIncidents: incidents?.filter((i: any) => !i.properties?.userReported).length || 0,
     userReports: incidents?.filter((i: any) => i.properties?.userReported).length || 0,
-    totalEvents: (regionalEvents?.length || 0) + (incidents?.length || 0),
+    totalEvents: (events?.length || 0) + (incidents?.length || 0),
     totalStatewide: events?.length || 0,
   };
 
