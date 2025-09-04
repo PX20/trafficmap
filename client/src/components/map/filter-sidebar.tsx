@@ -109,23 +109,39 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
     return count;
   };
   
+  // Filter events by region if location filter is enabled
+  const getRegionalEvents = () => {
+    if (!filters.locationFilter || !filters.homeBoundingBox || !events) return events || [];
+    
+    const [minLon, minLat, maxLon, maxLat] = filters.homeBoundingBox;
+    return events.filter((event: any) => {
+      const coords = event.geometry?.coordinates;
+      if (!coords || coords.length !== 2) return false;
+      const [lon, lat] = coords;
+      return lon >= minLon && lon <= maxLon && lat >= minLat && lat <= maxLat;
+    });
+  };
+
+  const regionalEvents = getRegionalEvents();
+
   const eventCounts = {
-    crashes: events?.filter((e: any) => {
+    crashes: regionalEvents?.filter((e: any) => {
       const eventType = e.properties?.event_type || e.properties?.eventType || e.properties?.type;
       return eventType === "Crash" || eventType === "crash";
     }).length || 0,
-    hazards: events?.filter((e: any) => {
+    hazards: regionalEvents?.filter((e: any) => {
       const eventType = e.properties?.event_type || e.properties?.eventType || e.properties?.type;
       return eventType === "Hazard" || eventType === "hazard";
     }).length || 0,
-    restrictions: events?.filter((e: any) => {
+    restrictions: regionalEvents?.filter((e: any) => {
       const eventType = e.properties?.event_type || e.properties?.eventType || e.properties?.type;
       return eventType === "Roadworks" || eventType === "roadworks" || 
              eventType === "Special event" || eventType === "special_event";
     }).length || 0,
     officialIncidents: incidents?.filter((i: any) => !i.properties?.userReported).length || 0,
     userReports: incidents?.filter((i: any) => i.properties?.userReported).length || 0,
-    totalEvents: (events?.length || 0) + (incidents?.length || 0),
+    totalEvents: (regionalEvents?.length || 0) + (incidents?.length || 0),
+    totalStatewide: events?.length || 0,
   };
 
 
