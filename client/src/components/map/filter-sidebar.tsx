@@ -182,13 +182,6 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
             <h2 className="text-lg font-semibold text-foreground mb-4">Incident Types</h2>
             
             
-            {/* Data source info */}
-            <div className="text-xs text-gray-500 mb-4 p-2 bg-muted/30 rounded">
-              📊 <strong>Data Sources:</strong><br/>
-              🌏 Official QLD Traffic: {events?.length || 0} statewide events<br/>
-              🏘️ Community Reports: {eventCounts.userReports} local incidents<br/>
-              📍 Total on Map: {eventCounts.totalEvents} items
-            </div>
             
             {/* Traffic Events Section */}
             <div className="mb-4">
@@ -196,10 +189,13 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
                 onClick={() => toggleSection('traffic')}
                 className="flex items-center justify-between w-full p-2 text-left hover:bg-muted/50 rounded-md transition-colors"
               >
-                <h3 className="text-sm font-medium text-foreground flex items-center gap-2">
+                <div className="flex items-center gap-2">
                   <Car className="w-4 h-4 text-blue-600" />
-                  Live Traffic
-                </h3>
+                  <h3 className="text-sm font-medium text-foreground">Live Traffic</h3>
+                  <span className="text-xs text-muted-foreground bg-blue-100 text-blue-800 px-2 py-1 rounded-full ml-auto">
+                    {eventCounts.crashes + eventCounts.hazards + eventCounts.restrictions}
+                  </span>
+                </div>
                 {expandedSections.traffic ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
               </button>
               
@@ -283,10 +279,13 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
                   onClick={() => toggleSection(category.name)}
                   className="flex items-center justify-between w-full p-2 text-left hover:bg-muted/50 rounded-md transition-colors"
                 >
-                  <h3 className="text-sm font-medium text-foreground flex items-center gap-2">
+                  <div className="flex items-center gap-2">
                     {getCategoryIcon(category.name)}
-                    {category.name}
-                  </h3>
+                    <h3 className="text-sm font-medium text-foreground">{category.name}</h3>
+                    <span className="text-xs text-muted-foreground bg-gray-100 text-gray-800 px-2 py-1 rounded-full ml-auto">
+                      {getCategoryCount(category.id)}
+                    </span>
+                  </div>
                   {expandedSections[category.name as keyof typeof expandedSections] ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                 </button>
                 
