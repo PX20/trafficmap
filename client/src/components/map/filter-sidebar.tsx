@@ -19,6 +19,7 @@ interface FilterSidebarProps {
 }
 
 export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: FilterSidebarProps) {
+  // Force cache refresh
   const isMobile = useIsMobile();
   const { toast } = useToast();
   const [expandedSections, setExpandedSections] = useState({
@@ -40,7 +41,10 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
   const { data: events, refetch: refetchEvents } = useQuery({
     queryKey: ["/api/traffic/events"],
     queryFn: getTrafficEvents,
-    select: (data: any) => data?.features || [],
+    select: (data: any) => {
+      const features = data?.features || [];
+      return Array.isArray(features) ? features : [];
+    },
   });
 
   const { data: incidents, refetch: refetchIncidents } = useQuery({
@@ -50,7 +54,10 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
       if (!response.ok) throw new Error('Failed to fetch incidents');
       return response.json();
     },
-    select: (data: any) => data?.features || [],
+    select: (data: any) => {
+      const features = data?.features || [];
+      return Array.isArray(features) ? features : [];
+    },
   });
   
   // Fetch hierarchical categories
