@@ -235,17 +235,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // Transform and store events in local storage for caching (filter out cleared events)
+      // Transform and store events in local storage for caching (filter by age only)
       let trafficStoredCount = 0;
-      let trafficFilteredCount = 0;
+      let trafficAgeFilteredCount = 0;
       if (data.features) {
         for (const feature of data.features) {
-          const status = feature.properties.status?.toLowerCase() || 'active';
+          // Filter out traffic events older than 7 days
+          const publishedDate = feature.properties.published ? new Date(feature.properties.published) : null;
+          const lastUpdated = feature.properties.last_updated ? new Date(feature.properties.last_updated) : null;
+          const eventDate = publishedDate || lastUpdated;
           
-          // Skip cleared, resolved, or completed traffic events
-          if (status === 'cleared' || status === 'resolved' || status === 'completed' || status === 'closed') {
-            trafficFilteredCount++;
-            continue;
+          if (eventDate) {
+            const daysSinceEvent = (Date.now() - eventDate.getTime()) / (1000 * 60 * 60 * 24);
+            if (daysSinceEvent > 7) {
+              trafficAgeFilteredCount++;
+              continue;
+            }
           }
           
           const event = {
@@ -272,8 +277,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           trafficStoredCount++;
         }
         
-        if (trafficFilteredCount > 0) {
-          console.log(`Filtered out ${trafficFilteredCount} cleared/completed traffic events`);
+        if (trafficAgeFilteredCount > 0) {
+          console.log(`Filtered out ${trafficAgeFilteredCount} traffic events older than 7 days`);
         }
       }
       
@@ -568,18 +573,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const existingIncidents = await storage.getIncidents();
       const userIncidents = existingIncidents.filter(inc => (inc.properties as any)?.userReported);
       
-      // Store new emergency incidents (filter out completed/closed ones)
+      // Store new emergency incidents (keep all, filter by age only)
       let storedCount = 0;
-      let filteredCount = 0;
+      let ageFilteredCount = 0;
       if (data.features) {
         for (const feature of data.features) {
           const props = feature.properties;
-          const status = props.CurrentStatus?.toLowerCase() || 'active';
           
-          // Skip completed, closed, or resolved incidents
-          if (status === 'completed' || status === 'closed' || status === 'resolved' || status === 'cleared') {
-            filteredCount++;
-            continue;
+          // Filter out incidents older than 7 days
+          const responseDate = props.Response_Date ? new Date(props.Response_Date) : null;
+          if (responseDate) {
+            const daysSinceResponse = (Date.now() - responseDate.getTime()) / (1000 * 60 * 60 * 24);
+            if (daysSinceResponse > 7) {
+              ageFilteredCount++;
+              continue;
+            }
           }
           
           const incident = {
@@ -607,9 +615,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json({ 
         success: true, 
-        message: `Successfully refreshed ${storedCount} active emergency incidents (filtered out ${filteredCount} completed/closed)`,
+        message: `Successfully refreshed ${storedCount} emergency incidents (filtered out ${ageFilteredCount} incidents older than 7 days)`,
         count: storedCount,
-        filtered: filteredCount
+        filtered: ageFilteredCount
       });
     } catch (error) {
       console.error("Error refreshing incidents:", error);

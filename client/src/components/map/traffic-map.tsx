@@ -121,7 +121,7 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
           
           if (coords) {
             const marker = L.marker(coords, {
-              icon: createCustomMarker(eventType, getMarkerColor(eventType))
+              icon: createCustomMarker(eventType, getMarkerColor(eventType, feature.properties))
             });
 
             const popupContent = createEventPopup(feature.properties);
@@ -186,7 +186,7 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
           
           if (coords) {
             const marker = L.marker(coords, {
-              icon: createCustomMarker(markerType, getMarkerColor(markerType))
+              icon: createCustomMarker(markerType, getMarkerColor(markerType, feature.properties))
             });
 
             const popupContent = createIncidentPopup(feature.properties);
@@ -310,8 +310,16 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
     return 'deaca906-3561-4f80-b79f-ed99561c3b04'; // Community Issues
   };
 
-  const getMarkerColor = (markerType: string) => {
-    // Simplified color scheme - one color per category
+  const getMarkerColor = (markerType: string, properties?: any) => {
+    // Check if incident is completed/closed - show grey for historical context
+    if (properties) {
+      const status = (properties.status || properties.CurrentStatus || '').toLowerCase();
+      if (status === 'completed' || status === 'closed' || status === 'resolved' || status === 'cleared') {
+        return '#9ca3af'; // Grey for completed incidents
+      }
+    }
+    
+    // Active incident colors
     switch(markerType.toLowerCase()) {
       // Traffic events - all get orange (TMR)
       case 'crash':
