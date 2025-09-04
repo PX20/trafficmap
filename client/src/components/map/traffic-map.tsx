@@ -146,21 +146,20 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
           const isUserReported = properties?.userReported;
           
           if (isUserReported) {
-            // User-reported incidents - determine marker type based on incident content
+            // User-reported incidents - determine marker type based on incident type
             const incidentType = properties?.incidentType;
-            const description = properties?.description?.toLowerCase() || '';
-            const title = properties?.title?.toLowerCase() || '';
             
-            if (incidentType === 'traffic' || description.includes('traffic') || title.includes('traffic')) {
+            if (incidentType === 'traffic') {
               markerType = 'traffic';
-            } else if (incidentType === 'crime' || incidentType === 'suspicious_activity' || 
-                       description.includes('suspicious') || title.includes('suspicious') ||
-                       description.includes('break') || title.includes('break')) {
+            } else if (incidentType === 'crime' || incidentType === 'suspicious_activity') {
               markerType = 'crime';
-            } else if (description.includes('emergency') || title.includes('emergency')) {
+            } else if (incidentType === 'emergency') {
               markerType = 'emergency';
+            } else if (incidentType === 'wildlife') {
+              markerType = 'wildlife';
             } else {
-              markerType = 'incident'; // default
+              // Infrastructure and other types fall into community category
+              markerType = 'community';
             }
           } else {
             // Official emergency incidents - all are emergency type
