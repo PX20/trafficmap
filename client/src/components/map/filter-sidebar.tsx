@@ -38,7 +38,15 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
   };
   
   const { data: events, refetch: refetchEvents } = useQuery({
-    queryKey: ["/api/traffic/events"],
+    queryKey: ["/api/traffic/events", filters.homeLocation],
+    queryFn: async () => {
+      const url = filters.homeLocation 
+        ? `/api/traffic/events?suburb=${encodeURIComponent(filters.homeLocation)}`
+        : '/api/traffic/events';
+      const response = await fetch(url);
+      if (!response.ok) throw new Error('Failed to fetch traffic events');
+      return response.json();
+    },
     select: (data: any) => data?.features || [],
   });
 
@@ -109,35 +117,8 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
     return count;
   };
   
-  // Filter events by region if location filter is enabled
-  const getRegionalEvents = () => {
-    if (!filters.locationFilter || !events) return events || [];
-    
-    // If no bounding box is set, return all events (fallback)
-    if (!filters.homeBoundingBox) return events || [];
-    
-    const [minLon, minLat, maxLon, maxLat] = filters.homeBoundingBox;
-    
-    const filtered = events.filter((event: any) => {
-      const coords = event.geometry?.coordinates;
-      if (!coords || coords.length !== 2) return false;
-      
-      const [lon, lat] = coords;
-      
-      // Use a larger buffer for more inclusive regional filtering
-      const buffer = 0.2; // About 20km buffer for regional coverage
-      const inBounds = lon >= (minLon - buffer) && 
-                      lon <= (maxLon + buffer) && 
-                      lat >= (minLat - buffer) && 
-                      lat <= (maxLat + buffer);
-      
-      return inBounds;
-    });
-    
-    return filtered;
-  };
-
-  const regionalEvents = getRegionalEvents();
+  // Events are already filtered by region on the backend when homeLocation is set
+  const regionalEvents = events;
 
   const eventCounts = {
     crashes: regionalEvents?.filter((e: any) => {
@@ -365,26 +346,14 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
             )}
           </div>
           
-          {/* Location Filter Section */}
+          {/* Location Setting Section */}
           <div className="pt-4 border-t border-border">
             <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
               <MapPin className="w-5 h-5 text-blue-500" />
-              Location Filter
+              Your Location
             </h2>
             
-            <div className="space-y-4">
-              <div className="flex items-center space-x-3">
-                <Checkbox
-                  id="location-filter-enabled"
-                  checked={filters.locationFilter}
-                  onCheckedChange={(checked) => onFilterChange('locationFilter', !!checked)}
-                  data-testid="checkbox-location-filter"
-                />
-                <Label htmlFor="location-filter-enabled" className="text-sm text-foreground flex-1">
-                  Updates from my region
-                </Label>
-              </div>
-              
+            <div className="space-y-4">              
               <div className="space-y-2">
                 <Label className="text-xs text-muted-foreground">Set your home suburb:</Label>
                 <LocationAutocomplete
@@ -397,15 +366,11 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
                     if (boundingBox) {
                       onFilterChange('homeBoundingBox', boundingBox);
                     }
-                    // Auto-enable location filtering when a location is set
-                    onFilterChange('locationFilter', true);
                   }}
                   onClear={() => {
                     onFilterChange('homeLocation', '');
                     onFilterChange('homeCoordinates', undefined);
                     onFilterChange('homeBoundingBox', undefined);
-                    // Auto-disable location filtering when location is cleared
-                    onFilterChange('locationFilter', false);
                   }}
                   placeholder="Enter your suburb..."
                   disabled={false}
@@ -417,7 +382,7 @@ export function FilterSidebar({ isOpen, filters, onFilterChange, onClose }: Filt
                   <div className="text-xs text-muted-foreground mb-1">Home Location:</div>
                   <div className="text-sm font-medium text-foreground">{filters.homeLocation}</div>
                   <div className="text-xs text-muted-foreground mt-1">
-                    {filters.locationFilter ? 'Filtering by nearby area' : 'Click checkbox above to enable location filtering'}
+                    Showing events from your region
                   </div>
                 </div>
               )}
