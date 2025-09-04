@@ -18,7 +18,7 @@ export interface ProcessedTrafficData {
 
 export interface FilterState {
   homeLocation?: string;
-  showTraffic?: boolean;
+  showTrafficEvents?: boolean;
   showIncidents?: boolean;
   showQFES?: boolean;
   showUserSafetyCrime?: boolean;
@@ -116,7 +116,7 @@ export function useTrafficData(filters: FilterState): ProcessedTrafficData {
   };
 
   // Apply filtering for display
-  const filteredEvents = events.filter(() => filters.showTraffic === true);
+  const filteredEvents = events.filter(() => filters.showTrafficEvents === true);
   
   const filteredIncidents = incidents.filter((incident: any) => {
     const isUserReported = incident.properties?.userReported;
