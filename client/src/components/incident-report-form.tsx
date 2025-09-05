@@ -42,13 +42,19 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [uploadedPhotoUrl, setUploadedPhotoUrl] = useState<string>("");
   
-  // Fetch categories and subcategories - using default queryFn
+  // Fetch categories - using simple fetch to avoid auth issues
   const { data: categories = [], error: categoriesError, isLoading: categoriesLoading } = useQuery({
     queryKey: ["/api/categories"],
-    // Using default queryFn from queryClient (no custom queryFn)
+    queryFn: async () => {
+      const response = await fetch("/api/categories");
+      if (!response.ok) {
+        throw new Error(`Categories failed: ${response.status}`);
+      }
+      return response.json();
+    },
     enabled: true,
     retry: 3,
-    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
   
   const { data: subcategories = [] } = useQuery({
@@ -166,10 +172,12 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
           const locationData = await response.json();
           console.log('Reverse geocoding response:', locationData);
           
-          // Build comprehensive location string including street name
+          // Build comprehensive location string with ALL available info
           let locationParts = [];
           if (locationData.road) locationParts.push(locationData.road);
           if (locationData.suburb) locationParts.push(locationData.suburb);
+          if (locationData.city && !locationData.suburb) locationParts.push(locationData.city);
+          if (locationData.town && !locationData.suburb && !locationData.city) locationParts.push(locationData.town);
           if (locationData.postcode) locationParts.push(locationData.postcode);
           if (locationData.state && !locationData.state.includes('Queensland')) {
             locationParts.push(locationData.state);
