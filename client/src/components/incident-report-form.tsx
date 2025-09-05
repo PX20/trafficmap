@@ -46,19 +46,29 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
   const { data: categories = [], error: categoriesError, isLoading: categoriesLoading } = useQuery({
     queryKey: ["/api/categories"],
     queryFn: async () => {
+      console.log('🔄 Starting categories fetch...');
       const response = await fetch("/api/categories");
+      console.log('📡 Categories API response status:', response.status, response.statusText);
       if (!response.ok) {
         console.error('Categories API failed:', response.status, response.statusText);
         throw new Error(`Failed to fetch categories: ${response.status}`);
       }
       const data = await response.json();
-      console.log('Categories loaded:', data);
+      console.log('✅ Categories loaded successfully:', data);
+      console.log('📊 Categories count:', data.length);
       return data;
     },
     enabled: true, // Always enabled to ensure categories load
     retry: 3,
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
     select: (data: any) => data || [],
+  });
+
+  console.log('🔍 Categories query state:', {
+    data: categories,
+    length: categories?.length,
+    error: categoriesError,
+    isLoading: categoriesLoading
   });
   
   const { data: subcategories = [] } = useQuery({
@@ -272,6 +282,10 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
+                      {(() => {
+                        console.log('🎯 Rendering SelectContent - categories:', categories, 'loading:', categoriesLoading, 'error:', categoriesError);
+                        return null;
+                      })()}
                       {categoriesLoading ? (
                         <div className="px-2 py-2 text-sm text-gray-500">Loading categories...</div>
                       ) : categoriesError ? (
