@@ -340,36 +340,7 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
       return <Badge variant="secondary">Community Report</Badge>;
     }
     
-    // Debug: Log what we're working with
-    console.log('Status Badge Debug:', {
-      incidentType: incident.type,
-      priority: incident.properties?.event_priority,
-      eventType: incident.properties?.event_type,
-      status: incident.properties?.status
-    });
-    
-    // Traffic incidents - show priority first, then event type
-    const priority = incident.properties?.event_priority;
-    const eventType = incident.properties?.event_type || incident.properties?.event_subtype;
-    
-    if (priority) {
-      const priorityColors = {
-        'high': 'destructive',
-        'medium': 'default', 
-        'low': 'secondary',
-        'major': 'destructive',
-        'minor': 'secondary'
-      };
-      return <Badge variant={priorityColors[priority.toLowerCase()] || 'default'} className="capitalize">
-        {priority} Priority
-      </Badge>;
-    }
-    
-    if (eventType) {
-      return <Badge variant="secondary" className="capitalize">{eventType}</Badge>;
-    }
-    
-    // Check status for other states
+    // Check status for completion
     const status = (
       incident.status || 
       incident.properties?.CurrentStatus || 
@@ -379,20 +350,13 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
       ''
     ).toLowerCase();
     
-    if (status === 'completed' || status === 'closed' || status === 'resolved' || status === 'cleared' || status === 'patrolled') {
-      return <Badge variant="outline" className="text-gray-600 border-gray-300">Resolved</Badge>;
+    // Complete status
+    if (status === 'completed' || status === 'closed' || status === 'resolved' || status === 'cleared' || status === 'patrolled' || status === 'complete') {
+      return <Badge variant="outline" className="text-gray-600 border-gray-300">Complete</Badge>;
     }
     
-    if (status === 'going' || status === 'active' || status === 'in progress') {
-      return <Badge variant="destructive">Active</Badge>;
-    }
-    
-    if (status === 'monitoring' || status === 'ongoing') {
-      return <Badge variant="secondary">Monitoring</Badge>;
-    }
-    
-    // Always return something visible for debugging
-    return <Badge variant="secondary">TMR</Badge>;
+    // Default to Active for all other incidents
+    return <Badge variant="destructive">Active</Badge>;
   };
 
   const handleCommentSubmit = () => {
@@ -709,9 +673,8 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
                     <DialogTitle className="text-xl font-bold text-gray-900 leading-tight">
                       {getIncidentTitle(incident)}
                     </DialogTitle>
-                    <div className="flex flex-wrap gap-2" style={{border: '1px solid red', minHeight: '30px', background: 'yellow'}}>
+                    <div className="flex flex-wrap gap-2">
                       {getStatusBadge(incident)}
-                      <Badge variant="secondary">TEST BADGE</Badge>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 text-sm text-gray-700 mb-4">
