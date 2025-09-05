@@ -42,10 +42,18 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [uploadedPhotoUrl, setUploadedPhotoUrl] = useState<string>("");
   
-  // Fetch categories - always fetch for better UX
+  // Fetch categories - with explicit queryFn to avoid auth issues
   const { data: categories = [], error: categoriesError, isLoading: categoriesLoading } = useQuery<any[]>({
     queryKey: ["/api/categories"],
+    queryFn: async () => {
+      const response = await fetch("/api/categories");
+      if (!response.ok) {
+        throw new Error(`Failed to fetch categories: ${response.status}`);
+      }
+      return response.json();
+    },
     staleTime: 5 * 60 * 1000,
+    retry: 3,
   });
   
   const { data: subcategories = [] } = useQuery({
