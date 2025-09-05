@@ -30,7 +30,7 @@ export function LocationAutocomplete({
   value, 
   onChange, 
   onClear, 
-  placeholder = "Enter your suburb or address...",
+  placeholder = "Enter suburb or street name (no house numbers)...",
   disabled = false 
 }: LocationAutocompleteProps) {
   const [suggestions, setSuggestions] = useState<LocationSuggestion[]>([]);
@@ -87,29 +87,48 @@ export function LocationAutocomplete({
     }
   };
 
+  // Privacy-safe function to strip house numbers from addresses
+  const stripHouseNumbers = (address: string): string => {
+    // Remove leading numbers, house numbers, unit numbers, etc.
+    return address
+      .replace(/^\d+[A-Za-z]?\s+/, '') // Remove house numbers like "123 ", "123A ", etc.
+      .replace(/^Unit\s+\d+[A-Za-z]?\s+/, '') // Remove "Unit 12 "
+      .replace(/^Apt\s+\d+[A-Za-z]?\s+/, '') // Remove "Apt 5A "  
+      .replace(/^Shop\s+\d+[A-Za-z]?\s+/, '') // Remove "Shop 7 "
+      .replace(/^Level\s+\d+[A-Za-z]?\s+/, '') // Remove "Level 2 "
+      .replace(/^\d+\/\d+\s+/, '') // Remove "1/123 " format
+      .replace(/^\d+\/\s+/, '') // Remove "12/ " format
+      .trim();
+  };
+
   const handleSuggestionClick = (suggestion: LocationSuggestion) => {
     // Extract address components
     const parts = suggestion.display_name.split(',').map(part => part.trim());
-    const street = parts[0];
+    let street = parts[0];
     const suburb = suggestion.address.suburb || suggestion.address.city;
     const postcode = suggestion.address.postcode;
     const state = suggestion.address.state || 'QLD';
     
-    // Build location string with street, suburb, postcode and state
+    // PRIVACY PROTECTION: Strip house numbers and specific addresses
+    if (street) {
+      street = stripHouseNumbers(street);
+    }
+    
+    // Build privacy-safe location string 
     let locationText = '';
     
-    // Start with street if it's different from suburb
-    if (street && suburb && street !== suburb) {
+    // Only include street name if it's different from suburb and has content after stripping numbers
+    if (street && suburb && street !== suburb && street.length > 2) {
       locationText = street;
       
       // Add suburb
       locationText += `, ${suburb}`;
     } else {
-      // Just use suburb if no street or street is same as suburb
-      locationText = suburb || street || '';
+      // Just use suburb for privacy - no specific street addresses
+      locationText = suburb || 'Unknown location';
     }
     
-    // Add postcode and state
+    // Add postcode and state for better context
     if (postcode) {
       locationText += ` ${postcode}`;
     }
@@ -201,15 +220,20 @@ export function LocationAutocomplete({
                     {(() => {
                       const parts = suggestion.display_name.split(',').map(part => part.trim());
                       const suburb = suggestion.address.suburb || suggestion.address.city;
-                      const street = parts[0];
+                      let street = parts[0];
                       const postcode = suggestion.address.postcode;
                       
-                      // If we have both street and suburb, show both
-                      if (suburb && street && street !== suburb) {
+                      // PRIVACY PROTECTION: Strip house numbers from display
+                      if (street) {
+                        street = stripHouseNumbers(street);
+                      }
+                      
+                      // Show street name only if it's different from suburb and privacy-safe
+                      if (suburb && street && street !== suburb && street.length > 2) {
                         return `${street}, ${suburb}`;
                       }
-                      // Otherwise just show the suburb
-                      return suburb || street;
+                      // Otherwise just show the suburb for privacy
+                      return suburb || 'Street location';
                     })()}
                   </div>
                   <div className="text-xs text-muted-foreground truncate">
