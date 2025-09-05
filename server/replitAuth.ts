@@ -143,7 +143,29 @@ export async function setupAuth(app: Express) {
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
   const user = req.user as any;
 
-  if (!req.isAuthenticated() || !user.expires_at) {
+  // Check basic authentication
+  if (!req.isAuthenticated() || !user) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  // Check if session has proper claims structure
+  if (!user.claims || !user.claims.sub) {
+    console.error("Authentication failed: Invalid user claims structure", { 
+      hasUser: !!user, 
+      hasClaims: !!(user && user.claims),
+      hasSub: !!(user && user.claims && user.claims.sub),
+      userKeys: user ? Object.keys(user) : []
+    });
+    
+    // Clear corrupted session and redirect to login
+    req.logout((err) => {
+      if (err) console.error("Logout error:", err);
+    });
+    return res.status(401).json({ message: "Unauthorized - Invalid session, please log in again" });
+  }
+
+  // Check token expiration
+  if (!user.expires_at) {
     return res.status(401).json({ message: "Unauthorized" });
   }
 
@@ -152,6 +174,7 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
     return next();
   }
 
+  // Try to refresh token
   const refreshToken = user.refresh_token;
   if (!refreshToken) {
     res.status(401).json({ message: "Unauthorized" });

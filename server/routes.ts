@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
-import { isAuthenticated } from "./replitAuth";
+import { isAuthenticated, setupAuth as setupReplitAuth } from "./replitAuth";
 import { insertIncidentSchema, insertCommentSchema, insertConversationSchema, insertMessageSchema, insertNotificationSchema } from "@shared/schema";
 import { z } from "zod";
 import {
@@ -129,6 +129,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Auth middleware
   await setupAuth(app);
+  
+  // Replit Auth routes (login, logout, callback)
+  await setupReplitAuth(app);
 
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
