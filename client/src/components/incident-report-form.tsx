@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
@@ -42,27 +42,26 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [uploadedPhotoUrl, setUploadedPhotoUrl] = useState<string>("");
   
-  // Fetch categories - debug version
-  const { data: categories = [], error: categoriesError, isLoading: categoriesLoading } = useQuery({
-    queryKey: ["categories"],
-    queryFn: async () => {
-      console.log("🔥 Categories fetch starting...");
-      const response = await fetch("/api/categories");
-      console.log("🔥 Categories response:", response.status, response.ok);
-      if (!response.ok) {
-        throw new Error(`Categories failed: ${response.status}`);
-      }
-      const data = await response.json();
-      console.log("🔥 Categories data:", data);
-      return data;
-    },
-    enabled: true,
-    retry: false, // Disable retry for debugging
-    staleTime: 0, // No caching for debugging
-  });
+  // Test with hardcoded categories to isolate the issue
+  const [categories, setCategoriesTest] = useState([
+    { id: "1", name: "Test Category 1" },
+    { id: "2", name: "Test Category 2" },
+    { id: "3", name: "Test Category 3" }
+  ]);
+  const categoriesError = null;
+  const categoriesLoading = false;
 
-  // Debug logging
-  console.log("🔥 Categories state:", { categories, error: categoriesError, loading: categoriesLoading });
+  // Try to fetch real categories on component mount
+  useEffect(() => {
+    fetch("/api/categories")
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.length > 0) {
+          setCategoriesTest(data);
+        }
+      })
+      .catch(err => console.error("Categories fetch error:", err));
+  }, []);
   
   const { data: subcategories = [] } = useQuery({
     queryKey: ["/api/subcategories", selectedCategoryId],
