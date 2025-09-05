@@ -315,9 +315,20 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
     if (properties) {
       const status = (properties.status || properties.CurrentStatus || '').toLowerCase();
       
-      
+      // Check for explicitly completed statuses (user-reported incidents)
       if (status === 'completed' || status === 'closed' || status === 'resolved' || status === 'cleared' || status === 'patrolled') {
         return '#9ca3af'; // Grey for completed incidents
+      }
+      
+      // Time-based auto-greying for TMR incidents
+      if (properties.last_updated) {
+        const lastUpdated = new Date(properties.last_updated);
+        const hoursSinceUpdate = (Date.now() - lastUpdated.getTime()) / (1000 * 60 * 60);
+        
+        // Auto-grey TMR incidents older than 24 hours
+        if (hoursSinceUpdate > 24) {
+          return '#9ca3af'; // Grey for likely resolved incidents
+        }
       }
     }
     
