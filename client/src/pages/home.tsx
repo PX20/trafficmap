@@ -32,7 +32,7 @@ export interface FilterState {
 export default function Home() {
   // Safety Monitor - Main Home Component
   const isMobile = useIsMobile();
-  const [sidebarOpen, setSidebarOpen] = useState(!isMobile);
+  const [sidebarOpen, setSidebarOpen] = useState(false); // Always start closed on mobile for better UX
   const [selectedIncident, setSelectedIncident] = useState<any>(null);
   const [reportFormOpen, setReportFormOpen] = useState(false);
   const [filters, setFilters] = useState<FilterState>({
@@ -193,7 +193,11 @@ export default function Home() {
 
   return (
     <div className="relative h-screen overflow-hidden bg-background">
-      <AppHeader onMenuToggle={toggleSidebar} />
+      <AppHeader 
+        onMenuToggle={toggleSidebar}
+        onFilterToggle={toggleSidebar}
+        showFilterButton={isMobile}
+      />
       
       <SimpleFilterSidebar
         isOpen={sidebarOpen}

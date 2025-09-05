@@ -17,6 +17,7 @@ import { IncidentDetailModal } from "@/components/incident-detail-modal";
 import { IncidentReportForm } from "@/components/incident-report-form";
 import { AppHeader } from "@/components/map/app-header";
 import { findRegionBySuburb, getRegionalSuburbs } from "@/lib/regions";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { 
   MapPin, 
   Clock, 
@@ -40,6 +41,7 @@ import {
 export default function Feed() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   const [selectedSuburb, setSelectedSuburb] = useState("");
   const [selectedIncident, setSelectedIncident] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -413,94 +415,150 @@ export default function Feed() {
       <AppHeader onMenuToggle={() => {}} />
 
       <div className="max-w-2xl mx-auto px-4 pt-20 pb-6">
-        {/* Location Card */}
-        <Card className="mb-6 border-none shadow-lg bg-gradient-to-br from-card to-card/50">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4 mb-4">
-              <div className="bg-primary/10 p-3 rounded-full">
-                <MapPin className="w-6 h-6 text-primary" />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-xl font-bold text-foreground">Your Location</h3>
-                <p className="text-muted-foreground">
-                  Connect with your local community
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                {rawIncidentData?.lastUpdated && (
-                  <div className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
-                    Updated {new Date(rawIncidentData.lastUpdated).toLocaleTimeString()}
-                  </div>
-                )}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="rounded-full"
-                  onClick={() => refreshMutation.mutate()}
-                  disabled={refreshMutation.isPending}
-                  data-testid="button-refresh-incidents"
-                >
-                  <RefreshCw className={`w-4 h-4 mr-1 ${refreshMutation.isPending ? 'animate-spin' : ''}`} />
-                  {refreshMutation.isPending ? 'Refreshing...' : 'Refresh'}
-                </Button>
-              </div>
+        {/* Mobile Compact Location Bar */}
+        {isMobile ? (
+          <div className="mb-4 bg-muted/50 rounded-lg p-3">
+            <div className="flex items-center gap-2 mb-2">
+              <MapPin className="w-4 h-4 text-primary" />
+              <span className="text-sm font-medium text-foreground">
+                {selectedSuburb || "Set your location"}
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => refreshMutation.mutate()}
+                disabled={refreshMutation.isPending}
+                className="ml-auto h-6 w-6 p-0"
+                data-testid="button-refresh-incidents-mobile"
+              >
+                <RefreshCw className={`w-3 h-3 ${refreshMutation.isPending ? 'animate-spin' : ''}`} />
+              </Button>
             </div>
-            <div className="flex gap-3">
+            <div className="flex gap-2">
               <div className="flex-1">
                 <LocationAutocomplete
                   value={selectedSuburb}
                   onChange={(location, coordinates, boundingBox) => {
                     setSelectedSuburb(location);
-                    // Sync with map home location
                     syncLocationToStorage(location, coordinates, boundingBox);
-                    // Automatically update when location is selected
                     setTimeout(() => handleSuburbUpdate(), 100);
                   }}
                   onClear={() => {
                     setSelectedSuburb('');
-                    // Clear from localStorage too
                     localStorage.removeItem('homeLocation');
                     localStorage.removeItem('homeCoordinates');
                     localStorage.removeItem('homeBoundingBox');
                     localStorage.setItem('locationFilter', 'false');
-                    // Trigger storage event
                     window.dispatchEvent(new StorageEvent('storage', {
                       key: 'homeLocation',
                       newValue: null,
                       oldValue: selectedSuburb
                     }));
-                    // Clear the feed when location is cleared
                     setTimeout(() => handleSuburbUpdate(), 100);
                   }}
-                  placeholder="Enter your suburb (e.g., Brisbane City, Surfers Paradise)"
+                  placeholder="Enter suburb..."
                   disabled={false}
                 />
               </div>
-              <Button 
-                onClick={handleSuburbUpdate} 
-                className="rounded-full px-6"
-                data-testid="button-update-suburb"
-              >
-                Update
-              </Button>
             </div>
-            
-            {/* Regional Updates Checkbox */}
             {selectedSuburb && (
-              <div className="flex items-center space-x-3 mt-4 pt-3 border-t border-border/50">
+              <div className="flex items-center space-x-2 mt-2">
                 <Checkbox
-                  id="feed-regional-updates"
+                  id="feed-regional-updates-mobile"
                   checked={showRegionalUpdates}
                   onCheckedChange={(checked) => setShowRegionalUpdates(!!checked)}
-                  data-testid="checkbox-regional-updates"
+                  data-testid="checkbox-regional-updates-mobile"
                 />
-                <Label htmlFor="feed-regional-updates" className="text-sm text-foreground flex-1">
-                  Updates from my region
+                <Label htmlFor="feed-regional-updates-mobile" className="text-xs text-muted-foreground">
+                  Include region updates
                 </Label>
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        ) : (
+          /* Desktop Location Card */
+          <Card className="mb-6 border-none shadow-lg bg-gradient-to-br from-card to-card/50">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="bg-primary/10 p-3 rounded-full">
+                  <MapPin className="w-6 h-6 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-xl font-bold text-foreground">Your Location</h3>
+                  <p className="text-muted-foreground">
+                    Connect with your local community
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  {rawIncidentData?.lastUpdated && (
+                    <div className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
+                      Updated {new Date(rawIncidentData.lastUpdated).toLocaleTimeString()}
+                    </div>
+                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="rounded-full"
+                    onClick={() => refreshMutation.mutate()}
+                    disabled={refreshMutation.isPending}
+                    data-testid="button-refresh-incidents"
+                  >
+                    <RefreshCw className={`w-4 h-4 mr-1 ${refreshMutation.isPending ? 'animate-spin' : ''}`} />
+                    {refreshMutation.isPending ? 'Refreshing...' : 'Refresh'}
+                  </Button>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <div className="flex-1">
+                  <LocationAutocomplete
+                    value={selectedSuburb}
+                    onChange={(location, coordinates, boundingBox) => {
+                      setSelectedSuburb(location);
+                      syncLocationToStorage(location, coordinates, boundingBox);
+                      setTimeout(() => handleSuburbUpdate(), 100);
+                    }}
+                    onClear={() => {
+                      setSelectedSuburb('');
+                      localStorage.removeItem('homeLocation');
+                      localStorage.removeItem('homeCoordinates');
+                      localStorage.removeItem('homeBoundingBox');
+                      localStorage.setItem('locationFilter', 'false');
+                      window.dispatchEvent(new StorageEvent('storage', {
+                        key: 'homeLocation',
+                        newValue: null,
+                        oldValue: selectedSuburb
+                      }));
+                      setTimeout(() => handleSuburbUpdate(), 100);
+                    }}
+                    placeholder="Enter your suburb (e.g., Brisbane City, Surfers Paradise)"
+                    disabled={false}
+                  />
+                </div>
+                <Button 
+                  onClick={handleSuburbUpdate} 
+                  className="rounded-full px-6"
+                  data-testid="button-update-suburb"
+                >
+                  Update
+                </Button>
+              </div>
+              
+              {selectedSuburb && (
+                <div className="flex items-center space-x-3 mt-4 pt-3 border-t border-border/50">
+                  <Checkbox
+                    id="feed-regional-updates"
+                    checked={showRegionalUpdates}
+                    onCheckedChange={(checked) => setShowRegionalUpdates(!!checked)}
+                    data-testid="checkbox-regional-updates"
+                  />
+                  <Label htmlFor="feed-regional-updates" className="text-sm text-foreground flex-1">
+                    Updates from my region
+                  </Label>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Loading State */}
         {isLoading && selectedSuburb && (

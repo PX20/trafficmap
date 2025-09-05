@@ -3,14 +3,16 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Link, useLocation } from "wouter";
-import { Map, List, Bell, MessageCircle } from "lucide-react";
+import { Map, List, Bell, MessageCircle, Filter } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 
 interface AppHeaderProps {
   onMenuToggle: () => void;
+  onFilterToggle?: () => void;
+  showFilterButton?: boolean;
 }
 
-export function AppHeader({ onMenuToggle }: AppHeaderProps) {
+export function AppHeader({ onMenuToggle, onFilterToggle, showFilterButton }: AppHeaderProps) {
   const { user, isAuthenticated } = useAuth();
   const [location] = useLocation();
 
@@ -34,6 +36,19 @@ export function AppHeader({ onMenuToggle }: AppHeaderProps) {
         </div>
         
         <div className="flex items-center space-x-4">
+          {/* Filter Button for Mobile Map Mode */}
+          {showFilterButton && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onFilterToggle}
+              className="h-8 mr-2"
+              data-testid="button-toggle-filter"
+            >
+              <Filter className="w-4 h-4" />
+            </Button>
+          )}
+          
           {/* View Toggle */}
           <div className="flex items-center bg-muted p-1 rounded-lg">
             <Link href="/">
