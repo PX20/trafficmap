@@ -23,7 +23,8 @@ function Router() {
         <Route path="/" component={AuthPage} />
       ) : (
         <>
-          <Route path="/" component={Home} />
+          <Route path="/" component={Feed} />
+          <Route path="/map" component={Home} />
           <Route path="/feed" component={Feed} />
           <Route path="/profile" component={Profile} />
           <Route path="/users/:userId" component={UserProfile} />
