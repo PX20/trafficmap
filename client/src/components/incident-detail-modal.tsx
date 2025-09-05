@@ -640,17 +640,91 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
                     </div>
                 
                 
-                    {/* Enhanced Traffic Advice */}
-                    {incident.type === 'traffic' && incident.properties?.advice && (
-                      <div className="relative p-4 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 overflow-hidden">
-                        <div className="absolute top-0 right-0 w-12 h-12 bg-gradient-to-br from-amber-200/30 to-orange-200/30 rounded-full blur-lg"></div>
-                        <div className="relative flex items-start gap-3">
-                          <div className="p-2 bg-amber-500 rounded-lg">
-                            <AlertTriangle className="w-4 h-4 text-white" />
+                    {/* Enhanced Traffic Details - Government Style */}
+                    {incident.type === 'traffic' && (
+                      <div className="relative p-4 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 overflow-hidden">
+                        <div className="absolute top-0 right-0 w-12 h-12 bg-gradient-to-br from-blue-200/30 to-indigo-200/30 rounded-full blur-lg"></div>
+                        <div className="relative space-y-4">
+                          <div className="flex items-center gap-3 mb-4">
+                            <div className="p-2 bg-blue-600 rounded-lg">
+                              <Car className="w-4 h-4 text-white" />
+                            </div>
+                            <h4 className="font-bold text-blue-900 text-lg">
+                              {incident.properties?.event_type || incident.properties?.event_subtype || 'Traffic Event'}
+                            </h4>
                           </div>
-                          <div>
-                            <h4 className="font-bold text-amber-900 mb-2 text-base">Advice</h4>
-                            <p className="text-sm text-amber-800 font-medium leading-relaxed">{incident.properties.advice}</p>
+                          
+                          <div className="grid grid-cols-1 gap-3 text-sm">
+                            {/* Suburbs/Localities */}
+                            {incident.properties?.road_summary?.locality && (
+                              <div className="flex">
+                                <div className="font-semibold text-blue-800 w-32 flex-shrink-0">Suburbs / Localities</div>
+                                <div className="text-blue-900">{incident.properties.road_summary.locality}</div>
+                              </div>
+                            )}
+                            
+                            {/* Roads */}
+                            {incident.properties?.road_summary?.road_name && (
+                              <div className="flex">
+                                <div className="font-semibold text-blue-800 w-32 flex-shrink-0">Roads</div>
+                                <div className="text-blue-900">{incident.properties.road_summary.road_name}</div>
+                              </div>
+                            )}
+                            
+                            {/* Location details */}
+                            {incident.properties?.description && (
+                              <div className="flex">
+                                <div className="font-semibold text-blue-800 w-32 flex-shrink-0">Location details</div>
+                                <div className="text-blue-900">{incident.properties.description}</div>
+                              </div>
+                            )}
+                            
+                            {/* What to expect */}
+                            {incident.properties?.advice && (
+                              <div className="flex">
+                                <div className="font-semibold text-blue-800 w-32 flex-shrink-0">What to expect</div>
+                                <div className="text-blue-900">{incident.properties.advice}</div>
+                              </div>
+                            )}
+                            
+                            {/* Traffic impact */}
+                            {incident.properties?.traffic_impact && (
+                              <div className="flex">
+                                <div className="font-semibold text-blue-800 w-32 flex-shrink-0">Impact</div>
+                                <div className="text-blue-900">{incident.properties.traffic_impact}</div>
+                              </div>
+                            )}
+                            
+                            {/* Last updated */}
+                            {incident.properties?.last_updated && (
+                              <div className="flex">
+                                <div className="font-semibold text-blue-800 w-32 flex-shrink-0">Last updated</div>
+                                <div className="text-blue-900">
+                                  {new Date(incident.properties.last_updated).toLocaleString('en-AU', {
+                                    day: 'numeric',
+                                    month: 'short',
+                                    year: 'numeric',
+                                    hour: 'numeric',
+                                    minute: '2-digit',
+                                    hour12: true
+                                  })}
+                                </div>
+                              </div>
+                            )}
+                            
+                            {/* Information provided by */}
+                            <div className="flex">
+                              <div className="font-semibold text-blue-800 w-32 flex-shrink-0">Information provided by</div>
+                              <div className="text-blue-900">Department of Transport and Main Roads</div>
+                            </div>
+                            
+                            {/* Event ID */}
+                            {incident.properties?.id && (
+                              <div className="flex">
+                                <div className="font-semibold text-blue-800 w-32 flex-shrink-0">Event ID</div>
+                                <div className="text-blue-900 font-mono">{incident.properties.id}</div>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
