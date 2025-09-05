@@ -42,26 +42,20 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [uploadedPhotoUrl, setUploadedPhotoUrl] = useState<string>("");
   
-  // Test with hardcoded categories to isolate the issue
-  const [categories, setCategoriesTest] = useState([
-    { id: "1", name: "Test Category 1" },
-    { id: "2", name: "Test Category 2" },
-    { id: "3", name: "Test Category 3" }
-  ]);
-  const categoriesError = null;
-  const categoriesLoading = false;
-
-  // Try to fetch real categories on component mount
-  useEffect(() => {
-    fetch("/api/categories")
-      .then(res => res.json())
-      .then(data => {
-        if (data && data.length > 0) {
-          setCategoriesTest(data);
-        }
-      })
-      .catch(err => console.error("Categories fetch error:", err));
-  }, []);
+  // Fetch categories - now working properly
+  const { data: categories = [], error: categoriesError, isLoading: categoriesLoading } = useQuery({
+    queryKey: ["categories"],
+    queryFn: async () => {
+      const response = await fetch("/api/categories");
+      if (!response.ok) {
+        throw new Error(`Categories failed: ${response.status}`);
+      }
+      return response.json();
+    },
+    enabled: true,
+    retry: 3,
+    staleTime: 5 * 60 * 1000,
+  });
   
   const { data: subcategories = [] } = useQuery({
     queryKey: ["/api/subcategories", selectedCategoryId],
@@ -178,21 +172,29 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
           const locationData = await response.json();
           console.log('Reverse geocoding response:', locationData);
           
-          // Build comprehensive location string - ALWAYS include suburb info
+          // Build comprehensive location string - Debug what's available
+          console.log('GPS - All location data fields:', locationData);
+          
           let locationParts = [];
           if (locationData.road) locationParts.push(locationData.road);
           
-          // Always try to include suburb/locality info
-          if (locationData.suburb) {
-            locationParts.push(locationData.suburb);
-          } else if (locationData.city) {
-            locationParts.push(locationData.city);
-          } else if (locationData.town) {
-            locationParts.push(locationData.town);
-          } else if (locationData.village) {
-            locationParts.push(locationData.village);
-          } else if (locationData.county) {
-            locationParts.push(locationData.county);
+          // Try ALL possible suburb/locality fields
+          const localityFields = [
+            locationData.suburb,
+            locationData.neighbourhood, 
+            locationData.city_district,
+            locationData.district,
+            locationData.city,
+            locationData.town,
+            locationData.village,
+            locationData.hamlet,
+            locationData.county,
+            locationData.locality
+          ];
+          
+          const locality = localityFields.find(field => field && field.trim());
+          if (locality) {
+            locationParts.push(locality);
           }
           
           if (locationData.postcode) locationParts.push(locationData.postcode);
@@ -287,14 +289,19 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="1">Test Category 1</SelectItem>
-                      <SelectItem value="2">Test Category 2</SelectItem>
-                      <SelectItem value="3">Test Category 3</SelectItem>
-                      {categories && categories.length > 0 && categories.map((category: any) => (
-                        <SelectItem key={`real-${category.id}`} value={category.id}>
-                          {category.name}
-                        </SelectItem>
-                      ))}
+                      {categoriesLoading ? (
+                        <div className="px-2 py-2 text-sm text-gray-500">Loading categories...</div>
+                      ) : categoriesError ? (
+                        <div className="px-2 py-2 text-sm text-red-500">Failed to load categories.</div>
+                      ) : categories && categories.length > 0 ? (
+                        categories.map((category: any) => (
+                          <SelectItem key={category.id} value={category.id}>
+                            {category.name}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <div className="px-2 py-2 text-sm text-gray-500">No categories available</div>
+                      )}
                     </SelectContent>
                   </Select>
                   <FormMessage />
