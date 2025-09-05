@@ -182,16 +182,17 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-md max-h-[90vh] flex flex-col">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle>Report Safety Incident</DialogTitle>
           <DialogDescription>
             Report any safety concern, incident, or suspicious activity you've observed to help keep the community informed and safe.
           </DialogDescription>
         </DialogHeader>
         
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <div className="flex-1 overflow-y-auto pr-2">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             {/* Category Selection */}
             <FormField
               control={form.control}
@@ -390,8 +391,9 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
                 {reportIncidentMutation.isPending ? "Submitting..." : "Submit Report"}
               </Button>
             </div>
-          </form>
-        </Form>
+            </form>
+          </Form>
+        </div>
       </DialogContent>
     </Dialog>
   );
