@@ -178,12 +178,23 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
           const locationData = await response.json();
           console.log('Reverse geocoding response:', locationData);
           
-          // Build comprehensive location string with ALL available info
+          // Build comprehensive location string - ALWAYS include suburb info
           let locationParts = [];
           if (locationData.road) locationParts.push(locationData.road);
-          if (locationData.suburb) locationParts.push(locationData.suburb);
-          if (locationData.city && !locationData.suburb) locationParts.push(locationData.city);
-          if (locationData.town && !locationData.suburb && !locationData.city) locationParts.push(locationData.town);
+          
+          // Always try to include suburb/locality info
+          if (locationData.suburb) {
+            locationParts.push(locationData.suburb);
+          } else if (locationData.city) {
+            locationParts.push(locationData.city);
+          } else if (locationData.town) {
+            locationParts.push(locationData.town);
+          } else if (locationData.village) {
+            locationParts.push(locationData.village);
+          } else if (locationData.county) {
+            locationParts.push(locationData.county);
+          }
+          
           if (locationData.postcode) locationParts.push(locationData.postcode);
           if (locationData.state && !locationData.state.includes('Queensland')) {
             locationParts.push(locationData.state);
