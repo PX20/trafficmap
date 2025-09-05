@@ -391,6 +391,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             incidentType: incident.incidentType,
             description: incident.description,
             locationDescription: incident.location,
+            status: incident.status, // Include the status field for marker coloring
             createdAt: incident.lastUpdated,
             userReported: isUserReported,
             // Add proper user attribution for user-reported incidents
