@@ -21,7 +21,7 @@ const reportIncidentSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().optional(),
   location: z.string().min(1, "Location is required"),
-  priority: z.enum(["High", "Medium", "Low"]).optional(),
+  policeNotified: z.enum(["yes", "no", "not_needed", "unsure"]).optional(),
 });
 
 type ReportIncidentData = z.infer<typeof reportIncidentSchema>;
@@ -63,7 +63,7 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
       title: "",
       description: "",
       location: initialLocation || "",
-      priority: "Medium",
+      policeNotified: "unsure",
     },
   });
 
@@ -332,20 +332,21 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
 
             <FormField
               control={form.control}
-              name="priority"
+              name="policeNotified"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Priority Level</FormLabel>
+                  <FormLabel>Have you notified police?</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
-                      <SelectTrigger data-testid="select-priority">
-                        <SelectValue placeholder="Select priority" />
+                      <SelectTrigger data-testid="select-police-notified">
+                        <SelectValue placeholder="Select option" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="High">High - Immediate danger/emergency</SelectItem>
-                      <SelectItem value="Medium">Medium - Significant concern</SelectItem>
-                      <SelectItem value="Low">Low - Minor concern</SelectItem>
+                      <SelectItem value="yes">Yes - I have contacted police</SelectItem>
+                      <SelectItem value="no">No - I haven't contacted police yet</SelectItem>
+                      <SelectItem value="not_needed">Not needed - This doesn't require police</SelectItem>
+                      <SelectItem value="unsure">Unsure - Not sure if police are needed</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
