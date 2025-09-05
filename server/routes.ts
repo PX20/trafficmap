@@ -668,6 +668,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await storage.incrementSubcategoryReportCount(reportData.subcategoryId);
       }
 
+      // Geocode the location to get coordinates for mapping
+      let geometry = null;
+      try {
+        const geocodeResponse = await fetch(
+          `https://nominatim.openstreetmap.org/search?` +
+          `q=${encodeURIComponent(reportData.location + ', Queensland, Australia')}&` +
+          `format=json&limit=1&addressdetails=1`,
+          {
+            headers: {
+              'User-Agent': 'QLD Safety Monitor (contact: support@example.com)'
+            }
+          }
+        );
+        
+        if (geocodeResponse.ok) {
+          const geocodeData = await geocodeResponse.json();
+          if (geocodeData.length > 0) {
+            const result = geocodeData[0];
+            geometry = {
+              type: "Point",
+              coordinates: [parseFloat(result.lon), parseFloat(result.lat)]
+            };
+            console.log(`Geocoded user incident "${reportData.title}" to coordinates:`, geometry.coordinates);
+          }
+        }
+      } catch (error) {
+        console.error("Error geocoding user incident location:", error);
+        // Continue without coordinates - incident will still be created but won't appear on map
+      }
+
       const incident = {
         incidentType: "User Report", // Keep for backward compatibility
         categoryId: reportData.categoryId,
@@ -679,7 +709,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         policeNotified: reportData.policeNotified || null,
         agency: "User Report",
         publishedDate: new Date(),
-        geometry: null,
+        geometry: geometry,
         properties: {
           reportedBy: user?.email || "Anonymous",
           userReported: true,
