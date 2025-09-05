@@ -649,9 +649,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         title: z.string().min(1),
         description: z.string().optional(),
         location: z.string().min(1),
-        priority: z.enum(["High", "Medium", "Low"]).optional(),
+        policeNotified: z.enum(["yes", "no", "not_needed", "unsure"]).optional(),
       }).parse(req.body);
 
+      // Check if user is properly authenticated
+      if (!req.user || !req.user.claims || !req.user.claims.sub) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
       
@@ -668,7 +673,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         description: reportData.description || null,
         location: reportData.location,
         status: "Reported",
-        priority: reportData.priority || null,
+        policeNotified: reportData.policeNotified || null,
         agency: "User Report",
         publishedDate: new Date(),
         geometry: null,
