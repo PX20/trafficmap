@@ -201,13 +201,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           (suburb as string).toLowerCase().includes(scSuburb)
         );
 
-      // Use Sunshine Coast specific cache if applicable
+      // Use Sunshine Coast specific cache if applicable  
       if (isSunshineCoastRequest && isCacheValid(trafficCache.sunshineCoast, SUNSHINE_COAST_CACHE_DURATION)) {
         console.log("Using cached Sunshine Coast traffic data");
-        data = trafficCache.sunshineCoast.data;
+        data = JSON.parse(JSON.stringify(trafficCache.sunshineCoast.data)); // Deep copy to avoid modifying cache
       } else if (!isSunshineCoastRequest && isCacheValid(trafficCache.events)) {
         console.log("Using cached traffic events data");
-        data = trafficCache.events.data;
+        data = JSON.parse(JSON.stringify(trafficCache.events.data)); // Deep copy to avoid modifying cache
       } else {
         // Try to fetch fresh data
         try {
@@ -245,7 +245,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const fallbackCache = isSunshineCoastRequest ? trafficCache.sunshineCoast : trafficCache.events;
           if (fallbackCache.data) {
             console.log("API fetch failed, using stale cached data");
-            data = fallbackCache.data;
+            data = JSON.parse(JSON.stringify(fallbackCache.data)); // Deep copy
           } else {
             throw error;
           }
@@ -310,21 +310,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Apply 7-day age filter to data being returned to client
-      if (data && data.features) {
-        const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
+      if (data && data.features && Array.isArray(data.features)) {
+        const originalCount = data.features.length;
+        console.log(`🔍 Starting age filtering on ${originalCount} events`);
         
         data.features = data.features.filter((feature: any) => {
-          const publishedDate = feature.properties.published ? new Date(feature.properties.published) : null;
-          const lastUpdated = feature.properties.last_updated ? new Date(feature.properties.last_updated) : null;
-          const eventDate = publishedDate || lastUpdated;
-          
-          if (eventDate) {
-            return eventDate.getTime() > sevenDaysAgo;
+          try {
+            const publishedDate = feature.properties?.published ? new Date(feature.properties.published) : null;
+            const lastUpdated = feature.properties?.last_updated ? new Date(feature.properties.last_updated) : null;
+            const eventDate = publishedDate || lastUpdated;
+            
+            if (eventDate && !isNaN(eventDate.getTime())) {
+              const daysSince = (Date.now() - eventDate.getTime()) / (1000 * 60 * 60 * 24);
+              const isRecent = daysSince <= 7;
+              
+              // Debug log for very old events that should be filtered
+              if (daysSince > 30) {
+                console.log(`🚫 Filtering very old event (${daysSince.toFixed(0)} days): ${feature.properties?.description || 'Unknown'} - ${eventDate.toISOString()}`);
+              }
+              
+              return isRecent;
+            }
+            
+            // If no valid date available, exclude it to be safe
+            console.log(`❌ Excluding event with no valid date: ${feature.properties?.description || 'Unknown'}`);
+            return false;
+          } catch (error) {
+            console.log(`⚠️ Error processing event for age filtering:`, error);
+            return false;
           }
-          
-          // If no date available, exclude it to be safe
-          return false;
         });
+        
+        const filteredCount = originalCount - data.features.length;
+        if (filteredCount > 0) {
+          console.log(`✅ Client-side filtered out ${filteredCount} old traffic events (${data.features.length} remaining)`);
+        } else {
+          console.log(`ℹ️ No old events found to filter (${data.features.length} total events)`);
+        }
+      } else {
+        console.log(`⚠️ No data features to filter`);
       }
       
       res.json(data);
