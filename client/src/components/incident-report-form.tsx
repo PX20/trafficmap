@@ -42,10 +42,9 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [uploadedPhotoUrl, setUploadedPhotoUrl] = useState<string>("");
   
-  // Fetch categories - using consistent query pattern
+  // Fetch categories - always fetch for better UX
   const { data: categories = [], error: categoriesError, isLoading: categoriesLoading } = useQuery<any[]>({
     queryKey: ["/api/categories"],
-    enabled: isOpen, // Only fetch when modal is open
     staleTime: 5 * 60 * 1000,
   });
   
