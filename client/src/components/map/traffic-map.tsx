@@ -315,17 +315,6 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
     if (properties) {
       const status = (properties.status || properties.CurrentStatus || '').toLowerCase();
       
-      // Debug logging for problematic incident
-      if (properties.id === '748346' || properties.id === 748346) {
-        console.log('Status Badge Debug:', {
-          incidentType: markerType,
-          priority: properties.priority,
-          eventType: properties.eventType,
-          status: properties.status,
-          statusLower: status,
-          willBeGrey: status === 'completed' || status === 'closed' || status === 'resolved' || status === 'cleared' || status === 'patrolled'
-        });
-      }
       
       if (status === 'completed' || status === 'closed' || status === 'resolved' || status === 'cleared' || status === 'patrolled') {
         return '#9ca3af'; // Grey for completed incidents
@@ -342,6 +331,7 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
       case 'traffic':
       case 'roadworks':
       case 'special event':
+      case 'congestion':
         return '#f97316'; // Orange - matches TMR filter icon
       // Crime and safety - purple
       case 'crime':

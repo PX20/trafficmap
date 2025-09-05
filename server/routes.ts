@@ -31,8 +31,8 @@ const trafficCache = {
   sunshineCoast: { data: null as any, lastFetch: 0 }
 };
 
-const CACHE_DURATION = 0; // Disable cache temporarily to debug 748346
-const SUNSHINE_COAST_CACHE_DURATION = 0; // Disable cache temporarily to debug
+const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes in milliseconds
+const SUNSHINE_COAST_CACHE_DURATION = 60 * 60 * 1000; // 1 hour for Sunshine Coast
 const RETRY_DELAY = 30 * 1000; // 30 seconds delay on rate limit
 
 // Configure web push - Generate VAPID keys for production
@@ -300,17 +300,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
             alertMessage: feature.properties.alert_message || null,
           };
           
-          // Debug logging for incident 748346 in traffic events
-          if (feature.properties.id.toString() === '748346') {
-            console.log('Traffic event debug for 748346:', {
-              id: feature.properties.id,
-              status: feature.properties.status,
-              event_type: feature.properties.event_type,
-              event_priority: feature.properties.event_priority,
-              published: feature.properties.published,
-              allProps: Object.keys(feature.properties)
-            });
-          }
           
           await storage.updateTrafficEvent(event.id, event) || await storage.createTrafficEvent(event);
           trafficStoredCount++;
@@ -321,35 +310,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      // Debug logging for incident 748346 in response data
-      if (data && data.features && Array.isArray(data.features)) {
-        const incident748346 = data.features.find((f: any) => f.properties.id?.toString() === '748346');
-        if (incident748346) {
-          console.log('Found 748346 in traffic response data:', {
-            id: incident748346.properties.id,
-            status: incident748346.properties.status,
-            event_type: incident748346.properties.event_type,
-            published: incident748346.properties.published,
-            event_priority: incident748346.properties.event_priority,
-            allPropsCount: Object.keys(incident748346.properties).length,
-            rawStatus: JSON.stringify(incident748346.properties.status)
-          });
-        } else {
-          // Check if it exists in a different ID format
-          const allIds = data.features.map((f: any) => f.properties.id?.toString()).filter(Boolean);
-          const matchingIds = allIds.filter(id => id.includes('748346') || id.includes('346'));
-          console.log('748346 not found in traffic data. Similar IDs:', matchingIds.slice(0, 5));
-          console.log('Total features in response:', data.features.length);
-          
-          // Sample a few incidents to see data structure
-          const sampleIncidents = data.features.slice(0, 2).map((f: any) => ({
-            id: f.properties.id,
-            status: f.properties.status,
-            event_type: f.properties.event_type
-          }));
-          console.log('Sample incidents:', sampleIncidents);
-        }
-      }
       
       // Apply 7-day age filter to data being returned to client
       if (data && data.features && Array.isArray(data.features)) {
@@ -425,15 +385,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
         
-        // Debug logging for incident 748346
-        if (incident.id === '748346') {
-          console.log('Server debug for incident 748346:', {
-            id: incident.id,
-            status: incident.status,
-            incidentType: incident.incidentType,
-            properties: incident.properties
-          });
-        }
         
         return {
           type: "Feature",
