@@ -730,43 +730,139 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
                       </div>
                     )}
                 
-                    {/* Enhanced Emergency Incident Details */}
+                    {/* Enhanced Emergency Incident Details - Government Style */}
                     {!incident.properties?.userReported && incident.type !== 'traffic' && (
-                      <div className="space-y-3">
-                        {incident.properties?.Priority && incident.properties.Priority !== 'Unknown' && (
-                          <div className="relative p-4 rounded-xl bg-gradient-to-r from-red-50 to-pink-50 border border-red-200 overflow-hidden">
-                            <div className="absolute top-0 right-0 w-12 h-12 bg-gradient-to-br from-red-200/30 to-pink-200/30 rounded-full blur-lg"></div>
-                            <div className="relative flex items-start gap-3">
-                              <div className="p-2 bg-red-500 rounded-lg">
-                                <Zap className="w-4 h-4 text-white" />
-                              </div>
-                              <div>
-                                <h4 className="font-bold text-red-900 mb-2 text-base">Priority Level</h4>
-                                <p className="text-lg text-red-800 font-bold">{incident.properties.Priority}</p>
-                              </div>
+                      <div className="relative p-4 rounded-xl bg-gradient-to-r from-red-50 to-orange-50 border border-red-200 overflow-hidden">
+                        <div className="absolute top-0 right-0 w-12 h-12 bg-gradient-to-br from-red-200/30 to-orange-200/30 rounded-full blur-lg"></div>
+                        <div className="relative space-y-4">
+                          <div className="flex items-center gap-3 mb-4">
+                            <div className="p-2 bg-red-600 rounded-lg">
+                              <Shield className="w-4 h-4 text-white" />
                             </div>
+                            <h4 className="font-bold text-red-900 text-lg">
+                              {incident.properties?.Event_Type || incident.properties?.GroupedType || 'Emergency Incident'}
+                            </h4>
                           </div>
-                        )}
-                        
-                        {incident.properties?.CurrentStatus && incident.properties.CurrentStatus !== 'Unknown' && (
-                          <div className="relative p-4 rounded-xl bg-gradient-to-r from-gray-50 to-blue-50 border border-gray-200 overflow-hidden">
-                            <div className="relative flex items-start gap-3">
-                              <div className="p-2 bg-gray-500 rounded-lg">
-                                <Eye className="w-4 h-4 text-white" />
+                          
+                          <div className="grid grid-cols-1 gap-3 text-sm">
+                            {/* Incident Type */}
+                            {incident.properties?.GroupedType && (
+                              <div className="flex">
+                                <div className="font-semibold text-red-800 w-32 flex-shrink-0">Incident Type</div>
+                                <div className="text-red-900">{incident.properties.GroupedType}</div>
                               </div>
-                              <div>
-                                <h4 className="font-bold text-gray-900 mb-2 text-base">Current Status</h4>
-                                <p className="text-sm text-gray-800 font-semibold">{incident.properties.CurrentStatus}</p>
+                            )}
+                            
+                            {/* Specific Event */}
+                            {incident.properties?.Event_Type && incident.properties.Event_Type !== incident.properties?.GroupedType && (
+                              <div className="flex">
+                                <div className="font-semibold text-red-800 w-32 flex-shrink-0">Event Details</div>
+                                <div className="text-red-900">{incident.properties.Event_Type}</div>
                               </div>
-                            </div>
+                            )}
+                            
+                            {/* Location */}
+                            {incident.properties?.Location && (
+                              <div className="flex">
+                                <div className="font-semibold text-red-800 w-32 flex-shrink-0">Location</div>
+                                <div className="text-red-900">{incident.properties.Location}</div>
+                              </div>
+                            )}
+                            
+                            {/* Locality/Suburb */}
+                            {incident.properties?.Locality && (
+                              <div className="flex">
+                                <div className="font-semibold text-red-800 w-32 flex-shrink-0">Locality</div>
+                                <div className="text-red-900">{incident.properties.Locality}</div>
+                              </div>
+                            )}
+                            
+                            {/* Current Status */}
+                            {incident.properties?.CurrentStatus && incident.properties.CurrentStatus !== 'Unknown' && (
+                              <div className="flex">
+                                <div className="font-semibold text-red-800 w-32 flex-shrink-0">Current Status</div>
+                                <div className="text-red-900 font-semibold">{incident.properties.CurrentStatus}</div>
+                              </div>
+                            )}
+                            
+                            {/* Priority Level */}
+                            {incident.properties?.Priority && incident.properties.Priority !== 'Unknown' && (
+                              <div className="flex">
+                                <div className="font-semibold text-red-800 w-32 flex-shrink-0">Priority Level</div>
+                                <div className="text-red-900 font-bold">{incident.properties.Priority}</div>
+                              </div>
+                            )}
+                            
+                            {/* Response Date */}
+                            {incident.properties?.Response_Date && (
+                              <div className="flex">
+                                <div className="font-semibold text-red-800 w-32 flex-shrink-0">Response Date</div>
+                                <div className="text-red-900">
+                                  {new Date(incident.properties.Response_Date).toLocaleString('en-AU', {
+                                    day: 'numeric',
+                                    month: 'short',
+                                    year: 'numeric',
+                                    hour: 'numeric',
+                                    minute: '2-digit',
+                                    hour12: true
+                                  })}
+                                </div>
+                              </div>
+                            )}
+                            
+                            {/* Published Date */}
+                            {incident.properties?.publishedDate && incident.properties.publishedDate !== incident.properties?.Response_Date && (
+                              <div className="flex">
+                                <div className="font-semibold text-red-800 w-32 flex-shrink-0">Published</div>
+                                <div className="text-red-900">
+                                  {new Date(incident.properties.publishedDate).toLocaleString('en-AU', {
+                                    day: 'numeric',
+                                    month: 'short',
+                                    year: 'numeric',
+                                    hour: 'numeric',
+                                    minute: '2-digit',
+                                    hour12: true
+                                  })}
+                                </div>
+                              </div>
+                            )}
+                            
+                            {/* Responsible Agency */}
+                            {incident.properties?.Jurisdiction && (
+                              <div className="flex">
+                                <div className="font-semibold text-red-800 w-32 flex-shrink-0">Responsible Agency</div>
+                                <div className="text-red-900">
+                                  {(() => {
+                                    const jurisdiction = incident.properties.Jurisdiction;
+                                    switch (jurisdiction) {
+                                      case 'QFES': return 'Queensland Fire & Emergency Services';
+                                      case 'QPS': return 'Queensland Police Service';
+                                      case 'QAS': return 'Queensland Ambulance Service';
+                                      case 'ESQ': return 'Emergency Services Queensland';
+                                      default: return jurisdiction;
+                                    }
+                                  })()}
+                                </div>
+                              </div>
+                            )}
+                            
+                            {/* Master Incident Number */}
+                            {incident.properties?.Master_Incident_Number && (
+                              <div className="flex">
+                                <div className="font-semibold text-red-800 w-32 flex-shrink-0">Incident Number</div>
+                                <div className="text-red-900 font-mono">{incident.properties.Master_Incident_Number}</div>
+                              </div>
+                            )}
+                            
+                            {/* Additional Description */}
+                            {incident.properties?.Description && (
+                              <div className="flex">
+                                <div className="font-semibold text-red-800 w-32 flex-shrink-0">Additional Info</div>
+                                <div className="text-red-900">{incident.properties.Description}</div>
+                              </div>
+                            )}
                           </div>
-                        )}
-                        
-                        {incident.properties?.Master_Incident_Number && (
-                          <div className="text-xs text-gray-500 bg-gray-100 p-2 rounded-lg">
-                            <strong>Incident #:</strong> {incident.properties.Master_Incident_Number}
-                          </div>
-                        )}
+                        </div>
                       </div>
                     )}
                 
