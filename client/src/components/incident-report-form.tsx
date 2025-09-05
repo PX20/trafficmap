@@ -42,30 +42,54 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [uploadedPhotoUrl, setUploadedPhotoUrl] = useState<string>("");
   
-  // Fetch categories - with explicit queryFn to avoid auth issues
-  const { data: categories = [], error: categoriesError, isLoading: categoriesLoading } = useQuery<any[]>({
-    queryKey: ["/api/categories"],
-    queryFn: async () => {
-      const response = await fetch("/api/categories");
-      if (!response.ok) {
-        throw new Error(`Failed to fetch categories: ${response.status}`);
-      }
-      return response.json();
-    },
-    staleTime: 5 * 60 * 1000,
-    retry: 3,
-  });
+  // Simple state for categories and subcategories
+  const [categories, setCategories] = useState<any[]>([]);
+  const [subcategories, setSubcategories] = useState<any[]>([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(false);
   
-  const { data: subcategories = [] } = useQuery({
-    queryKey: ["/api/subcategories", selectedCategoryId],
-    queryFn: async () => {
-      if (!selectedCategoryId) return [];
-      const response = await fetch(`/api/subcategories?categoryId=${selectedCategoryId}`);
-      if (!response.ok) throw new Error('Failed to fetch subcategories');
-      return response.json();
-    },
-    enabled: isOpen && !!selectedCategoryId,
-  });
+  // Load categories when modal opens
+  useEffect(() => {
+    if (isOpen && categories.length === 0) {
+      loadCategories();
+    }
+  }, [isOpen]);
+  
+  // Load subcategories when category changes
+  useEffect(() => {
+    if (selectedCategoryId) {
+      loadSubcategories(selectedCategoryId);
+    } else {
+      setSubcategories([]);
+    }
+  }, [selectedCategoryId]);
+  
+  const loadCategories = async () => {
+    try {
+      setCategoriesLoading(true);
+      const response = await fetch("/api/categories");
+      if (response.ok) {
+        const data = await response.json();
+        setCategories(data);
+      }
+    } catch (error) {
+      console.error("Failed to load categories:", error);
+    } finally {
+      setCategoriesLoading(false);
+    }
+  };
+  
+  const loadSubcategories = async (categoryId: string) => {
+    try {
+      const response = await fetch(`/api/subcategories?categoryId=${categoryId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setSubcategories(data);
+      }
+    } catch (error) {
+      console.error("Failed to load subcategories:", error);
+      setSubcategories([]);
+    }
+  };
   
   const form = useForm<ReportIncidentData>({
     resolver: zodResolver(reportIncidentSchema),
@@ -152,81 +176,44 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
       const position = await new Promise<GeolocationPosition>((resolve, reject) => {
         navigator.geolocation.getCurrentPosition(resolve, reject, {
           enableHighAccuracy: true,
-          timeout: 15000,
-          maximumAge: 300000 // 5 minutes
+          timeout: 10000,
         });
       });
 
-      const coordinates = {
-        lat: position.coords.latitude,
-        lon: position.coords.longitude
-      };
+      const lat = position.coords.latitude;
+      const lon = position.coords.longitude;
 
-      // Try to reverse geocode the coordinates to get a readable address
+      // Try to get readable address
       try {
-        console.log('Attempting reverse geocoding for:', coordinates);
-        const response = await fetch(`/api/location/reverse?lat=${coordinates.lat}&lon=${coordinates.lon}`);
-        
+        const response = await fetch(`/api/location/reverse?lat=${lat}&lon=${lon}`);
         if (response.ok) {
-          const locationData = await response.json();
-          console.log('Reverse geocoding response:', locationData);
+          const data = await response.json();
           
-          // Build comprehensive location string - Debug what's available
-          console.log('GPS - All location data fields:', locationData);
-          
-          let locationParts = [];
-          if (locationData.road) locationParts.push(locationData.road);
-          
-          // Try ALL possible suburb/locality fields
-          const localityFields = [
-            locationData.suburb,
-            locationData.neighbourhood, 
-            locationData.city_district,
-            locationData.district,
-            locationData.city,
-            locationData.town,
-            locationData.village,
-            locationData.hamlet,
-            locationData.county,
-            locationData.locality
-          ];
-          
-          const locality = localityFields.find(field => field && field.trim());
-          if (locality) {
-            locationParts.push(locality);
+          // Build simple address string
+          const parts = [];
+          if (data.road) parts.push(data.road);
+          if (data.suburb || data.city || data.neighbourhood) {
+            parts.push(data.suburb || data.city || data.neighbourhood);
           }
+          if (data.postcode) parts.push(data.postcode);
           
-          if (locationData.postcode) locationParts.push(locationData.postcode);
-          if (locationData.state && !locationData.state.includes('Queensland')) {
-            locationParts.push(locationData.state);
-          }
+          const address = parts.length > 0 ? parts.join(', ') : `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
+          form.setValue('location', address);
           
-          const locationText = locationParts.length > 0 ? 
-            locationParts.join(' ') : 
-            `${coordinates.lat.toFixed(5)}, ${coordinates.lon.toFixed(5)}`;
-
-          // Update the form value - LocationAutocomplete will sync automatically
-          form.setValue('location', locationText);
-
           toast({
             title: "Location found!",
-            description: `Location set to ${locationText}`,
+            description: `Set to: ${address}`,
           });
         } else {
-          console.error('Reverse geocoding failed with status:', response.status);
-          const errorData = await response.text();
-          console.error('Error details:', errorData);
-          throw new Error(`Reverse geocoding failed: ${response.status}`);
+          throw new Error('Address lookup failed');
         }
       } catch (error) {
-        console.error('Reverse geocoding error:', error);
-        // Fallback to coordinates if reverse geocoding fails
-        const locationText = `${coordinates.lat.toFixed(5)}, ${coordinates.lon.toFixed(5)}`;
-        form.setValue('location', locationText);
-
+        // Fallback to coordinates
+        const coords = `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
+        form.setValue('location', coords);
         toast({
           title: "Location found!",
-          description: "GPS coordinates have been added to the location field. (Address lookup unavailable)",
+          description: `Set to coordinates: ${coords}`,
         });
       }
     } catch (error) {
@@ -290,9 +277,7 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
                     <SelectContent>
                       {categoriesLoading ? (
                         <div className="px-2 py-2 text-sm text-gray-500">Loading categories...</div>
-                      ) : categoriesError ? (
-                        <div className="px-2 py-2 text-sm text-red-500">Failed to load categories.</div>
-                      ) : categories && categories.length > 0 ? (
+                      ) : categories.length > 0 ? (
                         categories.map((category: any) => (
                           <SelectItem key={category.id} value={category.id}>
                             {category.name}
