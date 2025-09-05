@@ -291,7 +291,11 @@ export default function Feed() {
       return roadInfo?.locality || 'Location not specified';
     }
     if (incident.properties?.userReported) {
-      return incident.properties?.location || 'Location not specified';
+      // Check multiple possible location fields for user-reported incidents
+      return incident.properties?.locationDescription || 
+             incident.properties?.location || 
+             incident.properties?.suburb ||
+             'Location not specified';
     }
     return incident.properties?.Location || incident.properties?.Locality || 'Location not specified';
   };
