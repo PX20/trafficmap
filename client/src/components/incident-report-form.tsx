@@ -46,6 +46,12 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
   
   const { data: subcategories = [] } = useQuery({
     queryKey: ["/api/subcategories", selectedCategoryId],
+    queryFn: async () => {
+      if (!selectedCategoryId) return [];
+      const response = await fetch(`/api/subcategories?categoryId=${selectedCategoryId}`);
+      if (!response.ok) throw new Error('Failed to fetch subcategories');
+      return response.json();
+    },
     enabled: isOpen && !!selectedCategoryId,
   });
   
