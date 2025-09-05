@@ -331,25 +331,36 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
   const getStatusBadge = (incident: any) => {
     if (!incident) return <Badge variant="outline">Unknown</Badge>;
     
-    if (incident.type === 'traffic') {
-      // Traffic incidents don't need impact badges
-      return null;
-    }
-    
     if (incident.properties?.userReported) {
       return <Badge variant="secondary">Community Report</Badge>;
     }
     
-    const status = incident.properties?.CurrentStatus?.toLowerCase();
+    // Check both incident.status and properties.CurrentStatus for status info
+    const status = (incident.status || incident.properties?.CurrentStatus || incident.properties?.status || '').toLowerCase();
+    
+    // Handle all completed/resolved states (same as map greying logic)
+    if (status === 'completed' || status === 'closed' || status === 'resolved' || status === 'cleared' || status === 'patrolled') {
+      return <Badge variant="outline" className="text-gray-600 border-gray-300">Resolved</Badge>;
+    }
+    
+    // Active states
     if (status === 'going' || status === 'active') {
       return <Badge variant="destructive">Active</Badge>;
     }
-    if (status === 'patrolled' || status === 'monitoring') {
+    
+    // Monitoring states  
+    if (status === 'monitoring') {
       return <Badge variant="secondary">Monitoring</Badge>;
     }
-    if (status === 'completed' || status === 'closed') {
-      return <Badge variant="outline">Resolved</Badge>;
+    
+    // Traffic incidents show their event type if available
+    if (incident.type === 'traffic') {
+      const eventType = incident.properties?.event_type || incident.properties?.event_subtype;
+      if (eventType) {
+        return <Badge variant="secondary" className="capitalize">{eventType}</Badge>;
+      }
     }
+    
     return <Badge variant="secondary">Official</Badge>;
   };
 
