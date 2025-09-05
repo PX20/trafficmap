@@ -3,10 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Link, useLocation } from "wouter";
-import { Map, List, Bell, MessageCircle, Filter, Plus, MapPin, Menu } from "lucide-react";
+import { Map, List, Bell, MessageCircle, Filter, Plus, MapPin, Menu, LogOut, Settings } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { LocationAutocomplete } from "@/components/location-autocomplete";
 import { IncidentReportForm } from "@/components/incident-report-form";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -55,18 +56,10 @@ export function AppHeader({ onMenuToggle, onFilterToggle, showFilterButton }: Ap
   return (
     <header className="absolute top-0 left-0 right-0 z-20 bg-card border-b border-border">
       <div className="px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-            <svg className="w-5 h-5 text-primary-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m-6 3l6-3"></path>
-            </svg>
-          </div>
-          <div>
-            <h1 className="text-lg font-semibold text-foreground">QLD Safety Monitor</h1>
-            {!isMobile && (
-              <p className="text-sm text-muted-foreground">Real-time safety and incident alerts</p>
-            )}
-          </div>
+        <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+          <svg className="w-5 h-5 text-primary-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m-6 3l6-3"></path>
+          </svg>
         </div>
         
         <div className="flex items-center space-x-3">
@@ -102,17 +95,6 @@ export function AppHeader({ onMenuToggle, onFilterToggle, showFilterButton }: Ap
               {/* User Menu - Only for authenticated users */}
               {isAuthenticated && user && (
                 <div className="flex items-center space-x-2">
-                  {/* Location Button */}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setIsLocationDrawerOpen(true)}
-                    className="h-8 w-8 p-0"
-                    data-testid="button-location"
-                  >
-                    <MapPin className="w-4 h-4" />
-                  </Button>
-                  
                   {/* Report Button */}
                   <Button
                     onClick={() => setReportFormOpen(true)}
@@ -123,15 +105,34 @@ export function AppHeader({ onMenuToggle, onFilterToggle, showFilterButton }: Ap
                     <Plus className="w-4 h-4" />
                   </Button>
 
-                  {/* User Avatar */}
-                  <Link href="/profile">
-                    <Avatar className="w-8 h-8 cursor-pointer hover:opacity-80 transition-opacity">
-                      <AvatarImage src={user.profileImageUrl || undefined} alt={user.firstName || 'User'} />
-                      <AvatarFallback className="text-xs">
-                        {user.firstName ? user.firstName[0].toUpperCase() : user.email ? user.email[0].toUpperCase() : 'U'}
-                      </AvatarFallback>
-                    </Avatar>
-                  </Link>
+                  {/* Profile Dropdown */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Avatar className="w-8 h-8 cursor-pointer hover:opacity-80 transition-opacity">
+                        <AvatarImage src={user.profileImageUrl || undefined} alt={user.firstName || 'User'} />
+                        <AvatarFallback className="text-xs">
+                          {user.firstName ? user.firstName[0].toUpperCase() : user.email ? user.email[0].toUpperCase() : 'U'}
+                        </AvatarFallback>
+                      </Avatar>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48">
+                      <DropdownMenuItem onClick={() => setIsLocationDrawerOpen(true)}>
+                        <MapPin className="w-4 h-4 mr-2" />
+                        Set Location
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href="/profile" className="flex items-center w-full">
+                          <Settings className="w-4 h-4 mr-2" />
+                          Profile Settings
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => window.location.href = '/api/logout'} className="text-red-600">
+                        <LogOut className="w-4 h-4 mr-2" />
+                        Sign Out
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               )}
             </div>
@@ -179,7 +180,7 @@ export function AppHeader({ onMenuToggle, onFilterToggle, showFilterButton }: Ap
               </div>
               
               {/* Desktop User Menu */}
-              {isAuthenticated && (
+              {isAuthenticated && user && (
                 <div className="flex items-center space-x-2">
                   {/* Notifications */}
                   <Button
@@ -191,9 +192,9 @@ export function AppHeader({ onMenuToggle, onFilterToggle, showFilterButton }: Ap
                     <Bell className="w-4 h-4" />
                   </Button>
                   
-                  {/* User Profile */}
-                  {user && (
-                    <Link href="/profile">
+                  {/* Profile Dropdown */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
                       <div className="flex items-center space-x-2 p-1 hover:bg-muted rounded-lg transition-colors cursor-pointer" data-testid="link-user-profile">
                         <Avatar className="w-8 h-8">
                           <AvatarImage src={user.profileImageUrl || undefined} alt={user.firstName || 'User'} />
@@ -205,19 +206,25 @@ export function AppHeader({ onMenuToggle, onFilterToggle, showFilterButton }: Ap
                           {user.firstName || user.email}
                         </span>
                       </div>
-                    </Link>
-                  )}
-                  
-                  {/* Sign Out */}
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => window.location.href = '/api/logout'}
-                    data-testid="button-logout"
-                    className="hidden lg:flex"
-                  >
-                    Sign Out
-                  </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48">
+                      <DropdownMenuItem onClick={() => setIsLocationDrawerOpen(true)}>
+                        <MapPin className="w-4 h-4 mr-2" />
+                        Set Location
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href="/profile" className="flex items-center w-full">
+                          <Settings className="w-4 h-4 mr-2" />
+                          Profile Settings
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => window.location.href = '/api/logout'} className="text-red-600">
+                        <LogOut className="w-4 h-4 mr-2" />
+                        Sign Out
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               )}
               
