@@ -652,11 +652,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         policeNotified: z.enum(["yes", "no", "not_needed", "unsure"]).optional(),
       }).parse(req.body);
 
-      // Check if user is properly authenticated
-      if (!req.user || !req.user.claims || !req.user.claims.sub) {
-        return res.status(401).json({ error: "Authentication required" });
-      }
-      
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
       

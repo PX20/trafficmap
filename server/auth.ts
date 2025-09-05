@@ -136,8 +136,20 @@ export function setupAuth(app: Express) {
 }
 
 export function isAuthenticated(req: any, res: any, next: any) {
-  if (req.isAuthenticated()) {
-    return next();
+  // Check if user is authenticated via Passport
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ message: "Unauthorized" });
   }
-  res.status(401).json({ message: "Unauthorized" });
+  
+  // Check if user object has proper claims structure
+  if (!req.user || !req.user.claims || !req.user.claims.sub) {
+    console.error("Authentication failed: Invalid user claims structure", { 
+      hasUser: !!req.user, 
+      hasClaims: !!(req.user && req.user.claims),
+      hasSub: !!(req.user && req.user.claims && req.user.claims.sub)
+    });
+    return res.status(401).json({ message: "Unauthorized - Invalid session" });
+  }
+  
+  return next();
 }
