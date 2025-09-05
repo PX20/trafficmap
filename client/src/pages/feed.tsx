@@ -288,7 +288,13 @@ export default function Feed() {
   const getIncidentLocation = (incident: any) => {
     if (incident.type === 'traffic') {
       const roadInfo = incident.properties?.road_summary;
-      return roadInfo?.locality || 'Location not specified';
+      const roadName = roadInfo?.road_name || '';
+      const locality = roadInfo?.locality || '';
+      
+      if (roadName && locality) {
+        return `${roadName}, ${locality}`;
+      }
+      return roadName || locality || 'Location not specified';
     }
     if (incident.properties?.userReported) {
       // Check multiple possible location fields for user-reported incidents
@@ -297,7 +303,16 @@ export default function Feed() {
              incident.properties?.suburb ||
              'Location not specified';
     }
-    return incident.properties?.Location || incident.properties?.Locality || 'Location not specified';
+    // For government/emergency incidents, check all available location fields
+    const location = incident.properties?.Location || '';
+    const locality = incident.properties?.Locality || '';
+    const locationDesc = incident.properties?.locationDescription || '';
+    
+    // Combine fields intelligently
+    if (location && locality) {
+      return `${location}, ${locality}`;
+    }
+    return location || locality || locationDesc || 'Location not specified';
   };
 
   const handleIncidentClick = (incident: any) => {
