@@ -88,11 +88,36 @@ export function LocationAutocomplete({
   };
 
   const handleSuggestionClick = (suggestion: LocationSuggestion) => {
-    const suburb = suggestion.address.suburb || '';
-    const locationText = suggestion.address.postcode ? 
-      `${suburb} ${suggestion.address.postcode}` :
-      suburb;
-    setInputValue(locationText);
+    // Extract address components
+    const parts = suggestion.display_name.split(',').map(part => part.trim());
+    const street = parts[0];
+    const suburb = suggestion.address.suburb || suggestion.address.city;
+    const postcode = suggestion.address.postcode;
+    const state = suggestion.address.state || 'QLD';
+    
+    // Build location string with street, suburb, postcode and state
+    let locationText = '';
+    
+    // Start with street if it's different from suburb
+    if (street && suburb && street !== suburb) {
+      locationText = street;
+      
+      // Add suburb
+      locationText += `, ${suburb}`;
+    } else {
+      // Just use suburb if no street or street is same as suburb
+      locationText = suburb || street || '';
+    }
+    
+    // Add postcode and state
+    if (postcode) {
+      locationText += ` ${postcode}`;
+    }
+    if (state) {
+      locationText += `, ${state}`;
+    }
+    
+    setInputValue(locationText.trim());
     setShowSuggestions(false);
     
     const boundingBox = suggestion.boundingbox ? [
