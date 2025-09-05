@@ -55,7 +55,9 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
       console.log('Categories loaded:', data);
       return data;
     },
+    enabled: isOpen, // Only fetch when dialog is open
     retry: 3,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
     select: (data: any) => data || [],
   });
   
@@ -186,7 +188,13 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
             locationParts.join(' ') : 
             `${coordinates.lat.toFixed(5)}, ${coordinates.lon.toFixed(5)}`;
 
+          // Update both the form and the LocationAutocomplete component
           form.setValue('location', locationText);
+          // Trigger form change event to sync with LocationAutocomplete
+          const locationField = form.getValues('location');
+          if (locationField !== locationText) {
+            form.trigger('location');
+          }
 
           toast({
             title: "Location found!",
@@ -203,6 +211,7 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
         // Fallback to coordinates if reverse geocoding fails
         const locationText = `${coordinates.lat.toFixed(5)}, ${coordinates.lon.toFixed(5)}`;
         form.setValue('location', locationText);
+        form.trigger('location');
 
         toast({
           title: "Location found!",
