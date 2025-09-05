@@ -63,183 +63,173 @@ export function AppHeader({ onMenuToggle, onFilterToggle, showFilterButton }: Ap
           </div>
           <div>
             <h1 className="text-lg font-semibold text-foreground">QLD Safety Monitor</h1>
-            <p className="text-sm text-muted-foreground hidden md:block">Real-time safety and incident alerts</p>
+            {!isMobile && (
+              <p className="text-sm text-muted-foreground">Real-time safety and incident alerts</p>
+            )}
           </div>
         </div>
         
-        <div className="flex items-center space-x-4">
-          {/* Filter Button for Mobile Map Mode */}
-          {showFilterButton && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onFilterToggle}
-              className="h-8 mr-2"
-              data-testid="button-toggle-filter"
-            >
-              <Filter className="w-4 h-4" />
-            </Button>
-          )}
-          
-          {/* Mobile Navigation */}
+        <div className="flex items-center space-x-3">
+          {/* Mobile Navigation - Clean and Simple */}
           {isMobile ? (
-            <div className="flex items-center space-x-2">
-              {/* Location Button */}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsLocationDrawerOpen(true)}
-                className="h-8"
-                data-testid="button-location"
-              >
-                <MapPin className="w-4 h-4" />
-              </Button>
-              
-              {/* Report Button */}
-              {isAuthenticated && (
-                <Button
-                  onClick={() => setReportFormOpen(true)}
-                  size="sm"
-                  className="h-8"
-                  data-testid="button-report-mobile"
-                >
-                  <Plus className="w-4 h-4" />
-                </Button>
-              )}
-              
-              {/* View Toggle */}
+            <div className="flex items-center space-x-3">
+              {/* View Toggle - Main Navigation */}
               <div className="flex items-center bg-muted p-1 rounded-lg">
                 <Link href="/map">
                   <Button
                     variant={location === "/map" ? "default" : "ghost"}
                     size="sm"
-                    className="h-8 px-2"
+                    className="h-8 px-3 text-xs"
                     data-testid="button-map-view"
                   >
-                    <Map className="w-4 h-4" />
+                    <Map className="w-4 h-4 mr-1" />
+                    Map
                   </Button>
                 </Link>
                 <Link href="/feed">
                   <Button
                     variant={location === "/feed" || location === "/" ? "default" : "ghost"}
                     size="sm"
-                    className="h-8 px-2"
+                    className="h-8 px-3 text-xs"
                     data-testid="button-feed-view"
                   >
-                    <List className="w-4 h-4" />
+                    <List className="w-4 h-4 mr-1" />
+                    Feed
                   </Button>
                 </Link>
               </div>
+
+              {/* User Menu - Only for authenticated users */}
+              {isAuthenticated && user && (
+                <div className="flex items-center space-x-2">
+                  {/* Location Button */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsLocationDrawerOpen(true)}
+                    className="h-8 w-8 p-0"
+                    data-testid="button-location"
+                  >
+                    <MapPin className="w-4 h-4" />
+                  </Button>
+                  
+                  {/* Report Button */}
+                  <Button
+                    onClick={() => setReportFormOpen(true)}
+                    size="sm"
+                    className="h-8 w-8 p-0"
+                    data-testid="button-report-mobile"
+                  >
+                    <Plus className="w-4 h-4" />
+                  </Button>
+
+                  {/* User Avatar */}
+                  <Link href="/profile">
+                    <Avatar className="w-8 h-8 cursor-pointer hover:opacity-80 transition-opacity">
+                      <AvatarImage src={user.profileImageUrl || undefined} alt={user.firstName || 'User'} />
+                      <AvatarFallback className="text-xs">
+                        {user.firstName ? user.firstName[0].toUpperCase() : user.email ? user.email[0].toUpperCase() : 'U'}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Link>
+                </div>
+              )}
             </div>
           ) : (
-            /* Desktop View Toggle */
-            <div className="flex items-center bg-muted p-1 rounded-lg">
-              <Link href="/map">
+            /* Desktop Navigation */
+            <div className="flex items-center space-x-4">
+              {/* Filter Button for Desktop Map Mode */}
+              {showFilterButton && (
                 <Button
-                  variant={location === "/map" ? "default" : "ghost"}
+                  variant="outline"
                   size="sm"
+                  onClick={onFilterToggle}
                   className="h-8"
-                  data-testid="button-map-view"
+                  data-testid="button-toggle-filter"
                 >
-                  <Map className="w-4 h-4 mr-1" />
-                  Map
+                  <Filter className="w-4 h-4 mr-1" />
+                  Filter
                 </Button>
-              </Link>
-              <Link href="/feed">
-                <Button
-                  variant={location === "/feed" || location === "/" ? "default" : "ghost"}
-                  size="sm"
-                  className="h-8"
-                  data-testid="button-feed-view"
-                >
-                  <List className="w-4 h-4 mr-1" />
-                  Feed
-                </Button>
-              </Link>
-            </div>
-          )}
-          
-          {/* Notifications and Messages */}
-          {isAuthenticated && (
-            <div className="flex items-center space-x-2">
-              {/* Notification Bell */}
-              <Link href="/notifications">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="relative h-8 w-8 p-0"
-                  data-testid="button-notifications"
-                >
-                  <Bell className="w-4 h-4" />
-                  {unreadNotifications > 0 && (
-                    <Badge 
-                      variant="destructive" 
-                      className="absolute -top-1 -right-1 h-5 w-5 text-xs p-0 flex items-center justify-center"
-                    >
-                      {unreadNotifications > 99 ? '99+' : unreadNotifications}
-                    </Badge>
-                  )}
-                </Button>
-              </Link>
+              )}
               
-              {/* Messages Icon */}
-              <Link href="/messages">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="relative h-8 w-8 p-0"
-                  data-testid="button-messages"
-                >
-                  <MessageCircle className="w-4 h-4" />
-                  {unreadMessages > 0 && (
-                    <Badge 
-                      variant="destructive" 
-                      className="absolute -top-1 -right-1 h-5 w-5 text-xs p-0 flex items-center justify-center"
-                    >
-                      {unreadMessages > 99 ? '99+' : unreadMessages}
-                    </Badge>
+              {/* Desktop View Toggle */}
+              <div className="flex items-center bg-muted p-1 rounded-lg">
+                <Link href="/map">
+                  <Button
+                    variant={location === "/map" ? "default" : "ghost"}
+                    size="sm"
+                    className="h-8"
+                    data-testid="button-map-view"
+                  >
+                    <Map className="w-4 h-4 mr-1" />
+                    Map
+                  </Button>
+                </Link>
+                <Link href="/feed">
+                  <Button
+                    variant={location === "/feed" || location === "/" ? "default" : "ghost"}
+                    size="sm"
+                    className="h-8"
+                    data-testid="button-feed-view"
+                  >
+                    <List className="w-4 h-4 mr-1" />
+                    Feed
+                  </Button>
+                </Link>
+              </div>
+              
+              {/* Desktop User Menu */}
+              {isAuthenticated && (
+                <div className="flex items-center space-x-2">
+                  {/* Notifications */}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="relative h-8 w-8 p-0"
+                    data-testid="button-notifications"
+                  >
+                    <Bell className="w-4 h-4" />
+                  </Button>
+                  
+                  {/* User Profile */}
+                  {user && (
+                    <Link href="/profile">
+                      <div className="flex items-center space-x-2 p-1 hover:bg-muted rounded-lg transition-colors cursor-pointer" data-testid="link-user-profile">
+                        <Avatar className="w-8 h-8">
+                          <AvatarImage src={user.profileImageUrl || undefined} alt={user.firstName || 'User'} />
+                          <AvatarFallback className="text-xs">
+                            {user.firstName ? user.firstName[0].toUpperCase() : user.email ? user.email[0].toUpperCase() : 'U'}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="text-sm text-foreground hidden lg:block">
+                          {user.firstName || user.email}
+                        </span>
+                      </div>
+                    </Link>
                   )}
-                </Button>
-              </Link>
-            </div>
-          )}
-
-          {/* User Info and Logout */}
-          {isAuthenticated && user && (
-            <div className="flex items-center space-x-3">
-              <Link href="/profile">
-                <div className="flex items-center space-x-2 p-2 hover:bg-muted rounded-lg transition-colors cursor-pointer" data-testid="link-user-profile">
-                  <Avatar className="w-8 h-8">
-                    <AvatarImage src={user.profileImageUrl || undefined} alt={user.firstName || 'User'} />
-                    <AvatarFallback>
-                      {user.firstName ? user.firstName[0].toUpperCase() : user.email ? user.email[0].toUpperCase() : 'U'}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="text-sm text-foreground hidden sm:block">
-                    {user.firstName || user.email}
-                  </span>
+                  
+                  {/* Sign Out */}
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => window.location.href = '/api/logout'}
+                    data-testid="button-logout"
+                    className="hidden lg:flex"
+                  >
+                    Sign Out
+                  </Button>
                 </div>
-              </Link>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => window.location.href = '/api/logout'}
-                data-testid="button-logout"
+              )}
+              
+              {/* Menu Button */}
+              <button 
+                onClick={onMenuToggle}
+                className="p-2 hover:bg-muted rounded-lg transition-colors"
+                data-testid="button-menu-toggle"
               >
-                Sign Out
-              </Button>
+                <Menu className="w-5 h-5" />
+              </button>
             </div>
-          )}
-          
-          {/* Menu Button - Hide on mobile */}
-          {!isMobile && (
-            <button 
-              onClick={onMenuToggle}
-              className="p-2 hover:bg-muted rounded-lg transition-colors"
-              data-testid="button-menu-toggle"
-            >
-              <Menu className="w-5 h-5" />
-            </button>
           )}
         </div>
       </div>
@@ -255,7 +245,6 @@ export function AppHeader({ onMenuToggle, onFilterToggle, showFilterButton }: Ap
               value=""
               onChange={handleLocationChange}
               placeholder="Search for your suburb or area..."
-              className="w-full"
             />
             {currentLocation && (
               <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
