@@ -42,18 +42,10 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [uploadedPhotoUrl, setUploadedPhotoUrl] = useState<string>("");
   
-  // Fetch categories - now working properly
-  const { data: categories = [], error: categoriesError, isLoading: categoriesLoading } = useQuery({
-    queryKey: ["categories"],
-    queryFn: async () => {
-      const response = await fetch("/api/categories");
-      if (!response.ok) {
-        throw new Error(`Categories failed: ${response.status}`);
-      }
-      return response.json();
-    },
-    enabled: true,
-    retry: 3,
+  // Fetch categories - using consistent query pattern
+  const { data: categories = [], error: categoriesError, isLoading: categoriesLoading } = useQuery<any[]>({
+    queryKey: ["/api/categories"],
+    enabled: isOpen, // Only fetch when modal is open
     staleTime: 5 * 60 * 1000,
   });
   
