@@ -19,7 +19,7 @@ export function AppHeader({ onMenuToggle }: AppHeaderProps) {
   const unreadMessages = 0;
 
   return (
-    <header className="absolute top-0 left-0 right-0 z-20 bg-card/95 backdrop-blur-sm border-b border-border">
+    <header className="absolute top-0 left-0 right-0 z-20 bg-card border-b border-border">
       <div className="px-4 py-3 flex items-center justify-between">
         <div className="flex items-center space-x-3">
           <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
