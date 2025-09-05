@@ -43,13 +43,19 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
   const [uploadedPhotoUrl, setUploadedPhotoUrl] = useState<string>("");
   
   // Fetch categories and subcategories
-  const { data: categories = [] } = useQuery({
+  const { data: categories = [], error: categoriesError, isLoading: categoriesLoading } = useQuery({
     queryKey: ["/api/categories"],
     queryFn: async () => {
       const response = await fetch("/api/categories");
-      if (!response.ok) throw new Error('Failed to fetch categories');
-      return response.json();
+      if (!response.ok) {
+        console.error('Categories API failed:', response.status, response.statusText);
+        throw new Error(`Failed to fetch categories: ${response.status}`);
+      }
+      const data = await response.json();
+      console.log('Categories loaded:', data);
+      return data;
     },
+    retry: 3,
     select: (data: any) => data || [],
   });
   
@@ -161,11 +167,23 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
 
       // Try to reverse geocode the coordinates to get a readable address
       try {
+        console.log('Attempting reverse geocoding for:', coordinates);
         const response = await fetch(`/api/location/reverse?lat=${coordinates.lat}&lon=${coordinates.lon}`);
+        
         if (response.ok) {
           const locationData = await response.json();
-          const locationText = locationData.suburb ? 
-            `${locationData.suburb} ${locationData.postcode || ''}`.trim() :
+          console.log('Reverse geocoding response:', locationData);
+          
+          // Build comprehensive location string
+          let locationParts = [];
+          if (locationData.suburb) locationParts.push(locationData.suburb);
+          if (locationData.postcode) locationParts.push(locationData.postcode);
+          if (locationData.state && !locationData.state.includes('Queensland')) {
+            locationParts.push(locationData.state);
+          }
+          
+          const locationText = locationParts.length > 0 ? 
+            locationParts.join(' ') : 
             `${coordinates.lat.toFixed(5)}, ${coordinates.lon.toFixed(5)}`;
 
           form.setValue('location', locationText);
@@ -175,16 +193,20 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
             description: `Location set to ${locationText}`,
           });
         } else {
-          throw new Error('Reverse geocoding failed');
+          console.error('Reverse geocoding failed with status:', response.status);
+          const errorData = await response.text();
+          console.error('Error details:', errorData);
+          throw new Error(`Reverse geocoding failed: ${response.status}`);
         }
       } catch (error) {
+        console.error('Reverse geocoding error:', error);
         // Fallback to coordinates if reverse geocoding fails
         const locationText = `${coordinates.lat.toFixed(5)}, ${coordinates.lon.toFixed(5)}`;
         form.setValue('location', locationText);
 
         toast({
           title: "Location found!",
-          description: "GPS coordinates have been added to the location field.",
+          description: "GPS coordinates have been added to the location field. (Address lookup unavailable)",
         });
       }
     } catch (error) {
@@ -246,8 +268,22 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {categories.length === 0 ? (
+                      {categoriesLoading ? (
                         <div className="px-2 py-2 text-sm text-gray-500">Loading categories...</div>
+                      ) : categoriesError ? (
+                        <div className="px-2 py-2">
+                          <div className="text-sm text-red-500 mb-2">Failed to load categories.</div>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => window.location.reload()}
+                            className="h-6 text-xs"
+                          >
+                            Refresh Page
+                          </Button>
+                        </div>
+                      ) : categories.length === 0 ? (
+                        <div className="px-2 py-2 text-sm text-gray-500">No categories available</div>
                       ) : (
                         categories.map((category: any) => (
                           <SelectItem key={category.id} value={category.id}>
