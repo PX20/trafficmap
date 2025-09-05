@@ -321,6 +321,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
+      // Debug logging for incident 748346 in response data
+      if (data && data.features && Array.isArray(data.features)) {
+        const incident748346 = data.features.find((f: any) => f.properties.id?.toString() === '748346');
+        if (incident748346) {
+          console.log('Found 748346 in traffic response data:', {
+            id: incident748346.properties.id,
+            status: incident748346.properties.status,
+            event_type: incident748346.properties.event_type,
+            published: incident748346.properties.published,
+            event_priority: incident748346.properties.event_priority
+          });
+        }
+      }
+      
       // Apply 7-day age filter to data being returned to client
       if (data && data.features && Array.isArray(data.features)) {
         const originalCount = data.features.length;
