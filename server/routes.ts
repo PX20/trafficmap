@@ -650,7 +650,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Report new incident (authenticated users only)
   app.post("/api/incidents/report", isAuthenticated, async (req: any, res) => {
-    console.log("🔥 POST /api/incidents/report endpoint called with data:", req.body);
     try {
       const reportData = z.object({
         categoryId: z.string().min(1, "Category is required"),
@@ -671,7 +670,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Geocode the location to get coordinates for mapping
       let geometry = null;
-      console.log(`Starting geocoding for location: "${reportData.location}"`);
       try {
         const geocodeResponse = await fetch(
           `https://nominatim.openstreetmap.org/search?` +
@@ -686,26 +684,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         if (geocodeResponse.ok) {
           const geocodeData = await geocodeResponse.json();
-          console.log(`Geocoding response for "${reportData.location}":`, geocodeData);
           if (geocodeData.length > 0) {
             const result = geocodeData[0];
             geometry = {
               type: "Point",
               coordinates: [parseFloat(result.lon), parseFloat(result.lat)]
             };
-            console.log(`✅ Geocoded user incident "${reportData.title}" to coordinates:`, geometry.coordinates);
-          } else {
-            console.log(`❌ No geocoding results found for location: "${reportData.location}"`);
           }
-        } else {
-          console.log(`❌ Geocoding API request failed with status:`, geocodeResponse.status);
         }
       } catch (error) {
-        console.error("❌ Error geocoding user incident location:", error);
+        console.error("Error geocoding user incident location:", error);
         // Continue without coordinates - incident will still be created but won't appear on map
       }
-      
-      console.log(`Final geometry for incident "${reportData.title}":`, geometry);
 
       const incident = {
         incidentType: "User Report", // Keep for backward compatibility
