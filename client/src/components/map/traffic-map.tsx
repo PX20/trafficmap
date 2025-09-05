@@ -427,7 +427,6 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
                 </svg>
                 <span class="font-medium">${formatEventTime(properties.published || properties.Response_Date || properties.createdAt || properties.timeReported)}</span>
               </div>
-              <span class="px-2 py-0.5 bg-orange-100 text-orange-700 rounded-full text-xs font-medium">Live</span>
             </div>
           </div>
         </div>

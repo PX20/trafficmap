@@ -221,7 +221,7 @@ export default function Feed() {
         {/* Compact Header with Stats and Refresh */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Live Safety Feed</h1>
+            <h1 className="text-2xl font-bold text-foreground">Safety Feed</h1>
             <p className="text-muted-foreground">
               {allIncidents.length > 0 ? `${allIncidents.length} active incidents across Queensland` : 'Real-time incidents across Queensland'}
             </p>

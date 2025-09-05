@@ -610,7 +610,7 @@ export default function Feed() {
                   <div className="flex items-center justify-between">
                     <div>
                       <h2 className="text-2xl font-bold text-foreground mb-2">
-                        Live Safety Feed
+                        Safety Feed
                       </h2>
                       <p className="text-muted-foreground">
                         {selectedSuburb}
