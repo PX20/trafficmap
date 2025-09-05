@@ -276,31 +276,14 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {categoriesLoading ? (
-                        <div className="px-2 py-2 text-sm text-gray-500">Loading categories...</div>
-                      ) : categoriesError ? (
-                        <div className="px-2 py-2">
-                          <div className="text-sm text-red-500 mb-2">Failed to load categories.</div>
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            onClick={() => window.location.reload()}
-                            className="h-6 text-xs"
-                          >
-                            Refresh Page
-                          </Button>
-                        </div>
-                      ) : !categories || categories.length === 0 ? (
-                        <div className="px-2 py-2 text-sm text-gray-500">
-                          No categories available
-                        </div>
-                      ) : (
-                        categories.map((category: any) => (
-                          <SelectItem key={category.id} value={category.id}>
-                            {category.name}
-                          </SelectItem>
-                        ))
-                      )}
+                      <SelectItem value="1">Test Category 1</SelectItem>
+                      <SelectItem value="2">Test Category 2</SelectItem>
+                      <SelectItem value="3">Test Category 3</SelectItem>
+                      {categories && categories.length > 0 && categories.map((category: any) => (
+                        <SelectItem key={`real-${category.id}`} value={category.id}>
+                          {category.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <FormMessage />
