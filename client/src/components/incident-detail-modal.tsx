@@ -49,10 +49,7 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
   const markCompleteMutation = useMutation({
     mutationFn: async () => {
       if (!incidentId) throw new Error('No incident ID');
-      return apiRequest(`/api/incidents/${incidentId}/status`, {
-        method: 'PATCH',
-        body: { status: 'completed' }
-      });
+      return apiRequest('PATCH', `/api/incidents/${incidentId}/status`, { status: 'completed' });
     },
     onSuccess: () => {
       toast({

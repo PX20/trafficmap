@@ -54,7 +54,7 @@ try {
     console.log('Web push: VAPID keys not configured - push notifications disabled');
   }
 } catch (error) {
-  console.log('Web push configuration skipped:', error.message);
+  console.log('Web push configuration skipped:', error instanceof Error ? error.message : 'Unknown error');
 }
 
 // Sunshine Coast suburbs for filtering
@@ -159,7 +159,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = (req.user as any).claims.sub;
       const user = await storage.getUser(userId);
       res.json(user);
     } catch (error) {
@@ -175,7 +175,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         homeSuburb: z.string().min(1),
       }).parse(req.body);
 
-      const userId = req.user.claims.sub;
+      const userId = (req.user as any).claims.sub;
       const updatedUser = await storage.updateUserSuburb(userId, homeSuburb);
       
       if (!updatedUser) {
@@ -709,9 +709,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         description: z.string().optional(),
         location: z.string().min(1),
         policeNotified: z.enum(["yes", "no", "not_needed", "unsure"]).optional(),
+        photoUrl: z.string().optional(),
       }).parse(req.body);
 
-      const userId = req.user.claims.sub;
+      const userId = (req.user as any).claims.sub;
       const user = await storage.getUser(userId);
       
       // Increment subcategory report count for analytics
@@ -790,7 +791,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const incidentId = req.params.id;
       const { status } = req.body;
-      const userId = req.user.claims.sub;
+      const userId = (req.user as any).claims.sub;
 
       if (!status || !['active', 'completed'].includes(status)) {
         return res.status(400).json({ error: "Status must be 'active' or 'completed'" });
@@ -882,7 +883,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/comments/:commentId", isAuthenticated, async (req: any, res) => {
     try {
       const { commentId } = req.params;
-      const userId = req.user.claims.sub;
+      const userId = (req.user as any).claims.sub;
 
       // Check if user owns the comment
       const existingComments = await storage.getCommentsByIncidentId(''); // We'll need to get by comment ID
@@ -911,7 +912,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/comments/:commentId", isAuthenticated, async (req: any, res) => {
     try {
       const { commentId } = req.params;
-      const userId = req.user.claims.sub;
+      const userId = (req.user as any).claims.sub;
 
       // In production, add proper ownership check here
       const success = await storage.deleteComment(commentId);
@@ -938,7 +939,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Check privacy settings - only return public information for non-own profiles
-      const currentUserId = req.user.claims.sub;
+      const currentUserId = (req.user as any).claims.sub;
       if (currentUserId !== userId && user.profileVisibility === 'private') {
         return res.status(403).json({ message: "This profile is private" });
       }
@@ -959,7 +960,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Messaging Routes
   app.get('/api/conversations', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = (req.user as any).claims.sub;
       const conversations = await storage.getConversationsByUserId(userId);
       res.json(conversations);
     } catch (error) {
@@ -974,7 +975,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         otherUserId: z.string().min(1),
       }).parse(req.body);
 
-      const currentUserId = req.user.claims.sub;
+      const currentUserId = (req.user as any).claims.sub;
       
       // Check if conversation already exists
       let conversation = await storage.getConversationBetweenUsers(currentUserId, otherUserId);
@@ -997,7 +998,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/conversations/:conversationId/messages', isAuthenticated, async (req: any, res) => {
     try {
       const { conversationId } = req.params;
-      const userId = req.user.claims.sub;
+      const userId = (req.user as any).claims.sub;
       
       // Verify user has access to this conversation
       const conversation = await storage.getConversationBetweenUsers(userId, "dummy"); // We'll check properly
@@ -1023,7 +1024,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         content: z.string().min(1).max(1000),
       }).parse(req.body);
 
-      const userId = req.user.claims.sub;
+      const userId = (req.user as any).claims.sub;
       
       // Verify user has access to this conversation
       const conversations = await storage.getConversationsByUserId(userId);
@@ -1049,7 +1050,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch('/api/conversations/:conversationId/read', isAuthenticated, async (req: any, res) => {
     try {
       const { conversationId } = req.params;
-      const userId = req.user.claims.sub;
+      const userId = (req.user as any).claims.sub;
       
       // Verify user has access to this conversation
       const conversations = await storage.getConversationsByUserId(userId);
@@ -1070,7 +1071,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Notification Routes
   app.get('/api/notifications', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = (req.user as any).claims.sub;
       const limit = parseInt(req.query.limit as string) || 50;
       const notifications = await storage.getNotifications(userId, limit);
       res.json(notifications);
@@ -1082,11 +1083,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/notifications/unread-count', isAuthenticated, async (req: any, res) => {
     try {
-      if (!req.user || !req.user.claims || !req.user.claims.sub) {
+      if (!req.user || !req.user.claims || !(req.user as any).claims.sub) {
         return res.status(401).json({ message: "User authentication failed" });
       }
       
-      const userId = req.user.claims.sub;
+      const userId = (req.user as any).claims.sub;
       const count = await storage.getUnreadNotificationCount(userId);
       res.json(count);
     } catch (error) {
@@ -1108,7 +1109,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch('/api/notifications/read-all', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = (req.user as any).claims.sub;
       await storage.markAllNotificationsAsRead(userId);
       res.json({ message: "All notifications marked as read" });
     } catch (error) {
@@ -1119,11 +1120,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/messages/unread-count', isAuthenticated, async (req: any, res) => {
     try {
-      if (!req.user || !req.user.claims || !req.user.claims.sub) {
+      if (!req.user || !req.user.claims || !(req.user as any).claims.sub) {
         return res.status(401).json({ message: "User authentication failed" });
       }
       
-      const userId = req.user.claims.sub;
+      const userId = (req.user as any).claims.sub;
       const count = await storage.getUnreadMessageCount(userId);
       res.json(count);
     } catch (error) {
@@ -1607,7 +1608,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/push/subscribe', isAuthenticated, async (req, res) => {
     try {
       const { subscription } = req.body;
-      const userId = req.user?.claims?.sub;
+      const userId = (req.user as any)?.claims?.sub;
 
       if (!subscription || !userId) {
         return res.status(400).json({ error: 'Invalid subscription data' });
@@ -1627,7 +1628,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/push/unsubscribe', isAuthenticated, async (req, res) => {
     try {
       const { endpoint } = req.body;
-      const userId = req.user?.claims?.sub;
+      const userId = (req.user as any)?.claims?.sub;
 
       if (!endpoint || !userId) {
         return res.status(400).json({ error: 'Invalid unsubscribe data' });
@@ -1646,7 +1647,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Test push notification endpoint (for development)
   app.post('/api/push/test', isAuthenticated, async (req, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = (req.user as any)?.claims?.sub;
       
       // In a real implementation, you'd fetch user's subscription from database
       // For demo purposes, we'll return success without sending actual notification
