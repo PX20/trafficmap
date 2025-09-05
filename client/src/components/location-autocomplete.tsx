@@ -37,6 +37,13 @@ export function LocationAutocomplete({
   const [isLoading, setIsLoading] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [inputValue, setInputValue] = useState(value);
+
+  // Sync inputValue with external value changes (like GPS updates)
+  useEffect(() => {
+    if (value !== inputValue) {
+      setInputValue(value);
+    }
+  }, [value]);
   const { toast } = useToast();
   const inputRef = useRef<HTMLInputElement>(null);
 
