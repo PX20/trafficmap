@@ -466,8 +466,7 @@ export default function Feed() {
                   
                   // Only show engagement for user-reported incidents
                   const isUserReported = incident.properties?.userReported;
-                  const actualComments = incident.properties?.commentCount || 0;
-                  const actualLikes = incident.properties?.likeCount || 0;
+                  // Remove fake comment/like counts - no real functionality implemented yet
 
                   return (
                     <Card 
@@ -569,7 +568,7 @@ export default function Feed() {
                               >
                                 <MessageCircle className="w-5 h-5" />
                                 <span className="text-sm font-medium">
-                                  {actualComments > 0 ? actualComments : ''}
+                                  {/* No comment count shown - functionality not implemented */}
                                 </span>
                               </Button>
                               
@@ -577,7 +576,7 @@ export default function Feed() {
                                 <Button variant="ghost" size="sm" className="flex items-center gap-2 hover:text-red-500 transition-colors p-2 h-auto">
                                   <Heart className="w-5 h-5" />
                                   <span className="text-sm font-medium">
-                                    {actualLikes > 0 ? actualLikes : ''}
+                                    {/* No like count shown - functionality not implemented */}
                                   </span>
                                 </Button>
                               )}
