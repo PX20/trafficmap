@@ -13,6 +13,7 @@ import { IncidentDetailModal } from "@/components/incident-detail-modal";
 import { IncidentReportForm } from "@/components/incident-report-form";
 import { AppHeader } from "@/components/map/app-header";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { findRegionBySuburb, getRegionalSuburbs } from "@/lib/regions";
 import { 
   MapPin, 
   Clock, 
@@ -37,9 +38,46 @@ export default function Feed() {
   const { user } = useAuth();
   const { toast } = useToast();
   const isMobile = useIsMobile();
+  const [selectedSuburb, setSelectedSuburb] = useState("");
   const [selectedIncident, setSelectedIncident] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showRegionalUpdates, setShowRegionalUpdates] = useState(true);
   const [reportFormOpen, setReportFormOpen] = useState(false);
+  
+  // Load saved location from localStorage on startup (sync with map home location)
+  useEffect(() => {
+    const savedLocation = localStorage.getItem('homeLocation');
+    if (savedLocation) {
+      setSelectedSuburb(savedLocation);
+    } else if (user?.homeSuburb) {
+      setSelectedSuburb(user.homeSuburb);
+    } else if (user?.primarySuburb) {
+      setSelectedSuburb(user.primarySuburb);
+    }
+  }, [user?.homeSuburb, user?.primarySuburb]);
+  
+  // Listen for location changes from map page
+  useEffect(() => {
+    const handleLocationChange = (event: CustomEvent) => {
+      const { location } = event.detail;
+      if (location) {
+        setSelectedSuburb(location);
+      }
+    };
+    
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'homeLocation' && e.newValue) {
+        setSelectedSuburb(e.newValue);
+      }
+    };
+    
+    window.addEventListener('locationChanged', handleLocationChange as EventListener);
+    window.addEventListener('storage', handleStorageChange);
+    return () => {
+      window.removeEventListener('locationChanged', handleLocationChange as EventListener);
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
 
   const { data: incidents, isLoading: incidentsLoading, data: rawIncidentData } = useQuery({
     queryKey: ["/api/incidents"],
@@ -127,7 +165,62 @@ export default function Feed() {
     }
   }
   
-  const allIncidents = Array.from(incidentMap.values())
+  const deduplicatedIncidents = Array.from(incidentMap.values());
+
+  // Apply regional filtering if location is selected
+  let filteredIncidents = deduplicatedIncidents;
+  
+  if (showRegionalUpdates && selectedSuburb) {
+    const region = findRegionBySuburb(selectedSuburb);
+    
+    if (region) {
+      filteredIncidents = deduplicatedIncidents.filter((incident: any) => {
+        // Filter traffic events by region
+        if (incident.type === 'traffic') {
+          const locality = incident.properties?.road_summary?.locality || '';
+          const roadName = incident.properties?.road_summary?.road_name || '';
+          const locationText = `${locality} ${roadName}`.toLowerCase();
+          
+          return region.suburbs.some(suburb => {
+            const suburbLower = suburb.toLowerCase();
+            return locationText.includes(suburbLower) ||
+                   suburbLower.includes(locationText);
+          });
+        }
+        
+        // Filter emergency incidents by region
+        if (!incident.properties?.userReported && incident.type !== 'traffic') {
+          const locality = incident.properties?.Locality || '';
+          const location = incident.properties?.Location || '';
+          const locationDesc = incident.properties?.locationDescription || '';
+          const locationText = `${locality} ${location} ${locationDesc}`.toLowerCase();
+          
+          return region.suburbs.some(suburb => {
+            const suburbLower = suburb.toLowerCase();
+            return locationText.includes(suburbLower) ||
+                   suburbLower.includes(locationText);
+          });
+        }
+        
+        // For user-reported incidents, check if they match the region
+        if (incident.properties?.userReported) {
+          const location = incident.properties?.location || '';
+          const suburb = incident.properties?.suburb || '';
+          const locationText = `${location} ${suburb}`.toLowerCase();
+          
+          return region.suburbs.some(suburbRegion => {
+            const suburbLower = suburbRegion.toLowerCase();
+            return locationText.includes(suburbLower) ||
+                   suburbLower.includes(locationText);
+          });
+        }
+        
+        return true; // Include other incident types by default
+      });
+    }
+  }
+
+  const allIncidents = filteredIncidents
     .sort((a, b) => {
       const dateA = new Date(a.properties?.Response_Date || a.properties?.last_updated || a.properties?.createdAt || 0);
       const dateB = new Date(b.properties?.Response_Date || b.properties?.last_updated || b.properties?.createdAt || 0);
@@ -223,7 +316,11 @@ export default function Feed() {
           <div>
             <h1 className="text-2xl font-bold text-foreground">Safety Feed</h1>
             <p className="text-muted-foreground">
-              {allIncidents.length > 0 ? `${allIncidents.length} active incidents across Queensland` : 'Real-time incidents across Queensland'}
+              {selectedSuburb && showRegionalUpdates ? (
+                `${allIncidents.length} incidents in ${selectedSuburb} region`
+              ) : (
+                allIncidents.length > 0 ? `${allIncidents.length} active incidents across Queensland` : 'Real-time incidents across Queensland'
+              )}
             </p>
           </div>
           <Button
