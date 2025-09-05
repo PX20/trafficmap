@@ -708,6 +708,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         policeNotified: reportData.policeNotified || null,
         agency: "User Report",
         publishedDate: new Date(),
+        photoUrl: reportData.photoUrl || null, // User-uploaded photo
         geometry: geometry,
         properties: {
           reportedBy: user?.email || "Anonymous",
@@ -1519,6 +1520,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching subcategories:", error);
       res.status(500).json({ error: "Failed to fetch subcategories" });
+    }
+  });
+
+  // Object Storage endpoints for photo uploads
+  
+  // Get upload URL for photos
+  app.post("/api/objects/upload", isAuthenticated, async (req, res) => {
+    try {
+      const objectStorageService = new ObjectStorageService();
+      const uploadURL = await objectStorageService.getObjectEntityUploadURL();
+      res.json({ uploadURL });
+    } catch (error) {
+      console.error("Error generating upload URL:", error);
+      res.status(500).json({ error: "Failed to generate upload URL" });
+    }
+  });
+
+  // Serve uploaded photos (publicly accessible)
+  app.get("/objects/:objectPath(*)", async (req, res) => {
+    try {
+      const objectStorageService = new ObjectStorageService();
+      const objectFile = await objectStorageService.getObjectEntityFile(req.path);
+      await objectStorageService.downloadObject(objectFile, res);
+    } catch (error) {
+      console.error("Error serving object:", error);
+      if (error instanceof ObjectNotFoundError) {
+        return res.status(404).json({ error: "Photo not found" });
+      }
+      return res.status(500).json({ error: "Failed to serve photo" });
     }
   });
 

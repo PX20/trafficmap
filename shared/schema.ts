@@ -73,6 +73,7 @@ export const incidents = pgTable("incidents", {
   status: text("status").notNull(),
   priority: text("priority"),
   agency: text("agency"),
+  photoUrl: text("photo_url"), // Photo uploaded with incident
   geometry: jsonb("geometry"),
   properties: jsonb("properties"),
   lastUpdated: timestamp("last_updated").notNull(),

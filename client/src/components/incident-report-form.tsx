@@ -14,6 +14,8 @@ import { Navigation } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { LocationAutocomplete } from "@/components/location-autocomplete";
+import { ObjectUploader } from "@/components/ObjectUploader";
+import { Camera } from "lucide-react";
 
 const reportIncidentSchema = z.object({
   categoryId: z.string().min(1, "Category is required"),
@@ -22,6 +24,7 @@ const reportIncidentSchema = z.object({
   description: z.string().optional(),
   location: z.string().min(1, "Location is required"),
   policeNotified: z.enum(["yes", "no", "not_needed", "unsure"]).optional(),
+  photoUrl: z.string().optional(),
 });
 
 type ReportIncidentData = z.infer<typeof reportIncidentSchema>;
@@ -37,6 +40,7 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
   const queryClient = useQueryClient();
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
   const [isGettingLocation, setIsGettingLocation] = useState(false);
+  const [uploadedPhotoUrl, setUploadedPhotoUrl] = useState<string>("");
   
   // Fetch categories and subcategories
   const { data: categories = [] } = useQuery({
@@ -64,8 +68,30 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
       description: "",
       location: initialLocation || "",
       policeNotified: "unsure",
+      photoUrl: "",
     },
   });
+
+  // Photo upload functions
+  const handleGetUploadParameters = async () => {
+    const response = await apiRequest("POST", "/api/objects/upload", {});
+    return {
+      method: "PUT" as const,
+      url: response.uploadURL,
+    };
+  };
+
+  const handlePhotoUploadComplete = (result: any) => {
+    if (result.successful && result.successful.length > 0) {
+      const uploadedUrl = result.successful[0].uploadURL;
+      setUploadedPhotoUrl(uploadedUrl);
+      form.setValue("photoUrl", uploadedUrl);
+      toast({
+        title: "Photo Uploaded",
+        description: "Your photo has been uploaded successfully.",
+      });
+    }
+  };
 
   const reportIncidentMutation = useMutation({
     mutationFn: async (data: ReportIncidentData) => {
@@ -368,6 +394,56 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
                       {...field}
                       data-testid="textarea-incident-description"
                     />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Photo Upload Field */}
+            <FormField
+              control={form.control}
+              name="photoUrl"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Add Photo (Optional)</FormLabel>
+                  <FormControl>
+                    <div className="space-y-3">
+                      {uploadedPhotoUrl ? (
+                        <div className="relative">
+                          <img
+                            src={uploadedPhotoUrl}
+                            alt="Uploaded incident photo"
+                            className="max-w-full h-32 object-cover rounded-lg border"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setUploadedPhotoUrl("");
+                              form.setValue("photoUrl", "");
+                            }}
+                            className="absolute top-2 right-2"
+                          >
+                            Remove
+                          </Button>
+                        </div>
+                      ) : (
+                        <ObjectUploader
+                          maxNumberOfFiles={1}
+                          maxFileSize={5242880}
+                          onGetUploadParameters={handleGetUploadParameters}
+                          onComplete={handlePhotoUploadComplete}
+                          buttonClassName="w-full border-dashed border-2 border-gray-300 hover:border-gray-400"
+                        >
+                          <div className="flex items-center justify-center gap-2 py-8">
+                            <Camera className="w-5 h-5 text-gray-500" />
+                            <span className="text-gray-600">Add Photo</span>
+                          </div>
+                        </ObjectUploader>
+                      )}
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
