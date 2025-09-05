@@ -709,8 +709,9 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
                     <DialogTitle className="text-xl font-bold text-gray-900 leading-tight">
                       {getIncidentTitle(incident)}
                     </DialogTitle>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-2" style={{border: '1px solid red', minHeight: '30px', background: 'yellow'}}>
                       {getStatusBadge(incident)}
+                      <Badge variant="secondary">TEST BADGE</Badge>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 text-sm text-gray-700 mb-4">
