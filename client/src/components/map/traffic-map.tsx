@@ -315,6 +315,16 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
     if (properties) {
       const status = (properties.status || properties.CurrentStatus || '').toLowerCase();
       
+      // Debug logging for incident 748346
+      if (properties.id === '748346') {
+        console.log('Status debug for incident:', {
+          id: properties.id,
+          status: properties.status,
+          allProps: Object.keys(properties),
+          eventType: properties.eventType
+        });
+      }
+      
       if (status === 'completed' || status === 'closed' || status === 'resolved' || status === 'cleared' || status === 'patrolled') {
         return '#9ca3af'; // Grey for completed incidents
       }
