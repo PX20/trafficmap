@@ -334,6 +334,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
             allPropsCount: Object.keys(incident748346.properties).length,
             rawStatus: JSON.stringify(incident748346.properties.status)
           });
+        } else {
+          // Check if it exists in a different ID format
+          const allIds = data.features.map((f: any) => f.properties.id?.toString()).filter(Boolean);
+          const matchingIds = allIds.filter(id => id.includes('748346') || id.includes('346'));
+          console.log('748346 not found in traffic data. Similar IDs:', matchingIds.slice(0, 5));
+          console.log('Total features in response:', data.features.length);
+          
+          // Sample a few incidents to see data structure
+          const sampleIncidents = data.features.slice(0, 2).map((f: any) => ({
+            id: f.properties.id,
+            status: f.properties.status,
+            event_type: f.properties.event_type
+          }));
+          console.log('Sample incidents:', sampleIncidents);
         }
       }
       
