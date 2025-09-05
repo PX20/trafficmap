@@ -350,13 +350,6 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
       ''
     ).toLowerCase();
     
-    // Debug: Log what status data we have
-    console.log('Status debug for incident:', {
-      id: incident.properties?.id,
-      status: status,
-      allProps: Object.keys(incident.properties || {}),
-      eventType: incident.properties?.event_type
-    });
     
     // Handle all completed/resolved states (same as map greying logic)
     if (status === 'completed' || status === 'closed' || status === 'resolved' || status === 'cleared' || status === 'patrolled') {
@@ -997,38 +990,32 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
                   <Button 
                     variant="ghost" 
                     size="sm" 
-                    className={`group flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md ${
+                    className={`group flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200 ${
                       isLiked 
-                        ? 'bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100' 
-                        : 'bg-white hover:bg-blue-50 border border-gray-200 hover:border-blue-300 text-gray-600 hover:text-blue-600'
+                        ? 'text-blue-600 hover:text-blue-700 hover:bg-blue-50' 
+                        : 'text-gray-500 hover:text-blue-600 hover:bg-blue-50'
                     }`}
                     onClick={handleLike}
                     data-testid="button-like-incident"
                   >
-                    <div className="w-5 h-5 bg-blue-500 rounded-lg flex items-center justify-center">
-                      <Heart className="w-3 h-3 text-white" />
-                    </div>
+                    <Heart className={`w-4 h-4 transition-colors ${isLiked ? 'fill-blue-600 text-blue-600' : ''}`} />
                     {likeCount > 0 && (
-                      <span className="text-sm font-semibold">{likeCount}</span>
+                      <span className="text-sm font-medium">{likeCount}</span>
                     )}
                   </Button>
-                  <Button variant="ghost" size="sm" className="group flex items-center gap-2 px-4 py-2 rounded-xl bg-white hover:bg-purple-50 border border-gray-200 hover:border-purple-300 text-gray-600 hover:text-purple-600 transition-all duration-200 shadow-sm hover:shadow-md">
-                    <div className="w-5 h-5 bg-purple-500 rounded-lg flex items-center justify-center">
-                      <MessageCircle className="w-3 h-3 text-white" />
-                    </div>
-                    <span className="text-sm font-semibold">{comments.length || 0}</span>
+                  <Button variant="ghost" size="sm" className="group flex items-center gap-2 px-3 py-2 rounded-lg text-gray-500 hover:text-purple-600 hover:bg-purple-50 transition-all duration-200">
+                    <MessageCircle className="w-4 h-4" />
+                    <span className="text-sm font-medium">{comments.length || 0}</span>
                   </Button>
                   <Button 
                     variant="ghost" 
                     size="sm" 
-                    className="group flex items-center gap-2 px-4 py-2 rounded-xl bg-white hover:bg-green-50 border border-gray-200 hover:border-green-300 text-gray-600 hover:text-green-600 transition-all duration-200 shadow-sm hover:shadow-md"
+                    className="group flex items-center gap-2 px-3 py-2 rounded-lg text-gray-500 hover:text-green-600 hover:bg-green-50 transition-all duration-200"
                     onClick={handleShare}
                     data-testid="button-share-incident"
                   >
-                    <div className="w-5 h-5 bg-green-500 rounded-lg flex items-center justify-center">
-                      <Share2 className="w-3 h-3 text-white" />
-                    </div>
-                    <span className="text-sm font-semibold">Share</span>
+                    <Share2 className="w-4 h-4" />
+                    <span className="text-sm font-medium">Share</span>
                   </Button>
                   
                   {/* Mark Complete Button - only show for incident creator and not already completed */}
