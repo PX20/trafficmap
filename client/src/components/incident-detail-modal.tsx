@@ -340,8 +340,23 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
       return <Badge variant="secondary">Community Report</Badge>;
     }
     
-    // Check both incident.status and properties.CurrentStatus for status info
-    const status = (incident.status || incident.properties?.CurrentStatus || incident.properties?.status || '').toLowerCase();
+    // Check multiple possible status field locations
+    const status = (
+      incident.status || 
+      incident.properties?.CurrentStatus || 
+      incident.properties?.status ||
+      incident.properties?.event_status ||
+      incident.properties?.event_state ||
+      ''
+    ).toLowerCase();
+    
+    // Debug: Log what status data we have
+    console.log('Status debug for incident:', {
+      id: incident.properties?.id,
+      status: status,
+      allProps: Object.keys(incident.properties || {}),
+      eventType: incident.properties?.event_type
+    });
     
     // Handle all completed/resolved states (same as map greying logic)
     if (status === 'completed' || status === 'closed' || status === 'resolved' || status === 'cleared' || status === 'patrolled') {
@@ -349,18 +364,33 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
     }
     
     // Active states
-    if (status === 'going' || status === 'active') {
+    if (status === 'going' || status === 'active' || status === 'in progress') {
       return <Badge variant="destructive">Active</Badge>;
     }
     
     // Monitoring states  
-    if (status === 'monitoring') {
+    if (status === 'monitoring' || status === 'ongoing') {
       return <Badge variant="secondary">Monitoring</Badge>;
     }
     
-    // Traffic incidents show their event type if available
-    if (incident.type === 'traffic') {
+    // Traffic incidents show their priority or event type if available
+    if (incident.type === 'traffic' || !incident.properties?.userReported) {
+      const priority = incident.properties?.event_priority;
       const eventType = incident.properties?.event_type || incident.properties?.event_subtype;
+      
+      if (priority) {
+        const priorityColors = {
+          'high': 'destructive',
+          'medium': 'default', 
+          'low': 'secondary',
+          'major': 'destructive',
+          'minor': 'secondary'
+        };
+        return <Badge variant={priorityColors[priority.toLowerCase()] || 'default'} className="capitalize">
+          {priority} Priority
+        </Badge>;
+      }
+      
       if (eventType) {
         return <Badge variant="secondary" className="capitalize">{eventType}</Badge>;
       }
