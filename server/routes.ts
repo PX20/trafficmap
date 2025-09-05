@@ -445,11 +445,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           (item.address.state.includes('Queensland') || item.address.state.includes('QLD'))
         )
         .map((item: any) => {
-          // Extract the actual suburb name from display_name (first part before comma)
-          let suburb = item.display_name.split(',')[0].trim();
+          // Extract the actual suburb name from display_name
+          // Format: "Street Name, Suburb, City, Region, State, Postcode, Country"
+          const parts = item.display_name.split(',').map(p => p.trim());
+          
+          // Try to get suburb from the second part of display_name first
+          let suburb = parts[1] || parts[0]; // Use second part (suburb) or fallback to first part
           
           // Fallback to address fields if display_name doesn't work
-          if (!suburb) {
+          if (!suburb || suburb.length < 2) {
             suburb = item.address.suburb || 
                     item.address.town || 
                     item.address.village ||

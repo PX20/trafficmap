@@ -88,19 +88,12 @@ export function LocationAutocomplete({
   };
 
   const handleSuggestionClick = (suggestion: LocationSuggestion) => {
-    // Debug logging to understand the data structure
-    console.log('Suggestion clicked:', suggestion);
-    console.log('Display name:', suggestion.display_name);
-    console.log('Address object:', suggestion.address);
-    
     // Extract address components
     const parts = suggestion.display_name.split(',').map(part => part.trim());
     const street = parts[0];
     const suburb = suggestion.address.suburb || suggestion.address.city;
     const postcode = suggestion.address.postcode;
     const state = suggestion.address.state || 'QLD';
-    
-    console.log('Parsed components:', { street, suburb, postcode, state, parts });
     
     // Build location string with street, suburb, postcode and state
     let locationText = '';
@@ -123,8 +116,6 @@ export function LocationAutocomplete({
     if (state) {
       locationText += `, ${state}`;
     }
-    
-    console.log('Final location text:', locationText);
     
     setInputValue(locationText.trim());
     setShowSuggestions(false);
