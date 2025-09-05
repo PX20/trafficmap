@@ -565,12 +565,12 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg max-h-[85vh] flex flex-col p-0 bg-gradient-to-br from-white via-gray-50 to-white border-0 shadow-2xl overflow-hidden" data-testid="modal-incident-details">
+      <DialogContent className="w-[95vw] max-w-lg max-h-[90vh] sm:max-h-[85vh] flex flex-col p-0 bg-gradient-to-br from-white via-gray-50 to-white border-0 shadow-2xl overflow-hidden" data-testid="modal-incident-details">
         {/* Decorative Background Elements */}
         <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-200/30 to-purple-200/30 rounded-full blur-2xl"></div>
         <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-br from-orange-200/20 to-pink-200/20 rounded-full blur-lg"></div>
         
-        <DialogHeader className="relative p-6 pb-4 flex-shrink-0 bg-gradient-to-r from-gray-50/80 to-white/80 backdrop-blur-sm">
+        <DialogHeader className="relative p-4 sm:p-6 pb-3 sm:pb-4 flex-shrink-0 bg-gradient-to-r from-gray-50/80 to-white/80 backdrop-blur-sm">
           {/* Enhanced Header */}
           <div className="flex items-center gap-4">
             {/* Clickable User Avatar/Name for user-reported incidents only */}
@@ -591,11 +591,11 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
                   </Avatar>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-3 mb-1">
-                    <h4 className="font-bold text-gray-900 text-lg truncate hover:text-blue-600 transition-colors">
+                  <div className="flex items-start gap-2 mb-1 flex-wrap">
+                    <h4 className="font-bold text-gray-900 text-base sm:text-lg leading-tight hover:text-blue-600 transition-colors break-words flex-1 min-w-0">
                       {getSourceInfo(incident).name}
                     </h4>
-                    <Badge variant="secondary" className="px-3 py-1 bg-gradient-to-r from-blue-100 to-purple-100 text-blue-700 border-blue-200 font-medium">
+                    <Badge variant="secondary" className="px-2 sm:px-3 py-1 bg-gradient-to-r from-blue-100 to-purple-100 text-blue-700 border-blue-200 font-medium text-xs sm:text-sm flex-shrink-0">
                       {getSourceInfo(incident).type.split(' ')[0]}
                     </Badge>
                   </div>
@@ -624,11 +624,11 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
                   </Avatar>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-3 mb-1">
-                    <h4 className="font-bold text-gray-900 text-lg truncate">
+                  <div className="flex items-start gap-2 mb-1 flex-wrap">
+                    <h4 className="font-bold text-gray-900 text-base sm:text-lg leading-tight break-words flex-1 min-w-0">
                       {getSourceInfo(incident).name}
                     </h4>
-                    <Badge variant="secondary" className="px-3 py-1 bg-gradient-to-r from-blue-100 to-purple-100 text-blue-700 border-blue-200 font-medium">
+                    <Badge variant="secondary" className="px-2 sm:px-3 py-1 bg-gradient-to-r from-blue-100 to-purple-100 text-blue-700 border-blue-200 font-medium text-xs sm:text-sm flex-shrink-0">
                       {getSourceInfo(incident).type.split(' ')[0]}
                     </Badge>
                   </div>
@@ -656,7 +656,7 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
         {/* Enhanced Scrollable Content Container */}
         <div className="relative flex-1 overflow-y-auto">
           {/* Main Incident Card */}
-          <div className="p-6 space-y-6">
+          <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
             <div className="relative p-6 rounded-2xl bg-gradient-to-br from-white via-gray-50 to-white border border-gray-100 shadow-lg overflow-hidden">
               {/* Content decorative elements */}
               <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-blue-200/20 to-purple-200/20 rounded-full blur-lg"></div>
@@ -702,52 +702,52 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
                             </h4>
                           </div>
                           
-                          <div className="grid grid-cols-1 gap-3 text-sm">
+                          <div className="space-y-3 text-sm">
                             {/* Suburbs/Localities */}
                             {incident.properties?.road_summary?.locality && (
-                              <div className="flex">
-                                <div className="font-semibold text-blue-800 w-32 flex-shrink-0">Suburbs / Localities</div>
-                                <div className="text-blue-900">{incident.properties.road_summary.locality}</div>
+                              <div className="flex flex-col sm:flex-row gap-1 sm:gap-3">
+                                <div className="font-semibold text-blue-800 min-w-0 sm:w-32">Suburbs / Localities</div>
+                                <div className="text-blue-900 break-words">{incident.properties.road_summary.locality}</div>
                               </div>
                             )}
                             
                             {/* Roads */}
                             {incident.properties?.road_summary?.road_name && (
-                              <div className="flex">
-                                <div className="font-semibold text-blue-800 w-32 flex-shrink-0">Roads</div>
-                                <div className="text-blue-900">{incident.properties.road_summary.road_name}</div>
+                              <div className="flex flex-col sm:flex-row gap-1 sm:gap-3">
+                                <div className="font-semibold text-blue-800 min-w-0 sm:w-32">Roads</div>
+                                <div className="text-blue-900 break-words">{incident.properties.road_summary.road_name}</div>
                               </div>
                             )}
                             
                             {/* Location details */}
                             {incident.properties?.description && (
-                              <div className="flex">
-                                <div className="font-semibold text-blue-800 w-32 flex-shrink-0">Location details</div>
-                                <div className="text-blue-900">{incident.properties.description}</div>
+                              <div className="flex flex-col sm:flex-row gap-1 sm:gap-3">
+                                <div className="font-semibold text-blue-800 min-w-0 sm:w-32">Location details</div>
+                                <div className="text-blue-900 break-words">{incident.properties.description}</div>
                               </div>
                             )}
                             
                             {/* What to expect */}
                             {incident.properties?.advice && (
-                              <div className="flex">
-                                <div className="font-semibold text-blue-800 w-32 flex-shrink-0">What to expect</div>
-                                <div className="text-blue-900">{incident.properties.advice}</div>
+                              <div className="flex flex-col sm:flex-row gap-1 sm:gap-3">
+                                <div className="font-semibold text-blue-800 min-w-0 sm:w-32">What to expect</div>
+                                <div className="text-blue-900 break-words">{incident.properties.advice}</div>
                               </div>
                             )}
                             
                             {/* Traffic impact */}
                             {incident.properties?.traffic_impact && (
-                              <div className="flex">
-                                <div className="font-semibold text-blue-800 w-32 flex-shrink-0">Impact</div>
-                                <div className="text-blue-900">{incident.properties.traffic_impact}</div>
+                              <div className="flex flex-col sm:flex-row gap-1 sm:gap-3">
+                                <div className="font-semibold text-blue-800 min-w-0 sm:w-32">Impact</div>
+                                <div className="text-blue-900 break-words">{incident.properties.traffic_impact}</div>
                               </div>
                             )}
                             
                             {/* Last updated */}
                             {incident.properties?.last_updated && (
-                              <div className="flex">
-                                <div className="font-semibold text-blue-800 w-32 flex-shrink-0">Last updated</div>
-                                <div className="text-blue-900">
+                              <div className="flex flex-col sm:flex-row gap-1 sm:gap-3">
+                                <div className="font-semibold text-blue-800 min-w-0 sm:w-32">Last updated</div>
+                                <div className="text-blue-900 break-words">
                                   {new Date(incident.properties.last_updated).toLocaleString('en-AU', {
                                     day: 'numeric',
                                     month: 'short',
@@ -761,16 +761,16 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
                             )}
                             
                             {/* Information provided by */}
-                            <div className="flex">
-                              <div className="font-semibold text-blue-800 w-32 flex-shrink-0">Information provided by</div>
-                              <div className="text-blue-900">Department of Transport and Main Roads</div>
+                            <div className="flex flex-col sm:flex-row gap-1 sm:gap-3">
+                              <div className="font-semibold text-blue-800 min-w-0 sm:w-32">Information provided by</div>
+                              <div className="text-blue-900 break-words">Department of Transport and Main Roads</div>
                             </div>
                             
                             {/* Event ID */}
                             {incident.properties?.id && (
-                              <div className="flex">
-                                <div className="font-semibold text-blue-800 w-32 flex-shrink-0">Event ID</div>
-                                <div className="text-blue-900 font-mono">{incident.properties.id}</div>
+                              <div className="flex flex-col sm:flex-row gap-1 sm:gap-3">
+                                <div className="font-semibold text-blue-800 min-w-0 sm:w-32">Event ID</div>
+                                <div className="text-blue-900 font-mono break-all">{incident.properties.id}</div>
                               </div>
                             )}
                           </div>
@@ -792,36 +792,36 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
                             </h4>
                           </div>
                           
-                          <div className="grid grid-cols-1 gap-3 text-sm">
+                          <div className="space-y-3 text-sm">
                             {/* Incident Type */}
                             {incident.properties?.GroupedType && (
-                              <div className="flex">
-                                <div className="font-semibold text-red-800 w-32 flex-shrink-0">Incident Type</div>
-                                <div className="text-red-900">{incident.properties.GroupedType}</div>
+                              <div className="flex flex-col sm:flex-row gap-1 sm:gap-3">
+                                <div className="font-semibold text-red-800 min-w-0 sm:w-32">Incident Type</div>
+                                <div className="text-red-900 break-words">{incident.properties.GroupedType}</div>
                               </div>
                             )}
                             
                             {/* Specific Event */}
                             {incident.properties?.Event_Type && incident.properties.Event_Type !== incident.properties?.GroupedType && (
-                              <div className="flex">
-                                <div className="font-semibold text-red-800 w-32 flex-shrink-0">Event Details</div>
-                                <div className="text-red-900">{incident.properties.Event_Type}</div>
+                              <div className="flex flex-col sm:flex-row gap-1 sm:gap-3">
+                                <div className="font-semibold text-red-800 min-w-0 sm:w-32">Event Details</div>
+                                <div className="text-red-900 break-words">{incident.properties.Event_Type}</div>
                               </div>
                             )}
                             
                             {/* Location */}
                             {incident.properties?.Location && (
-                              <div className="flex">
-                                <div className="font-semibold text-red-800 w-32 flex-shrink-0">Location</div>
-                                <div className="text-red-900">{incident.properties.Location}</div>
+                              <div className="flex flex-col sm:flex-row gap-1 sm:gap-3">
+                                <div className="font-semibold text-red-800 min-w-0 sm:w-32">Location</div>
+                                <div className="text-red-900 break-words">{incident.properties.Location}</div>
                               </div>
                             )}
                             
                             {/* Locality/Suburb */}
                             {incident.properties?.Locality && (
-                              <div className="flex">
-                                <div className="font-semibold text-red-800 w-32 flex-shrink-0">Locality</div>
-                                <div className="text-red-900">{incident.properties.Locality}</div>
+                              <div className="flex flex-col sm:flex-row gap-1 sm:gap-3">
+                                <div className="font-semibold text-red-800 min-w-0 sm:w-32">Locality</div>
+                                <div className="text-red-900 break-words">{incident.properties.Locality}</div>
                               </div>
                             )}
                             

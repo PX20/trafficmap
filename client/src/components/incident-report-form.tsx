@@ -75,9 +75,10 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
   // Photo upload functions
   const handleGetUploadParameters = async () => {
     const response = await apiRequest("POST", "/api/objects/upload", {});
+    const responseData = await response.json();
     return {
       method: "PUT" as const,
-      url: response.uploadURL,
+      url: responseData.uploadURL,
     };
   };
 
@@ -208,7 +209,7 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md max-h-[90vh] flex flex-col">
+      <DialogContent className="w-[95vw] sm:max-w-md max-h-[90vh] flex flex-col">
         <DialogHeader className="flex-shrink-0">
           <DialogTitle>Report Safety Incident</DialogTitle>
           <DialogDescription>
@@ -216,7 +217,7 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
           </DialogDescription>
         </DialogHeader>
         
-        <div className="flex-1 overflow-y-auto pr-2">
+        <div className="flex-1 overflow-y-auto pr-1 sm:pr-2">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             {/* Category Selection */}
@@ -338,7 +339,7 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
                         disabled={isGettingLocation}
                         size="sm"
                         variant="outline"
-                        className="flex items-center gap-1 px-3"
+                        className="flex items-center gap-1 px-2 sm:px-3 flex-shrink-0"
                         data-testid="button-use-gps-location"
                       >
                         {isGettingLocation ? (
@@ -346,7 +347,7 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
                         ) : (
                           <>
                             <Navigation className="w-4 h-4" />
-                            <span className="text-xs">GPS</span>
+                            <span className="text-xs hidden sm:inline">GPS</span>
                           </>
                         )}
                       </Button>
