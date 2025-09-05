@@ -309,6 +309,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
+      // Apply 7-day age filter to data being returned to client
+      if (data && data.features) {
+        const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
+        
+        data.features = data.features.filter((feature: any) => {
+          const publishedDate = feature.properties.published ? new Date(feature.properties.published) : null;
+          const lastUpdated = feature.properties.last_updated ? new Date(feature.properties.last_updated) : null;
+          const eventDate = publishedDate || lastUpdated;
+          
+          if (eventDate) {
+            return eventDate.getTime() > sevenDaysAgo;
+          }
+          
+          // If no date available, exclude it to be safe
+          return false;
+        });
+      }
+      
       res.json(data);
     } catch (error) {
       console.error("Error fetching traffic events:", error);
