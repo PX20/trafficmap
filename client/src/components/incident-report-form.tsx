@@ -176,8 +176,9 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
           const locationData = await response.json();
           console.log('Reverse geocoding response:', locationData);
           
-          // Build comprehensive location string
+          // Build comprehensive location string including street name
           let locationParts = [];
+          if (locationData.road) locationParts.push(locationData.road);
           if (locationData.suburb) locationParts.push(locationData.suburb);
           if (locationData.postcode) locationParts.push(locationData.postcode);
           if (locationData.state && !locationData.state.includes('Queensland')) {
@@ -285,8 +286,10 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
                             Refresh Page
                           </Button>
                         </div>
-                      ) : categories.length === 0 ? (
-                        <div className="px-2 py-2 text-sm text-gray-500">No categories available</div>
+                      ) : !categories || categories.length === 0 ? (
+                        <div className="px-2 py-2 text-sm text-gray-500">
+                          No categories available
+                        </div>
                       ) : (
                         categories.map((category: any) => (
                           <SelectItem key={category.id} value={category.id}>
