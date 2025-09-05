@@ -218,11 +218,13 @@ export default function Feed() {
       <AppHeader onMenuToggle={() => {}} />
       
       <div className="max-w-2xl mx-auto px-4 pt-20 pb-6">
-        {/* Header with Refresh */}
+        {/* Compact Header with Stats and Refresh */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Live Safety Feed</h1>
-            <p className="text-muted-foreground">Real-time incidents across Queensland</p>
+            <h1 className="text-2xl font-bold text-foreground">Live Safety Feed</h1>
+            <p className="text-muted-foreground">
+              {allIncidents.length > 0 ? `${allIncidents.length} active incidents across Queensland` : 'Real-time incidents across Queensland'}
+            </p>
           </div>
           <Button
             variant="outline"
@@ -263,21 +265,6 @@ export default function Feed() {
               </div>
             ) : (
               <>
-                <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950 dark:to-purple-950 rounded-xl p-6 mb-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h2 className="text-2xl font-bold text-foreground mb-2">
-                        Live Safety Feed
-                      </h2>
-                      <p className="text-muted-foreground">
-                        Queensland • {allIncidents.length} active incidents
-                      </p>
-                    </div>
-                    <div className="bg-background rounded-full p-3">
-                      <TrendingUp className="w-6 h-6 text-primary" />
-                    </div>
-                  </div>
-                </div>
 
                 {allIncidents.map((incident, index) => {
                   // Create a more unique key to prevent React warnings
