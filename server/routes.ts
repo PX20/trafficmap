@@ -312,7 +312,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Apply 7-day age filter to data being returned to client
       if (data && data.features && Array.isArray(data.features)) {
         const originalCount = data.features.length;
-        console.log(`🔍 Starting age filtering on ${originalCount} events`);
         
         data.features = data.features.filter((feature: any) => {
           try {
@@ -322,33 +321,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
             
             if (eventDate && !isNaN(eventDate.getTime())) {
               const daysSince = (Date.now() - eventDate.getTime()) / (1000 * 60 * 60 * 24);
-              const isRecent = daysSince <= 7;
-              
-              // Debug log for very old events that should be filtered
-              if (daysSince > 30) {
-                console.log(`🚫 Filtering very old event (${daysSince.toFixed(0)} days): ${feature.properties?.description || 'Unknown'} - ${eventDate.toISOString()}`);
-              }
-              
-              return isRecent;
+              return daysSince <= 7;
             }
             
-            // If no valid date available, exclude it to be safe
-            console.log(`❌ Excluding event with no valid date: ${feature.properties?.description || 'Unknown'}`);
+            // If no valid date available, exclude it
             return false;
           } catch (error) {
-            console.log(`⚠️ Error processing event for age filtering:`, error);
             return false;
           }
         });
         
         const filteredCount = originalCount - data.features.length;
         if (filteredCount > 0) {
-          console.log(`✅ Client-side filtered out ${filteredCount} old traffic events (${data.features.length} remaining)`);
-        } else {
-          console.log(`ℹ️ No old events found to filter (${data.features.length} total events)`);
+          console.log(`Filtered out ${filteredCount} traffic events older than 7 days (${data.features.length} remaining)`);
         }
-      } else {
-        console.log(`⚠️ No data features to filter`);
       }
       
       res.json(data);
