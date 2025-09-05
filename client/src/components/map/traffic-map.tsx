@@ -416,7 +416,7 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
             <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500 via-orange-600 to-red-500 flex items-center justify-center shadow-lg ring-2 ring-orange-200">
               <span class="text-white font-bold text-sm">TMR</span>
             </div>
-            <div class="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white animate-pulse"></div>
+
           </div>
           <div class="flex-1 min-w-0">
             <div class="font-bold text-gray-900 text-base">TMR Queensland</div>
@@ -502,7 +502,7 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
               <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 via-purple-600 to-indigo-600 flex items-center justify-center shadow-lg ring-2 ring-purple-200">
                 <span class="text-white font-bold text-sm">${(properties.reporterName || 'User').slice(0, 2).toUpperCase()}</span>
               </div>
-              <div class="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white animate-pulse"></div>
+  
             </div>
             <div class="flex-1 min-w-0">
               <div class="font-bold text-gray-900 text-base">${properties.reporterName || 'Community Reporter'}</div>
