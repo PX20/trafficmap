@@ -340,7 +340,36 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
       return <Badge variant="secondary">Community Report</Badge>;
     }
     
-    // Check multiple possible status field locations
+    // Debug: Log what we're working with
+    console.log('Status Badge Debug:', {
+      incidentType: incident.type,
+      priority: incident.properties?.event_priority,
+      eventType: incident.properties?.event_type,
+      status: incident.properties?.status
+    });
+    
+    // Traffic incidents - show priority first, then event type
+    const priority = incident.properties?.event_priority;
+    const eventType = incident.properties?.event_type || incident.properties?.event_subtype;
+    
+    if (priority) {
+      const priorityColors = {
+        'high': 'destructive',
+        'medium': 'default', 
+        'low': 'secondary',
+        'major': 'destructive',
+        'minor': 'secondary'
+      };
+      return <Badge variant={priorityColors[priority.toLowerCase()] || 'default'} className="capitalize">
+        {priority} Priority
+      </Badge>;
+    }
+    
+    if (eventType) {
+      return <Badge variant="secondary" className="capitalize">{eventType}</Badge>;
+    }
+    
+    // Check status for other states
     const status = (
       incident.status || 
       incident.properties?.CurrentStatus || 
@@ -350,46 +379,20 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
       ''
     ).toLowerCase();
     
-    
-    // Handle all completed/resolved states (same as map greying logic)
     if (status === 'completed' || status === 'closed' || status === 'resolved' || status === 'cleared' || status === 'patrolled') {
       return <Badge variant="outline" className="text-gray-600 border-gray-300">Resolved</Badge>;
     }
     
-    // Active states
     if (status === 'going' || status === 'active' || status === 'in progress') {
       return <Badge variant="destructive">Active</Badge>;
     }
     
-    // Monitoring states  
     if (status === 'monitoring' || status === 'ongoing') {
       return <Badge variant="secondary">Monitoring</Badge>;
     }
     
-    // Traffic incidents show their priority or event type if available
-    if (incident.type === 'traffic' || !incident.properties?.userReported) {
-      const priority = incident.properties?.event_priority;
-      const eventType = incident.properties?.event_type || incident.properties?.event_subtype;
-      
-      if (priority) {
-        const priorityColors = {
-          'high': 'destructive',
-          'medium': 'default', 
-          'low': 'secondary',
-          'major': 'destructive',
-          'minor': 'secondary'
-        };
-        return <Badge variant={priorityColors[priority.toLowerCase()] || 'default'} className="capitalize">
-          {priority} Priority
-        </Badge>;
-      }
-      
-      if (eventType) {
-        return <Badge variant="secondary" className="capitalize">{eventType}</Badge>;
-      }
-    }
-    
-    return <Badge variant="secondary">Official</Badge>;
+    // Always return something visible for debugging
+    return <Badge variant="secondary">TMR</Badge>;
   };
 
   const handleCommentSubmit = () => {
