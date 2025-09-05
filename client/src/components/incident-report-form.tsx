@@ -233,12 +233,12 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
                 <FormItem>
                   <FormLabel>Category</FormLabel>
                   <Select 
+                    value={field.value}
                     onValueChange={(value) => {
                       field.onChange(value);
                       setSelectedCategoryId(value);
                       form.setValue("subcategoryId", ""); // Reset subcategory when category changes
-                    }} 
-                    defaultValue={field.value}
+                    }}
                   >
                     <FormControl>
                       <SelectTrigger data-testid="select-category">
@@ -246,17 +246,15 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {(categories as any[]).map((category: any) => (
-                        <SelectItem key={category.id} value={category.id}>
-                          <div className="flex items-center gap-2">
-                            <div 
-                              className="w-3 h-3 rounded-full" 
-                              style={{ backgroundColor: category.color }}
-                            />
-                            <span>{category.name}</span>
-                          </div>
-                        </SelectItem>
-                      ))}
+                      {categories.length === 0 ? (
+                        <div className="px-2 py-2 text-sm text-gray-500">Loading categories...</div>
+                      ) : (
+                        categories.map((category: any) => (
+                          <SelectItem key={category.id} value={category.id}>
+                            {category.name}
+                          </SelectItem>
+                        ))
+                      )}
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -272,7 +270,7 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Specific Type</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select value={field.value} onValueChange={field.onChange}>
                       <FormControl>
                         <SelectTrigger data-testid="select-subcategory">
                           <SelectValue placeholder="Choose specific type" />
