@@ -42,20 +42,27 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [uploadedPhotoUrl, setUploadedPhotoUrl] = useState<string>("");
   
-  // Fetch categories - using simple fetch to avoid auth issues
+  // Fetch categories - debug version
   const { data: categories = [], error: categoriesError, isLoading: categoriesLoading } = useQuery({
-    queryKey: ["/api/categories"],
+    queryKey: ["categories"],
     queryFn: async () => {
+      console.log("🔥 Categories fetch starting...");
       const response = await fetch("/api/categories");
+      console.log("🔥 Categories response:", response.status, response.ok);
       if (!response.ok) {
         throw new Error(`Categories failed: ${response.status}`);
       }
-      return response.json();
+      const data = await response.json();
+      console.log("🔥 Categories data:", data);
+      return data;
     },
     enabled: true,
-    retry: 3,
-    staleTime: 5 * 60 * 1000,
+    retry: false, // Disable retry for debugging
+    staleTime: 0, // No caching for debugging
   });
+
+  // Debug logging
+  console.log("🔥 Categories state:", { categories, error: categoriesError, loading: categoriesLoading });
   
   const { data: subcategories = [] } = useQuery({
     queryKey: ["/api/subcategories", selectedCategoryId],
