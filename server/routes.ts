@@ -383,6 +383,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
         
+        // Debug logging for incident 748346
+        if (incident.id === '748346') {
+          console.log('Server debug for incident 748346:', {
+            id: incident.id,
+            status: incident.status,
+            incidentType: incident.incidentType,
+            properties: incident.properties
+          });
+        }
+        
         return {
           type: "Feature",
           properties: {
