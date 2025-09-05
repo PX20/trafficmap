@@ -86,6 +86,15 @@ export async function setupAuth(app: Express) {
     const user = {};
     updateUserSession(user, tokens);
     await upsertUser(tokens.claims());
+    
+    // Ensure the user object maintains OAuth structure for session
+    console.log("OAuth user created with claims:", { 
+      hasUser: !!user, 
+      hasClaims: !!(user as any).claims,
+      hasSub: !!((user as any).claims && (user as any).claims.sub),
+      userKeys: Object.keys(user)
+    });
+    
     verified(null, user as any);
   };
 
@@ -107,8 +116,26 @@ export async function setupAuth(app: Express) {
     passport.use(strategy);
   }
 
-  passport.serializeUser((user: Express.User, cb) => cb(null, user));
-  passport.deserializeUser((user: Express.User, cb) => cb(null, user));
+  passport.serializeUser((user: Express.User, cb) => {
+    // For OAuth users, serialize the entire user object to preserve claims structure
+    console.log("Serializing OAuth user:", { 
+      hasUser: !!user, 
+      hasClaims: !!(user as any).claims,
+      hasSub: !!((user as any).claims && (user as any).claims.sub),
+      userKeys: user ? Object.keys(user) : []
+    });
+    cb(null, user);
+  });
+  passport.deserializeUser((user: Express.User, cb) => {
+    // For OAuth users, the user object already contains all necessary data
+    console.log("Deserializing OAuth user:", { 
+      hasUser: !!user, 
+      hasClaims: !!(user as any).claims,
+      hasSub: !!((user as any).claims && (user as any).claims.sub),
+      userKeys: user ? Object.keys(user) : []
+    });
+    cb(null, user);
+  });
 
   app.get("/api/login", (req, res, next) => {
     passport.authenticate(`replitauth:${req.hostname}`, {
@@ -153,20 +180,35 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
     return res.status(401).json({ message: "Unauthorized" });
   }
 
-  // Check if session has proper claims structure
+  // Check if session has proper claims structure for OAuth users
+  // Or if it's a local auth user with database ID
   if (!user.claims || !user.claims.sub) {
-    console.error("Authentication failed: Invalid user claims structure", { 
-      hasUser: !!user, 
-      hasClaims: !!(user && user.claims),
-      hasSub: !!(user && user.claims && user.claims.sub),
-      userKeys: user ? Object.keys(user) : []
-    });
+    // For OAuth users, if claims are missing, we need to re-authenticate
+    if (!user.id || typeof user.id !== 'string') {
+      console.error("Authentication failed: Invalid user structure", { 
+        hasUser: !!user, 
+        hasClaims: !!(user && user.claims),
+        hasSub: !!(user && user.claims && user.claims.sub),
+        hasId: !!(user && user.id),
+        userKeys: user ? Object.keys(user) : []
+      });
+      
+      // Clear corrupted session and redirect to login
+      req.logout((err) => {
+        if (err) console.error("Logout error:", err);
+      });
+      return res.status(401).json({ message: "Unauthorized - Invalid session, please log in again" });
+    }
     
-    // Clear corrupted session and redirect to login
-    req.logout((err) => {
-      if (err) console.error("Logout error:", err);
-    });
-    return res.status(401).json({ message: "Unauthorized - Invalid session, please log in again" });
+    // If it's a local auth user (has database id but no claims), allow it to pass
+    // but we need to refresh the OAuth session
+    if (user.email && !user.claims) {
+      console.log("User has database fields but no OAuth claims, requiring re-authentication");
+      req.logout((err) => {
+        if (err) console.error("Logout error:", err);
+      });
+      return res.status(401).json({ message: "Unauthorized - Please log in again" });
+    }
   }
 
   // Check token expiration
