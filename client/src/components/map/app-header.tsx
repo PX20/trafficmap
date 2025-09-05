@@ -85,22 +85,24 @@ export function AppHeader({ onMenuToggle, onFilterToggle, showFilterButton }: Ap
           {isAuthenticated && (
             <div className="flex items-center space-x-2">
               {/* Notification Bell */}
-              <Button
-                variant="ghost"
-                size="sm"
-                className="relative h-8 w-8 p-0"
-                data-testid="button-notifications"
-              >
-                <Bell className="w-4 h-4" />
-                {unreadNotifications > 0 && (
-                  <Badge 
-                    variant="destructive" 
-                    className="absolute -top-1 -right-1 h-5 w-5 text-xs p-0 flex items-center justify-center"
-                  >
-                    {unreadNotifications > 99 ? '99+' : unreadNotifications}
-                  </Badge>
-                )}
-              </Button>
+              <Link href="/notifications">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="relative h-8 w-8 p-0"
+                  data-testid="button-notifications"
+                >
+                  <Bell className="w-4 h-4" />
+                  {unreadNotifications > 0 && (
+                    <Badge 
+                      variant="destructive" 
+                      className="absolute -top-1 -right-1 h-5 w-5 text-xs p-0 flex items-center justify-center"
+                    >
+                      {unreadNotifications > 99 ? '99+' : unreadNotifications}
+                    </Badge>
+                  )}
+                </Button>
+              </Link>
               
               {/* Messages Icon */}
               <Link href="/messages">

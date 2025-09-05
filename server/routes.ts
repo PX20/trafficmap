@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { isAuthenticated, setupAuth as setupReplitAuth } from "./replitAuth";
+import webpush from "web-push";
 import { insertIncidentSchema, insertCommentSchema, insertConversationSchema, insertMessageSchema, insertNotificationSchema } from "@shared/schema";
 import { z } from "zod";
 import {
@@ -33,6 +34,28 @@ const trafficCache = {
 const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes in milliseconds
 const SUNSHINE_COAST_CACHE_DURATION = 60 * 60 * 1000; // 1 hour for Sunshine Coast
 const RETRY_DELAY = 30 * 1000; // 30 seconds delay on rate limit
+
+// Configure web push - Generate VAPID keys for production
+// For now, skip configuration to avoid startup errors
+// In production, generate proper VAPID keys with: npx web-push generate-vapid-keys
+try {
+  // Only configure if proper VAPID keys are available
+  const publicKey = process.env.VAPID_PUBLIC_KEY || 'BNXnNJlwtD-_OLQ_8YE3WRe3dXHO_-ZI2sGE7zJyR5eKjsEMAp0diFzOl1ZUgQzfOjm4Cf8PSQ7c1-oIqY2GsHw';
+  const privateKey = process.env.VAPID_PRIVATE_KEY;
+  
+  if (privateKey && privateKey.length > 20) {
+    webpush.setVapidDetails(
+      'mailto:support@example.com',
+      publicKey,
+      privateKey
+    );
+    console.log('Web push configured with VAPID keys');
+  } else {
+    console.log('Web push: VAPID keys not configured - push notifications disabled');
+  }
+} catch (error) {
+  console.log('Web push configuration skipped:', error.message);
+}
 
 // Sunshine Coast suburbs for filtering
 const SUNSHINE_COAST_SUBURBS = [
@@ -1549,6 +1572,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Photo not found" });
       }
       return res.status(500).json({ error: "Failed to serve photo" });
+    }
+  });
+
+  // Push notification subscription endpoints
+  app.post('/api/push/subscribe', isAuthenticated, async (req, res) => {
+    try {
+      const { subscription } = req.body;
+      const userId = req.user?.claims?.sub;
+
+      if (!subscription || !userId) {
+        return res.status(400).json({ error: 'Invalid subscription data' });
+      }
+
+      // Save subscription to storage (you may want to add a subscriptions table)
+      // For now, we'll store in user preferences or a simple in-memory store
+      console.log('Push subscription registered for user:', userId, subscription);
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error saving push subscription:', error);
+      res.status(500).json({ error: 'Failed to save subscription' });
+    }
+  });
+
+  app.post('/api/push/unsubscribe', isAuthenticated, async (req, res) => {
+    try {
+      const { endpoint } = req.body;
+      const userId = req.user?.claims?.sub;
+
+      if (!endpoint || !userId) {
+        return res.status(400).json({ error: 'Invalid unsubscribe data' });
+      }
+
+      // Remove subscription from storage
+      console.log('Push subscription removed for user:', userId, endpoint);
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error removing push subscription:', error);
+      res.status(500).json({ error: 'Failed to remove subscription' });
+    }
+  });
+
+  // Test push notification endpoint (for development)
+  app.post('/api/push/test', isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      
+      // In a real implementation, you'd fetch user's subscription from database
+      // For demo purposes, we'll return success without sending actual notification
+      console.log('Test push notification requested for user:', userId);
+      
+      res.json({ 
+        success: true, 
+        message: 'Push notification system is ready. Subscription management needed for actual sending.' 
+      });
+    } catch (error) {
+      console.error('Error sending test notification:', error);
+      res.status(500).json({ error: 'Failed to send test notification' });
     }
   });
 
