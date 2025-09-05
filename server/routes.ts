@@ -31,8 +31,8 @@ const trafficCache = {
   sunshineCoast: { data: null as any, lastFetch: 0 }
 };
 
-const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes in milliseconds
-const SUNSHINE_COAST_CACHE_DURATION = 60 * 60 * 1000; // 1 hour for Sunshine Coast
+const CACHE_DURATION = 0; // Disable cache temporarily to debug 748346
+const SUNSHINE_COAST_CACHE_DURATION = 0; // Disable cache temporarily to debug
 const RETRY_DELAY = 30 * 1000; // 30 seconds delay on rate limit
 
 // Configure web push - Generate VAPID keys for production
@@ -330,7 +330,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             status: incident748346.properties.status,
             event_type: incident748346.properties.event_type,
             published: incident748346.properties.published,
-            event_priority: incident748346.properties.event_priority
+            event_priority: incident748346.properties.event_priority,
+            allPropsCount: Object.keys(incident748346.properties).length,
+            rawStatus: JSON.stringify(incident748346.properties.status)
           });
         }
       }
