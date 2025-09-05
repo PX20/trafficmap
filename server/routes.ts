@@ -296,9 +296,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
             properties: feature.properties,
             nextInspection: feature.properties.next_inspection ? new Date(feature.properties.next_inspection) : null,
             webLink: feature.properties.web_link || null,
-            areaAlert: feature.properties.area_alert || false,
+            areaAlert: feature.properties.area_area || false,
             alertMessage: feature.properties.alert_message || null,
           };
+          
+          // Debug logging for incident 748346 in traffic events
+          if (feature.properties.id.toString() === '748346') {
+            console.log('Traffic event debug for 748346:', {
+              id: feature.properties.id,
+              status: feature.properties.status,
+              event_type: feature.properties.event_type,
+              event_priority: feature.properties.event_priority,
+              published: feature.properties.published,
+              allProps: Object.keys(feature.properties)
+            });
+          }
           
           await storage.updateTrafficEvent(event.id, event) || await storage.createTrafficEvent(event);
           trafficStoredCount++;
