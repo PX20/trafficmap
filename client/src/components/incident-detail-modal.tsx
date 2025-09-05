@@ -273,7 +273,8 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
     }
     
     if (incident.properties?.userReported) {
-      return incident.properties?.incidentType || "Community Report";
+      // Use the actual title submitted by the user, fall back to category name
+      return incident.properties?.title || incident.properties?.categoryName || "Community Report";
     }
     
     return incident.properties?.GroupedType || "Emergency Incident";
@@ -287,7 +288,10 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
     }
     
     if (incident.properties?.userReported) {
-      return incident.properties?.description || "Community reported incident";
+      // Use the actual description submitted by the user
+      return incident.properties?.description || 
+             incident.properties?.subcategoryName || 
+             "Community reported incident";
     }
     
     return `Incident #${incident.properties?.Master_Incident_Number || 'Unknown'}`;
