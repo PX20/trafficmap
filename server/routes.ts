@@ -650,6 +650,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Report new incident (authenticated users only)
   app.post("/api/incidents/report", isAuthenticated, async (req: any, res) => {
+    console.log("🔥 POST /api/incidents/report endpoint called with data:", req.body);
     try {
       const reportData = z.object({
         categoryId: z.string().min(1, "Category is required"),
