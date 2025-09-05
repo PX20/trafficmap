@@ -607,7 +607,6 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
             <div class="w-12 h-12 rounded-xl bg-gradient-to-br ${agencyInfo.color} flex items-center justify-center shadow-lg ring-2 ring-red-200">
               <span class="text-white font-bold text-sm">${agencyInfo.avatar}</span>
             </div>
-            <div class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-white animate-pulse"></div>
           </div>
           <div class="flex-1 min-w-0">
             <div class="font-bold text-gray-900 text-base">${agencyInfo.name}</div>
@@ -618,7 +617,6 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
                 </svg>
                 <span class="font-medium">${formatEventTime(properties.Response_Date || properties.createdAt || properties.published)}</span>
               </div>
-              <span class="px-2 py-0.5 bg-red-100 text-red-700 rounded-full text-xs font-medium">Active</span>
             </div>
           </div>
         </div>
