@@ -57,8 +57,13 @@ function updateUserSession(
 async function upsertUser(
   claims: any,
 ) {
+  // Generate a username from email or use a default pattern for OAuth users
+  const username = claims["email"] ? claims["email"].split('@')[0] + '_oauth' : 'oauth_user_' + claims["sub"];
+  
   await storage.upsertUser({
     id: claims["sub"],
+    username: username,
+    password: null, // OAuth users don't need passwords
     email: claims["email"],
     firstName: claims["first_name"],
     lastName: claims["last_name"],
@@ -81,7 +86,7 @@ export async function setupAuth(app: Express) {
     const user = {};
     updateUserSession(user, tokens);
     await upsertUser(tokens.claims());
-    verified(null, user);
+    verified(null, user as any);
   };
 
   // Support both production domains and localhost for development
@@ -119,7 +124,7 @@ export async function setupAuth(app: Express) {
     passport.authenticate(`replitauth:${req.hostname}`, {
       successReturnToOrRedirect: "/",
       failureRedirect: "/api/login",
-    })(req, res, (err) => {
+    })(req, res, (err: any) => {
       if (err) {
         console.error("OAuth callback error:", err);
         return res.redirect("/api/login");
