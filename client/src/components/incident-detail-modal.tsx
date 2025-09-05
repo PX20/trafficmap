@@ -31,7 +31,7 @@ import {
   MoreHorizontal,
   CheckCircle
 } from "lucide-react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import type { Comment } from "@shared/schema";
 
 interface IncidentDetailModalProps {
@@ -43,6 +43,7 @@ interface IncidentDetailModalProps {
 export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetailModalProps) {
   const { user, isAuthenticated } = useAuth();
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
 
   // Mark Complete mutation
   const markCompleteMutation = useMutation({
@@ -585,35 +586,80 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
         <DialogHeader className="relative p-6 pb-4 flex-shrink-0 bg-gradient-to-r from-gray-50/80 to-white/80 backdrop-blur-sm">
           {/* Enhanced Header */}
           <div className="flex items-center gap-4">
-            <div className="relative">
-              <Avatar className="w-14 h-14 ring-4 ring-white shadow-xl">
-                <AvatarFallback className={`${getSourceInfo(incident).color} text-white font-bold text-lg`}>
-                  {getSourceInfo(incident).avatar}
-                </AvatarFallback>
-              </Avatar>
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-3 mb-1">
-                <h4 className="font-bold text-gray-900 text-lg truncate">
-                  {getSourceInfo(incident).name}
-                </h4>
-                <Badge variant="secondary" className="px-3 py-1 bg-gradient-to-r from-blue-100 to-purple-100 text-blue-700 border-blue-200 font-medium">
-                  {getSourceInfo(incident).type.split(' ')[0]}
-                </Badge>
-              </div>
-              <div className="flex items-center gap-3 text-sm text-gray-600">
-                <div className="flex items-center gap-1">
-                  <Clock className="w-4 h-4 text-blue-500" />
-                  <span className="font-medium">{getTimeAgo(
-                    incident.properties?.published || 
-                    incident.properties?.Response_Date || 
-                    incident.properties?.createdAt || 
-                    incident.properties?.timeReported ||
-                    incident.properties?.last_updated
-                  )}</span>
+            {/* Clickable User Avatar/Name for user-reported incidents only */}
+            {incident.properties?.userReported && incident.properties?.reporterId ? (
+              <div 
+                className="flex items-center gap-4 cursor-pointer hover:bg-gray-50 p-2 -ml-2 rounded-xl transition-colors flex-1"
+                onClick={() => {
+                  setLocation(`/users/${incident.properties.reporterId}`);
+                  onClose(); // Close the modal when navigating to profile
+                }}
+                data-testid="button-user-profile"
+              >
+                <div className="relative">
+                  <Avatar className="w-14 h-14 ring-4 ring-white shadow-xl">
+                    <AvatarFallback className={`${getSourceInfo(incident).color} text-white font-bold text-lg`}>
+                      {getSourceInfo(incident).avatar}
+                    </AvatarFallback>
+                  </Avatar>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-3 mb-1">
+                    <h4 className="font-bold text-gray-900 text-lg truncate hover:text-blue-600 transition-colors">
+                      {getSourceInfo(incident).name}
+                    </h4>
+                    <Badge variant="secondary" className="px-3 py-1 bg-gradient-to-r from-blue-100 to-purple-100 text-blue-700 border-blue-200 font-medium">
+                      {getSourceInfo(incident).type.split(' ')[0]}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center gap-3 text-sm text-gray-600">
+                    <div className="flex items-center gap-1">
+                      <Clock className="w-4 h-4 text-blue-500" />
+                      <span className="font-medium">{getTimeAgo(
+                        incident.properties?.published || 
+                        incident.properties?.Response_Date || 
+                        incident.properties?.createdAt || 
+                        incident.properties?.timeReported ||
+                        incident.properties?.last_updated
+                      )}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
+            ) : (
+              // Non-clickable version for official incidents
+              <>
+                <div className="relative">
+                  <Avatar className="w-14 h-14 ring-4 ring-white shadow-xl">
+                    <AvatarFallback className={`${getSourceInfo(incident).color} text-white font-bold text-lg`}>
+                      {getSourceInfo(incident).avatar}
+                    </AvatarFallback>
+                  </Avatar>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-3 mb-1">
+                    <h4 className="font-bold text-gray-900 text-lg truncate">
+                      {getSourceInfo(incident).name}
+                    </h4>
+                    <Badge variant="secondary" className="px-3 py-1 bg-gradient-to-r from-blue-100 to-purple-100 text-blue-700 border-blue-200 font-medium">
+                      {getSourceInfo(incident).type.split(' ')[0]}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center gap-3 text-sm text-gray-600">
+                    <div className="flex items-center gap-1">
+                      <Clock className="w-4 h-4 text-blue-500" />
+                      <span className="font-medium">{getTimeAgo(
+                        incident.properties?.published || 
+                        incident.properties?.Response_Date || 
+                        incident.properties?.createdAt || 
+                        incident.properties?.timeReported ||
+                        incident.properties?.last_updated
+                      )}</span>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
             <Button variant="ghost" size="sm" className="w-10 h-10 p-0 shrink-0 rounded-full hover:bg-gray-100">
               <MoreHorizontal className="w-5 h-5 text-gray-500" />
             </Button>
