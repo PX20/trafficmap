@@ -3,8 +3,13 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Link, useLocation } from "wouter";
-import { Map, List, Bell, MessageCircle, Filter } from "lucide-react";
+import { Map, List, Bell, MessageCircle, Filter, Plus, MapPin, Menu } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
+import { LocationAutocomplete } from "@/components/location-autocomplete";
+import { IncidentReportForm } from "@/components/incident-report-form";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface AppHeaderProps {
   onMenuToggle: () => void;
@@ -15,10 +20,37 @@ interface AppHeaderProps {
 export function AppHeader({ onMenuToggle, onFilterToggle, showFilterButton }: AppHeaderProps) {
   const { user, isAuthenticated } = useAuth();
   const [location] = useLocation();
+  const isMobile = useIsMobile();
+  const [isLocationDrawerOpen, setIsLocationDrawerOpen] = useState(false);
+  const [reportFormOpen, setReportFormOpen] = useState(false);
+  const [currentLocation, setCurrentLocation] = useState(() => 
+    typeof window !== 'undefined' ? localStorage.getItem('homeLocation') || '' : ''
+  );
 
   // Temporarily disable notification and message count queries until APIs are implemented
   const unreadNotifications = 0;
   const unreadMessages = 0;
+
+  const handleLocationChange = (location: string, coordinates?: { lat: number; lon: number }, boundingBox?: [number, number, number, number]) => {
+    setCurrentLocation(location);
+    
+    // Save to localStorage to sync with other pages
+    if (coordinates) {
+      localStorage.setItem('homeLocation', location);
+      localStorage.setItem('homeCoordinates', JSON.stringify(coordinates));
+      localStorage.setItem('locationFilter', 'true');
+      if (boundingBox) {
+        localStorage.setItem('homeBoundingBox', JSON.stringify(boundingBox));
+      }
+      
+      // Dispatch custom event to notify other pages
+      window.dispatchEvent(new CustomEvent('locationChanged', {
+        detail: { location, coordinates, boundingBox }
+      }));
+    }
+    
+    setIsLocationDrawerOpen(false);
+  };
 
   return (
     <header className="absolute top-0 left-0 right-0 z-20 bg-card border-b border-border">
@@ -49,37 +81,83 @@ export function AppHeader({ onMenuToggle, onFilterToggle, showFilterButton }: Ap
             </Button>
           )}
           
-          {/* View Toggle */}
-          <div className="flex items-center bg-muted p-1 rounded-lg">
-            <Link href="/">
+          {/* Mobile Navigation */}
+          {isMobile ? (
+            <div className="flex items-center space-x-2">
+              {/* Location Button */}
               <Button
-                variant={location === "/" ? "default" : "ghost"}
+                variant="outline"
                 size="sm"
+                onClick={() => setIsLocationDrawerOpen(true)}
                 className="h-8"
-                data-testid="button-map-view"
+                data-testid="button-location"
               >
-                <Map className="w-4 h-4 mr-1" />
-                Map
+                <MapPin className="w-4 h-4" />
               </Button>
-            </Link>
-            <Link href="/feed">
-              <Button
-                variant={location === "/feed" ? "default" : "ghost"}
-                size="sm"
-                className="h-8"
-                data-testid="button-feed-view"
-              >
-                <List className="w-4 h-4 mr-1" />
-                Feed
-              </Button>
-            </Link>
-          </div>
-          
-          {/* Status Indicator */}
-          <div className="flex items-center space-x-1 px-2 py-1 bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-300 rounded-full text-sm">
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-            <span className="hidden md:block">Live</span>
-          </div>
+              
+              {/* Report Button */}
+              {isAuthenticated && (
+                <Button
+                  onClick={() => setReportFormOpen(true)}
+                  size="sm"
+                  className="h-8"
+                  data-testid="button-report-mobile"
+                >
+                  <Plus className="w-4 h-4" />
+                </Button>
+              )}
+              
+              {/* View Toggle */}
+              <div className="flex items-center bg-muted p-1 rounded-lg">
+                <Link href="/map">
+                  <Button
+                    variant={location === "/map" ? "default" : "ghost"}
+                    size="sm"
+                    className="h-8 px-2"
+                    data-testid="button-map-view"
+                  >
+                    <Map className="w-4 h-4" />
+                  </Button>
+                </Link>
+                <Link href="/feed">
+                  <Button
+                    variant={location === "/feed" || location === "/" ? "default" : "ghost"}
+                    size="sm"
+                    className="h-8 px-2"
+                    data-testid="button-feed-view"
+                  >
+                    <List className="w-4 h-4" />
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          ) : (
+            /* Desktop View Toggle */
+            <div className="flex items-center bg-muted p-1 rounded-lg">
+              <Link href="/map">
+                <Button
+                  variant={location === "/map" ? "default" : "ghost"}
+                  size="sm"
+                  className="h-8"
+                  data-testid="button-map-view"
+                >
+                  <Map className="w-4 h-4 mr-1" />
+                  Map
+                </Button>
+              </Link>
+              <Link href="/feed">
+                <Button
+                  variant={location === "/feed" || location === "/" ? "default" : "ghost"}
+                  size="sm"
+                  className="h-8"
+                  data-testid="button-feed-view"
+                >
+                  <List className="w-4 h-4 mr-1" />
+                  Feed
+                </Button>
+              </Link>
+            </div>
+          )}
           
           {/* Notifications and Messages */}
           {isAuthenticated && (
@@ -153,18 +231,66 @@ export function AppHeader({ onMenuToggle, onFilterToggle, showFilterButton }: Ap
             </div>
           )}
           
-          {/* Menu Button */}
-          <button 
-            onClick={onMenuToggle}
-            className="p-2 hover:bg-muted rounded-lg transition-colors"
-            data-testid="button-menu-toggle"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"></path>
-            </svg>
-          </button>
+          {/* Menu Button - Hide on mobile */}
+          {!isMobile && (
+            <button 
+              onClick={onMenuToggle}
+              className="p-2 hover:bg-muted rounded-lg transition-colors"
+              data-testid="button-menu-toggle"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+          )}
         </div>
       </div>
+
+      {/* Location Drawer for Mobile */}
+      <Drawer open={isLocationDrawerOpen} onOpenChange={setIsLocationDrawerOpen}>
+        <DrawerContent>
+          <DrawerHeader>
+            <DrawerTitle>Set Your Location</DrawerTitle>
+          </DrawerHeader>
+          <div className="p-4 space-y-4">
+            <LocationAutocomplete
+              value=""
+              onChange={handleLocationChange}
+              placeholder="Search for your suburb or area..."
+              className="w-full"
+            />
+            {currentLocation && (
+              <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                <div className="flex items-center gap-2 flex-1">
+                  <MapPin className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-sm">{currentLocation}</span>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    localStorage.removeItem('homeLocation');
+                    localStorage.removeItem('homeCoordinates');
+                    localStorage.removeItem('homeBoundingBox');
+                    localStorage.setItem('locationFilter', 'false');
+                    setCurrentLocation('');
+                    window.dispatchEvent(new CustomEvent('locationChanged', {
+                      detail: { location: '', coordinates: null, boundingBox: null }
+                    }));
+                  }}
+                  className="text-destructive hover:text-destructive"
+                >
+                  Clear
+                </Button>
+              </div>
+            )}
+          </div>
+        </DrawerContent>
+      </Drawer>
+
+      {/* Incident Report Form */}
+      <IncidentReportForm
+        isOpen={reportFormOpen}
+        onClose={() => setReportFormOpen(false)}
+      />
     </header>
   );
 }

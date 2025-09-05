@@ -7,7 +7,6 @@ import { IncidentReportForm } from "@/components/incident-report-form";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
-import { BottomNav } from "@/components/bottom-nav";
 
 export interface FilterState {
   // Simplified source-based filters
@@ -254,8 +253,6 @@ export default function Home() {
         onClose={() => setReportFormOpen(false)}
       />
 
-      {/* Bottom Navigation */}
-      <BottomNav />
     </div>
   );
 }

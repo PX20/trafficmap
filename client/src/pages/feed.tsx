@@ -6,7 +6,6 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
-import { BottomNav } from "@/components/bottom-nav";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -519,17 +518,17 @@ export default function Feed() {
         onClose={() => setReportFormOpen(false)}
       />
       
-      {/* Floating Report Button */}
-      <Button
-        onClick={() => setReportFormOpen(true)}
-        className="fixed bottom-20 right-4 z-30 shadow-xl h-14 w-14 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground"
-        data-testid="button-report-incident"
-      >
-        <Plus className="w-6 h-6" />
-      </Button>
+      {/* Floating Report Button - Desktop Only */}
+      <div className="hidden md:block">
+        <Button
+          onClick={() => setReportFormOpen(true)}
+          className="fixed bottom-6 right-6 z-30 shadow-xl h-14 w-14 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground"
+          data-testid="button-report-incident"
+        >
+          <Plus className="w-6 h-6" />
+        </Button>
+      </div>
 
-      {/* Bottom Navigation */}
-      <BottomNav />
     </div>
   );
 }
