@@ -52,8 +52,9 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
 
     const map = L.map(mapRef.current).setView(centerCoords, zoomLevel);
     
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors'
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+      attribution: '© OpenStreetMap contributors, © CARTO',
+      maxZoom: 19
     }).addTo(map);
 
     mapInstanceRef.current = map;
