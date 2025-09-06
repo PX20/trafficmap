@@ -264,7 +264,7 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
   };
 
   const getIncidentTitle = (incident: any) => {
-    if (!incident) return "Unknown Incident";
+    if (!incident) return "Incident";
     
     if (incident.type === 'traffic') {
       return incident.properties?.description || incident.properties?.event_type || "Traffic Event";
@@ -275,7 +275,14 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
       return incident.properties?.title || incident.properties?.categoryName || "Community Report";
     }
     
-    return incident.properties?.GroupedType || "Emergency Incident";
+    // For emergency incidents, create a meaningful title
+    const groupedType = incident.properties?.GroupedType || '';
+    const locality = incident.properties?.Locality || '';
+    
+    if (groupedType && locality) {
+      return `${groupedType} - ${locality}`;
+    }
+    return groupedType || "Emergency Incident";
   };
 
   const getIncidentDescription = (incident: any) => {
@@ -292,11 +299,23 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
              "Community reported incident";
     }
     
-    return `Incident #${incident.properties?.Master_Incident_Number || 'Unknown'}`;
+    // For emergency incidents, provide better description
+    const masterIncident = incident.properties?.Master_Incident_Number;
+    const groupedType = incident.properties?.GroupedType || '';
+    const status = incident.properties?.CurrentStatus || '';
+    
+    if (masterIncident) {
+      if (status && status !== 'Active') {
+        return `Incident #${masterIncident} - ${status}`;
+      }
+      return `Incident #${masterIncident}`;
+    }
+    
+    return groupedType || "Emergency incident";
   };
 
   const getIncidentLocation = (incident: any) => {
-    if (!incident) return "Unknown location";
+    if (!incident) return "Location not specified";
     
     if (incident.type === 'traffic') {
       const roadName = incident.properties?.road_summary?.road_name || '';
@@ -305,14 +324,29 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
       if (roadName && locality) {
         return `${roadName}, ${locality}`;
       }
-      return roadName || locality || "Unknown location";
+      return roadName || locality || "Location not specified";
     }
     
     if (incident.properties?.userReported) {
-      return incident.properties?.locationDescription || "Unknown location";
+      return incident.properties?.locationDescription || 
+             incident.properties?.location || 
+             "Location not specified";
     }
     
-    return `${incident.properties?.Location || 'Unknown'}, ${incident.properties?.Locality || 'Unknown'}`;
+    // For emergency incidents, build location intelligently
+    const location = incident.properties?.Location || '';
+    const locality = incident.properties?.Locality || '';
+    const locationDesc = incident.properties?.LocationDescription || '';
+    
+    // Try different combinations
+    if (location && locality && location !== locality) {
+      return `${location}, ${locality}`;
+    }
+    if (location) return location;
+    if (locality) return locality;
+    if (locationDesc) return locationDesc;
+    
+    return "Location not specified";
   };
 
   const getTimeAgo = (dateStr: string) => {

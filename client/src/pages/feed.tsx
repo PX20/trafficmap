@@ -269,7 +269,14 @@ export default function Feed() {
     if (incident.properties?.userReported) {
       return incident.properties?.title || 'Community Report';
     }
-    return incident.properties?.Event_Type || incident.properties?.description || 'Emergency Incident';
+    // For emergency incidents, create a meaningful title
+    const groupedType = incident.properties?.GroupedType || '';
+    const locality = incident.properties?.Locality || '';
+    
+    if (groupedType && locality) {
+      return `${groupedType} - ${locality}`;
+    }
+    return groupedType || incident.properties?.Event_Type || incident.properties?.description || 'Emergency Incident';
   };
 
   const getIncidentDescription = (incident: any) => {
@@ -304,16 +311,20 @@ export default function Feed() {
              incident.properties?.suburb ||
              'Location not specified';
     }
-    // For government/emergency incidents, check all available location fields
+    // For emergency incidents, build location intelligently
     const location = incident.properties?.Location || '';
     const locality = incident.properties?.Locality || '';
-    const locationDesc = incident.properties?.locationDescription || '';
+    const locationDesc = incident.properties?.LocationDescription || '';
     
-    // Combine fields intelligently
-    if (location && locality) {
+    // Try different combinations
+    if (location && locality && location !== locality) {
       return `${location}, ${locality}`;
     }
-    return location || locality || locationDesc || 'Location not specified';
+    if (location) return location;
+    if (locality) return locality;
+    if (locationDesc) return locationDesc;
+    
+    return 'Location not specified';
   };
 
   const handleIncidentClick = (incident: any) => {

@@ -111,17 +111,41 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
     if (isUserReported) {
       return props.title || props.description || "Community Report";
     }
-    return props.GroupedType || "Emergency Incident";
+    // For emergency incidents, create a meaningful title
+    const groupedType = props.GroupedType || '';
+    const locality = props.Locality || '';
+    
+    if (groupedType && locality) {
+      return `${groupedType} - ${locality}`;
+    }
+    return groupedType || "Emergency Incident";
   };
   
   const getLocation = () => {
     if (isTrafficEvent) {
-      return `${props.road_summary?.road_name || 'Unknown Road'}, ${props.road_summary?.locality || 'Unknown Area'}`;
+      const roadName = props.road_summary?.road_name || '';
+      const locality = props.road_summary?.locality || '';
+      if (roadName && locality) {
+        return `${roadName}, ${locality}`;
+      }
+      return roadName || locality || 'Location not specified';
     }
     if (isUserReported) {
-      return props.locationDescription || props.Location || 'Unknown location';
+      return props.locationDescription || props.Location || 'Location not specified';
     }
-    return `${props.Location || 'Unknown location'}, ${props.Locality || ''}`;
+    // For emergency incidents, build location intelligently
+    const location = props.Location || '';
+    const locality = props.Locality || '';
+    const locationDesc = props.LocationDescription || '';
+    
+    if (location && locality && location !== locality) {
+      return `${location}, ${locality}`;
+    }
+    if (location) return location;
+    if (locality) return locality;
+    if (locationDesc) return locationDesc;
+    
+    return 'Location not specified';
   };
   
   const getThumbnail = () => {
