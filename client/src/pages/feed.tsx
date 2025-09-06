@@ -478,7 +478,6 @@ export default function Feed() {
                   
                   // Only show engagement for user-reported incidents
                   const isUserReported = incident.properties?.userReported;
-                  // Remove fake comment/like counts - no real functionality implemented yet
 
                   return (
                     <Card 
