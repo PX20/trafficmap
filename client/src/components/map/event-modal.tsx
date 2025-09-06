@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MessageCircle, Heart, Share2, MapPin, Clock, AlertTriangle, Car, Shield, Eye, Zap } from "lucide-react";
+import { useLocation } from "wouter";
 
 interface EventModalProps {
   eventId: string | null;
@@ -11,6 +12,7 @@ interface EventModalProps {
 }
 
 export function EventModal({ eventId, onClose }: EventModalProps) {
+  const [, setLocation] = useLocation();
   const { data: trafficData } = useQuery({
     queryKey: ["/api/traffic/events"],
   });
@@ -156,13 +158,25 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
         <DialogHeader className="pb-3">
           {/* Reporter Info Header */}
           <div className="flex items-center space-x-3">
-            <Avatar className="w-10 h-10">
+            <Avatar 
+              className={`w-10 h-10 ${isUserReported && props.reporterId ? 'cursor-pointer hover:ring-2 hover:ring-primary/40 transition-all' : ''}`}
+              onClick={isUserReported && props.reporterId ? () => {
+                setLocation(`/users/${props.reporterId}`);
+              } : undefined}
+            >
               <AvatarFallback className={`text-sm font-medium ${getAgencyColor(reporterInfo.agency)}`}>
                 {reporterInfo.initials}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1">
-              <p className="text-sm font-medium text-foreground">{reporterInfo.name}</p>
+              <p 
+                className={`text-sm font-medium text-foreground ${isUserReported && props.reporterId ? 'cursor-pointer hover:text-primary transition-colors' : ''}`}
+                onClick={isUserReported && props.reporterId ? () => {
+                  setLocation(`/users/${props.reporterId}`);
+                } : undefined}
+              >
+                {reporterInfo.name}
+              </p>
               <div className="flex items-center space-x-2 text-xs text-muted-foreground">
                 <Clock className="w-3 h-3" />
                 <span data-testid="text-event-time">
