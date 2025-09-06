@@ -40,9 +40,7 @@ export function LocationAutocomplete({
 
   // Sync inputValue with external value changes (like GPS updates)
   useEffect(() => {
-    if (value !== inputValue) {
-      setInputValue(value);
-    }
+    setInputValue(value);
   }, [value]);
   const { toast } = useToast();
   const inputRef = useRef<HTMLInputElement>(null);
