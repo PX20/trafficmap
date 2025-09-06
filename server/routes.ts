@@ -580,12 +580,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: 'No address found for coordinates' });
       }
 
-      // Extract suburb name from address data  
-      const suburb = data.display_name?.split(',')[0]?.trim() ||
-                    data.address.suburb || 
+      // Extract suburb name from address data - prioritize actual suburb over infrastructure names
+      const suburb = data.address.suburb || 
                     data.address.town || 
                     data.address.village ||
-                    data.address.city;
+                    data.address.city ||
+                    // If no address suburb, try to get actual suburb from display_name (usually 2nd part)
+                    (() => {
+                      const parts = data.display_name?.split(',') || [];
+                      // Skip first part if it looks like infrastructure (contains numbers, "Access", "Way", etc.)
+                      if (parts.length > 1 && parts[0] && (/\d|Access|Way|Path|Bridge|Link/.test(parts[0]))) {
+                        return parts[1]?.trim();
+                      }
+                      return parts[0]?.trim();
+                    })();
       
       const postcode = data.address.postcode;
       const state = data.address.state;
