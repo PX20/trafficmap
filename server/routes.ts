@@ -580,6 +580,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: 'No address found for coordinates' });
       }
 
+      // Extract street/road name from address data
+      const road = data.address.road || 
+                  data.address.street ||
+                  // Get from display_name if it's not infrastructure
+                  (() => {
+                    const parts = data.display_name?.split(',') || [];
+                    const firstPart = parts[0]?.trim();
+                    // Only use first part if it's NOT infrastructure (no numbers, "Access", etc.)
+                    if (firstPart && !(/\d|Access|Way$|Path$|Bridge|Link|Cycleway|Pathway/.test(firstPart))) {
+                      return firstPart;
+                    }
+                    return null;
+                  })();
+
       // Extract suburb name from address data - prioritize actual suburb over infrastructure names
       const suburb = data.address.suburb || 
                     data.address.town || 
@@ -589,7 +603,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                     (() => {
                       const parts = data.display_name?.split(',') || [];
                       // Skip first part if it looks like infrastructure (contains numbers, "Access", "Way", etc.)
-                      if (parts.length > 1 && parts[0] && (/\d|Access|Way|Path|Bridge|Link/.test(parts[0]))) {
+                      if (parts.length > 1 && parts[0] && (/\d|Access|Way|Path|Bridge|Link|Cycleway|Pathway/.test(parts[0]))) {
                         return parts[1]?.trim();
                       }
                       return parts[0]?.trim();
@@ -604,6 +618,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       res.json({
+        road: road,
         suburb: suburb,
         postcode: postcode,
         state: state,

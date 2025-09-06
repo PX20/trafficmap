@@ -189,12 +189,10 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
         if (response.ok) {
           const data = await response.json();
           
-          // Build simple address string
+          // Build address string with street name and suburb
           const parts = [];
           if (data.road) parts.push(data.road);
-          if (data.suburb || data.city || data.neighbourhood) {
-            parts.push(data.suburb || data.city || data.neighbourhood);
-          }
+          if (data.suburb) parts.push(data.suburb);
           if (data.postcode) parts.push(data.postcode);
           
           const address = parts.length > 0 ? parts.join(', ') : `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
