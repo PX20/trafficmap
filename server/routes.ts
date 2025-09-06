@@ -596,8 +596,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Extract suburb name from address data - prioritize actual suburb over infrastructure names
       const suburb = data.address.suburb || 
+                    data.address.residential ||  // Local area name like "Kawana Forest"
                     data.address.town || 
                     data.address.village ||
+                    data.address.city_district ||  // More specific than city
                     data.address.city ||
                     // If no address suburb, try to get actual suburb from display_name (usually 2nd part)
                     (() => {
