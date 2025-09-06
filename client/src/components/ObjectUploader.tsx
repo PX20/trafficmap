@@ -113,7 +113,7 @@ export function ObjectUploader({
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowModal(false)}
-                className="p-1 h-auto"
+                className="h-8 w-8 p-0 rounded-full hover:bg-gray-100 transition-colors"
               >
                 <X className="w-4 h-4" />
               </Button>
