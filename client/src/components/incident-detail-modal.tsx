@@ -178,19 +178,11 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
     });
   };
 
-  // Initialize like count when modal opens (demo data)
+  // Reset like state when modal opens
   useEffect(() => {
     if (isOpen && incident && incidentId) {
-      // Demo like counts - in real app this would come from API
-      const demoLikeCounts: Record<string, number> = {
-        'crash': Math.floor(Math.random() * 50) + 5,
-        'incident': Math.floor(Math.random() * 30) + 3,
-        'emergency': Math.floor(Math.random() * 100) + 20,
-      };
-      
-      const eventType = incident.type || 'incident';
-      setLikeCount(demoLikeCounts[eventType] || Math.floor(Math.random() * 20) + 1);
-      setIsLiked(false); // Reset like state for demo
+      setLikeCount(0); // No fake counts - real functionality not implemented
+      setIsLiked(false);
     }
   }, [isOpen, incident, incidentId]);
 
