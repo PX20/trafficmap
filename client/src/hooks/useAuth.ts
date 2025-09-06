@@ -20,9 +20,14 @@ export function useAuth() {
     },
     onSuccess: (user: SelectUser) => {
       queryClient.setQueryData(["/api/user"], user);
+      
+      // Refresh incident data to ensure fresh information after login
+      queryClient.invalidateQueries({ queryKey: ["/api/incidents"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/traffic/events"] });
+      
       toast({
         title: "Signed in successfully",
-        description: "You have successfully signed in.",
+        description: "Loading latest safety data...",
       });
     },
     onError: (error: Error) => {
@@ -41,9 +46,14 @@ export function useAuth() {
     },
     onSuccess: (user: SelectUser) => {
       queryClient.setQueryData(["/api/user"], user);
+      
+      // Refresh incident data for new users
+      queryClient.invalidateQueries({ queryKey: ["/api/incidents"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/traffic/events"] });
+      
       toast({
         title: "Account created!",
-        description: "Welcome to QLD Safety Monitor.",
+        description: "Loading latest safety data...",
       });
     },
     onError: (error: Error) => {
