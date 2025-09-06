@@ -21,7 +21,7 @@ export function useAuth() {
     onSuccess: (user: SelectUser) => {
       queryClient.setQueryData(["/api/user"], user);
       toast({
-        title: "Welcome back!",
+        title: "Signed in successfully",
         description: "You have successfully signed in.",
       });
     },

@@ -132,7 +132,7 @@ export default function AuthPage() {
             <TabsContent value="login">
               <Card>
                 <CardHeader>
-                  <CardTitle>Welcome Back</CardTitle>
+                  <CardTitle>Sign In</CardTitle>
                   <CardDescription>
                     Sign in to your account to stay connected with your community
                   </CardDescription>
