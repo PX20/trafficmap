@@ -49,7 +49,7 @@ export function useTrafficData(filters: FilterState): ProcessedTrafficData {
       const features = data?.features || [];
       return Array.isArray(features) ? features : [];
     },
-    refetchInterval: filters.autoRefresh ? 30000 : false,
+    refetchInterval: filters.autoRefresh ? 30000 : 2 * 60 * 1000, // Auto-refresh every 2 minutes by default
   });
 
   // Fetch ALL incidents (no location filtering for map display)
@@ -64,7 +64,7 @@ export function useTrafficData(filters: FilterState): ProcessedTrafficData {
       const features = data?.features || [];
       return Array.isArray(features) ? features : [];
     },
-    refetchInterval: filters.autoRefresh ? 60000 : false,
+    refetchInterval: filters.autoRefresh ? 60000 : 3 * 60 * 1000, // Auto-refresh every 3 minutes by default
   });
 
   // Fetch location-filtered data for counting (filter sidebar)
