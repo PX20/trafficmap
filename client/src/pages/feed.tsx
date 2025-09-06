@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { IncidentDetailModal } from "@/components/incident-detail-modal";
 import { IncidentReportForm } from "@/components/incident-report-form";
@@ -38,6 +38,7 @@ export default function Feed() {
   const { user } = useAuth();
   const { toast } = useToast();
   const isMobile = useIsMobile();
+  const [, setLocation] = useLocation();
   const [selectedSuburb, setSelectedSuburb] = useState("");
   const [selectedIncident, setSelectedIncident] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -480,7 +481,13 @@ export default function Feed() {
                         <div className="p-4 pb-3">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                              <Avatar className="w-12 h-12 ring-2 ring-primary/20">
+                              <Avatar 
+                                className={`w-12 h-12 ring-2 ring-primary/20 ${isUserReported ? 'cursor-pointer hover:ring-primary/40 transition-all' : ''}`}
+                                onClick={isUserReported && incident.properties?.reporterId ? (e) => {
+                                  e.stopPropagation();
+                                  setLocation(`/users/${incident.properties.reporterId}`);
+                                } : undefined}
+                              >
                                 {sourceInfo.photoUrl ? (
                                   <img src={sourceInfo.photoUrl} alt={sourceInfo.name} className="w-full h-full object-cover" />
                                 ) : (
@@ -491,7 +498,13 @@ export default function Feed() {
                               </Avatar>
                               <div>
                                 <div className="flex items-center gap-2">
-                                  <h4 className="font-bold text-foreground text-base">
+                                  <h4 
+                                    className={`font-bold text-foreground text-base ${isUserReported && incident.properties?.reporterId ? 'cursor-pointer hover:text-primary transition-colors' : ''}`}
+                                    onClick={isUserReported && incident.properties?.reporterId ? (e) => {
+                                      e.stopPropagation();
+                                      setLocation(`/users/${incident.properties.reporterId}`);
+                                    } : undefined}
+                                  >
                                     {sourceInfo.name}
                                   </h4>
                                   <Badge 
