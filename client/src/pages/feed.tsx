@@ -405,7 +405,11 @@ export default function Feed() {
             <h1 className="text-2xl font-bold text-foreground">Safety Feed</h1>
             <p className="text-muted-foreground">
               {selectedSuburb && showRegionalUpdates ? (
-                `${sortedIncidents.length} incidents in ${selectedSuburb} region`
+                (() => {
+                  const region = findRegionBySuburb(selectedSuburb.split(' ')[0]);
+                  const regionName = region ? region.name : selectedSuburb;
+                  return `${sortedIncidents.length} incidents in ${regionName} region`;
+                })()
               ) : (
                 sortedIncidents.length > 0 ? `${sortedIncidents.length} active incidents across Queensland` : 'Real-time incidents across Queensland'
               )}
