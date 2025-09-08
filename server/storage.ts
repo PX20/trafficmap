@@ -14,6 +14,7 @@ import {
   categories,
   subcategories,
   incidentFollowUps,
+  reports,
   type User, 
   type UpsertUser,
   type InsertUser, 
@@ -44,7 +45,9 @@ import {
   type Subcategory,
   type InsertSubcategory,
   type IncidentFollowUp,
-  type InsertIncidentFollowUp
+  type InsertIncidentFollowUp,
+  type Report,
+  type InsertReport
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, or, ne, sql } from "drizzle-orm";
@@ -129,6 +132,12 @@ export interface IStorage {
   // Incident follow-up operations
   getIncidentFollowUps(incidentId: string): Promise<IncidentFollowUp[]>;
   createIncidentFollowUp(followUp: InsertIncidentFollowUp): Promise<IncidentFollowUp>;
+  
+  // Report operations for content moderation
+  createReport(report: InsertReport): Promise<Report>;
+  getReports(status?: string): Promise<Report[]>;
+  updateReportStatus(reportId: string, status: string, moderatorId?: string, moderatorNotes?: string): Promise<Report | undefined>;
+  getReportsByEntity(entityType: string, entityId: string): Promise<Report[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -684,6 +693,59 @@ export class DatabaseStorage implements IStorage {
       .values(followUp)
       .returning();
     return created;
+  }
+
+  async createReport(report: InsertReport): Promise<Report> {
+    const [created] = await db
+      .insert(reports)
+      .values(report)
+      .returning();
+    return created;
+  }
+
+  async getReports(status?: string): Promise<Report[]> {
+    if (status) {
+      return await db
+        .select()
+        .from(reports)
+        .where(eq(reports.status, status))
+        .orderBy(desc(reports.createdAt));
+    } else {
+      return await db
+        .select()
+        .from(reports)
+        .orderBy(desc(reports.createdAt));
+    }
+  }
+
+  async updateReportStatus(reportId: string, status: string, moderatorId?: string, moderatorNotes?: string): Promise<Report | undefined> {
+    const updateData: any = { 
+      status,
+      ...(moderatorId && { moderatorId }),
+      ...(moderatorNotes && { moderatorNotes })
+    };
+    
+    if (status === 'resolved' || status === 'dismissed') {
+      updateData.resolvedAt = new Date();
+    }
+
+    const [updated] = await db
+      .update(reports)
+      .set(updateData)
+      .where(eq(reports.id, reportId))
+      .returning();
+    return updated;
+  }
+
+  async getReportsByEntity(entityType: string, entityId: string): Promise<Report[]> {
+    return await db
+      .select()
+      .from(reports)
+      .where(and(
+        eq(reports.entityType, entityType),
+        eq(reports.entityId, entityId)
+      ))
+      .orderBy(desc(reports.createdAt));
   }
 
 }
