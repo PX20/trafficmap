@@ -26,7 +26,8 @@ export function TermsAndConditionsModal({ isOpen, onAccept }: TermsAndConditions
 
   const acceptTermsMutation = useMutation({
     mutationFn: async () => {
-      await apiRequest("/api/user/accept-terms", "POST");
+      const response = await apiRequest("POST", "/api/user/accept-terms");
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
@@ -37,9 +38,10 @@ export function TermsAndConditionsModal({ isOpen, onAccept }: TermsAndConditions
       onAccept();
     },
     onError: (error: any) => {
+      console.error("Terms acceptance error:", error);
       toast({
         title: "Error accepting terms",
-        description: error.message || "Please try again",
+        description: error.message || "Please try again later",
         variant: "destructive",
       });
     },
@@ -60,7 +62,11 @@ export function TermsAndConditionsModal({ isOpen, onAccept }: TermsAndConditions
 
   return (
     <Dialog open={isOpen} onOpenChange={() => {}}>
-      <DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] flex flex-col p-0 bg-gradient-to-br from-white via-gray-50 to-white border-0 shadow-2xl" data-testid="modal-terms-conditions">
+      <DialogContent 
+        className="w-[95vw] max-w-2xl max-h-[90vh] flex flex-col p-0 bg-gradient-to-br from-white via-gray-50 to-white border-0 shadow-2xl" 
+        data-testid="modal-terms-conditions"
+        aria-describedby="terms-description"
+      >
         <DialogHeader className="p-6 pb-4 flex-shrink-0 bg-gradient-to-r from-blue-50 to-purple-50 border-b border-gray-200">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg">
@@ -74,6 +80,9 @@ export function TermsAndConditionsModal({ isOpen, onAccept }: TermsAndConditions
         </DialogHeader>
 
         <div className="flex-1 p-6 overflow-hidden flex flex-col">
+          <div id="terms-description" className="sr-only">
+            Terms and Conditions document that must be read and accepted to use QLD Safety Monitor
+          </div>
           <ScrollArea className="flex-1 pr-4" onScrollCapture={() => setHasReadTerms(true)}>
             <div className="space-y-6 text-sm text-gray-700 leading-relaxed">
               <section>

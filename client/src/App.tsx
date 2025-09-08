@@ -22,7 +22,7 @@ function Router() {
 
   // Check if user needs to accept terms
   useEffect(() => {
-    if (user && !user.termsAccepted) {
+    if (user && user.id && !user.termsAccepted) {
       setShowTermsModal(true);
     } else {
       setShowTermsModal(false);
