@@ -197,64 +197,42 @@ export default function Feed() {
     },
   });
 
-  // Use filtered data from the traffic data hook (same as map)
-  const combinedIncidents = [
-    ...regionalIncidents.map((inc: any) => ({ ...inc, type: 'incident' })),
-    ...regionalEvents.map((event: any) => ({ ...event, type: 'traffic' }))
-  ];
-
-  // Apply regional filtering if location is selected
-  let finalFilteredIncidents = combinedIncidents;
+  // Apply category/type filtering to regional data (already filtered by region from backend)
+  const filteredRegionalEvents = regionalEvents.filter(() => filters.showTrafficEvents === true);
   
-  if (showRegionalUpdates && selectedSuburb) {
-    const region = findRegionBySuburb(selectedSuburb);
+  const filteredRegionalIncidents = regionalIncidents.filter((incident: any) => {
+    const isUserReported = incident.properties?.userReported;
     
-    if (region) {
-      finalFilteredIncidents = combinedIncidents.filter((incident: any) => {
-        // Filter traffic events by region
-        if (incident.type === 'traffic') {
-          const locality = incident.properties?.road_summary?.locality || '';
-          const roadName = incident.properties?.road_summary?.road_name || '';
-          const locationText = `${locality} ${roadName}`.toLowerCase();
-          
-          return region.suburbs.some(suburb => {
-            const suburbLower = suburb.toLowerCase();
-            return locationText.includes(suburbLower) ||
-                   suburbLower.includes(locationText);
-          });
-        }
-        
-        // Filter emergency incidents by region
-        if (!incident.properties?.userReported && incident.type !== 'traffic') {
-          const locality = incident.properties?.Locality || '';
-          const location = incident.properties?.Location || '';
-          const locationDesc = incident.properties?.locationDescription || '';
-          const locationText = `${locality} ${location} ${locationDesc}`.toLowerCase();
-          
-          return region.suburbs.some(suburb => {
-            const suburbLower = suburb.toLowerCase();
-            return locationText.includes(suburbLower) ||
-                   suburbLower.includes(locationText);
-          });
-        }
-        
-        // For user-reported incidents, check if they match the region
-        if (incident.properties?.userReported) {
-          const location = incident.properties?.location || '';
-          const suburb = incident.properties?.suburb || '';
-          const locationText = `${location} ${suburb}`.toLowerCase();
-          
-          return region.suburbs.some(suburbRegion => {
-            const suburbLower = suburbRegion.toLowerCase();
-            return locationText.includes(suburbLower) ||
-                   suburbLower.includes(locationText);
-          });
-        }
-        
-        return true; // Include other incident types by default
-      });
+    if (isUserReported) {
+      const incidentType = incident.properties?.incidentType;
+      
+      if (incidentType === 'crime') {
+        return filters.showUserSafetyCrime === true;
+      } else if (incidentType === 'wildlife') {
+        return filters.showUserWildlife === true;
+      } else if (incidentType === 'traffic') {
+        return filters.showUserTraffic === true;
+      } else {
+        return filters.showUserCommunity === true;
+      }
+    } else {
+      // Official incidents - check if it's QFES or ESQ
+      const isQFES = incident.properties?.incidentType?.toLowerCase()?.includes('fire') ||
+                     incident.properties?.GroupedType?.toLowerCase()?.includes('fire') ||
+                     incident.properties?.description?.toLowerCase()?.includes('fire');
+      if (isQFES) {
+        return filters.showQFES === true;
+      } else {
+        return filters.showIncidents === true;
+      }
     }
-  }
+  });
+
+  // Combine filtered regional data (no additional regional filtering needed)
+  const finalFilteredIncidents = [
+    ...filteredRegionalIncidents.map((inc: any) => ({ ...inc, type: 'incident' })),
+    ...filteredRegionalEvents.map((event: any) => ({ ...event, type: 'traffic' }))
+  ];
 
   // Sort all incidents by time (most recent first)
   const sortedIncidents = finalFilteredIncidents
