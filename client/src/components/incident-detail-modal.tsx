@@ -772,13 +772,8 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
                     <span className="font-semibold">{getIncidentLocation(incident)}</span>
                   </div>
                   
-                  {/* Enhanced Description */}
+                  {/* Enhanced Details */}
                   <div className="space-y-4">
-                    <div className="text-sm text-gray-700 leading-relaxed bg-white/80 p-4 rounded-xl border border-gray-200">
-                      {getIncidentDescription(incident)}
-                    </div>
-                
-                
                     {/* Enhanced Traffic Details - Government Style */}
                     {incident.type === 'traffic' && (
                       <div className="relative p-4 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 overflow-hidden">
