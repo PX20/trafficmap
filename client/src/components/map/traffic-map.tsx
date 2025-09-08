@@ -394,6 +394,14 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
         case 'hazard': 
         case 'restriction':
         case 'incident':
+        case 'congestion':
+        case 'roadworks':
+        case 'special_event':
+        case 'special event':
+        case 'traffic':
+        case 'multi-vehicle':
+        case 'road damage':
+        case 'recurring':
           return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9L18.7 10H15l2.9-1.9c.5-.3.8-.8.8-1.4 0-.8-.7-1.4-1.5-1.4H12c-.8 0-1.5.6-1.5 1.4 0 .6.3 1.1.8 1.4L14.3 10H10.7L8.9 8.1c.5-.3.8-.8.8-1.4 0-.8-.7-1.4-1.5-1.4H3.8c-.8 0-1.5.6-1.5 1.4 0 .6.3 1.1.8 1.4L5 10.3C4.2 11 3.5 12 3.5 13v3c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>`;
         // Community reports get specific icons
         case 'crime':
