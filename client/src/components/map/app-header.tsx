@@ -58,7 +58,10 @@ export function AppHeader({ onMenuToggle, onFilterToggle, showFilterButton }: Ap
       <div className="px-4 py-3 flex items-center justify-between">
         <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
           <svg className="w-5 h-5 text-primary-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m-6 3l6-3"></path>
+            <circle cx="12" cy="12" r="10" strokeWidth="2"/>
+            <circle cx="12" cy="12" r="6" strokeWidth="1.5"/>
+            <circle cx="12" cy="12" r="2" fill="currentColor"/>
+            <path strokeLinecap="round" strokeWidth="2" d="M12 2v4M12 18v4M2 12h4M18 12h4"/>
           </svg>
         </div>
         
