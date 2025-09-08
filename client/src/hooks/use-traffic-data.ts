@@ -177,10 +177,34 @@ export function useTrafficData(filters: FilterState): ProcessedTrafficData {
   });
 
   return {
-    events: allEvents,
-    incidents: allIncidents,
+    events: filters.locationFilter && filters.homeLocation ? localEvents : allEvents,
+    incidents: filters.locationFilter && filters.homeLocation ? localIncidents : allIncidents,
     counts,
-    filteredEvents,
-    filteredIncidents
+    filteredEvents: filters.locationFilter && filters.homeLocation ? localEvents.filter(() => filters.showTrafficEvents === true) : filteredEvents,
+    filteredIncidents: filters.locationFilter && filters.homeLocation ? localIncidents.filter((incident: any) => {
+      const isUserReported = incident.properties?.userReported;
+      
+      if (isUserReported) {
+        const incidentType = incident.properties?.incidentType;
+        
+        if (incidentType === 'crime') {
+          return filters.showUserSafetyCrime === true;
+        } else if (incidentType === 'wildlife') {
+          return filters.showUserWildlife === true;
+        } else if (incidentType === 'traffic') {
+          return filters.showUserTraffic === true;
+        } else {
+          return filters.showUserCommunity === true;
+        }
+      } else {
+        // Official incidents
+        const isQFES = isQFESIncident(incident);
+        if (isQFES) {
+          return filters.showQFES === true;
+        } else {
+          return filters.showIncidents === true;
+        }
+      }
+    }) : filteredIncidents
   };
 }
