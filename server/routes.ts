@@ -1543,6 +1543,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
             { name: "Public Space Problems", description: "Park issues, playground damage", order: 3 },
             { name: "Events & Gatherings", description: "Large gatherings, street events", order: 4 }
           ]
+        },
+        {
+          name: "Lost & Found",
+          description: "Lost and found items, missing and found pets",
+          icon: "search",
+          color: "#f59e0b", // amber
+          order: 6,
+          subcategories: [
+            { name: "Lost Items", description: "Lost keys, phones, wallets, jewelry, documents", order: 1 },
+            { name: "Found Items", description: "Found personal belongings that need to be returned", order: 2 },
+            { name: "Missing Pets", description: "Lost or missing cats, dogs, and other pets", order: 3 },
+            { name: "Found Pets", description: "Found animals looking for their owners", order: 4 }
+          ]
         }
       ];
       
