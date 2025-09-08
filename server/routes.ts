@@ -244,6 +244,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Ad serving endpoint - get ads for user's region
+  app.get("/api/ads", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any)?.claims?.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user || !user.homeSuburb) {
+        return res.json([]);
+      }
+
+      const limit = parseInt(req.query.limit as string) || 3;
+      const ads = await storage.getActiveAdsForSuburb(user.homeSuburb, limit);
+      
+      res.json(ads);
+    } catch (error) {
+      console.error("Error fetching ads:", error);
+      res.status(500).json({ message: "Failed to fetch ads" });
+    }
+  });
+
+  // Ad view tracking endpoint
+  app.post("/api/ads/track-view", async (req, res) => {
+    try {
+      const { adId, duration, userSuburb, timestamp } = req.body;
+      
+      // Basic validation
+      if (!adId || !duration || !userSuburb || !timestamp) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      const userId = (req.user as any)?.claims?.sub || 'anonymous';
+      const viewedAt = new Date(timestamp);
+      
+      // Check if view already recorded today
+      const today = viewedAt.toISOString().split('T')[0];
+      const existingViews = await storage.getAdViewsToday(userId, adId, today);
+      
+      if (existingViews >= 3) { // Max 3 views per user per ad per day
+        return res.json({ message: "View limit reached" });
+      }
+
+      await storage.recordAdView({
+        adCampaignId: adId,
+        userId: userId,
+        viewedAt: viewedAt,
+        duration: duration,
+        userSuburb: userSuburb
+      });
+
+      res.json({ message: "View recorded" });
+    } catch (error) {
+      console.error("Error tracking ad view:", error);
+      res.status(500).json({ message: "Failed to track view" });
+    }
+  });
+
+  // Ad click tracking endpoint
+  app.post("/api/ads/track-click", async (req, res) => {
+    try {
+      const { adId, timestamp } = req.body;
+      
+      if (!adId || !timestamp) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      const userId = (req.user as any)?.claims?.sub || 'anonymous';
+      const clickedAt = new Date(timestamp);
+
+      await storage.recordAdClick({
+        adCampaignId: adId,
+        userId: userId,
+        clickedAt: clickedAt
+      });
+
+      res.json({ message: "Click recorded" });
+    } catch (error) {
+      console.error("Error tracking ad click:", error);
+      res.status(500).json({ message: "Failed to track click" });
+    }
+  });
+
   // Get traffic events from QLD Traffic API (with enhanced caching)
   app.get("/api/traffic/events", async (req, res) => {
     try {
