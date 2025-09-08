@@ -15,7 +15,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { LocationAutocomplete } from "@/components/location-autocomplete";
 import { ObjectUploader } from "@/components/ObjectUploader";
-import { Camera } from "lucide-react";
+import { Camera, Upload, Image, CheckCircle } from "lucide-react";
 
 const reportIncidentSchema = z.object({
   categoryId: z.string().min(1, "Category is required"),
@@ -433,22 +433,35 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
               )}
             />
 
-            {/* Photo Upload Field */}
+            {/* Modern Photo Upload Section */}
             <FormField
               control={form.control}
               name="photoUrl"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Add Photo (Optional)</FormLabel>
+                <FormItem className="space-y-3">
+                  <FormLabel className="text-base font-semibold text-gray-900 flex items-center gap-2">
+                    <div className="p-1.5 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg">
+                      <Image className="w-4 h-4 text-white" />
+                    </div>
+                    Add Photo (Optional)
+                  </FormLabel>
                   <FormControl>
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                       {uploadedPhotoUrl ? (
-                        <div className="relative">
-                          <img
-                            src={uploadedPhotoUrl}
-                            alt="Uploaded incident photo"
-                            className="max-w-full h-32 object-cover rounded-lg border"
-                          />
+                        <div className="relative group">
+                          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 shadow-sm">
+                            <img
+                              src={uploadedPhotoUrl}
+                              alt="Uploaded incident photo"
+                              className="w-full h-48 object-cover"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+                            <div className="absolute top-3 right-3 flex gap-2">
+                              <div className="p-1.5 bg-green-500 rounded-full">
+                                <CheckCircle className="w-4 h-4 text-white" />
+                              </div>
+                            </div>
+                          </div>
                           <Button
                             type="button"
                             variant="outline"
@@ -457,9 +470,9 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
                               setUploadedPhotoUrl("");
                               form.setValue("photoUrl", "");
                             }}
-                            className="absolute top-2 right-2"
+                            className="absolute bottom-3 right-3 bg-white/90 backdrop-blur-sm hover:bg-white border-gray-200 hover:border-gray-300 shadow-sm"
                           >
-                            Remove
+                            Remove Photo
                           </Button>
                         </div>
                       ) : (
@@ -468,11 +481,40 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
                           maxFileSize={5242880}
                           onGetUploadParameters={handleGetUploadParameters}
                           onComplete={handlePhotoUploadComplete}
-                          buttonClassName="w-full border-dashed border-2 border-gray-300 hover:border-gray-400"
+                          buttonClassName="w-full"
                         >
-                          <div className="flex items-center justify-center gap-2 py-8">
-                            <Camera className="w-5 h-5 text-gray-500" />
-                            <span className="text-gray-600">Add Photo</span>
+                          <div className="relative group cursor-pointer">
+                            <div className="border-2 border-dashed border-blue-300 rounded-2xl p-8 text-center bg-gradient-to-br from-blue-50/50 via-white to-purple-50/50 hover:from-blue-100/60 hover:via-white hover:to-purple-100/60 transition-all duration-300 group-hover:border-blue-400 group-hover:shadow-lg">
+                              <div className="space-y-4">
+                                <div className="flex justify-center">
+                                  <div className="relative">
+                                    <div className="p-4 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl group-hover:from-blue-600 group-hover:to-purple-700 transition-all duration-300 shadow-lg group-hover:shadow-xl group-hover:scale-105">
+                                      <Upload className="w-8 h-8 text-white" />
+                                    </div>
+                                    <div className="absolute -top-1 -right-1 p-1 bg-white rounded-full shadow-sm group-hover:scale-110 transition-transform duration-300">
+                                      <Camera className="w-4 h-4 text-gray-600" />
+                                    </div>
+                                  </div>
+                                </div>
+                                
+                                <div className="space-y-2">
+                                  <h4 className="text-lg font-semibold text-gray-900 group-hover:text-gray-800">
+                                    Add Incident Photo
+                                  </h4>
+                                  <p className="text-gray-600 group-hover:text-gray-700">
+                                    Drag and drop an image here, or <span className="font-medium text-blue-600 group-hover:text-blue-700">click to browse</span>
+                                  </p>
+                                  <div className="flex items-center justify-center gap-4 pt-2">
+                                    <div className="px-3 py-1 bg-white/60 rounded-full border border-gray-200 text-xs text-gray-500">
+                                      JPG, PNG, GIF
+                                    </div>
+                                    <div className="px-3 py-1 bg-white/60 rounded-full border border-gray-200 text-xs text-gray-500">
+                                      Max 5MB
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
                           </div>
                         </ObjectUploader>
                       )}
@@ -483,11 +525,12 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
               )}
             />
 
-            <div className="flex justify-end space-x-2 pt-4">
+            <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-gray-200">
               <Button
                 type="button"
                 variant="outline"
                 onClick={onClose}
+                className="flex-1 sm:flex-none px-6 py-3 border-gray-300 hover:border-gray-400 hover:bg-gray-50"
                 data-testid="button-cancel-report"
               >
                 Cancel
@@ -495,9 +538,20 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
               <Button
                 type="submit"
                 disabled={reportIncidentMutation.isPending}
+                className="flex-1 px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 data-testid="button-submit-report"
               >
-                {reportIncidentMutation.isPending ? "Submitting..." : "Submit Report"}
+                {reportIncidentMutation.isPending ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Submitting Report...
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4" />
+                    Submit Report
+                  </div>
+                )}
               </Button>
             </div>
             </form>
