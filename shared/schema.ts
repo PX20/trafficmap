@@ -36,6 +36,8 @@ export const users = pgTable("users", {
   locationSharingLevel: varchar("location_sharing_level").default('suburb'), // 'exact' | 'suburb' | 'private'
   profileVisibility: varchar("profile_visibility").default('community'), // 'public' | 'community' | 'private'
   allowDirectMessages: boolean("allow_direct_messages").default(true),
+  termsAccepted: boolean("terms_accepted").default(false),
+  termsAcceptedAt: timestamp("terms_accepted_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
