@@ -19,6 +19,7 @@ import {
   getRegionFromCoordinates, 
   isFeatureInRegion, 
   extractCoordinatesFromGeometry,
+  isPointInPolygon,
   QLD_REGIONS,
 } from "./region-utils";
 
@@ -438,12 +439,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const region = findRegionBySuburb(suburb as string);
         if (region) {
           recentIncidents = recentIncidents.filter((incident: any) => {
-            // Create a feature-like object for consistent filtering
-            const feature = {
-              properties: incident.properties || {},
-              geometry: incident.geometry
-            };
-            return isFeatureInRegion(feature, region);
+            // Extract coordinates using the robust function
+            const coords = extractCoordinatesFromGeometry(incident.geometry);
+            
+            if (coords) {
+              const [lat, lng] = coords;
+              // Check if coordinates are within region boundary
+              if (region.boundary && isPointInPolygon([lng, lat], region.boundary)) {
+                return true;
+              }
+            }
+            
+            // Fallback to text-based matching
+            const locationText = `${incident.location || ''} ${incident.properties?.Locality || ''} ${incident.properties?.suburb || ''}`.toLowerCase();
+            return region.suburbs.some(suburbName => {
+              const suburbLower = suburbName.toLowerCase();
+              return locationText.includes(suburbLower) || suburbLower.includes(locationText);
+            });
           });
         }
       }
