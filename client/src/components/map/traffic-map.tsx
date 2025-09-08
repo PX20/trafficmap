@@ -27,12 +27,12 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
   const markersRef = useRef<L.Marker[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Use shared data processing hook - MAP shows ALL Queensland data
-  const { events, incidents } = useTrafficData(filters);
+  // Use shared data processing hook - MAP shows ALL Queensland data but respects filters
+  const { filteredEvents, filteredIncidents } = useTrafficData(filters);
   
   // Convert to expected format for backward compatibility  
-  const eventsData = { features: events };
-  const incidentsData = { features: incidents };
+  const eventsData = { features: filteredEvents };
+  const incidentsData = { features: filteredIncidents };
   const eventsLoading = false;
   const incidentsLoading = false;
 
