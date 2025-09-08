@@ -37,38 +37,8 @@ const isQFESIncident = (incident: any) => {
 };
 
 export function useTrafficData(filters: FilterState): ProcessedTrafficData {
-  // Fetch ALL traffic events (no location filtering for map display)
-  const { data: allEventsData } = useQuery({
-    queryKey: ["/api/traffic/events"],
-    queryFn: async () => {
-      const response = await fetch('/api/traffic/events');
-      if (!response.ok) throw new Error('Failed to fetch traffic events');
-      return response.json();
-    },
-    select: (data: any) => {
-      const features = data?.features || [];
-      return Array.isArray(features) ? features : [];
-    },
-    refetchInterval: filters.autoRefresh ? 30000 : 2 * 60 * 1000, // Auto-refresh every 2 minutes by default
-  });
-
-  // Fetch ALL incidents (no location filtering for map display)
-  const { data: allIncidentsData } = useQuery({
-    queryKey: ["/api/incidents"],
-    queryFn: async () => {
-      const response = await fetch('/api/incidents');
-      if (!response.ok) throw new Error('Failed to fetch incidents');
-      return response.json();
-    },
-    select: (data: any) => {
-      const features = data?.features || [];
-      return Array.isArray(features) ? features : [];
-    },
-    refetchInterval: filters.autoRefresh ? 60000 : 3 * 60 * 1000, // Auto-refresh every 3 minutes by default
-  });
-
-  // Fetch location-filtered data for counting (filter sidebar)
-  const { data: localEventsData } = useQuery({
+  // Only fetch what the user needs - either their region or all QLD
+  const { data: eventsData } = useQuery({
     queryKey: ["/api/traffic/events", filters.homeLocation],
     queryFn: async () => {
       const suburb = filters.homeLocation?.split(' ')[0] || '';
@@ -84,10 +54,10 @@ export function useTrafficData(filters: FilterState): ProcessedTrafficData {
       const features = data?.features || [];
       return Array.isArray(features) ? features : [];
     },
-    refetchInterval: filters.autoRefresh ? 30000 : false,
+    refetchInterval: filters.autoRefresh ? 30000 : 2 * 60 * 1000, // Auto-refresh every 2 minutes
   });
 
-  const { data: localIncidentsData } = useQuery({
+  const { data: incidentsData } = useQuery({
     queryKey: ["/api/incidents", filters.homeLocation],
     queryFn: async () => {
       const suburb = filters.homeLocation?.split(' ')[0] || '';
@@ -103,44 +73,40 @@ export function useTrafficData(filters: FilterState): ProcessedTrafficData {
       const features = data?.features || [];
       return Array.isArray(features) ? features : [];
     },
-    refetchInterval: filters.autoRefresh ? 60000 : false,
+    refetchInterval: filters.autoRefresh ? 60000 : 3 * 60 * 1000, // Auto-refresh every 3 minutes
   });
 
-  // All data for map display
-  const allEvents = Array.isArray(allEventsData) ? allEventsData : [];
-  const allIncidents = Array.isArray(allIncidentsData) ? allIncidentsData : [];
+  // Use the fetched data directly
+  const allEvents = Array.isArray(eventsData) ? eventsData : [];
+  const allIncidents = Array.isArray(incidentsData) ? incidentsData : [];
   
-  // Local data for counting in sidebar
-  const localEvents = Array.isArray(localEventsData) ? localEventsData : [];
-  const localIncidents = Array.isArray(localIncidentsData) ? localIncidentsData : [];
+  // Categorize incidents for counting in sidebar
+  const nonUserIncidents = allIncidents.filter((i: any) => !i.properties?.userReported);
+  const qfesIncidents = nonUserIncidents.filter(isQFESIncident);
+  const esqIncidents = nonUserIncidents.filter(incident => !isQFESIncident(incident));
   
-  // Categorize LOCAL incidents for counting in sidebar
-  const localNonUserIncidents = localIncidents.filter((i: any) => !i.properties?.userReported);
-  const localQfesIncidents = localNonUserIncidents.filter(isQFESIncident);
-  const localEsqIncidents = localNonUserIncidents.filter(incident => !isQFESIncident(incident));
-  
-  // Calculate counts based on LOCAL data (for filter sidebar)
-  const trafficEvents = localEvents.length;
-  const emergencyIncidents = localEsqIncidents.length;
-  const qfesIncidents = localQfesIncidents.length;
-  const userSafetyCrime = localIncidents.filter((i: any) => 
+  // Calculate counts based on fetched data (for filter sidebar)
+  const trafficEvents = allEvents.length;
+  const emergencyIncidents = esqIncidents.length;
+  const qfesIncidentsCount = qfesIncidents.length;
+  const userSafetyCrime = allIncidents.filter((i: any) => 
     i.properties?.userReported && i.properties?.incidentType === 'crime'
   ).length;
-  const userWildlife = localIncidents.filter((i: any) => 
+  const userWildlife = allIncidents.filter((i: any) => 
     i.properties?.userReported && i.properties?.incidentType === 'wildlife'
   ).length;
-  const userCommunity = localIncidents.filter((i: any) => 
+  const userCommunity = allIncidents.filter((i: any) => 
     i.properties?.userReported && !['crime', 'wildlife', 'traffic'].includes(i.properties?.incidentType)
   ).length;
-  const userTraffic = localIncidents.filter((i: any) => 
+  const userTraffic = allIncidents.filter((i: any) => 
     i.properties?.userReported && i.properties?.incidentType === 'traffic'
   ).length;
   
   const counts = {
-    total: trafficEvents + emergencyIncidents + qfesIncidents + userSafetyCrime + userWildlife + userCommunity + userTraffic,
+    total: trafficEvents + emergencyIncidents + qfesIncidentsCount + userSafetyCrime + userWildlife + userCommunity + userTraffic,
     trafficEvents,
     emergencyIncidents,
-    qfesIncidents,
+    qfesIncidents: qfesIncidentsCount,
     userSafetyCrime,
     userWildlife,
     userCommunity,
@@ -177,34 +143,10 @@ export function useTrafficData(filters: FilterState): ProcessedTrafficData {
   });
 
   return {
-    events: filters.locationFilter && filters.homeLocation ? localEvents : allEvents,
-    incidents: filters.locationFilter && filters.homeLocation ? localIncidents : allIncidents,
+    events: allEvents,
+    incidents: allIncidents,
     counts,
-    filteredEvents: filters.locationFilter && filters.homeLocation ? localEvents.filter(() => filters.showTrafficEvents === true) : filteredEvents,
-    filteredIncidents: filters.locationFilter && filters.homeLocation ? localIncidents.filter((incident: any) => {
-      const isUserReported = incident.properties?.userReported;
-      
-      if (isUserReported) {
-        const incidentType = incident.properties?.incidentType;
-        
-        if (incidentType === 'crime') {
-          return filters.showUserSafetyCrime === true;
-        } else if (incidentType === 'wildlife') {
-          return filters.showUserWildlife === true;
-        } else if (incidentType === 'traffic') {
-          return filters.showUserTraffic === true;
-        } else {
-          return filters.showUserCommunity === true;
-        }
-      } else {
-        // Official incidents
-        const isQFES = isQFESIncident(incident);
-        if (isQFES) {
-          return filters.showQFES === true;
-        } else {
-          return filters.showIncidents === true;
-        }
-      }
-    }) : filteredIncidents
+    filteredEvents,
+    filteredIncidents
   };
 }
