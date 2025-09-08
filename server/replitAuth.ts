@@ -61,13 +61,13 @@ async function upsertUser(
   const username = claims["email"] ? claims["email"].split('@')[0] + '_oauth' : 'oauth_user_' + claims["sub"];
   
   await storage.upsertUser({
-    id: claims["sub"],
+    id: String(claims["sub"]), // Ensure ID is a string
     username: username,
     password: null, // OAuth users don't need passwords
-    email: claims["email"],
-    firstName: claims["first_name"],
-    lastName: claims["last_name"],
-    profileImageUrl: claims["profile_image_url"],
+    email: claims["email"] || null,
+    firstName: claims["first_name"] || null,
+    lastName: claims["last_name"] || null,
+    profileImageUrl: claims["profile_image_url"] || null,
   });
 }
 
