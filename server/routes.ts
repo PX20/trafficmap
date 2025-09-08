@@ -732,15 +732,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
           }
           
+          // Enhanced ESQ incident data extraction
+          const incidentType = props.GroupedType || 'Emergency Incident';
+          const locality = props.Locality || 'Queensland';
+          const location = props.Location;
+          
+          // Create more informative title and description
+          const title = location ? `${incidentType} - ${location}, ${locality}` : `${incidentType} - ${locality}`;
+          
+          // Build comprehensive description with available details
+          const descriptionParts = [];
+          if (props.Master_Incident_Number) {
+            descriptionParts.push(`Incident #${props.Master_Incident_Number}`);
+          }
+          if (props.Jurisdiction) {
+            descriptionParts.push(`Jurisdiction: ${props.Jurisdiction}`);
+          }
+          
+          // Add vehicle deployment information if available
+          const totalVehicles = (props.VehiclesAssigned || 0) + (props.VehiclesOnRoute || 0) + (props.VehiclesOnScene || 0);
+          if (totalVehicles > 0) {
+            const vehicleInfo = [];
+            if (props.VehiclesOnScene > 0) vehicleInfo.push(`${props.VehiclesOnScene} on scene`);
+            if (props.VehiclesOnRoute > 0) vehicleInfo.push(`${props.VehiclesOnRoute} en route`);
+            if (props.VehiclesAssigned > 0) vehicleInfo.push(`${props.VehiclesAssigned} assigned`);
+            if (vehicleInfo.length > 0) {
+              descriptionParts.push(`Vehicles: ${vehicleInfo.join(', ')}`);
+            }
+          }
+          
           const incident = {
             id: props.OBJECTID?.toString() || randomUUID(),
-            incidentType: props.GroupedType || 'Incident',
-            title: `${props.GroupedType || 'Emergency Incident'} - ${props.Locality || 'Queensland'}`,
-            description: props.Master_Incident_Number ? `Incident #${props.Master_Incident_Number}` : null,
-            location: props.Location || props.Locality || null,
+            incidentType: incidentType,
+            title: title,
+            description: descriptionParts.length > 0 ? descriptionParts.join(' • ') : null,
+            location: location || locality,
             status: props.CurrentStatus || 'Active',
-            priority: null,
-            agency: props.Jurisdiction || null,
+            priority: totalVehicles > 5 ? 'high' : totalVehicles > 2 ? 'medium' : 'low',
+            agency: props.Jurisdiction || 'Emergency Services Queensland',
             geometry: feature.geometry,
             properties: feature.properties,
             publishedDate: props.Response_Date ? new Date(props.Response_Date) : null,
