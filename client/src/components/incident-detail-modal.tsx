@@ -373,9 +373,9 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
       return incident.properties?.title || incident.properties?.categoryName || "Community Report";
     }
     
-    // For ESQ incidents - check incident object first, then properties
-    if (incident.title) {
-      return incident.title;
+    // For ESQ incidents - check properties.title
+    if (incident.properties?.title) {
+      return incident.properties.title;
     }
     
     // For emergency incidents, create a meaningful title
@@ -402,9 +402,9 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
              "Community reported incident";
     }
     
-    // For ESQ incidents - check incident object first, then properties
-    if (incident.description) {
-      return incident.description;
+    // For ESQ incidents - check properties.description
+    if (incident.properties?.description) {
+      return incident.properties.description;
     }
     
     // For emergency incidents, provide better description
@@ -441,9 +441,9 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
              "Location not specified";
     }
     
-    // For ESQ incidents - check incident object first, then properties
-    if (incident.location) {
-      return incident.location;
+    // For ESQ incidents - check properties.locationDescription
+    if (incident.properties?.locationDescription) {
+      return incident.properties.locationDescription;
     }
     
     // For emergency incidents, build location intelligently
