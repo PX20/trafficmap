@@ -167,7 +167,7 @@ export function ObjectUploader({
                   </div>
                   
                   <div className="space-y-2">
-                    <h4 className="text-lg font-semibold text-gray-700">Choose your profile photo</h4>
+                    <h4 className="text-lg font-semibold text-gray-700">Upload an image</h4>
                     <p className="text-gray-500">Drag and drop an image here, or click to browse</p>
                     <p className="text-sm text-gray-400">Images only • Max 5MB • JPG, PNG, or GIF</p>
                   </div>
@@ -182,7 +182,7 @@ export function ObjectUploader({
                   hideUploadButton={true}
                   height={150}
                   theme="light"
-                  showProgressDetails={true}
+                  hideProgressDetails={false}
                   hideRetryButton={false}
                   hideCancelButton={false}
                   hidePauseResumeButton={true}
