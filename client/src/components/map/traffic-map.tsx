@@ -169,7 +169,8 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
             } else if (incidentType === 'wildlife') {
               markerType = 'wildlife';
             } else {
-              // Infrastructure and other types fall into community category
+              // Infrastructure, generic user reports, and other types fall into community category
+              // This includes "USER_REPORT", "User Report", and other community issues
               markerType = 'community';
             }
           } else {
