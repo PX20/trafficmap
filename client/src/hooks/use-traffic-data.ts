@@ -74,10 +74,13 @@ export function useTrafficData(filters: FilterState): ProcessedTrafficData {
     queryKey: ["/api/traffic/events", filters.homeLocation],
     queryFn: async () => {
       const suburb = filters.homeLocation?.split(' ')[0] || '';
-      const url = suburb 
-        ? `/api/traffic/events?suburb=${encodeURIComponent(suburb)}`
-        : '/api/traffic/events';
       
+      // If no location set, return empty instead of all QLD
+      if (!suburb) {
+        return { features: [] };
+      }
+      
+      const url = `/api/traffic/events?suburb=${encodeURIComponent(suburb)}`;
       const response = await fetch(url);
       if (!response.ok) throw new Error('Failed to fetch traffic events');
       return response.json();
@@ -93,10 +96,13 @@ export function useTrafficData(filters: FilterState): ProcessedTrafficData {
     queryKey: ["/api/incidents", filters.homeLocation],
     queryFn: async () => {
       const suburb = filters.homeLocation?.split(' ')[0] || '';
-      const url = suburb 
-        ? `/api/incidents?suburb=${encodeURIComponent(suburb)}`
-        : '/api/incidents';
       
+      // If no location set, return empty instead of all QLD
+      if (!suburb) {
+        return { features: [] };
+      }
+      
+      const url = `/api/incidents?suburb=${encodeURIComponent(suburb)}`;
       const response = await fetch(url);
       if (!response.ok) throw new Error('Failed to fetch incidents');
       return response.json();

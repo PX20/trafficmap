@@ -182,7 +182,9 @@ export default function Feed() {
       return response.json();
     },
     onSuccess: () => {
+      // Invalidate both all incidents and regional incidents queries
       queryClient.invalidateQueries({ queryKey: ["/api/incidents"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/incidents", filters.homeLocation] });
       toast({
         title: "Data refreshed",
         description: "Incidents have been updated from emergency services",
