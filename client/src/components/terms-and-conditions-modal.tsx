@@ -26,9 +26,7 @@ export function TermsAndConditionsModal({ isOpen, onAccept }: TermsAndConditions
 
   const acceptTermsMutation = useMutation({
     mutationFn: async () => {
-      await apiRequest("/api/user/accept-terms", {
-        method: "POST",
-      });
+      await apiRequest("/api/user/accept-terms", "POST");
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
@@ -179,7 +177,7 @@ export function TermsAndConditionsModal({ isOpen, onAccept }: TermsAndConditions
               <Checkbox
                 id="read-terms"
                 checked={hasReadTerms}
-                onCheckedChange={setHasReadTerms}
+                onCheckedChange={(checked) => setHasReadTerms(checked === true)}
                 data-testid="checkbox-read-terms"
               />
               <label htmlFor="read-terms" className="text-sm text-gray-700">
@@ -191,7 +189,7 @@ export function TermsAndConditionsModal({ isOpen, onAccept }: TermsAndConditions
               <Checkbox
                 id="accept-terms"
                 checked={hasAcceptedTerms}
-                onCheckedChange={setHasAcceptedTerms}
+                onCheckedChange={(checked) => setHasAcceptedTerms(checked === true)}
                 data-testid="checkbox-accept-terms"
               />
               <label htmlFor="accept-terms" className="text-sm text-gray-700">

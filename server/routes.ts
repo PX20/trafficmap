@@ -206,6 +206,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post('/api/user/accept-terms', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = (req.user as any).claims.sub;
+      const user = await storage.acceptUserTerms(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      res.json({ message: "Terms accepted successfully", user });
+    } catch (error) {
+      console.error("Error accepting terms:", error);
+      res.status(500).json({ message: "Failed to accept terms" });
+    }
+  });
+
   // Update user's home suburb
   app.patch('/api/user/suburb', isAuthenticated, async (req: any, res) => {
     try {

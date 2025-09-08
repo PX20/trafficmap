@@ -65,6 +65,9 @@ export interface IStorage {
   updateUserProfile(id: string, profile: Partial<User>): Promise<User | undefined>;
   getUsersBySuburb(suburb: string): Promise<User[]>;
   
+  // Terms and conditions
+  acceptUserTerms(id: string): Promise<User | undefined>;
+  
   // Traffic and incident operations
   getTrafficEvents(): Promise<TrafficEvent[]>;
   createTrafficEvent(event: InsertTrafficEvent): Promise<TrafficEvent>;
@@ -178,6 +181,15 @@ export class DatabaseStorage implements IStorage {
     const [updated] = await db
       .update(users)
       .set({ homeSuburb, updatedAt: new Date() })
+      .where(eq(users.id, id))
+      .returning();
+    return updated;
+  }
+
+  async acceptUserTerms(id: string): Promise<User | undefined> {
+    const [updated] = await db
+      .update(users)
+      .set({ termsAccepted: true, termsAcceptedAt: new Date(), updatedAt: new Date() })
       .where(eq(users.id, id))
       .returning();
     return updated;
