@@ -9,7 +9,7 @@ export function useAuth() {
   const { toast } = useToast();
   
   const { data: user, error, isLoading } = useQuery<SelectUser | undefined, Error>({
-    queryKey: ["/api/user"],
+    queryKey: ["/api/auth/user"],
     retry: false,
   });
 
@@ -19,7 +19,7 @@ export function useAuth() {
       return await res.json();
     },
     onSuccess: (user: SelectUser) => {
-      queryClient.setQueryData(["/api/user"], user);
+      queryClient.setQueryData(["/api/auth/user"], user);
       
       // Refresh incident data to ensure fresh information after login
       queryClient.invalidateQueries({ queryKey: ["/api/incidents"] });
@@ -45,7 +45,7 @@ export function useAuth() {
       return await res.json();
     },
     onSuccess: (user: SelectUser) => {
-      queryClient.setQueryData(["/api/user"], user);
+      queryClient.setQueryData(["/api/auth/user"], user);
       
       // Refresh incident data for new users
       queryClient.invalidateQueries({ queryKey: ["/api/incidents"] });
@@ -70,7 +70,7 @@ export function useAuth() {
       await apiRequest("POST", "/api/logout");
     },
     onSuccess: () => {
-      queryClient.setQueryData(["/api/user"], null);
+      queryClient.setQueryData(["/api/auth/user"], null);
       toast({
         title: "Signed out",
         description: "You have been successfully signed out.",
