@@ -241,7 +241,7 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[95vw] sm:max-w-md max-h-[90vh] flex flex-col">
+      <DialogContent className="w-[95vw] sm:max-w-lg lg:max-w-xl max-h-[90vh] flex flex-col overflow-visible">
         <DialogHeader className="flex-shrink-0">
           <DialogTitle>Report Safety Incident</DialogTitle>
           <DialogDescription>
@@ -272,7 +272,7 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
                         <SelectValue placeholder="Choose a category" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent>
+                    <SelectContent position="popper" sideOffset={4}>
                       {categoriesLoading ? (
                         <div className="px-2 py-2 text-sm text-gray-500">Loading categories...</div>
                       ) : categories.length > 0 ? (
@@ -305,7 +305,7 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
                           <SelectValue placeholder="Choose specific type" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent>
+                      <SelectContent position="popper" sideOffset={4}>
                         {(subcategories as any[]).map((subcategory: any) => (
                           <SelectItem key={subcategory.id} value={subcategory.id}>
                             <div className="flex flex-col">
