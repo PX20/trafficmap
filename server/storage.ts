@@ -13,6 +13,7 @@ import {
   notifications,
   categories,
   subcategories,
+  incidentFollowUps,
   type User, 
   type UpsertUser,
   type InsertUser, 
@@ -41,7 +42,9 @@ import {
   type Category,
   type InsertCategory,
   type Subcategory,
-  type InsertSubcategory
+  type InsertSubcategory,
+  type IncidentFollowUp,
+  type InsertIncidentFollowUp
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, or, ne, sql } from "drizzle-orm";
@@ -122,6 +125,10 @@ export interface IStorage {
   getSubcategories(categoryId?: string): Promise<Subcategory[]>;
   createSubcategory(subcategory: InsertSubcategory): Promise<Subcategory>;
   incrementSubcategoryReportCount(subcategoryId: string): Promise<void>;
+  
+  // Incident follow-up operations
+  getIncidentFollowUps(incidentId: string): Promise<IncidentFollowUp[]>;
+  createIncidentFollowUp(followUp: InsertIncidentFollowUp): Promise<IncidentFollowUp>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -661,6 +668,22 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.log(`Failed to increment report count for subcategory ${subcategoryId}:`, error);
     }
+  }
+
+  async getIncidentFollowUps(incidentId: string): Promise<IncidentFollowUp[]> {
+    return await db
+      .select()
+      .from(incidentFollowUps)
+      .where(eq(incidentFollowUps.incidentId, incidentId))
+      .orderBy(desc(incidentFollowUps.createdAt));
+  }
+
+  async createIncidentFollowUp(followUp: InsertIncidentFollowUp): Promise<IncidentFollowUp> {
+    const [created] = await db
+      .insert(incidentFollowUps)
+      .values(followUp)
+      .returning();
+    return created;
   }
 
 }

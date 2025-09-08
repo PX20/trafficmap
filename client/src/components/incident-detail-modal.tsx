@@ -12,6 +12,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { 
@@ -29,10 +30,12 @@ import {
   Heart,
   Share2,
   MoreHorizontal,
-  CheckCircle
+  CheckCircle,
+  ClipboardList,
+  TrendingUp
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
-import type { Comment } from "@shared/schema";
+import type { Comment, IncidentFollowUp } from "@shared/schema";
 
 interface IncidentDetailModalProps {
   incident: any;
@@ -85,6 +88,10 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
   const [replyText, setReplyText] = useState("");
   const [isLiked, setIsLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
+  
+  // Follow-up states
+  const [followUpDescription, setFollowUpDescription] = useState("");
+  const [followUpStatus, setFollowUpStatus] = useState("");
 
   // Check if current user is the creator of this incident
   const isIncidentCreator = user && incident && 
@@ -218,6 +225,64 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
       });
     },
   });
+
+  // Follow-up queries and mutations
+  const { data: followUps = [], isLoading: followUpsLoading } = useQuery({
+    queryKey: ["/api/incidents", incidentId, "follow-ups"],
+    queryFn: async () => {
+      const response = await fetch(`/api/incidents/${incidentId}/follow-ups`);
+      if (!response.ok) throw new Error('Failed to fetch follow-ups');
+      return response.json();
+    },
+    enabled: isOpen && !!incidentId && !!incident
+  });
+
+  const createFollowUpMutation = useMutation({
+    mutationFn: async (data: { status: string; description: string; photoUrl?: string }) => {
+      return apiRequest("POST", `/api/incidents/${incidentId}/follow-ups`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/incidents", incidentId, "follow-ups"] });
+      setFollowUpDescription("");
+      setFollowUpStatus("");
+      toast({
+        title: "Follow-up posted",
+        description: "Your status update has been added to the incident",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to post follow-up",
+        description: error.message || "Please try again",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSubmitFollowUp = () => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Please log in",
+        description: "You need to log in to post follow-ups",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!followUpStatus || !followUpDescription.trim()) {
+      toast({
+        title: "Missing information",
+        description: "Please select a status and provide a description",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    createFollowUpMutation.mutate({
+      status: followUpStatus,
+      description: followUpDescription.trim(),
+    });
+  };
 
   function getIncidentId(incident: any): string {
     if (!incident) return `unknown-${Date.now()}`;
@@ -1030,6 +1095,121 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
               </div>
             </div>
           
+            {/* Follow-ups Section - Only show for user-reported incidents */}
+            {incident?.properties?.userReported && (
+              <div className="relative p-4 rounded-2xl bg-gradient-to-br from-green-50/80 to-emerald-50/80 border border-green-200 shadow-sm">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg">
+                    <ClipboardList className="w-4 h-4 text-white" />
+                  </div>
+                  <h3 className="font-bold text-gray-900 text-lg">
+                    Status Updates ({followUps.length})
+                  </h3>
+                </div>
+
+                {followUpsLoading ? (
+                  <div className="text-center py-4">
+                    <div className="w-6 h-6 border-2 border-muted border-t-primary rounded-full animate-spin mx-auto mb-2"></div>
+                    <p className="text-sm text-muted-foreground">Loading follow-ups...</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {followUps.map((followUp: IncidentFollowUp) => (
+                      <div key={followUp.id} className="flex gap-3 p-3 bg-white/60 rounded-lg border border-green-100">
+                        <Avatar className="w-8 h-8">
+                          <AvatarFallback className="text-xs bg-green-100 text-green-700">
+                            {getUserData(followUp.userId).name.split(' ').map(n => n[0]).join('')}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="font-medium text-sm text-gray-900">
+                              {getUserData(followUp.userId).name}
+                            </span>
+                            <Badge 
+                              variant="outline" 
+                              className={`text-xs ${
+                                followUp.status === 'resolved' ? 'bg-green-50 text-green-700 border-green-200' :
+                                followUp.status === 'in_progress' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                                followUp.status === 'escalated' ? 'bg-orange-50 text-orange-700 border-orange-200' :
+                                'bg-gray-50 text-gray-700 border-gray-200'
+                              }`}
+                            >
+                              <TrendingUp className="w-3 h-3 mr-1" />
+                              {followUp.status.replace('_', ' ')}
+                            </Badge>
+                            <span className="text-xs text-gray-500">
+                              {new Date(followUp.createdAt).toLocaleString('en-AU', {
+                                day: 'numeric',
+                                month: 'short',
+                                hour: 'numeric',
+                                minute: '2-digit',
+                                hour12: true
+                              })}
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-700 break-words">{followUp.description}</p>
+                        </div>
+                      </div>
+                    ))}
+                    
+                    {followUps.length === 0 && (
+                      <p className="text-sm text-muted-foreground text-center py-6">
+                        No status updates yet. Share an update about this incident!
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {/* Follow-up Form - Only show for incident creator */}
+                {isIncidentCreator && isAuthenticated && (
+                  <div className="mt-4 pt-4 border-t border-green-200">
+                    <h4 className="font-semibold text-sm text-gray-900 mb-3">Post Status Update</h4>
+                    <div className="space-y-3">
+                      <Select value={followUpStatus} onValueChange={setFollowUpStatus}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select status..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="in_progress">In Progress</SelectItem>
+                          <SelectItem value="resolved">Resolved</SelectItem>
+                          <SelectItem value="escalated">Escalated</SelectItem>
+                          <SelectItem value="closed">Closed</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      
+                      <Textarea
+                        placeholder="Provide an update on the current status..."
+                        value={followUpDescription}
+                        onChange={(e) => setFollowUpDescription(e.target.value)}
+                        className="min-h-[80px] resize-none"
+                        data-testid="textarea-followup-description"
+                      />
+                      
+                      <Button 
+                        onClick={handleSubmitFollowUp}
+                        disabled={createFollowUpMutation.isPending || !followUpStatus || !followUpDescription.trim()}
+                        className="w-full bg-green-600 hover:bg-green-700"
+                        data-testid="button-submit-followup"
+                      >
+                        {createFollowUpMutation.isPending ? (
+                          <>
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                            Posting...
+                          </>
+                        ) : (
+                          <>
+                            <Send className="w-4 h-4 mr-2" />
+                            Post Update
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Enhanced Comments Section */}
             <div className="relative p-4 rounded-2xl bg-gradient-to-br from-gray-50/80 to-white/80 border border-gray-200 shadow-sm">
               <div className="mb-4">

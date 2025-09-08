@@ -123,6 +123,17 @@ export const emergencyContacts = pgTable("emergency_contacts", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Incident follow-ups for status updates from original reporters
+export const incidentFollowUps = pgTable("incident_follow_ups", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  incidentId: varchar("incident_id").notNull(),
+  userId: varchar("user_id").notNull(), // Must be original reporter
+  status: varchar("status").notNull(), // 'in_progress' | 'resolved' | 'escalated' | 'closed'
+  description: text("description").notNull(),
+  photoUrl: text("photo_url"), // Optional follow-up photo
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Hierarchical category system for incident reporting
 export const categories = pgTable("categories", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -213,11 +224,13 @@ export const usersRelations = relations(users, ({ many }) => ({
   conversations1: many(conversations, { relationName: 'user1' }),
   conversations2: many(conversations, { relationName: 'user2' }),
   notifications: many(notifications),
+  incidentFollowUps: many(incidentFollowUps),
 }));
 
 export const incidentsRelations = relations(incidents, ({ one, many }) => ({
   comments: many(comments),
   safetyCheckIns: many(safetyCheckIns),
+  followUps: many(incidentFollowUps),
   category: one(categories, {
     fields: [incidents.categoryId],
     references: [categories.id],
@@ -256,6 +269,17 @@ export const commentsRelations = relations(comments, ({ one, many }) => ({
   }),
   replies: many(comments),
   votes: many(commentVotes),
+}));
+
+export const incidentFollowUpsRelations = relations(incidentFollowUps, ({ one }) => ({
+  incident: one(incidents, {
+    fields: [incidentFollowUps.incidentId],
+    references: [incidents.id],
+  }),
+  user: one(users, {
+    fields: [incidentFollowUps.userId],
+    references: [users.id],
+  }),
 }));
 
 export const neighborhoodGroupsRelations = relations(neighborhoodGroups, ({ many }) => ({
@@ -416,6 +440,11 @@ export const insertSubcategorySchema = createInsertSchema(subcategories).omit({
   createdAt: true,
 });
 
+export const insertIncidentFollowUpSchema = createInsertSchema(incidentFollowUps).omit({
+  id: true,
+  createdAt: true,
+});
+
 export type UpsertUser = typeof users.$inferInsert;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -445,3 +474,5 @@ export type Category = typeof categories.$inferSelect;
 export type InsertCategory = z.infer<typeof insertCategorySchema>;
 export type Subcategory = typeof subcategories.$inferSelect;
 export type InsertSubcategory = z.infer<typeof insertSubcategorySchema>;
+export type IncidentFollowUp = typeof incidentFollowUps.$inferSelect;
+export type InsertIncidentFollowUp = z.infer<typeof insertIncidentFollowUpSchema>;

@@ -1729,6 +1729,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Incident Follow-up Routes
+  app.get('/api/incidents/:incidentId/follow-ups', async (req, res) => {
+    try {
+      const { incidentId } = req.params;
+      const followUps = await storage.getIncidentFollowUps(incidentId);
+      res.json(followUps);
+    } catch (error) {
+      console.error("Error fetching incident follow-ups:", error);
+      res.status(500).json({ message: "Failed to fetch incident follow-ups" });
+    }
+  });
+
+  app.post('/api/incidents/:incidentId/follow-ups', isAuthenticated, async (req: any, res) => {
+    try {
+      const { incidentId } = req.params;
+      const { status, description, photoUrl } = req.body;
+      const userId = (req.user as any).claims.sub;
+
+      // Validate required fields
+      if (!status || !description) {
+        return res.status(400).json({ message: "Status and description are required" });
+      }
+
+      const followUp = await storage.createIncidentFollowUp({
+        incidentId,
+        userId,
+        status,
+        description,
+        photoUrl: photoUrl || null,
+      });
+
+      res.json(followUp);
+    } catch (error) {
+      console.error("Error creating incident follow-up:", error);
+      res.status(500).json({ message: "Failed to create incident follow-up" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
