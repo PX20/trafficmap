@@ -373,6 +373,11 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
       return incident.properties?.title || incident.properties?.categoryName || "Community Report";
     }
     
+    // For ESQ incidents - check incident object first, then properties
+    if (incident.title) {
+      return incident.title;
+    }
+    
     // For emergency incidents, create a meaningful title
     const groupedType = incident.properties?.GroupedType || '';
     const locality = incident.properties?.Locality || '';
@@ -395,6 +400,11 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
       return incident.properties?.description || 
              incident.properties?.subcategoryName || 
              "Community reported incident";
+    }
+    
+    // For ESQ incidents - check incident object first, then properties
+    if (incident.description) {
+      return incident.description;
     }
     
     // For emergency incidents, provide better description
@@ -429,6 +439,11 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
       return incident.properties?.locationDescription || 
              incident.properties?.location || 
              "Location not specified";
+    }
+    
+    // For ESQ incidents - check incident object first, then properties
+    if (incident.location) {
+      return incident.location;
     }
     
     // For emergency incidents, build location intelligently
