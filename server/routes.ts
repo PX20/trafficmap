@@ -402,7 +402,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               reporterId: props.reporterId,
               reporterName: props.reporterName || props.reportedBy?.split('@')[0] || "Anonymous User",
               timeReported: props.timeReported || incident.lastUpdated,
-              photoUrl: props.profileImageUrl || props.photoUrl,
+              photoUrl: incident.photoUrl || props.photoUrl, // Include incident photo from database
               title: incident.title || props.title
             })
           },
