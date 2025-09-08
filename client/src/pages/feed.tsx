@@ -308,6 +308,12 @@ export default function Feed() {
     if (incident.properties?.userReported) {
       return incident.properties?.title || 'Community Report';
     }
+    
+    // For ESQ incidents - check incident object first, then properties
+    if (incident.title) {
+      return incident.title;
+    }
+    
     // For emergency incidents, create a meaningful title
     const groupedType = incident.properties?.GroupedType || '';
     const locality = incident.properties?.Locality || '';
@@ -329,6 +335,12 @@ export default function Feed() {
     if (incident.properties?.userReported) {
       return incident.properties?.description || 'Community safety report';
     }
+    
+    // For ESQ incidents - check incident object first, then properties
+    if (incident.description) {
+      return incident.description;
+    }
+    
     return incident.properties?.description || incident.properties?.Location || 'Emergency incident in progress';
   };
 
@@ -350,6 +362,12 @@ export default function Feed() {
              incident.properties?.suburb ||
              'Location not specified';
     }
+    
+    // For ESQ incidents - check incident object first, then properties
+    if (incident.location) {
+      return incident.location;
+    }
+    
     // For emergency incidents, build location intelligently
     const location = incident.properties?.Location || '';
     const locality = incident.properties?.Locality || '';
