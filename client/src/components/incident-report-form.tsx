@@ -476,47 +476,52 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
                           </Button>
                         </div>
                       ) : (
-                        <ObjectUploader
-                          maxNumberOfFiles={1}
-                          maxFileSize={5242880}
-                          onGetUploadParameters={handleGetUploadParameters}
-                          onComplete={handlePhotoUploadComplete}
-                          buttonClassName="w-full"
-                        >
-                          <div className="relative group cursor-pointer">
-                            <div className="border-2 border-dashed border-blue-300 rounded-2xl p-8 text-center bg-gradient-to-br from-blue-50/50 via-white to-purple-50/50 hover:from-blue-100/60 hover:via-white hover:to-purple-100/60 transition-all duration-300 group-hover:border-blue-400 group-hover:shadow-lg">
-                              <div className="space-y-4">
-                                <div className="flex justify-center">
-                                  <div className="relative">
-                                    <div className="p-4 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl group-hover:from-blue-600 group-hover:to-purple-700 transition-all duration-300 shadow-lg group-hover:shadow-xl group-hover:scale-105">
-                                      <Upload className="w-8 h-8 text-white" />
-                                    </div>
-                                    <div className="absolute -top-1 -right-1 p-1 bg-white rounded-full shadow-sm group-hover:scale-110 transition-transform duration-300">
-                                      <Camera className="w-4 h-4 text-gray-600" />
-                                    </div>
+                        <div className="space-y-3">
+                          <div className="border-2 border-dashed border-blue-300 rounded-2xl p-8 text-center bg-gradient-to-br from-blue-50/50 via-white to-purple-50/50 hover:from-blue-100/60 hover:via-white hover:to-purple-100/60 transition-all duration-300 hover:border-blue-400 hover:shadow-lg">
+                            <div className="space-y-4">
+                              <div className="flex justify-center">
+                                <div className="relative">
+                                  <div className="p-4 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl transition-all duration-300 shadow-lg">
+                                    <Upload className="w-8 h-8 text-white" />
+                                  </div>
+                                  <div className="absolute -top-1 -right-1 p-1 bg-white rounded-full shadow-sm">
+                                    <Camera className="w-4 h-4 text-gray-600" />
                                   </div>
                                 </div>
-                                
-                                <div className="space-y-2">
-                                  <h4 className="text-lg font-semibold text-gray-900 group-hover:text-gray-800">
-                                    Add Incident Photo
-                                  </h4>
-                                  <p className="text-gray-600 group-hover:text-gray-700">
-                                    Drag and drop an image here, or <span className="font-medium text-blue-600 group-hover:text-blue-700">click to browse</span>
-                                  </p>
-                                  <div className="flex items-center justify-center gap-4 pt-2">
-                                    <div className="px-3 py-1 bg-white/60 rounded-full border border-gray-200 text-xs text-gray-500">
-                                      JPG, PNG, GIF
-                                    </div>
-                                    <div className="px-3 py-1 bg-white/60 rounded-full border border-gray-200 text-xs text-gray-500">
-                                      Max 5MB
-                                    </div>
+                              </div>
+                              
+                              <div className="space-y-2">
+                                <h4 className="text-lg font-semibold text-gray-900">
+                                  Add Incident Photo
+                                </h4>
+                                <p className="text-gray-600">
+                                  Choose an image to help document the incident
+                                </p>
+                                <div className="flex items-center justify-center gap-4 pt-2">
+                                  <div className="px-3 py-1 bg-white/60 rounded-full border border-gray-200 text-xs text-gray-500">
+                                    JPG, PNG, GIF
+                                  </div>
+                                  <div className="px-3 py-1 bg-white/60 rounded-full border border-gray-200 text-xs text-gray-500">
+                                    Max 5MB
                                   </div>
                                 </div>
                               </div>
                             </div>
                           </div>
-                        </ObjectUploader>
+                          
+                          <ObjectUploader
+                            maxNumberOfFiles={1}
+                            maxFileSize={5242880}
+                            onGetUploadParameters={handleGetUploadParameters}
+                            onComplete={handlePhotoUploadComplete}
+                            buttonClassName="w-full py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium rounded-xl shadow-md hover:shadow-lg transition-all duration-200"
+                          >
+                            <div className="flex items-center justify-center gap-2">
+                              <Camera className="w-5 h-5" />
+                              Choose Photo
+                            </div>
+                          </ObjectUploader>
+                        </div>
                       )}
                     </div>
                   </FormControl>
