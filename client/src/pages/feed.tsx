@@ -15,6 +15,7 @@ import { AppHeader } from "@/components/map/app-header";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { findRegionBySuburb, getRegionalSuburbs } from "@/lib/regions";
 import { FilterState } from "@/pages/home";
+import { useTrafficData } from "@/hooks/use-traffic-data";
 import { 
   MapPin, 
   Clock, 
@@ -46,62 +47,109 @@ export default function Feed() {
   const [showRegionalUpdates, setShowRegionalUpdates] = useState(true);
   const [reportFormOpen, setReportFormOpen] = useState(false);
   
-  // Add filter state to match the map functionality
+  // Initialize filter state with same defaults as map
   const [filters, setFilters] = useState<FilterState>({
     showTrafficEvents: true,
-    showIncidents: true,      // ESQ emergency data
-    showQFES: true,           // QFES fire & emergency data  
+    showIncidents: true,
+    showQFES: true,
     showUserReports: true,
     showUserSafetyCrime: true,
     showUserWildlife: true,
     showUserCommunity: true,
     showUserTraffic: true,
-    timeRange: '24h',
-    locationFilter: false,
+    timeRange: 'now',
+    locationFilter: true,
+  });
+
+  // Fetch categories and subcategories to initialize filters (same as map)
+  const { data: categories = [] } = useQuery({
+    queryKey: ["/api/categories"],
+    select: (data: any) => data || [],
+  });
+
+  const { data: subcategories = [] } = useQuery({
+    queryKey: ["/api/subcategories"],
+    select: (data: any) => data || [],
   });
   
-  // Helper function to identify QFES incidents (same as in use-traffic-data.ts)
-  const isQFESIncident = (incident: any) => {
-    const incidentType = incident.properties?.incidentType?.toLowerCase() || '';
-    const groupedType = incident.properties?.GroupedType?.toLowerCase() || '';
-    const description = incident.properties?.description?.toLowerCase() || '';
-    
-    return incidentType.includes('fire') || 
-           incidentType.includes('smoke') || 
-           incidentType.includes('chemical') || 
-           incidentType.includes('hazmat') ||
-           groupedType.includes('fire') || 
-           groupedType.includes('smoke') || 
-           groupedType.includes('chemical') || 
-           groupedType.includes('hazmat') ||
-           description.includes('fire') || 
-           description.includes('smoke');
-  };
-  
-  // Load saved location from localStorage on startup (sync with map home location)
+  // Initialize all category and subcategory filters to true (same as map)
+  useEffect(() => {
+    if (categories.length > 0) {
+      const categoryFilters: Record<string, boolean> = {};
+      categories.forEach((category: any) => {
+        categoryFilters[category.id] = true;
+      });
+      setFilters(prev => ({ ...prev, ...categoryFilters }));
+    }
+  }, [categories]);
+
+  useEffect(() => {
+    if (subcategories.length > 0) {
+      const subcategoryFilters: Record<string, boolean> = {};
+      subcategories.forEach((subcategory: any) => {
+        subcategoryFilters[subcategory.id] = true;
+      });
+      setFilters(prev => ({ ...prev, ...subcategoryFilters }));
+    }
+  }, [subcategories]);
+
+  // Load saved filters from localStorage (sync with map)
   useEffect(() => {
     const savedLocation = localStorage.getItem('homeLocation');
-    if (savedLocation) {
-      setSelectedSuburb(savedLocation);
-    } else if (user?.homeSuburb) {
-      setSelectedSuburb(user.homeSuburb);
-    } else if (user?.primarySuburb) {
-      setSelectedSuburb(user.primarySuburb);
+    const savedCoordinates = localStorage.getItem('homeCoordinates'); 
+    const savedBoundingBox = localStorage.getItem('homeBoundingBox');
+    const locationFilterSetting = localStorage.getItem('locationFilter');
+    
+    if (savedLocation && savedCoordinates) {
+      try {
+        const coordinates = JSON.parse(savedCoordinates);
+        const boundingBox = savedBoundingBox ? JSON.parse(savedBoundingBox) : undefined;
+        setFilters(prev => ({
+          ...prev,
+          homeLocation: savedLocation,
+          homeCoordinates: coordinates,
+          homeBoundingBox: boundingBox,
+          locationFilter: locationFilterSetting ? locationFilterSetting === 'true' : true
+        }));
+      } catch (error) {
+        console.error('Failed to load saved location:', error);
+      }
     }
-  }, [user?.homeSuburb, user?.primarySuburb]);
-  
-  // Listen for location changes from map page
+  }, []);
+
+  // Listen for filter changes from map page (sync with map)
   useEffect(() => {
     const handleLocationChange = (event: CustomEvent) => {
-      const { location } = event.detail;
-      if (location) {
-        setSelectedSuburb(location);
-      }
+      const { location, coordinates, boundingBox } = event.detail;
+      setFilters(prev => ({
+        ...prev,
+        homeLocation: location,
+        homeCoordinates: coordinates,
+        homeBoundingBox: boundingBox,
+        locationFilter: true
+      }));
     };
     
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'homeLocation' && e.newValue) {
-        setSelectedSuburb(e.newValue);
+      if (e.key === 'homeLocation') {
+        const savedLocation = localStorage.getItem('homeLocation');
+        const savedCoordinates = localStorage.getItem('homeCoordinates');
+        const savedBoundingBox = localStorage.getItem('homeBoundingBox');
+        
+        if (savedLocation && savedCoordinates) {
+          try {
+            const coordinates = JSON.parse(savedCoordinates);
+            const boundingBox = savedBoundingBox ? JSON.parse(savedBoundingBox) : undefined;
+            setFilters(prev => ({
+              ...prev,
+              homeLocation: savedLocation,
+              homeCoordinates: coordinates,
+              homeBoundingBox: boundingBox
+            }));
+          } catch (error) {
+            console.error('Failed to load updated location:', error);
+          }
+        }
       }
     };
     
@@ -113,15 +161,19 @@ export default function Feed() {
     };
   }, []);
 
-  const { data: incidents, isLoading: incidentsLoading, data: rawIncidentData } = useQuery({
-    queryKey: ["/api/incidents"],
-    queryFn: async () => {
-      const response = await fetch("/api/incidents");
-      if (!response.ok) throw new Error('Failed to fetch incidents');
-      return response.json();
-    },
-    select: (data: any) => data?.features || [],
-  });
+  // Use the same traffic data hook as the map for consistent filtering
+  const { filteredEvents, filteredIncidents } = useTrafficData(filters);
+  
+  // Sync selected suburb with filter location
+  useEffect(() => {
+    if (filters.homeLocation) {
+      setSelectedSuburb(filters.homeLocation);
+    } else if (user?.homeSuburb) {
+      setSelectedSuburb(user.homeSuburb);
+    } else if (user?.primarySuburb) {
+      setSelectedSuburb(user.primarySuburb);
+    }
+  }, [filters.homeLocation, user?.homeSuburb, user?.primarySuburb]);
 
   const refreshMutation = useMutation({
     mutationFn: async () => {
@@ -145,102 +197,20 @@ export default function Feed() {
     },
   });
 
-  const { data: eventsData, isLoading: eventsLoading } = useQuery({
-    queryKey: ["/api/traffic/events"],
-    queryFn: async () => {
-      const response = await fetch("/api/traffic/events");
-      if (!response.ok) throw new Error('Failed to fetch traffic events');
-      return response.json();
-    },
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    refetchInterval: 10 * 60 * 1000, // 10 minutes
-  });
-
-  // Extract events data
-  const events = eventsData?.features || [];
-
-  // Only consider loading if incidents are loading (since traffic events take too long)
-  const isLoading = incidentsLoading;
-
-  // Combine, deduplicate, and sort all incidents by time
+  // Use filtered data from the traffic data hook (same as map)
   const combinedIncidents = [
-    ...(incidents || []).map((inc: any) => ({ ...inc, type: 'incident' })),
-    ...(events || []).map((event: any) => ({ ...event, type: 'traffic' }))
+    ...filteredIncidents.map((inc: any) => ({ ...inc, type: 'incident' })),
+    ...filteredEvents.map((event: any) => ({ ...event, type: 'traffic' }))
   ];
 
-  // Deduplicate incidents using a Map for better performance and accuracy
-  const incidentMap = new Map();
-  
-  for (const incident of combinedIncidents) {
-    // Generate a unique identifier for each incident
-    let incidentId: string;
-    
-    if (incident.type === 'traffic') {
-      incidentId = incident.properties?.id || incident.properties?.event_id || `traffic-${incident.properties?.description}-${incident.properties?.road_summary?.road_name}`;
-    } else if (incident.properties?.userReported) {
-      incidentId = `user-${incident.properties?.id || incident.properties?.createdAt}`;
-    } else {
-      // For emergency incidents, use Master_Incident_Number as primary identifier
-      incidentId = incident.properties?.Master_Incident_Number || incident.properties?.id || `incident-${incident.properties?.Response_Date}-${incident.properties?.Location}`;
-    }
-    
-    // Check if we already have this incident
-    if (incidentMap.has(incidentId)) {
-      // Keep the more recent one
-      const existing = incidentMap.get(incidentId);
-      const existingTime = new Date(existing.properties?.Response_Date || existing.properties?.last_updated || existing.properties?.createdAt || 0);
-      const currentTime = new Date(incident.properties?.Response_Date || incident.properties?.last_updated || incident.properties?.createdAt || 0);
-      
-      if (currentTime > existingTime) {
-        incidentMap.set(incidentId, incident);
-      }
-    } else {
-      incidentMap.set(incidentId, incident);
-    }
-  }
-  
-  const deduplicatedIncidents = Array.from(incidentMap.values());
-
-  // Apply incident type filtering (like the map does)
-  let filteredIncidents = deduplicatedIncidents.filter((incident: any) => {
-    // Filter traffic events
-    if (incident.type === 'traffic') {
-      return filters.showTrafficEvents === true;
-    }
-    
-    // Filter user reports
-    const isUserReported = incident.properties?.userReported;
-    if (isUserReported) {
-      if (!filters.showUserReports) return false;
-      
-      const incidentType = incident.properties?.incidentType;
-      if (incidentType === 'crime') {
-        return filters.showUserSafetyCrime === true;
-      } else if (incidentType === 'wildlife') {
-        return filters.showUserWildlife === true;
-      } else if (incidentType === 'traffic') {
-        return filters.showUserTraffic === true;
-      } else {
-        return filters.showUserCommunity === true;
-      }
-    } 
-    
-    // Filter official emergency incidents
-    const isQFES = isQFESIncident(incident);
-    if (isQFES) {
-      return filters.showQFES === true;
-    } else {
-      return filters.showIncidents === true;
-    }
-  });
-
   // Apply regional filtering if location is selected
+  let finalFilteredIncidents = combinedIncidents;
   
   if (showRegionalUpdates && selectedSuburb) {
     const region = findRegionBySuburb(selectedSuburb);
     
     if (region) {
-      filteredIncidents = deduplicatedIncidents.filter((incident: any) => {
+      finalFilteredIncidents = combinedIncidents.filter((incident: any) => {
         // Filter traffic events by region
         if (incident.type === 'traffic') {
           const locality = incident.properties?.road_summary?.locality || '';
@@ -286,12 +256,16 @@ export default function Feed() {
     }
   }
 
-  const allIncidents = filteredIncidents
+  // Sort all incidents by time (most recent first)
+  const sortedIncidents = finalFilteredIncidents
     .sort((a, b) => {
       const dateA = new Date(a.properties?.Response_Date || a.properties?.last_updated || a.properties?.createdAt || 0);
       const dateB = new Date(b.properties?.Response_Date || b.properties?.last_updated || b.properties?.createdAt || 0);
       return dateB.getTime() - dateA.getTime();
     });
+
+  // Set loading state - use query loading from traffic data hook
+  const isLoading = false; // Data is already pre-filtered by the hook
 
   // Helper functions
   const getTimeAgo = (dateString: string) => {
@@ -413,9 +387,9 @@ export default function Feed() {
             <h1 className="text-2xl font-bold text-foreground">Safety Feed</h1>
             <p className="text-muted-foreground">
               {selectedSuburb && showRegionalUpdates ? (
-                `${allIncidents.length} incidents in ${selectedSuburb} region`
+                `${sortedIncidents.length} incidents in ${selectedSuburb} region`
               ) : (
-                allIncidents.length > 0 ? `${allIncidents.length} active incidents across Queensland` : 'Real-time incidents across Queensland'
+                sortedIncidents.length > 0 ? `${sortedIncidents.length} active incidents across Queensland` : 'Real-time incidents across Queensland'
               )}
             </p>
           </div>
@@ -443,7 +417,7 @@ export default function Feed() {
         {/* Incident Feed */}
         {!isLoading && (
           <div className="space-y-4">
-            {allIncidents.length === 0 ? (
+            {sortedIncidents.length === 0 ? (
               <div className="text-center py-16">
                 <div className="bg-green-50 dark:bg-green-950 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6">
                   <Shield className="w-12 h-12 text-green-600" />
@@ -459,7 +433,7 @@ export default function Feed() {
             ) : (
               <>
 
-                {allIncidents.map((incident, index) => {
+                {sortedIncidents.map((incident, index) => {
                   // Create a more unique key to prevent React warnings
                   const getUniqueKey = (incident: any, index: number) => {
                     if (incident.type === 'traffic') {
