@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { findRegionBySuburb, getRegionalSuburbs } from "@/lib/regions";
 import { FilterState } from "@/pages/home";
 import { useTrafficData } from "@/hooks/use-traffic-data";
+import { SponsoredPost } from "@/components/sponsored-post";
 import { 
   MapPin, 
   Clock, 
@@ -248,7 +249,12 @@ export default function Feed() {
     }
   });
 
-  // Combine filtered regional data (no additional regional filtering needed)
+  // Fetch ads for user's region
+  const { data: ads = [] } = useQuery({
+    queryKey: ["/api/ads"],
+    enabled: !!user?.homeSuburb,
+  });
+
   const finalFilteredIncidents = [
     ...filteredRegionalIncidents.map((inc: any) => ({ ...inc, type: 'incident' })),
     ...filteredRegionalEvents.map((event: any) => ({ ...event, type: 'traffic' }))
@@ -262,8 +268,34 @@ export default function Feed() {
       return dateB.getTime() - dateA.getTime();
     });
 
+  // Integrate ads into the feed every 5-7 posts
+  const feedWithAds = useMemo(() => {
+    const feedItems = [...sortedIncidents];
+    const adsToInsert = [...ads];
+    const adInterval = 6; // Insert ads every 6 posts on average
+    
+    let adIndex = 0;
+    for (let i = adInterval; i < feedItems.length && adIndex < adsToInsert.length; i += adInterval) {
+      feedItems.splice(i, 0, { 
+        type: 'ad', 
+        ad: adsToInsert[adIndex], 
+        id: `ad-${adsToInsert[adIndex].id}-${i}` 
+      });
+      adIndex++;
+      i++; // Account for the inserted ad
+    }
+    
+    return feedItems;
+  }, [sortedIncidents, ads]);
+
   // Set loading state - use query loading from traffic data hook
   const isLoading = false; // Data is already pre-filtered by the hook
+
+  // Handle ad clicks
+  const handleAdClick = useCallback((adId: string) => {
+    console.log(`Ad clicked: ${adId}`);
+    // Additional analytics tracking could go here
+  }, []);
 
   // Helper functions
   const getTimeAgo = (dateString: string) => {
@@ -453,7 +485,30 @@ export default function Feed() {
             ) : (
               <>
 
-                {sortedIncidents.map((incident, index) => {
+                {feedWithAds.map((item, index) => {
+                  // Handle ads differently
+                  if (item.type === 'ad') {
+                    return (
+                      <SponsoredPost
+                        key={item.id}
+                        ad={{
+                          id: item.ad.id,
+                          businessName: item.ad.businessName,
+                          title: item.ad.title,
+                          content: item.ad.content,
+                          imageUrl: item.ad.imageUrl,
+                          websiteUrl: item.ad.websiteUrl,
+                          address: item.ad.address,
+                          suburb: item.ad.suburb,
+                          cta: item.ad.cta
+                        }}
+                        onAdClick={handleAdClick}
+                      />
+                    );
+                  }
+                  
+                  // Handle regular incidents
+                  const incident = item;
                   // Create a more unique key to prevent React warnings
                   const getUniqueKey = (incident: any, index: number) => {
                     if (incident.type === 'traffic') {

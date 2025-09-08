@@ -289,7 +289,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         adCampaignId: adId,
         userId: userId,
         viewedAt: viewedAt,
-        duration: duration,
+        durationMs: duration,
         userSuburb: userSuburb
       });
 
