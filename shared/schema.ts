@@ -213,6 +213,21 @@ export const notifications = pgTable("notifications", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Reports system for user-generated content moderation
+export const reports = pgTable("reports", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  reporterId: varchar("reporter_id").notNull(), // User who submitted the report
+  entityType: varchar("entity_type").notNull(), // 'incident' | 'comment'
+  entityId: varchar("entity_id").notNull(), // ID of the reported content
+  reason: varchar("reason").notNull(), // 'spam' | 'inappropriate' | 'harassment' | 'false_information' | 'other'
+  description: text("description"), // Optional additional details
+  status: varchar("status").notNull().default('pending'), // 'pending' | 'reviewed' | 'resolved' | 'dismissed'
+  moderatorId: varchar("moderator_id"), // Admin who handled the report
+  moderatorNotes: text("moderator_notes"), // Admin notes
+  resolvedAt: timestamp("resolved_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   comments: many(comments),
@@ -225,6 +240,8 @@ export const usersRelations = relations(users, ({ many }) => ({
   conversations2: many(conversations, { relationName: 'user2' }),
   notifications: many(notifications),
   incidentFollowUps: many(incidentFollowUps),
+  submittedReports: many(reports, { relationName: 'reporter' }),
+  moderatedReports: many(reports, { relationName: 'moderator' }),
 }));
 
 export const incidentsRelations = relations(incidents, ({ one, many }) => ({
@@ -366,6 +383,19 @@ export const notificationsRelations = relations(notifications, ({ one }) => ({
   }),
 }));
 
+export const reportsRelations = relations(reports, ({ one }) => ({
+  reporter: one(users, {
+    fields: [reports.reporterId],
+    references: [users.id],
+    relationName: 'reporter',
+  }),
+  moderator: one(users, {
+    fields: [reports.moderatorId],
+    references: [users.id],
+    relationName: 'moderator',
+  }),
+}));
+
 
 export const insertUserSchema = createInsertSchema(users).omit({
   createdAt: true,
@@ -445,6 +475,12 @@ export const insertIncidentFollowUpSchema = createInsertSchema(incidentFollowUps
   createdAt: true,
 });
 
+export const insertReportSchema = createInsertSchema(reports).omit({
+  id: true,
+  createdAt: true,
+  resolvedAt: true,
+});
+
 export type UpsertUser = typeof users.$inferInsert;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -476,3 +512,5 @@ export type Subcategory = typeof subcategories.$inferSelect;
 export type InsertSubcategory = z.infer<typeof insertSubcategorySchema>;
 export type IncidentFollowUp = typeof incidentFollowUps.$inferSelect;
 export type InsertIncidentFollowUp = z.infer<typeof insertIncidentFollowUpSchema>;
+export type Report = typeof reports.$inferSelect;
+export type InsertReport = z.infer<typeof insertReportSchema>;
