@@ -2,8 +2,10 @@ import { useQuery } from "@tanstack/react-query";
 import type { FilterState } from "@/pages/home";
 
 export interface ProcessedTrafficData {
-  events: any[];
-  incidents: any[];
+  events: any[]; // All Queensland data for map
+  incidents: any[]; // All Queensland data for map
+  regionalEvents: any[]; // User's region data for feed
+  regionalIncidents: any[]; // User's region data for feed
   counts: {
     total: number;
     trafficEvents: number;
@@ -37,8 +39,38 @@ const isQFESIncident = (incident: any) => {
 };
 
 export function useTrafficData(filters: FilterState): ProcessedTrafficData {
-  // Only fetch what the user needs - either their region or all QLD
-  const { data: eventsData } = useQuery({
+  // Fetch ALL events for map display (big picture view)
+  const { data: allEventsData } = useQuery({
+    queryKey: ["/api/traffic/events"],
+    queryFn: async () => {
+      const response = await fetch('/api/traffic/events');
+      if (!response.ok) throw new Error('Failed to fetch traffic events');
+      return response.json();
+    },
+    select: (data: any) => {
+      const features = data?.features || [];
+      return Array.isArray(features) ? features : [];
+    },
+    refetchInterval: filters.autoRefresh ? 30000 : 2 * 60 * 1000, // Auto-refresh every 2 minutes
+  });
+
+  // Fetch ALL incidents for map display (big picture view)
+  const { data: allIncidentsData } = useQuery({
+    queryKey: ["/api/incidents"],
+    queryFn: async () => {
+      const response = await fetch('/api/incidents');
+      if (!response.ok) throw new Error('Failed to fetch incidents');
+      return response.json();
+    },
+    select: (data: any) => {
+      const features = data?.features || [];
+      return Array.isArray(features) ? features : [];
+    },
+    refetchInterval: filters.autoRefresh ? 60000 : 3 * 60 * 1000, // Auto-refresh every 3 minutes
+  });
+
+  // Fetch FILTERED data for feed and counts (user's region only)
+  const { data: regionalEventsData } = useQuery({
     queryKey: ["/api/traffic/events", filters.homeLocation],
     queryFn: async () => {
       const suburb = filters.homeLocation?.split(' ')[0] || '';
@@ -54,10 +86,10 @@ export function useTrafficData(filters: FilterState): ProcessedTrafficData {
       const features = data?.features || [];
       return Array.isArray(features) ? features : [];
     },
-    refetchInterval: filters.autoRefresh ? 30000 : 2 * 60 * 1000, // Auto-refresh every 2 minutes
+    refetchInterval: filters.autoRefresh ? 30000 : false,
   });
 
-  const { data: incidentsData } = useQuery({
+  const { data: regionalIncidentsData } = useQuery({
     queryKey: ["/api/incidents", filters.homeLocation],
     queryFn: async () => {
       const suburb = filters.homeLocation?.split(' ')[0] || '';
@@ -73,32 +105,36 @@ export function useTrafficData(filters: FilterState): ProcessedTrafficData {
       const features = data?.features || [];
       return Array.isArray(features) ? features : [];
     },
-    refetchInterval: filters.autoRefresh ? 60000 : 3 * 60 * 1000, // Auto-refresh every 3 minutes
+    refetchInterval: filters.autoRefresh ? 60000 : false,
   });
 
-  // Use the fetched data directly
-  const allEvents = Array.isArray(eventsData) ? eventsData : [];
-  const allIncidents = Array.isArray(incidentsData) ? incidentsData : [];
+  // All data for map display (shows everything)
+  const allEvents = Array.isArray(allEventsData) ? allEventsData : [];
+  const allIncidents = Array.isArray(allIncidentsData) ? allIncidentsData : [];
   
-  // Categorize incidents for counting in sidebar
-  const nonUserIncidents = allIncidents.filter((i: any) => !i.properties?.userReported);
-  const qfesIncidents = nonUserIncidents.filter(isQFESIncident);
-  const esqIncidents = nonUserIncidents.filter(incident => !isQFESIncident(incident));
+  // Regional data for feed and counts
+  const regionalEvents = Array.isArray(regionalEventsData) ? regionalEventsData : [];
+  const regionalIncidents = Array.isArray(regionalIncidentsData) ? regionalIncidentsData : [];
   
-  // Calculate counts based on fetched data (for filter sidebar)
-  const trafficEvents = allEvents.length;
-  const emergencyIncidents = esqIncidents.length;
-  const qfesIncidentsCount = qfesIncidents.length;
-  const userSafetyCrime = allIncidents.filter((i: any) => 
+  // Categorize REGIONAL incidents for counting in sidebar (user's area only)
+  const regionalNonUserIncidents = regionalIncidents.filter((i: any) => !i.properties?.userReported);
+  const regionalQfesIncidents = regionalNonUserIncidents.filter(isQFESIncident);
+  const regionalEsqIncidents = regionalNonUserIncidents.filter(incident => !isQFESIncident(incident));
+  
+  // Calculate counts based on REGIONAL data (for filter sidebar)
+  const trafficEvents = regionalEvents.length;
+  const emergencyIncidents = regionalEsqIncidents.length;
+  const qfesIncidentsCount = regionalQfesIncidents.length;
+  const userSafetyCrime = regionalIncidents.filter((i: any) => 
     i.properties?.userReported && i.properties?.incidentType === 'crime'
   ).length;
-  const userWildlife = allIncidents.filter((i: any) => 
+  const userWildlife = regionalIncidents.filter((i: any) => 
     i.properties?.userReported && i.properties?.incidentType === 'wildlife'
   ).length;
-  const userCommunity = allIncidents.filter((i: any) => 
+  const userCommunity = regionalIncidents.filter((i: any) => 
     i.properties?.userReported && !['crime', 'wildlife', 'traffic'].includes(i.properties?.incidentType)
   ).length;
-  const userTraffic = allIncidents.filter((i: any) => 
+  const userTraffic = regionalIncidents.filter((i: any) => 
     i.properties?.userReported && i.properties?.incidentType === 'traffic'
   ).length;
   
@@ -143,8 +179,12 @@ export function useTrafficData(filters: FilterState): ProcessedTrafficData {
   });
 
   return {
+    // Map gets ALL Queensland data (big picture)
     events: allEvents,
     incidents: allIncidents,
+    // Feed gets REGIONAL data only (personalized)
+    regionalEvents,
+    regionalIncidents,
     counts,
     filteredEvents,
     filteredIncidents

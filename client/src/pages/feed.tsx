@@ -162,7 +162,7 @@ export default function Feed() {
   }, []);
 
   // Use the same traffic data hook as the map for consistent filtering
-  const { filteredEvents, filteredIncidents } = useTrafficData(filters);
+  const { regionalEvents, regionalIncidents } = useTrafficData(filters);
   
   // Sync selected suburb with filter location
   useEffect(() => {
@@ -199,8 +199,8 @@ export default function Feed() {
 
   // Use filtered data from the traffic data hook (same as map)
   const combinedIncidents = [
-    ...filteredIncidents.map((inc: any) => ({ ...inc, type: 'incident' })),
-    ...filteredEvents.map((event: any) => ({ ...event, type: 'traffic' }))
+    ...regionalIncidents.map((inc: any) => ({ ...inc, type: 'incident' })),
+    ...regionalEvents.map((event: any) => ({ ...event, type: 'traffic' }))
   ];
 
   // Apply regional filtering if location is selected
