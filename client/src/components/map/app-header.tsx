@@ -6,7 +6,7 @@ import { Link, useLocation } from "wouter";
 import { Map, List, Bell, MessageCircle, Filter, Plus, MapPin, Menu, LogOut, Settings } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { LocationAutocomplete } from "@/components/location-autocomplete";
 import { IncidentReportForm } from "@/components/incident-report-form";
@@ -279,46 +279,69 @@ export function AppHeader({ onMenuToggle, onFilterToggle, showFilterButton }: Ap
         </div>
       </div>
 
-      {/* Location Drawer for Mobile */}
-      <Drawer open={isLocationDrawerOpen} onOpenChange={setIsLocationDrawerOpen}>
-        <DrawerContent>
-          <DrawerHeader>
-            <DrawerTitle>Set Your Location</DrawerTitle>
-          </DrawerHeader>
-          <div className="p-4 space-y-4">
-            <LocationAutocomplete
-              value=""
-              onChange={handleLocationChange}
-              placeholder="Search for your suburb or area..."
-            />
+      {/* Location Dialog */}
+      <Dialog open={isLocationDrawerOpen} onOpenChange={setIsLocationDrawerOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <MapPin className="w-5 h-5 text-primary" />
+              Set Your Location
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6 pt-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">
+                Search for your area
+              </label>
+              <LocationAutocomplete
+                value=""
+                onChange={handleLocationChange}
+                placeholder="Enter suburb, postcode, or area..."
+              />
+              <p className="text-xs text-muted-foreground">
+                This helps filter safety alerts and incidents to your local area
+              </p>
+            </div>
+            
             {currentLocation && (
-              <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                <div className="flex items-center gap-2 flex-1">
-                  <MapPin className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-sm">{currentLocation}</span>
+              <div className="space-y-3">
+                <label className="text-sm font-medium text-foreground">
+                  Current Location
+                </label>
+                <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg border">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                      <MapPin className="w-4 h-4 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">{currentLocation}</p>
+                      <p className="text-xs text-muted-foreground">Regional filtering enabled</p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      localStorage.removeItem('homeLocation');
+                      localStorage.removeItem('homeCoordinates');
+                      localStorage.removeItem('homeBoundingBox');
+                      localStorage.setItem('locationFilter', 'false');
+                      setCurrentLocation('');
+                      window.dispatchEvent(new CustomEvent('locationChanged', {
+                        detail: { location: '', coordinates: null, boundingBox: null }
+                      }));
+                      setIsLocationDrawerOpen(false);
+                    }}
+                    className="text-destructive hover:text-destructive"
+                  >
+                    Clear
+                  </Button>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    localStorage.removeItem('homeLocation');
-                    localStorage.removeItem('homeCoordinates');
-                    localStorage.removeItem('homeBoundingBox');
-                    localStorage.setItem('locationFilter', 'false');
-                    setCurrentLocation('');
-                    window.dispatchEvent(new CustomEvent('locationChanged', {
-                      detail: { location: '', coordinates: null, boundingBox: null }
-                    }));
-                  }}
-                  className="text-destructive hover:text-destructive"
-                >
-                  Clear
-                </Button>
               </div>
             )}
           </div>
-        </DrawerContent>
-      </Drawer>
+        </DialogContent>
+      </Dialog>
 
       {/* Incident Report Form */}
       <IncidentReportForm
