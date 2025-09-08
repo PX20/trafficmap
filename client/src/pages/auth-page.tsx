@@ -14,12 +14,11 @@ import { Redirect } from "wouter";
 
 // Form schemas
 const loginSchema = z.object({
-  username: z.string().min(1, "Username is required"),
+  email: z.string().email("Valid email is required"),
   password: z.string().min(1, "Password is required"),
 });
 
 const registerSchema = insertUserSchema.pick({
-  username: true,
   password: true,
   email: true,
   firstName: true,
@@ -48,7 +47,7 @@ export default function AuthPage() {
   const loginForm = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      username: "",
+      email: "",
       password: "",
     },
   });
@@ -57,7 +56,6 @@ export default function AuthPage() {
   const registerForm = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      username: "",
       password: "",
       confirmPassword: "",
       email: "",
@@ -140,16 +138,17 @@ export default function AuthPage() {
                 <CardContent>
                   <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="login-username">Username</Label>
+                      <Label htmlFor="login-email">Email</Label>
                       <Input
-                        id="login-username"
-                        data-testid="input-login-username"
-                        {...loginForm.register("username")}
-                        placeholder="Enter your username"
+                        id="login-email"
+                        data-testid="input-login-email"
+                        type="email"
+                        {...loginForm.register("email")}
+                        placeholder="Enter your email"
                       />
-                      {loginForm.formState.errors.username && (
-                        <p className="text-sm text-red-600" data-testid="error-login-username">
-                          {loginForm.formState.errors.username.message}
+                      {loginForm.formState.errors.email && (
+                        <p className="text-sm text-red-600" data-testid="error-login-email">
+                          {loginForm.formState.errors.email.message}
                         </p>
                       )}
                     </div>
@@ -225,20 +224,6 @@ export default function AuthPage() {
                       </div>
                     </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="register-username">Username</Label>
-                      <Input
-                        id="register-username"
-                        data-testid="input-register-username"
-                        {...registerForm.register("username")}
-                        placeholder="Choose a username"
-                      />
-                      {registerForm.formState.errors.username && (
-                        <p className="text-sm text-red-600" data-testid="error-register-username">
-                          {registerForm.formState.errors.username.message}
-                        </p>
-                      )}
-                    </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="register-email">Email</Label>
