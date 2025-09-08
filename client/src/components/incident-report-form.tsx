@@ -243,9 +243,9 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="w-[95vw] sm:max-w-lg lg:max-w-xl max-h-[90vh] flex flex-col overflow-visible">
         <DialogHeader className="flex-shrink-0">
-          <DialogTitle>Report Safety Incident</DialogTitle>
+          <DialogTitle>Share Community Information</DialogTitle>
           <DialogDescription>
-            Report any safety concern, incident, or suspicious activity you've observed to help keep the community informed and safe.
+            Share local information, observations, or community updates to help keep neighbors informed and connected.
           </DialogDescription>
         </DialogHeader>
         
@@ -334,7 +334,7 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
                   <FormLabel>Title</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="Brief description of the incident"
+                      placeholder="Brief description of what you want to share"
                       {...field}
                       data-testid="input-incident-title"
                     />
@@ -395,7 +395,7 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
               name="policeNotified"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Have you notified police?</FormLabel>
+                  <FormLabel>Have authorities been notified? (if applicable)</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger data-testid="select-police-notified">
@@ -403,10 +403,10 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="yes">Yes - I have contacted police</SelectItem>
-                      <SelectItem value="no">No - I haven't contacted police yet</SelectItem>
-                      <SelectItem value="not_needed">Not needed - This doesn't require police</SelectItem>
-                      <SelectItem value="unsure">Unsure - Not sure if police are needed</SelectItem>
+                      <SelectItem value="yes">Yes - Authorities have been notified</SelectItem>
+                      <SelectItem value="no">No - Authorities haven't been contacted yet</SelectItem>
+                      <SelectItem value="not_needed">Not applicable - No authorities needed</SelectItem>
+                      <SelectItem value="unsure">Unsure - Not sure if authorities are needed</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -422,7 +422,7 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
                   <FormLabel>Additional Details (Optional)</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Describe what you observed, number of people involved, vehicle descriptions, direction of travel, etc..."
+                      placeholder="Provide additional context, details, or helpful information for the community..."
                       className="min-h-20"
                       {...field}
                       data-testid="textarea-incident-description"
@@ -452,7 +452,7 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
                           <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 shadow-sm">
                             <img
                               src={uploadedPhotoUrl}
-                              alt="Uploaded incident photo"
+                              alt="Uploaded photo"
                               className="w-full h-48 object-cover"
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
@@ -492,10 +492,10 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
                               
                               <div className="space-y-2">
                                 <h4 className="text-lg font-semibold text-gray-900">
-                                  Add Incident Photo
+                                  Add Photo
                                 </h4>
                                 <p className="text-gray-600">
-                                  Choose an image to help document the incident
+                                  Choose an image to help share information
                                 </p>
                                 <div className="flex items-center justify-center gap-4 pt-2">
                                   <div className="px-3 py-1 bg-white/60 rounded-full border border-gray-200 text-xs text-gray-500">
@@ -549,12 +549,12 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
                 {reportIncidentMutation.isPending ? (
                   <div className="flex items-center gap-2">
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Submitting Report...
+                    Sharing Information...
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">
                     <CheckCircle className="w-4 h-4" />
-                    Submit Report
+                    Share Information
                   </div>
                 )}
               </Button>
