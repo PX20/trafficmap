@@ -1,0 +1,274 @@
+Unexpected error happened 😕
+
+e126551bb57846ae91fb8c081e30e06b
+
+
+We're already looking into it! Feel free to reach out to our support team, make sure to copy error ID
+
+Invalid response from Replit driver
+INSERT INTO
+  categories (
+    id,
+    name,
+    description,
+    icon,
+    color,
+    "order",
+    is_active,
+    requires_approval
+  )
+VALUES
+  (
+    'safety-crime',
+    'Safety & Crime',
+    'Crime, violence, theft, and public safety concerns',
+    'shield',
+    '#7c3aed',
+    1,
+    true,
+    false
+  ),
+  (
+    'infrastructure',
+    'Infrastructure & Hazards',
+    'Road hazards, utilities, and structural problems',
+    'construction',
+    '#ea580c',
+    2,
+    true,
+    false
+  ),
+  (
+    'emergency',
+    'Emergency Situations',
+    'Active emergencies requiring immediate attention',
+    'siren',
+    '#dc2626',
+    3,
+    true,
+    false
+  ),
+  (
+    'wildlife',
+    'Wildlife & Nature',
+    'Animal-related incidents and environmental concerns',
+    'leaf',
+    '#16a34a',
+    4,
+    true,
+    false
+  ),
+  (
+    'community',
+    'Community Issues',
+    'Local community concerns and quality of life issues',
+    'users',
+    '#2563eb',
+    5,
+    true,
+    false
+  );
+
+SELECT
+  'Categories:' as status,
+  COUNT(*) as count
+FROM
+  categories;
+
+INSERT INTO
+  subcategories (
+    id,
+    category_id,
+    name,
+    description,
+    "order",
+    is_active
+  )
+VALUES
+  -- Safety & Crime (4)
+  (
+    'safety-violence',
+    'safety-crime',
+    'Violence & Threats',
+    'Physical violence, threats, intimidation',
+    1,
+    true
+  ),
+  (
+    'safety-theft',
+    'safety-crime',
+    'Theft & Property Crime',
+    'Theft, burglary, property damage',
+    2,
+    true
+  ),
+  (
+    'safety-suspicious',
+    'safety-crime',
+    'Suspicious Activity',
+    'Unusual behavior or activities',
+    3,
+    true
+  ),
+  (
+    'safety-disturbance',
+    'safety-crime',
+    'Public Disturbances',
+    'Noise, disruptions, antisocial behavior',
+    4,
+    true
+  ),
+  -- Infrastructure (4)
+  (
+    'infra-road',
+    'infrastructure',
+    'Road Hazards',
+    'Fallen trees, debris, potholes, dangerous conditions',
+    1,
+    true
+  ),
+  (
+    'infra-utility',
+    'infrastructure',
+    'Utility Issues',
+    'Power lines, water leaks, gas problems',
+    2,
+    true
+  ),
+  (
+    'infra-building',
+    'infrastructure',
+    'Building Problems',
+    'Structural damage, unsafe buildings',
+    3,
+    true
+  ),
+  (
+    'infra-environment',
+    'infrastructure',
+    'Environmental Hazards',
+    'Chemical spills, pollution, toxic materials',
+    4,
+    true
+  ),
+  -- Emergency (4)
+  (
+    'emergency-fire',
+    'emergency',
+    'Fire & Smoke',
+    'Fires, smoke, burning structures or vegetation',
+    1,
+    true
+  ),
+  (
+    'emergency-medical',
+    'emergency',
+    'Medical Emergencies',
+    'Medical incidents in public spaces',
+    2,
+    true
+  ),
+  (
+    'emergency-disaster',
+    'emergency',
+    'Natural Disasters',
+    'Floods, storms, weather emergencies',
+    3,
+    true
+  ),
+  (
+    'emergency-hazmat',
+    'emergency',
+    'Chemical/Hazmat',
+    'Chemical spills, gas leaks, hazardous materials',
+    4,
+    true
+  ),
+  -- Wildlife (4)
+  (
+    'wildlife-dangerous',
+    'wildlife',
+    'Dangerous Animals',
+    'Snakes, aggressive animals, pest control',
+    1,
+    true
+  ),
+  (
+    'wildlife-welfare',
+    'wildlife',
+    'Animal Welfare',
+    'Injured or distressed animals',
+    2,
+    true
+  ),
+  (
+    'wildlife-environment',
+    'wildlife',
+    'Environmental Issues',
+    'Pollution, illegal dumping, habitat damage',
+    3,
+    true
+  ),
+  (
+    'wildlife-pests',
+    'wildlife',
+    'Pest Problems',
+    'Insect infestations, rodent problems',
+    4,
+    true
+  ),
+  -- Community (4)
+  (
+    'community-noise',
+    'community',
+    'Noise Complaints',
+    'Excessive noise, loud parties, construction',
+    1,
+    true
+  ),
+  (
+    'community-traffic',
+    'community',
+    'Traffic Issues',
+    'Dangerous driving, parking problems',
+    2,
+    true
+  ),
+  (
+    'community-space',
+    'community',
+    'Public Space Problems',
+    'Park issues, playground damage',
+    3,
+    true
+  ),
+  (
+    'community-events',
+    'community',
+    'Events & Gatherings',
+    'Large gatherings, street events',
+    4,
+    true
+  );
+
+SELECT
+  'Final Categories:' as status,
+  COUNT(*) as count
+FROM
+  categories;
+
+SELECT
+  'Final Subcategories:' as status,
+  COUNT(*) as count
+FROM
+  subcategories;
+{
+  "sql": "INSERT INTO categories (id, name, description, icon, color, \"order\", is_active, requires_approval) \nVALUES \n('safety-crime', 'Safety & Crime', 'Crime, violence, theft, and public safety concerns', 'shield', '#7c3aed', 1, true, false),\n('infrastructure', 'Infrastructure & Hazards', 'Road hazards, utilities, and structural problems', 'construction', '#ea580c', 2, true, false),\n('emergency', 'Emergency Situations', 'Active emergencies requiring immediate attention', 'siren', '#dc2626', 3, true, false),\n('wildlife', 'Wildlife & Nature', 'Animal-related incidents and environmental concerns', 'leaf', '#16a34a', 4, true, false),\n('community', 'Community Issues', 'Local community concerns and quality of life issues', 'users', '#2563eb', 5, true, false);\n\nSELECT 'Categories:' as status, COUNT(*) as count FROM categories;\n\nINSERT INTO subcategories (id, category_id, name, description, \"order\", is_active) \nVALUES \n-- Safety & Crime (4)\n('safety-violence', 'safety-crime', 'Violence & Threats', 'Physical violence, threats, intimidation', 1, true),\n('safety-theft', 'safety-crime', 'Theft & Property Crime', 'Theft, burglary, property damage', 2, true),\n('safety-suspicious', 'safety-crime', 'Suspicious Activity', 'Unusual behavior or activities', 3, true),\n('safety-disturbance', 'safety-crime', 'Public Disturbances', 'Noise, disruptions, antisocial behavior', 4, true),\n\n-- Infrastructure (4)\n('infra-road', 'infrastructure', 'Road Hazards', 'Fallen trees, debris, potholes, dangerous conditions', 1, true),\n('infra-utility', 'infrastructure', 'Utility Issues', 'Power lines, water leaks, gas problems', 2, true),\n('infra-building', 'infrastructure', 'Building Problems', 'Structural damage, unsafe buildings', 3, true),\n('infra-environment', 'infrastructure', 'Environmental Hazards', 'Chemical spills, pollution, toxic materials', 4, true),\n\n-- Emergency (4)\n('emergency-fire', 'emergency', 'Fire & Smoke', 'Fires, smoke, burning structures or vegetation', 1, true),\n('emergency-medical', 'emergency', 'Medical Emergencies', 'Medical incidents in public spaces', 2, true),\n('emergency-disaster', 'emergency', 'Natural Disasters', 'Floods, storms, weather emergencies', 3, true),\n('emergency-hazmat', 'emergency', 'Chemical/Hazmat', 'Chemical spills, gas leaks, hazardous materials', 4, true),\n\n-- Wildlife (4)\n('wildlife-dangerous', 'wildlife', 'Dangerous Animals', 'Snakes, aggressive animals, pest control', 1, true),\n('wildlife-welfare', 'wildlife', 'Animal Welfare', 'Injured or distressed animals', 2, true),\n('wildlife-environment', 'wildlife', 'Environmental Issues', 'Pollution, illegal dumping, habitat damage', 3, true),\n('wildlife-pests', 'wildlife', 'Pest Problems', 'Insect infestations, rodent problems', 4, true),\n\n-- Community (4)\n('community-noise', 'community', 'Noise Complaints', 'Excessive noise, loud parties, construction', 1, true),\n('community-traffic', 'community', 'Traffic Issues', 'Dangerous driving, parking problems', 2, true),\n('community-space', 'community', 'Public Space Problems', 'Park issues, playground damage', 3, true),\n('community-events', 'community', 'Events & Gatherings', 'Large gatherings, street events', 4, true);\n\nSELECT 'Final Categories:' as status, COUNT(*) as count FROM categories;\n\nSELECT 'Final Subcategories:' as status, COUNT(*) as count FROM subcategories;"
+}
+[
+  "[Object]",
+  "[Object]",
+  "[Object]",
+  "[Object]",
+  "[Object]"
+]
