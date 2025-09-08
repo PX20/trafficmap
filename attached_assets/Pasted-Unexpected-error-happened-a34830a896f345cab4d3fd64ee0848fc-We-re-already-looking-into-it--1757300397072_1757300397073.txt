@@ -1,0 +1,284 @@
+Unexpected error happened 😕
+
+a34830a896f345cab4d3fd64ee0848fc
+
+
+We're already looking into it! Feel free to reach out to our support team, make sure to copy error ID
+
+Invalid response from Replit driver
+DELETE FROM subcategories;
+
+DELETE FROM categories;
+
+SELECT
+  'After cleanup - Categories:' as status,
+  COUNT(*) as count
+FROM
+  categories;
+
+SELECT
+  'After cleanup - Subcategories:' as status,
+  COUNT(*) as count
+FROM
+  subcategories;
+
+INSERT INTO
+  categories (
+    name,
+    description,
+    icon,
+    color,
+    "order",
+    is_active,
+    requires_approval
+  )
+VALUES
+  (
+    'Safety & Crime',
+    'Crime, violence, theft, and public safety concerns',
+    'shield',
+    '#7c3aed',
+    1,
+    true,
+    false
+  ),
+  (
+    'Infrastructure & Hazards',
+    'Road hazards, utilities, and structural problems',
+    'construction',
+    '#ea580c',
+    2,
+    true,
+    false
+  ),
+  (
+    'Emergency Situations',
+    'Active emergencies requiring immediate attention',
+    'siren',
+    '#dc2626',
+    3,
+    true,
+    false
+  ),
+  (
+    'Wildlife & Nature',
+    'Animal-related incidents and environmental concerns',
+    'leaf',
+    '#16a34a',
+    4,
+    true,
+    false
+  ),
+  (
+    'Community Issues',
+    'Local community concerns and quality of life issues',
+    'users',
+    '#2563eb',
+    5,
+    true,
+    false
+  );
+
+SELECT
+  id,
+  name,
+  "order"
+FROM
+  categories
+ORDER BY
+  "order";
+
+WITH
+  category_ids AS (
+    SELECT
+      id,
+      name
+    FROM
+      categories
+  )
+INSERT INTO
+  subcategories (
+    category_id,
+    name,
+    description,
+    "order",
+    is_active
+  )
+SELECT
+  c.id,
+  sub.name,
+  sub.description,
+  sub.order_num,
+  true
+FROM
+  category_ids c
+  CROSS JOIN (
+    VALUES
+      -- Safety & Crime (4 subcategories)
+      (
+        'Safety & Crime',
+        'Violence & Threats',
+        'Physical violence, threats, intimidation',
+        1
+      ),
+      (
+        'Safety & Crime',
+        'Theft & Property Crime',
+        'Theft, burglary, property damage',
+        2
+      ),
+      (
+        'Safety & Crime',
+        'Suspicious Activity',
+        'Unusual behavior or activities',
+        3
+      ),
+      (
+        'Safety & Crime',
+        'Public Disturbances',
+        'Noise, disruptions, antisocial behavior',
+        4
+      ),
+      -- Infrastructure & Hazards (4 subcategories)
+      (
+        'Infrastructure & Hazards',
+        'Road Hazards',
+        'Fallen trees, debris, potholes, dangerous conditions',
+        1
+      ),
+      (
+        'Infrastructure & Hazards',
+        'Utility Issues',
+        'Power lines, water leaks, gas problems',
+        2
+      ),
+      (
+        'Infrastructure & Hazards',
+        'Building Problems',
+        'Structural damage, unsafe buildings',
+        3
+      ),
+      (
+        'Infrastructure & Hazards',
+        'Environmental Hazards',
+        'Chemical spills, pollution, toxic materials',
+        4
+      ),
+      -- Emergency Situations (4 subcategories)
+      (
+        'Emergency Situations',
+        'Fire & Smoke',
+        'Fires, smoke, burning structures or vegetation',
+        1
+      ),
+      (
+        'Emergency Situations',
+        'Medical Emergencies',
+        'Medical incidents in public spaces',
+        2
+      ),
+      (
+        'Emergency Situations',
+        'Natural Disasters',
+        'Floods, storms, weather emergencies',
+        3
+      ),
+      (
+        'Emergency Situations',
+        'Chemical/Hazmat',
+        'Chemical spills, gas leaks, hazardous materials',
+        4
+      ),
+      -- Wildlife & Nature (4 subcategories)
+      (
+        'Wildlife & Nature',
+        'Dangerous Animals',
+        'Snakes, aggressive animals, pest control',
+        1
+      ),
+      (
+        'Wildlife & Nature',
+        'Animal Welfare',
+        'Injured or distressed animals',
+        2
+      ),
+      (
+        'Wildlife & Nature',
+        'Environmental Issues',
+        'Pollution, illegal dumping, habitat damage',
+        3
+      ),
+      (
+        'Wildlife & Nature',
+        'Pest Problems',
+        'Insect infestations, rodent problems',
+        4
+      ),
+      -- Community Issues (4 subcategories)
+      (
+        'Community Issues',
+        'Noise Complaints',
+        'Excessive noise, loud parties, construction',
+        1
+      ),
+      (
+        'Community Issues',
+        'Traffic Issues',
+        'Dangerous driving, parking problems',
+        2
+      ),
+      (
+        'Community Issues',
+        'Public Space Problems',
+        'Park issues, playground damage',
+        3
+      ),
+      (
+        'Community Issues',
+        'Events & Gatherings',
+        'Large gatherings, street events',
+        4
+      )
+  ) AS sub (category_name, name, description, order_num)
+WHERE
+  c.name = sub.category_name;
+
+SELECT
+  'Final Categories:' as status,
+  COUNT(*) as count
+FROM
+  categories;
+
+SELECT
+  'Final Subcategories:' as status,
+  COUNT(*) as count
+FROM
+  subcategories;
+
+SELECT
+  c.name as category,
+  COUNT(s.id) as subcategory_count
+FROM
+  categories c
+  LEFT JOIN subcategories s ON c.id = s.category_id
+GROUP BY
+  c.id,
+  c.name,
+  c."order"
+ORDER BY
+  c."order";
+{
+  "sql": "DELETE FROM subcategories;\n\nDELETE FROM categories;\n\nSELECT 'After cleanup - Categories:' as status, COUNT(*) as count FROM categories;\n\nSELECT 'After cleanup - Subcategories:' as status, COUNT(*) as count FROM subcategories;\n\nINSERT INTO categories (name, description, icon, color, \"order\", is_active, requires_approval) \nVALUES \n('Safety & Crime', 'Crime, violence, theft, and public safety concerns', 'shield', '#7c3aed', 1, true, false),\n('Infrastructure & Hazards', 'Road hazards, utilities, and structural problems', 'construction', '#ea580c', 2, true, false),\n('Emergency Situations', 'Active emergencies requiring immediate attention', 'siren', '#dc2626', 3, true, false),\n('Wildlife & Nature', 'Animal-related incidents and environmental concerns', 'leaf', '#16a34a', 4, true, false),\n('Community Issues', 'Local community concerns and quality of life issues', 'users', '#2563eb', 5, true, false);\n\nSELECT id, name, \"order\" FROM categories ORDER BY \"order\";\n\nWITH category_ids AS (\n    SELECT id, name FROM categories\n)\nINSERT INTO subcategories (category_id, name, description, \"order\", is_active) \nSELECT \n    c.id,\n    sub.name,\n    sub.description,\n    sub.order_num,\n    true\nFROM category_ids c\nCROSS JOIN (\n    VALUES \n    -- Safety & Crime (4 subcategories)\n    ('Safety & Crime', 'Violence & Threats', 'Physical violence, threats, intimidation', 1),\n    ('Safety & Crime', 'Theft & Property Crime', 'Theft, burglary, property damage', 2),\n    ('Safety & Crime', 'Suspicious Activity', 'Unusual behavior or activities', 3),\n    ('Safety & Crime', 'Public Disturbances', 'Noise, disruptions, antisocial behavior', 4),\n    \n    -- Infrastructure & Hazards (4 subcategories)\n    ('Infrastructure & Hazards', 'Road Hazards', 'Fallen trees, debris, potholes, dangerous conditions', 1),\n    ('Infrastructure & Hazards', 'Utility Issues', 'Power lines, water leaks, gas problems', 2),\n    ('Infrastructure & Hazards', 'Building Problems', 'Structural damage, unsafe buildings', 3),\n    ('Infrastructure & Hazards', 'Environmental Hazards', 'Chemical spills, pollution, toxic materials', 4),\n    \n    -- Emergency Situations (4 subcategories)\n    ('Emergency Situations', 'Fire & Smoke', 'Fires, smoke, burning structures or vegetation', 1),\n    ('Emergency Situations', 'Medical Emergencies', 'Medical incidents in public spaces', 2),\n    ('Emergency Situations', 'Natural Disasters', 'Floods, storms, weather emergencies', 3),\n    ('Emergency Situations', 'Chemical/Hazmat', 'Chemical spills, gas leaks, hazardous materials', 4),\n    \n    -- Wildlife & Nature (4 subcategories)\n    ('Wildlife & Nature', 'Dangerous Animals', 'Snakes, aggressive animals, pest control', 1),\n    ('Wildlife & Nature', 'Animal Welfare', 'Injured or distressed animals', 2),\n    ('Wildlife & Nature', 'Environmental Issues', 'Pollution, illegal dumping, habitat damage', 3),\n    ('Wildlife & Nature', 'Pest Problems', 'Insect infestations, rodent problems', 4),\n    \n    -- Community Issues (4 subcategories)\n    ('Community Issues', 'Noise Complaints', 'Excessive noise, loud parties, construction', 1),\n    ('Community Issues', 'Traffic Issues', 'Dangerous driving, parking problems', 2),\n    ('Community Issues', 'Public Space Problems', 'Park issues, playground damage', 3),\n    ('Community Issues', 'Events & Gatherings', 'Large gatherings, street events', 4)\n) AS sub(category_name, name, description, order_num)\nWHERE c.name = sub.category_name;\n\nSELECT 'Final Categories:' as status, COUNT(*) as count FROM categories;\n\nSELECT 'Final Subcategories:' as status, COUNT(*) as count FROM subcategories;\n\nSELECT c.name as category, COUNT(s.id) as subcategory_count\nFROM categories c\nLEFT JOIN subcategories s ON c.id = s.category_id\nGROUP BY c.id, c.name, c.\"order\"\nORDER BY c.\"order\";"
+}
+[
+  "[Object]",
+  "[Object]",
+  "[Object]",
+  "[Object]",
+  "[Object]",
+  "[Object]",
+  "[Object]",
+  "[Object]",
+  "[Object]",
+  "[Object]"
+]
