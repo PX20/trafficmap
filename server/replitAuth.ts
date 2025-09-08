@@ -180,61 +180,49 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
     return res.status(401).json({ message: "Unauthorized" });
   }
 
-  // Check if session has proper claims structure for OAuth users
-  // Or if it's a local auth user with database ID
-  if (!user.claims || !user.claims.sub) {
-    // For OAuth users, if claims are missing, we need to re-authenticate
-    if (!user.id || typeof user.id !== 'string') {
-      console.error("Authentication failed: Invalid user structure", { 
-        hasUser: !!user, 
-        hasClaims: !!(user && user.claims),
-        hasSub: !!(user && user.claims && user.claims.sub),
-        hasId: !!(user && user.id),
-        userKeys: user ? Object.keys(user) : []
-      });
-      
-      // Clear corrupted session and redirect to login
-      req.logout((err) => {
-        if (err) console.error("Logout error:", err);
-      });
-      return res.status(401).json({ message: "Unauthorized - Invalid session, please log in again" });
+  // Support both OAuth authentication (has claims) and local authentication (has id)
+  if (user.claims && user.claims.sub) {
+    // OAuth authentication - check token expiration and handle refresh
+    if (!user.expires_at) {
+      return res.status(401).json({ message: "Unauthorized" });
     }
-    
-    // If it's a local auth user (has database id but no claims), allow it to pass
-    // but we need to refresh the OAuth session
-    if (user.email && !user.claims) {
-      console.log("User has database fields but no OAuth claims, requiring re-authentication");
-      req.logout((err) => {
-        if (err) console.error("Logout error:", err);
-      });
-      return res.status(401).json({ message: "Unauthorized - Please log in again" });
+
+    const now = Math.floor(Date.now() / 1000);
+    if (now <= user.expires_at) {
+      return next();
+    }
+
+    // Try to refresh token
+    const refreshToken = user.refresh_token;
+    if (!refreshToken) {
+      res.status(401).json({ message: "Unauthorized" });
+      return;
+    }
+
+    try {
+      const config = await getOidcConfig();
+      const tokenResponse = await client.refreshTokenGrant(config, refreshToken);
+      updateUserSession(user, tokenResponse);
+      return next();
+    } catch (error) {
+      res.status(401).json({ message: "Unauthorized" });
+      return;
     }
   }
-
-  // Check token expiration
-  if (!user.expires_at) {
-    return res.status(401).json({ message: "Unauthorized" });
-  }
-
-  const now = Math.floor(Date.now() / 1000);
-  if (now <= user.expires_at) {
+  
+  if (user.id) {
+    // Local authentication - proceed directly
     return next();
   }
 
-  // Try to refresh token
-  const refreshToken = user.refresh_token;
-  if (!refreshToken) {
-    res.status(401).json({ message: "Unauthorized" });
-    return;
-  }
-
-  try {
-    const config = await getOidcConfig();
-    const tokenResponse = await client.refreshTokenGrant(config, refreshToken);
-    updateUserSession(user, tokenResponse);
-    return next();
-  } catch (error) {
-    res.status(401).json({ message: "Unauthorized" });
-    return;
-  }
+  // Neither authentication method worked
+  console.error("Authentication failed: Invalid user structure", { 
+    hasUser: !!user, 
+    hasClaims: !!(user && user.claims),
+    hasSub: !!(user && user.claims && user.claims.sub),
+    hasId: !!(user && user.id),
+    userKeys: user ? Object.keys(user) : []
+  });
+  
+  return res.status(401).json({ message: "Unauthorized - Invalid session" });
 };
