@@ -1020,14 +1020,20 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
               </div>
             </div>
           
-            {/* Enhanced Incident Photo */}
+            {/* Enhanced Incident Photo with Lazy Loading */}
             {incident?.properties?.photoUrl && (
               <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 shadow-lg">
                 <img 
-                  src={`/api/compress-image?path=${encodeURIComponent(incident.properties.photoUrl.startsWith('/') ? incident.properties.photoUrl : '/' + incident.properties.photoUrl)}`}
+                  src={`/api/compress-image?path=${encodeURIComponent(incident.properties.photoUrl.startsWith('/') ? incident.properties.photoUrl : '/' + incident.properties.photoUrl)}&size=full&format=auto`}
                   alt="Incident photo" 
                   className="w-full h-56 object-cover cursor-pointer hover:scale-105 transition-transform duration-300"
+                  loading="lazy"
                   data-testid="img-incident-photo"
+                  style={{
+                    backgroundImage: `url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"%3E%3Crect fill="%23f3f4f6" width="400" height="300"/%3E%3Ctext x="50%" y="50%" text-anchor="middle" dy=".3em" fill="%23d1d5db" font-family="sans-serif" font-size="14"%3ELoading...%3C/text%3E%3C/svg%3E')`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center'
+                  }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
               </div>

@@ -100,9 +100,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Serve static assets with compression for images
   app.use('/attached_assets', express.static(assetsPath));
   
-  // Image compression endpoint - compresses images on-the-fly
+  // Enhanced image compression endpoint with multiple sizes and WebP support
   app.get('/api/compress-image', async (req, res) => {
     const imagePath = req.query.path as string;
+    const size = req.query.size as string || 'medium'; // thumbnail, medium, full
+    const format = req.query.format as string || 'auto'; // auto, webp, jpeg
+    
     if (!imagePath) {
       return res.status(400).json({ error: 'Path parameter required' });
     }
@@ -117,29 +120,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const stats = fs.statSync(filePath);
       const fileSize = stats.size;
       
-      // Only compress images larger than 100KB
-      if (fileSize < 100 * 1024) {
+      // Define size configurations
+      const sizeConfigs = {
+        thumbnail: { width: 200, height: 200, quality: 60 },
+        medium: { width: 600, height: 400, quality: 70 },
+        full: { width: 1200, height: 800, quality: 80 }
+      };
+      
+      const config = sizeConfigs[size as keyof typeof sizeConfigs] || sizeConfigs.medium;
+      
+      // Auto-detect WebP support from Accept header
+      const supportsWebP = req.headers.accept?.includes('image/webp') || format === 'webp';
+      const outputFormat = supportsWebP && format !== 'jpeg' ? 'webp' : 'jpeg';
+      
+      // Only compress images larger than 50KB
+      if (fileSize < 50 * 1024 && size === 'thumbnail') {
         return res.sendFile(filePath);
       }
 
-      const compressed = await sharp(filePath)
-        .resize(800, 800, { 
+      let imageProcessor = sharp(filePath)
+        .resize(config.width, config.height, { 
           fit: 'inside', 
           withoutEnlargement: true 
-        })
-        .jpeg({ 
-          quality: 75, 
-          progressive: true 
-        })
-        .toBuffer();
+        });
+
+      let compressed: Buffer;
+      let contentType: string;
+
+      if (outputFormat === 'webp') {
+        compressed = await imageProcessor
+          .webp({ 
+            quality: config.quality,
+            effort: 4 // Balance between compression and speed
+          })
+          .toBuffer();
+        contentType = 'image/webp';
+      } else {
+        compressed = await imageProcessor
+          .jpeg({ 
+            quality: config.quality, 
+            progressive: true,
+            mozjpeg: true // Better compression
+          })
+          .toBuffer();
+        contentType = 'image/jpeg';
+      }
+
+      const compressionRatio = Math.round(((fileSize - compressed.length) / fileSize) * 100);
 
       res.set({
-        'Content-Type': 'image/jpeg',
+        'Content-Type': contentType,
         'Content-Length': compressed.length.toString(),
-        'Cache-Control': 'public, max-age=86400', // 1 day cache
+        'Cache-Control': 'public, max-age=2592000, immutable', // 30 days cache with immutable
+        'ETag': `"${imagePath}-${size}-${outputFormat}"`,
         'X-Original-Size': fileSize.toString(),
         'X-Compressed-Size': compressed.length.toString(),
-        'X-Compression-Ratio': `${Math.round(((fileSize - compressed.length) / fileSize) * 100)}%`
+        'X-Compression-Ratio': `${compressionRatio}%`,
+        'X-Image-Size': size,
+        'X-Image-Format': outputFormat
       });
 
       res.send(compressed);
