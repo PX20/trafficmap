@@ -32,10 +32,12 @@ import {
   MoreHorizontal,
   CheckCircle,
   ClipboardList,
-  TrendingUp
+  TrendingUp,
+  Flag
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import type { Comment, IncidentFollowUp } from "@shared/schema";
+import { ReportModal } from "@/components/report-modal";
 
 interface IncidentDetailModalProps {
   incident: any;
@@ -92,6 +94,12 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
   // Follow-up states
   const [followUpDescription, setFollowUpDescription] = useState("");
   const [followUpStatus, setFollowUpStatus] = useState("");
+  
+  // Report modal states
+  const [reportModalOpen, setReportModalOpen] = useState(false);
+  const [reportEntityType, setReportEntityType] = useState<'incident' | 'comment'>('incident');
+  const [reportEntityId, setReportEntityId] = useState('');
+  const [reportEntityTitle, setReportEntityTitle] = useState('');
 
   // Check if current user is the creator of this incident
   const isIncidentCreator = user && incident && 
@@ -100,6 +108,39 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
   // Check if incident is already completed
   const isIncidentCompleted = incident && 
     (incident.status === 'completed' || incident.properties?.status === 'completed');
+
+  // Report functionality
+  const handleReportIncident = () => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Please log in",
+        description: "You need to log in to report content",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setReportEntityType('incident');
+    setReportEntityId(incidentId || '');
+    setReportEntityTitle(getIncidentTitle(incident));
+    setReportModalOpen(true);
+  };
+
+  const handleReportComment = (commentId: string, commentContent: string) => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Please log in",
+        description: "You need to log in to report content",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setReportEntityType('comment');
+    setReportEntityId(commentId);
+    setReportEntityTitle(commentContent);
+    setReportModalOpen(true);
+  };
 
   // Extract incident ID from the incident object (safe to call even if incident is null)
   const incidentId = incident ? getIncidentId(incident) : null;
@@ -491,25 +532,39 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
               </div>
               <p className="text-sm">{comment.content}</p>
             </div>
-            {isAuthenticated && !isReply && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="mt-1 h-auto p-1 text-xs"
-                onClick={() => {
-                  if (replyingTo === comment.id) {
-                    setReplyingTo(null);
-                    setReplyText("");
-                  } else {
-                    setReplyingTo(comment.id);
-                  }
-                }}
-                data-testid={`button-reply-${comment.id}`}
-              >
-                <Reply className="w-3 h-3 mr-1" />
-                Reply
-              </Button>
-            )}
+            <div className="flex items-center gap-2 mt-1">
+              {isAuthenticated && !isReply && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-auto p-1 text-xs"
+                  onClick={() => {
+                    if (replyingTo === comment.id) {
+                      setReplyingTo(null);
+                      setReplyText("");
+                    } else {
+                      setReplyingTo(comment.id);
+                    }
+                  }}
+                  data-testid={`button-reply-${comment.id}`}
+                >
+                  <Reply className="w-3 h-3 mr-1" />
+                  Reply
+                </Button>
+              )}
+              {isAuthenticated && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-auto p-1 text-xs text-gray-500 hover:text-red-600"
+                  onClick={() => handleReportComment(comment.id, comment.content)}
+                  data-testid={`button-report-comment-${comment.id}`}
+                >
+                  <Flag className="w-3 h-3 mr-1" />
+                  Report
+                </Button>
+              )}
+            </div>
             {replyingTo === comment.id && (
               <div className="mt-2 flex gap-2">
                 <Textarea
@@ -655,7 +710,12 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      if (!open) {
+        setReportModalOpen(false);
+        onClose();
+      }
+    }}>
       <DialogContent className="w-[95vw] max-w-lg max-h-[90vh] sm:max-h-[85vh] flex flex-col p-0 bg-gradient-to-br from-white via-gray-50 to-white border-0 shadow-2xl overflow-hidden" data-testid="modal-incident-details">
         {/* Decorative Background Elements */}
         <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-200/30 to-purple-200/30 rounded-full blur-2xl"></div>
@@ -1074,6 +1134,20 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
                     <span className="text-sm font-medium">Share</span>
                   </Button>
                   
+                  {/* Report Button - only show for authenticated users */}
+                  {isAuthenticated && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="group flex items-center gap-2 px-3 py-2 rounded-lg text-gray-500 hover:text-red-600 hover:bg-red-50 transition-all duration-200"
+                      onClick={handleReportIncident}
+                      data-testid="button-report-incident"
+                    >
+                      <Flag className="w-4 h-4" />
+                      <span className="text-sm font-medium">Report</span>
+                    </Button>
+                  )}
+                  
                   {/* Mark Complete Button - only show for incident creator and not already completed */}
                   {isIncidentCreator && !isIncidentCompleted && incident.properties?.userReported && (
                     <Button 
@@ -1288,6 +1362,15 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
           </div>
         </div>
       </DialogContent>
+      
+      {/* Report Modal */}
+      <ReportModal
+        isOpen={reportModalOpen}
+        onClose={() => setReportModalOpen(false)}
+        entityType={reportEntityType}
+        entityId={reportEntityId}
+        entityTitle={reportEntityTitle}
+      />
     </Dialog>
   );
 }

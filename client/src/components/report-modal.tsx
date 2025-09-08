@@ -53,11 +53,7 @@ export function ReportModal({ isOpen, onClose, entityType, entityId, entityTitle
 
   const reportMutation = useMutation({
     mutationFn: async (data: { entityType: string; entityId: string; reason: string; description?: string }) => {
-      return await apiRequest('/api/reports', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
+      return await apiRequest('POST', '/api/reports', data);
     },
     onSuccess: () => {
       toast({
