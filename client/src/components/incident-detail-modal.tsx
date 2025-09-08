@@ -988,25 +988,25 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
                             
                             {/* Current Status */}
                             {incident.properties?.CurrentStatus && incident.properties.CurrentStatus !== 'Unknown' && (
-                              <div className="flex">
-                                <div className="font-semibold text-red-800 w-32 flex-shrink-0">Current Status</div>
-                                <div className="text-red-900 font-semibold">{incident.properties.CurrentStatus}</div>
+                              <div className="flex flex-col sm:flex-row gap-1 sm:gap-3">
+                                <div className="font-semibold text-red-800 min-w-0 sm:w-32">Current Status</div>
+                                <div className="text-red-900 font-semibold break-words">{incident.properties.CurrentStatus}</div>
                               </div>
                             )}
                             
                             {/* Priority Level */}
                             {incident.properties?.Priority && incident.properties.Priority !== 'Unknown' && (
-                              <div className="flex">
-                                <div className="font-semibold text-red-800 w-32 flex-shrink-0">Priority Level</div>
-                                <div className="text-red-900 font-bold">{incident.properties.Priority}</div>
+                              <div className="flex flex-col sm:flex-row gap-1 sm:gap-3">
+                                <div className="font-semibold text-red-800 min-w-0 sm:w-32">Priority Level</div>
+                                <div className="text-red-900 font-bold break-words">{incident.properties.Priority}</div>
                               </div>
                             )}
                             
                             {/* Response Date */}
                             {incident.properties?.Response_Date && (
-                              <div className="flex">
-                                <div className="font-semibold text-red-800 w-32 flex-shrink-0">Response Date</div>
-                                <div className="text-red-900">
+                              <div className="flex flex-col sm:flex-row gap-1 sm:gap-3">
+                                <div className="font-semibold text-red-800 min-w-0 sm:w-32">Response Date</div>
+                                <div className="text-red-900 break-words">
                                   {new Date(incident.properties.Response_Date).toLocaleString('en-AU', {
                                     day: 'numeric',
                                     month: 'short',
@@ -1021,9 +1021,9 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
                             
                             {/* Published Date */}
                             {incident.properties?.publishedDate && incident.properties.publishedDate !== incident.properties?.Response_Date && (
-                              <div className="flex">
-                                <div className="font-semibold text-red-800 w-32 flex-shrink-0">Published</div>
-                                <div className="text-red-900">
+                              <div className="flex flex-col sm:flex-row gap-1 sm:gap-3">
+                                <div className="font-semibold text-red-800 min-w-0 sm:w-32">Published</div>
+                                <div className="text-red-900 break-words">
                                   {new Date(incident.properties.publishedDate).toLocaleString('en-AU', {
                                     day: 'numeric',
                                     month: 'short',
@@ -1038,9 +1038,9 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
                             
                             {/* Responsible Agency */}
                             {incident.properties?.Jurisdiction && (
-                              <div className="flex">
-                                <div className="font-semibold text-red-800 w-32 flex-shrink-0">Responsible Agency</div>
-                                <div className="text-red-900">
+                              <div className="flex flex-col sm:flex-row gap-1 sm:gap-3">
+                                <div className="font-semibold text-red-800 min-w-0 sm:w-32">Responsible Agency</div>
+                                <div className="text-red-900 break-words">
                                   {(() => {
                                     const jurisdiction = incident.properties.Jurisdiction;
                                     switch (jurisdiction) {
@@ -1057,17 +1057,17 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
                             
                             {/* Master Incident Number */}
                             {incident.properties?.Master_Incident_Number && (
-                              <div className="flex">
-                                <div className="font-semibold text-red-800 w-32 flex-shrink-0">Incident Number</div>
-                                <div className="text-red-900 font-mono">{incident.properties.Master_Incident_Number}</div>
+                              <div className="flex flex-col sm:flex-row gap-1 sm:gap-3">
+                                <div className="font-semibold text-red-800 min-w-0 sm:w-32">Incident Number</div>
+                                <div className="text-red-900 font-mono break-all">{incident.properties.Master_Incident_Number}</div>
                               </div>
                             )}
                             
                             {/* Additional Description */}
                             {incident.properties?.Description && (
-                              <div className="flex">
-                                <div className="font-semibold text-red-800 w-32 flex-shrink-0">Additional Info</div>
-                                <div className="text-red-900">{incident.properties.Description}</div>
+                              <div className="flex flex-col sm:flex-row gap-1 sm:gap-3">
+                                <div className="font-semibold text-red-800 min-w-0 sm:w-32">Additional Info</div>
+                                <div className="text-red-900 break-words">{incident.properties.Description}</div>
                               </div>
                             )}
                           </div>
