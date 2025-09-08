@@ -4,6 +4,20 @@ import { useQuery } from "@tanstack/react-query";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useTrafficData } from "@/hooks/use-traffic-data";
+
+// Import QFES detection function from the hook
+const isQFESIncident = (incident: any) => {
+  const incidentType = incident.properties?.incidentType?.toLowerCase() || '';
+  const groupedType = incident.properties?.GroupedType?.toLowerCase() || '';
+  const description = incident.properties?.description?.toLowerCase() || '';
+  
+  return incidentType.includes('fire') || 
+         groupedType.includes('fire') ||
+         description.includes('fire') ||
+         description.includes('qfes') ||
+         description.includes('ambulance') ||
+         description.includes('rescue');
+};
 import type { FilterState } from "@/pages/home";
 import { findRegionBySuburb } from "@/lib/regions";
 import { extractCoordinatesFromGeometry } from "@/lib/location-utils";
@@ -174,8 +188,12 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
               markerType = 'community';
             }
           } else {
-            // Official emergency incidents - all are emergency type
-            markerType = 'emergency';
+            // Official emergency incidents - distinguish QFES from ESQ
+            if (isQFESIncident(feature)) {
+              markerType = 'qfes';
+            } else {
+              markerType = 'emergency';
+            }
           }
           
           // Handle different geometry types for incidents (data already filtered)
@@ -353,6 +371,9 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
       // Emergency - blue for ESQ
       case 'emergency':
         return '#4f46e5'; // Blue - matches emergency filter icon
+      // QFES - red for fire services
+      case 'qfes':
+        return '#dc2626'; // Red - matches QFES fire services
       // Wildlife - green
       case 'wildlife':
         return '#16a34a'; // Green - matches wildlife filter icon
@@ -381,6 +402,8 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
           return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>`;
         case 'emergency':
           return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`;
+        case 'qfes':
+          return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>`;
         case 'wildlife':
           return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m17 14 3 3.3a1 1 0 0 1-.7 1.7H4.7a1 1 0 0 1-.7-1.7L7 14h-.3a1 1 0 0 1-.7-1.7L9 9h-.2A1 1 0 0 1 8 7.3L12 3l4 4.3a1 1 0 0 1-.8 1.7H15l3 3.3a1 1 0 0 1-.7 1.7H17z"/></svg>`;
         case 'community':
