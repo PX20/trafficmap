@@ -144,9 +144,9 @@ export default function Profile() {
           <div className="lg:col-span-2">
             <Card>
               <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="relative">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                  <div className="flex items-center gap-4 flex-1 min-w-0">
+                    <div className="relative flex-shrink-0">
                       <Avatar className="w-20 h-20">
                         <AvatarImage src={user.profileImageUrl || undefined} alt={user.firstName || 'User'} />
                         <AvatarFallback className="text-lg">
@@ -165,31 +165,37 @@ export default function Profile() {
                         </ObjectUploader>
                       </div>
                     </div>
-                    <div>
-                      <CardTitle className="text-xl" data-testid="text-user-name">
+                    <div className="min-w-0 flex-1">
+                      <CardTitle className="text-xl truncate" data-testid="text-user-name">
                         {user.firstName && user.lastName 
                           ? `${user.firstName} ${user.lastName}` 
                           : user.firstName || user.email
                         }
                       </CardTitle>
-                      <CardDescription className="flex items-center gap-2">
-                        <span data-testid="text-user-email">{user.email}</span>
-                        <Badge variant="secondary" className="text-xs">
-                          <UserCheck className="w-3 h-3 mr-1" />
-                          Member
-                        </Badge>
+                      <CardDescription className="block">
+                        <span className="block truncate" data-testid="text-user-email">{user.email}</span>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Badge variant="secondary" className="text-xs">
+                            <UserCheck className="w-3 h-3 mr-1" />
+                            Member
+                          </Badge>
+                        </div>
                       </CardDescription>
                       {user.primarySuburb && (
                         <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
-                          <MapPin className="w-3 h-3" />
-                          <span data-testid="text-user-suburb">{user.primarySuburb}</span>
+                          <MapPin className="w-3 h-3 flex-shrink-0" />
+                          <span className="truncate" data-testid="text-user-suburb">{user.primarySuburb}</span>
                         </div>
                       )}
                     </div>
                   </div>
                   
                   {!isEditing && (
-                    <Button onClick={() => setIsEditing(true)} data-testid="button-edit-profile">
+                    <Button 
+                      onClick={() => setIsEditing(true)} 
+                      className="w-full sm:w-auto flex-shrink-0"
+                      data-testid="button-edit-profile"
+                    >
                       Edit Profile
                     </Button>
                   )}
