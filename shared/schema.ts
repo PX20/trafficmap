@@ -516,3 +516,83 @@ export type IncidentFollowUp = typeof incidentFollowUps.$inferSelect;
 export type InsertIncidentFollowUp = z.infer<typeof insertIncidentFollowUpSchema>;
 export type Report = typeof reports.$inferSelect;
 export type InsertReport = z.infer<typeof insertReportSchema>;
+
+// Ad Campaigns table
+export const adCampaigns = pgTable("ad_campaigns", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  businessName: varchar("business_name").notNull(),
+  title: varchar("title").notNull(),
+  content: text("content").notNull(),
+  imageUrl: text("image_url"),
+  websiteUrl: text("website_url"),
+  address: text("address"),
+  suburb: varchar("suburb", { length: 100 }).notNull(),
+  cta: varchar("cta", { length: 100 }).default("Learn More"),
+  targetSuburbs: text("target_suburbs").array(),
+  dailyBudget: text("daily_budget"),
+  totalBudget: text("total_budget"),
+  cpmRate: text("cpm_rate").default("2.00"),
+  status: varchar("status", { length: 50 }).default("active"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Ad Views table
+export const adViews = pgTable("ad_views", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  adCampaignId: varchar("ad_campaign_id").references(() => adCampaigns.id),
+  userId: varchar("user_id").references(() => users.id),
+  durationMs: integer("duration_ms").notNull(),
+  userSuburb: varchar("user_suburb", { length: 100 }),
+  ipAddress: varchar("ip_address"),
+  userAgent: text("user_agent"),
+  viewedAt: timestamp("viewed_at").notNull(),
+  date: varchar("date").notNull(),
+}, (table) => ({
+  campaignDateIdx: index("idx_ad_campaign_date").on(table.adCampaignId, table.date),
+  userDateIdx: index("idx_ad_user_date").on(table.userId, table.date),
+}));
+
+// Ad Clicks table
+export const adClicks = pgTable("ad_clicks", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  adCampaignId: varchar("ad_campaign_id").references(() => adCampaigns.id),
+  userId: varchar("user_id").references(() => users.id),
+  ipAddress: varchar("ip_address"),
+  clickedAt: timestamp("clicked_at").notNull(),
+});
+
+// Ad table type exports
+export type AdCampaign = typeof adCampaigns.$inferSelect;
+export type InsertAdCampaign = typeof adCampaigns.$inferInsert;
+export type AdView = typeof adViews.$inferSelect;
+export type InsertAdView = typeof adViews.$inferInsert;
+export type AdClick = typeof adClicks.$inferSelect;
+export type InsertAdClick = typeof adClicks.$inferInsert;
+
+// Analytics types
+export interface AdStats {
+  campaignId: string;
+  totalViews: number;
+  uniqueUsers: number;
+  totalClicks: number;
+  totalViewTime: number;
+  ctr: number;
+  costOwed: number;
+}
+
+export interface DailyAdStats {
+  date: string;
+  views: number;
+  clicks: number;
+  cost: number;
+}
+
+export interface BusinessAdPerformance {
+  businessName: string;
+  totalCampaigns: number;
+  totalViews: number;
+  totalClicks: number;
+  totalSpent: number;
+  averageCTR: number;
+}
