@@ -141,15 +141,27 @@ export function isAuthenticated(req: any, res: any, next: any) {
     return res.status(401).json({ message: "Unauthorized" });
   }
   
-  // Check if user object has proper claims structure
-  if (!req.user || !req.user.claims || !req.user.claims.sub) {
-    console.error("Authentication failed: Invalid user claims structure", { 
-      hasUser: !!req.user, 
-      hasClaims: !!(req.user && req.user.claims),
-      hasSub: !!(req.user && req.user.claims && req.user.claims.sub)
-    });
-    return res.status(401).json({ message: "Unauthorized - Invalid session" });
+  // Check if user object exists and has valid ID (either local auth or OAuth)
+  if (!req.user) {
+    return res.status(401).json({ message: "Unauthorized - No user" });
   }
   
-  return next();
+  // For OAuth authentication (has claims structure)
+  if (req.user.claims && req.user.claims.sub) {
+    return next();
+  }
+  
+  // For local authentication (direct user object with ID)
+  if (req.user.id) {
+    return next();
+  }
+  
+  // Neither authentication method worked
+  console.error("Authentication failed: User has database fields but no OAuth claims, requiring re-authentication", { 
+    hasUser: !!req.user, 
+    hasClaims: !!(req.user && req.user.claims),
+    hasSub: !!(req.user && req.user.claims && req.user.claims.sub),
+    hasId: !!(req.user && req.user.id)
+  });
+  return res.status(401).json({ message: "Unauthorized - Please log in again" });
 }

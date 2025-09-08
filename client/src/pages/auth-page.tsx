@@ -138,27 +138,7 @@ export default function AuthPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                    <Button 
-                      type="button"
-                      onClick={() => window.location.href = '/api/login'}
-                      className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5"
-                      data-testid="button-replit-login"
-                    >
-                      Continue with Replit
-                    </Button>
-                    
-                    <div className="relative">
-                      <div className="absolute inset-0 flex items-center">
-                        <span className="w-full border-t border-gray-300" />
-                      </div>
-                      <div className="relative flex justify-center text-xs uppercase">
-                        <span className="bg-white px-2 text-gray-500">or use local account</span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4 mt-4">
+                  <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="login-username">Username</Label>
                       <Input

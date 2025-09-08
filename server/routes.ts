@@ -197,7 +197,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = (req.user as any).claims.sub;
+      // Support both OAuth and local authentication
+      const userId = (req.user as any).claims?.sub || (req.user as any).id;
       const user = await storage.getUser(userId);
       res.json(user);
     } catch (error) {
@@ -208,7 +209,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/user/accept-terms', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = (req.user as any).claims.sub;
+      // Support both OAuth and local authentication
+      const userId = (req.user as any).claims?.sub || (req.user as any).id;
       const user = await storage.acceptUserTerms(userId);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
