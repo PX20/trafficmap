@@ -23,9 +23,11 @@ const registerSchema = insertUserSchema.pick({
   email: true,
   firstName: true,
   lastName: true,
+  homeSuburb: true,
 }).extend({
   password: z.string().min(6, "Password must be at least 6 characters"),
   confirmPassword: z.string().min(1, "Please confirm your password"),
+  homeSuburb: z.string().min(1, "Home suburb is required"),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],
@@ -61,6 +63,7 @@ export default function AuthPage() {
       email: "",
       firstName: "",
       lastName: "",
+      homeSuburb: "",
     },
   });
 
@@ -237,6 +240,21 @@ export default function AuthPage() {
                       {registerForm.formState.errors.email && (
                         <p className="text-sm text-red-600" data-testid="error-register-email">
                           {registerForm.formState.errors.email.message}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="register-homeSuburb">Home Suburb</Label>
+                      <Input
+                        id="register-homeSuburb"
+                        data-testid="input-register-homeSuburb"
+                        {...registerForm.register("homeSuburb")}
+                        placeholder="e.g. Caloundra, Brisbane, Gold Coast"
+                      />
+                      {registerForm.formState.errors.homeSuburb && (
+                        <p className="text-sm text-red-600" data-testid="error-register-homeSuburb">
+                          {registerForm.formState.errors.homeSuburb.message}
                         </p>
                       )}
                     </div>
