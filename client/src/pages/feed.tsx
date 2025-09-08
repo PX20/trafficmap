@@ -250,7 +250,7 @@ export default function Feed() {
   });
 
   // Fetch ads for user's region
-  const { data: ads = [] } = useQuery({
+  const { data: ads = [] } = useQuery<any[]>({
     queryKey: ["/api/ads"],
     enabled: !!user?.homeSuburb,
   });

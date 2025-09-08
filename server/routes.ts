@@ -290,7 +290,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userId: userId,
         viewedAt: viewedAt,
         durationMs: duration,
-        userSuburb: userSuburb
+        userSuburb: userSuburb,
+        date: today
       });
 
       res.json({ message: "View recorded" });
