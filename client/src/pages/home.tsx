@@ -20,6 +20,17 @@ export interface FilterState {
   showUserCommunity: boolean;
   showUserTraffic: boolean;
   timeRange: 'now' | '1h' | '6h' | '24h';
+  // Status filtering
+  showActiveIncidents: boolean;
+  showResolvedIncidents: boolean;
+  // Priority filtering
+  showHighPriority: boolean;
+  showMediumPriority: boolean;
+  showLowPriority: boolean;
+  // Auto-refresh settings
+  autoRefresh: boolean;
+  // Distance filtering
+  distanceFilter: 'all' | '5km' | '10km' | '25km';
   // Location filtering
   locationFilter: boolean;
   homeLocation?: string;
@@ -44,7 +55,17 @@ export default function Home() {
     showUserWildlife: true,
     showUserCommunity: true,
     showUserTraffic: true,
-    timeRange: 'now',
+    timeRange: '6h', // Default to 6 hours instead of 'now'
+    // Status filters
+    showActiveIncidents: true,
+    showResolvedIncidents: false, // Hide resolved by default
+    // Priority filters
+    showHighPriority: true,
+    showMediumPriority: true,
+    showLowPriority: true,
+    // Auto-refresh and distance
+    autoRefresh: true,
+    distanceFilter: 'all',
     locationFilter: true,
     // Dynamic category filters will be added automatically when users interact with them
   });
