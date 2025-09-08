@@ -10,7 +10,25 @@ export function useAuth() {
   
   const { data: user, error, isLoading } = useQuery<SelectUser | undefined, Error>({
     queryKey: ["/api/auth/user"],
+    queryFn: async () => {
+      const res = await fetch("/api/auth/user", {
+        credentials: "include",
+      });
+      
+      // For auth endpoint, 401 is expected when not logged in
+      if (res.status === 401) {
+        return null;
+      }
+      
+      if (!res.ok) {
+        throw new Error(`${res.status}: ${res.statusText}`);
+      }
+      
+      return await res.json();
+    },
     retry: false,
+    refetchOnWindowFocus: false,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   const loginMutation = useMutation({
