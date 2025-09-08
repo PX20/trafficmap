@@ -19,7 +19,7 @@ import {
   getRegionFromCoordinates, 
   isFeatureInRegion, 
   extractCoordinatesFromGeometry,
-  QLD_REGIONS
+  QLD_REGIONS,
 } from "./region-utils";
 
 const API_BASE_URL = "https://api.qldtraffic.qld.gov.au";
@@ -306,14 +306,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      // Filter by suburb if provided
+      // Filter by region if suburb provided
       if (suburb && data.features) {
-        data.features = data.features.filter((feature: any) => {
-          const locality = feature.properties?.road_summary?.locality?.toLowerCase();
-          const roadName = feature.properties?.road_summary?.road_name?.toLowerCase();
-          const searchSuburb = (suburb as string).toLowerCase();
-          return locality?.includes(searchSuburb) || roadName?.includes(searchSuburb);
-        });
+        const region = findRegionBySuburb(suburb as string);
+        if (region) {
+          data.features = data.features.filter((feature: any) => {
+            return isFeatureInRegion(feature, region);
+          });
+        } else {
+          // Fallback to basic suburb filtering if no region found
+          data.features = data.features.filter((feature: any) => {
+            const locality = feature.properties?.road_summary?.locality?.toLowerCase();
+            const roadName = feature.properties?.road_summary?.road_name?.toLowerCase();
+            const searchSuburb = (suburb as string).toLowerCase();
+            return locality?.includes(searchSuburb) || roadName?.includes(searchSuburb);
+          });
+        }
       }
       
       // Transform and store events in local storage for caching (filter by age only)
@@ -423,7 +431,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const maxLimit = parseInt(limit as string, 10);
       
       // Get recent incidents from database with a reasonable limit
-      const recentIncidents = await storage.getRecentIncidents(maxLimit);
+      let recentIncidents = await storage.getRecentIncidents(maxLimit);
+      
+      // Apply regional filtering if suburb provided
+      if (suburb) {
+        const region = findRegionBySuburb(suburb as string);
+        if (region) {
+          recentIncidents = recentIncidents.filter((incident: any) => {
+            // Create a feature-like object for consistent filtering
+            const feature = {
+              properties: incident.properties || {},
+              geometry: incident.geometry
+            };
+            return isFeatureInRegion(feature, region);
+          });
+        }
+      }
       
       // Transform incidents to GeoJSON format
       let incidentFeatures = recentIncidents.map(incident => {
