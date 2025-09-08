@@ -97,8 +97,7 @@ export function AppHeader({ onMenuToggle, onFilterToggle, showFilterButton }: Ap
                     className="h-8 px-2 text-xs relative"
                     data-testid="button-messages-view"
                   >
-                    <MessageCircle className="w-4 h-4 mr-1" />
-                    Messages
+                    <MessageCircle className="w-4 h-4" />
                     {unreadMessages > 0 && (
                       <Badge
                         variant="destructive"

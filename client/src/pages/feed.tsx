@@ -57,6 +57,8 @@ export default function Feed() {
     showUserWildlife: true,
     showUserCommunity: true,
     showUserTraffic: true,
+    showUserLostFound: true,
+    showUserPets: true,
     // Status filters
     showActiveIncidents: true,
     showResolvedIncidents: false,
@@ -701,10 +703,10 @@ export default function Feed() {
       />
       
       {/* Floating Report Button - Desktop Only */}
-      <div className="hidden md:block">
+      <div className="hidden md:block fixed bottom-6 right-6 z-30">
         <Button
           onClick={() => setReportFormOpen(true)}
-          className="fixed bottom-6 right-6 z-30 shadow-xl h-14 w-14 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground"
+          className="shadow-xl h-14 w-14 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground"
           data-testid="button-report-incident"
         >
           <Plus className="w-6 h-6" />
