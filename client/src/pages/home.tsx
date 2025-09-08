@@ -240,16 +240,28 @@ export default function Home() {
 
 
       {/* Community Report Button */}
-      <Button
-        onClick={() => setReportFormOpen(true)}
-        className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-30 shadow-lg"
-        data-testid="button-community-report"
-      >
-        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-        </svg>
-        Share Community Update
-      </Button>
+      {isMobile ? (
+        <button
+          onClick={() => setReportFormOpen(true)}
+          className="fixed bottom-6 left-6 w-14 h-14 bg-blue-500 text-white rounded-full shadow-lg z-30 flex items-center justify-center hover:bg-blue-600 transition-colors"
+          data-testid="button-community-report"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+          </svg>
+        </button>
+      ) : (
+        <Button
+          onClick={() => setReportFormOpen(true)}
+          className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-30 shadow-lg"
+          data-testid="button-community-report"
+        >
+          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+          </svg>
+          Share Community Update
+        </Button>
+      )}
 
       {/* Mobile FAB for filters */}
       {isMobile && !sidebarOpen && (
