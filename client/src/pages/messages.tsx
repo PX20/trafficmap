@@ -113,7 +113,7 @@ export default function Messages() {
     <div className="min-h-screen bg-background">
       <AppHeader onMenuToggle={() => {}} />
       
-      <div className="container mx-auto px-4 pt-6 pb-4 max-w-7xl">
+      <div className="container mx-auto px-4 pt-20 pb-4 max-w-7xl">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6" style={{ height: 'calc(100vh - 140px)' }}>
           {/* Conversations List */}
           <Card className="lg:col-span-1 flex flex-col">
