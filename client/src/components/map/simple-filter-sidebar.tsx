@@ -210,35 +210,6 @@ export function SimpleFilterSidebar({ isOpen, filters, onFilterChange, onClose }
             )}
           </div>
           
-          {/* Time Range Filter Section */}
-          <div className="pt-4 border-t border-border">
-            <h2 className="text-lg font-semibold text-foreground mb-4">
-              Time Range
-            </h2>
-            
-            <div className="space-y-2">
-              <Label className="text-xs text-muted-foreground">Show incidents from:</Label>
-              <div className="grid grid-cols-2 gap-2">
-                {[
-                  { value: 'now', label: 'Just Now' },
-                  { value: '1h', label: 'Past Hour' },
-                  { value: '6h', label: 'Past 6 Hours' },
-                  { value: '24h', label: 'Past 24 Hours' }
-                ].map((option) => (
-                  <Button
-                    key={option.value}
-                    variant={filters.timeRange === option.value ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => onFilterChange('timeRange', option.value)}
-                    className="text-xs"
-                  >
-                    {option.label}
-                  </Button>
-                ))}
-              </div>
-            </div>
-          </div>
-
           {/* Location Setting Section */}
           <div className="pt-4 border-t border-border">
             <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">

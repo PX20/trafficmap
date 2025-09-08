@@ -19,7 +19,6 @@ export interface FilterState {
   showUserWildlife: boolean;
   showUserCommunity: boolean;
   showUserTraffic: boolean;
-  timeRange: 'now' | '1h' | '6h' | '24h';
   // Status filtering
   showActiveIncidents: boolean;
   showResolvedIncidents: boolean;
@@ -55,7 +54,6 @@ export default function Home() {
     showUserWildlife: true,
     showUserCommunity: true,
     showUserTraffic: true,
-    timeRange: '6h', // Default to 6 hours instead of 'now'
     // Status filters
     showActiveIncidents: true,
     showResolvedIncidents: false, // Hide resolved by default

@@ -57,7 +57,16 @@ export default function Feed() {
     showUserWildlife: true,
     showUserCommunity: true,
     showUserTraffic: true,
-    timeRange: 'now',
+    // Status filters
+    showActiveIncidents: true,
+    showResolvedIncidents: false,
+    // Priority filters
+    showHighPriority: true,
+    showMediumPriority: true,
+    showLowPriority: true,
+    // Auto-refresh and distance
+    autoRefresh: true,
+    distanceFilter: 'all',
     locationFilter: true,
   });
 
