@@ -57,12 +57,9 @@ function updateUserSession(
 async function upsertUser(
   claims: any,
 ) {
-  // Generate a username from email or use a default pattern for OAuth users
-  const username = claims["email"] ? claims["email"].split('@')[0] + '_oauth' : 'oauth_user_' + claims["sub"];
-  
   await storage.upsertUser({
     id: String(claims["sub"]), // Ensure ID is a string
-    username: username,
+    username: null, // No usernames needed - use full names like social media
     password: null, // OAuth users don't need passwords
     email: claims["email"] || null,
     firstName: claims["first_name"] || null,
