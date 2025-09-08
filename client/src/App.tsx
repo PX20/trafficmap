@@ -54,26 +54,28 @@ function Router() {
     );
   }
 
+  // Handle unauthenticated users first
+  if (!isAuthenticated) {
+    return (
+      <Switch>
+        <Route path="/" component={AuthPage} />
+        <Route component={AuthPage} />
+      </Switch>
+    );
+  }
+
+  // Handle authenticated users
   return (
     <Switch>
-      {!isAuthenticated ? (
-        <>
-          <Route path="/" component={AuthPage} />
-          <Route component={AuthPage} />
-        </>
-      ) : (
-        <>
-          <Route path="/" component={Feed} />
-          <Route path="/map" component={Home} />
-          <Route path="/feed" component={Feed} />
-          <Route path="/profile" component={Profile} />
-          <Route path="/users/:userId" component={UserProfile} />
-          <Route path="/messages" component={Messages} />
-          <Route path="/messages/:conversationId" component={Messages} />
-          <Route path="/notifications" component={Notifications} />
-          <Route component={NotFound} />
-        </>
-      )}
+      <Route path="/" component={Feed} />
+      <Route path="/map" component={Home} />
+      <Route path="/feed" component={Feed} />
+      <Route path="/profile" component={Profile} />
+      <Route path="/users/:userId" component={UserProfile} />
+      <Route path="/messages" component={Messages} />
+      <Route path="/messages/:conversationId" component={Messages} />
+      <Route path="/notifications" component={Notifications} />
+      <Route component={NotFound} />
     </Switch>
   );
 }
