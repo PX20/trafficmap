@@ -114,7 +114,7 @@ export default function Messages() {
       <AppHeader onMenuToggle={() => {}} />
       
       <div className="container mx-auto px-4 py-6 max-w-7xl">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-120px)]">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-160px)]">
           {/* Conversations List */}
           <Card className="lg:col-span-1">
             <CardHeader>
@@ -124,7 +124,7 @@ export default function Messages() {
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-              <ScrollArea className="h-[calc(100vh-200px)]">
+              <ScrollArea className="h-[calc(100vh-280px)]">
                 {conversations.length === 0 ? (
                   <div className="p-4 text-center text-muted-foreground">
                     <Users className="w-12 h-12 mx-auto mb-2 opacity-50" />
@@ -216,7 +216,7 @@ export default function Messages() {
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent className="flex flex-col h-[calc(100vh-300px)]">
+                <CardContent className="flex flex-col h-[calc(100vh-380px)]">
                   {/* Messages */}
                   <ScrollArea className="flex-1 mb-4">
                     {messagesLoading ? (
