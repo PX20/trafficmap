@@ -14,6 +14,7 @@ import { IncidentReportForm } from "@/components/incident-report-form";
 import { AppHeader } from "@/components/map/app-header";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { findRegionBySuburb, getRegionalSuburbs } from "@/lib/regions";
+import { FilterState } from "@/pages/home";
 import { 
   MapPin, 
   Clock, 
@@ -44,6 +45,38 @@ export default function Feed() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showRegionalUpdates, setShowRegionalUpdates] = useState(true);
   const [reportFormOpen, setReportFormOpen] = useState(false);
+  
+  // Add filter state to match the map functionality
+  const [filters, setFilters] = useState<FilterState>({
+    showTrafficEvents: true,
+    showIncidents: true,      // ESQ emergency data
+    showQFES: true,           // QFES fire & emergency data  
+    showUserReports: true,
+    showUserSafetyCrime: true,
+    showUserWildlife: true,
+    showUserCommunity: true,
+    showUserTraffic: true,
+    timeRange: '24h',
+    locationFilter: false,
+  });
+  
+  // Helper function to identify QFES incidents (same as in use-traffic-data.ts)
+  const isQFESIncident = (incident: any) => {
+    const incidentType = incident.properties?.incidentType?.toLowerCase() || '';
+    const groupedType = incident.properties?.GroupedType?.toLowerCase() || '';
+    const description = incident.properties?.description?.toLowerCase() || '';
+    
+    return incidentType.includes('fire') || 
+           incidentType.includes('smoke') || 
+           incidentType.includes('chemical') || 
+           incidentType.includes('hazmat') ||
+           groupedType.includes('fire') || 
+           groupedType.includes('smoke') || 
+           groupedType.includes('chemical') || 
+           groupedType.includes('hazmat') ||
+           description.includes('fire') || 
+           description.includes('smoke');
+  };
   
   // Load saved location from localStorage on startup (sync with map home location)
   useEffect(() => {
@@ -168,8 +201,40 @@ export default function Feed() {
   
   const deduplicatedIncidents = Array.from(incidentMap.values());
 
+  // Apply incident type filtering (like the map does)
+  let filteredIncidents = deduplicatedIncidents.filter((incident: any) => {
+    // Filter traffic events
+    if (incident.type === 'traffic') {
+      return filters.showTrafficEvents === true;
+    }
+    
+    // Filter user reports
+    const isUserReported = incident.properties?.userReported;
+    if (isUserReported) {
+      if (!filters.showUserReports) return false;
+      
+      const incidentType = incident.properties?.incidentType;
+      if (incidentType === 'crime') {
+        return filters.showUserSafetyCrime === true;
+      } else if (incidentType === 'wildlife') {
+        return filters.showUserWildlife === true;
+      } else if (incidentType === 'traffic') {
+        return filters.showUserTraffic === true;
+      } else {
+        return filters.showUserCommunity === true;
+      }
+    } 
+    
+    // Filter official emergency incidents
+    const isQFES = isQFESIncident(incident);
+    if (isQFES) {
+      return filters.showQFES === true;
+    } else {
+      return filters.showIncidents === true;
+    }
+  });
+
   // Apply regional filtering if location is selected
-  let filteredIncidents = deduplicatedIncidents;
   
   if (showRegionalUpdates && selectedSuburb) {
     const region = findRegionBySuburb(selectedSuburb);
