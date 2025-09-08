@@ -241,7 +241,7 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[95vw] sm:max-w-lg lg:max-w-xl max-h-[90vh] flex flex-col overflow-visible">
+      <DialogContent className="w-[95vw] sm:max-w-lg lg:max-w-xl max-h-[90vh] flex flex-col overflow-visible" style={{ left: 'max(1rem, 50% - 20rem)' }}>
         <DialogHeader className="flex-shrink-0">
           <DialogTitle>Share Community Information</DialogTitle>
           <DialogDescription>
@@ -272,7 +272,7 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
                         <SelectValue placeholder="Choose a category" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent position="popper" sideOffset={4}>
+                    <SelectContent position="popper" sideOffset={4} className="z-[9999]" side="bottom" align="start">
                       {categoriesLoading ? (
                         <div className="px-2 py-2 text-sm text-gray-500">Loading categories...</div>
                       ) : categories.length > 0 ? (
@@ -305,7 +305,7 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
                           <SelectValue placeholder="Choose specific type" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent position="popper" sideOffset={4}>
+                      <SelectContent position="popper" sideOffset={4} className="z-[9999]" side="bottom" align="start">
                         {(subcategories as any[]).map((subcategory: any) => (
                           <SelectItem key={subcategory.id} value={subcategory.id}>
                             <div className="flex flex-col">
@@ -402,7 +402,7 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
                         <SelectValue placeholder="Select option" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent>
+                    <SelectContent position="popper" sideOffset={4} className="z-[9999]" side="bottom" align="start">
                       <SelectItem value="yes">Yes - Authorities have been notified</SelectItem>
                       <SelectItem value="no">No - Authorities haven't been contacted yet</SelectItem>
                       <SelectItem value="not_needed">Not applicable - No authorities needed</SelectItem>
