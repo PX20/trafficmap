@@ -241,7 +241,7 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[95vw] sm:max-w-lg lg:max-w-xl max-h-[90vh] flex flex-col overflow-visible" style={{ left: 'max(1rem, 50% - 20rem)' }}>
+      <DialogContent className="w-[95vw] sm:max-w-lg lg:max-w-xl max-h-[90vh] flex flex-col">
         <DialogHeader className="flex-shrink-0">
           <DialogTitle>Share Community Information</DialogTitle>
           <DialogDescription>
