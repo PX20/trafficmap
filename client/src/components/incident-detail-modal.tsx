@@ -1024,7 +1024,7 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
             {incident?.properties?.photoUrl && (
               <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 shadow-lg">
                 <img 
-                  src={`/api/compress-image?path=${encodeURIComponent(incident.properties.photoUrl)}`}
+                  src={`/api/compress-image?path=${encodeURIComponent(incident.properties.photoUrl.startsWith('/') ? incident.properties.photoUrl : '/' + incident.properties.photoUrl)}`}
                   alt="Incident photo" 
                   className="w-full h-56 object-cover cursor-pointer hover:scale-105 transition-transform duration-300"
                   data-testid="img-incident-photo"

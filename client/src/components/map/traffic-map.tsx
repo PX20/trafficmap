@@ -494,7 +494,7 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
     // Check if this is a user-reported incident
     if (properties?.userReported) {
       const photoUrl = properties?.photoUrl;
-      const compressedPhotoUrl = photoUrl ? `/api/compress-image?path=${encodeURIComponent(photoUrl)}` : null;
+      const compressedPhotoUrl = photoUrl ? `/api/compress-image?path=${encodeURIComponent(photoUrl.startsWith('/') ? photoUrl : '/' + photoUrl)}` : null;
       const photoThumbnail = compressedPhotoUrl ? `
         <div class="mb-3 rounded-lg overflow-hidden border border-gray-200">
           <img src="${compressedPhotoUrl}" alt="Incident photo" class="w-full h-24 object-cover hover:scale-105 transition-transform cursor-pointer" onclick="window.showIncidentDetails('${properties.id}', 'user-reported')" />
