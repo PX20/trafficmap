@@ -203,7 +203,12 @@ export default function Home() {
   }, [filters.homeLocation, filters.homeCoordinates, filters.homeBoundingBox, filters.locationFilter]);
 
   const handleFilterChange = (key: keyof FilterState, value: boolean | string | { lat: number; lon: number } | [number, number, number, number] | undefined) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
+    console.log('Filter change:', key, '=', value);
+    setFilters(prev => {
+      const newState = { ...prev, [key]: value };
+      console.log('New filter state:', newState);
+      return newState;
+    });
   };
 
   const toggleSidebar = () => {
