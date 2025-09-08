@@ -79,11 +79,11 @@ export function TermsAndConditionsModal({ isOpen, onAccept }: TermsAndConditions
           </div>
         </DialogHeader>
 
-        <div className="flex-1 p-6 overflow-hidden flex flex-col">
+        <div className="flex-1 p-6 overflow-hidden flex flex-col min-h-0">
           <div id="terms-description" className="sr-only">
             Terms and Conditions document that must be read and accepted to use QLD Safety Monitor
           </div>
-          <ScrollArea className="flex-1 pr-4" onScrollCapture={() => setHasReadTerms(true)}>
+          <ScrollArea className="flex-1 pr-4 h-0 min-h-[300px] max-h-[50vh]" onScrollCapture={() => setHasReadTerms(true)}>
             <div className="space-y-6 text-sm text-gray-700 leading-relaxed">
               <section>
                 <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
