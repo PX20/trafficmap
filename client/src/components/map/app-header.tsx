@@ -72,7 +72,7 @@ export function AppHeader({ onMenuToggle, onFilterToggle, showFilterButton }: Ap
                   <Button
                     variant={location === "/map" ? "default" : "ghost"}
                     size="sm"
-                    className="h-8 px-3 text-xs"
+                    className="h-8 px-2 text-xs"
                     data-testid="button-map-view"
                   >
                     <Map className="w-4 h-4 mr-1" />
@@ -83,11 +83,30 @@ export function AppHeader({ onMenuToggle, onFilterToggle, showFilterButton }: Ap
                   <Button
                     variant={location === "/feed" || location === "/" ? "default" : "ghost"}
                     size="sm"
-                    className="h-8 px-3 text-xs"
+                    className="h-8 px-2 text-xs"
                     data-testid="button-feed-view"
                   >
                     <List className="w-4 h-4 mr-1" />
                     Feed
+                  </Button>
+                </Link>
+                <Link href="/messages">
+                  <Button
+                    variant={location === "/messages" ? "default" : "ghost"}
+                    size="sm"
+                    className="h-8 px-2 text-xs relative"
+                    data-testid="button-messages-view"
+                  >
+                    <MessageCircle className="w-4 h-4 mr-1" />
+                    Messages
+                    {unreadMessages > 0 && (
+                      <Badge
+                        variant="destructive"
+                        className="absolute -top-1 -right-1 h-3 w-3 p-0 text-xs"
+                      >
+                        {unreadMessages}
+                      </Badge>
+                    )}
                   </Button>
                 </Link>
               </div>
@@ -175,6 +194,25 @@ export function AppHeader({ onMenuToggle, onFilterToggle, showFilterButton }: Ap
                   >
                     <List className="w-4 h-4 mr-1" />
                     Feed
+                  </Button>
+                </Link>
+                <Link href="/messages">
+                  <Button
+                    variant={location === "/messages" ? "default" : "ghost"}
+                    size="sm"
+                    className="h-8 relative"
+                    data-testid="button-messages-view"
+                  >
+                    <MessageCircle className="w-4 h-4 mr-1" />
+                    Messages
+                    {unreadMessages > 0 && (
+                      <Badge
+                        variant="destructive"
+                        className="absolute -top-1 -right-1 h-4 w-4 p-0 text-xs"
+                      >
+                        {unreadMessages}
+                      </Badge>
+                    )}
                   </Button>
                 </Link>
               </div>
