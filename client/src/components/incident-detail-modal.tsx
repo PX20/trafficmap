@@ -1139,7 +1139,7 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
                               {followUp.status.replace('_', ' ')}
                             </Badge>
                             <span className="text-xs text-gray-500">
-                              {new Date(followUp.createdAt).toLocaleString('en-AU', {
+                              {followUp.createdAt && new Date(followUp.createdAt).toLocaleString('en-AU', {
                                 day: 'numeric',
                                 month: 'short',
                                 hour: 'numeric',
