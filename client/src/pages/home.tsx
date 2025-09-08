@@ -19,6 +19,8 @@ export interface FilterState {
   showUserWildlife: boolean;
   showUserCommunity: boolean;
   showUserTraffic: boolean;
+  showUserLostFound: boolean;
+  showUserPets: boolean;
   // Status filtering
   showActiveIncidents: boolean;
   showResolvedIncidents: boolean;
@@ -54,6 +56,8 @@ export default function Home() {
     showUserWildlife: true,
     showUserCommunity: true,
     showUserTraffic: true,
+    showUserLostFound: true,
+    showUserPets: true,
     // Status filters
     showActiveIncidents: true,
     showResolvedIncidents: false, // Hide resolved by default

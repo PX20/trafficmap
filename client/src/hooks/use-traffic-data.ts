@@ -132,20 +132,26 @@ export function useTrafficData(filters: FilterState): ProcessedTrafficData {
   const emergencyIncidents = regionalEsqIncidents.length;
   const qfesIncidentsCount = regionalQfesIncidents.length;
   const userSafetyCrime = regionalIncidents.filter((i: any) => 
-    i.properties?.userReported && i.properties?.incidentType === 'crime'
+    i.properties?.userReported && i.properties?.categoryId === '792759f4-1b98-4665-b14c-44a54e9969e9'
   ).length;
   const userWildlife = regionalIncidents.filter((i: any) => 
-    i.properties?.userReported && i.properties?.incidentType === 'wildlife'
+    i.properties?.userReported && i.properties?.categoryId === 'd03f47a9-10fb-4656-ae73-92e959d7566a'
   ).length;
   const userCommunity = regionalIncidents.filter((i: any) => 
-    i.properties?.userReported && !['crime', 'wildlife', 'traffic'].includes(i.properties?.incidentType)
+    i.properties?.userReported && i.properties?.categoryId === 'deaca906-3561-4f80-b79f-ed99561c3b04'
   ).length;
   const userTraffic = regionalIncidents.filter((i: any) => 
-    i.properties?.userReported && i.properties?.incidentType === 'traffic'
+    i.properties?.userReported && i.properties?.categoryId === '9b1d58d9-cfd1-4c31-93e9-754276a5f265'
+  ).length;
+  const userLostFound = regionalIncidents.filter((i: any) => 
+    i.properties?.userReported && i.properties?.categoryId === 'd1dfcd4e-48e9-4e58-9476-4782a2a132f3'
+  ).length;
+  const userPets = regionalIncidents.filter((i: any) => 
+    i.properties?.userReported && i.properties?.categoryId === '4ea3a6f0-c49e-4baf-9ca5-f074ca2811b0'
   ).length;
   
   const counts = {
-    total: trafficEvents + emergencyIncidents + qfesIncidentsCount + userSafetyCrime + userWildlife + userCommunity + userTraffic,
+    total: trafficEvents + emergencyIncidents + qfesIncidentsCount + userSafetyCrime + userWildlife + userCommunity + userTraffic + userLostFound + userPets,
     trafficEvents,
     emergencyIncidents,
     qfesIncidents: qfesIncidentsCount,
@@ -153,6 +159,8 @@ export function useTrafficData(filters: FilterState): ProcessedTrafficData {
     userWildlife,
     userCommunity,
     userTraffic,
+    userLostFound,
+    userPets,
   };
 
   // Apply filtering for display based on ALL data (for map)
@@ -162,15 +170,22 @@ export function useTrafficData(filters: FilterState): ProcessedTrafficData {
     const isUserReported = incident.properties?.userReported;
     
     if (isUserReported) {
-      const incidentType = incident.properties?.incidentType;
+      const categoryId = incident.properties?.categoryId;
       
-      if (incidentType === 'crime') {
+      if (categoryId === '792759f4-1b98-4665-b14c-44a54e9969e9') { // Safety & Crime
         return filters.showUserSafetyCrime === true;
-      } else if (incidentType === 'wildlife') {
+      } else if (categoryId === 'd03f47a9-10fb-4656-ae73-92e959d7566a') { // Wildlife & Nature
         return filters.showUserWildlife === true;
-      } else if (incidentType === 'traffic') {
+      } else if (categoryId === '9b1d58d9-cfd1-4c31-93e9-754276a5f265') { // Infrastructure & Hazards (Traffic)
         return filters.showUserTraffic === true;
+      } else if (categoryId === 'deaca906-3561-4f80-b79f-ed99561c3b04') { // Community Issues
+        return filters.showUserCommunity === true;
+      } else if (categoryId === 'd1dfcd4e-48e9-4e58-9476-4782a2a132f3') { // Lost & Found
+        return filters.showUserLostFound === true;
+      } else if (categoryId === '4ea3a6f0-c49e-4baf-9ca5-f074ca2811b0') { // Pets
+        return filters.showUserPets === true;
       } else {
+        // Fallback for unknown categories - show with community issues
         return filters.showUserCommunity === true;
       }
     } else {

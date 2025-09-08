@@ -6,7 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { ChevronDown, ChevronRight, Car, Shield, Users, MapPin, Flame, Zap, Trees, AlertTriangle, RefreshCw, Target } from "lucide-react";
+import { ChevronDown, ChevronRight, Car, Shield, Users, MapPin, Flame, Zap, Trees, AlertTriangle, RefreshCw, Target, Heart } from "lucide-react";
 import type { FilterState } from "@/pages/home";
 import { LocationAutocomplete } from "@/components/location-autocomplete";
 import { useTrafficData } from "@/hooks/use-traffic-data";
@@ -204,6 +204,32 @@ export function SimpleFilterSidebar({ isOpen, filters, onFilterChange, onClose }
                   <Car className="w-4 h-4 text-orange-500" />
                   <Label htmlFor="filter-user-traffic" className="text-sm text-foreground flex-1">
                     Road & Traffic
+                  </Label>
+                </div>
+
+                <div className="flex items-center space-x-3">
+                  <Checkbox 
+                    id="filter-user-lost-found"
+                    checked={filters.showUserLostFound === true}
+                    onCheckedChange={(checked: boolean) => onFilterChange('showUserLostFound', !!checked)}
+                    data-testid="checkbox-filter-user-lost-found"
+                  />
+                  <Target className="w-4 h-4 text-amber-500" />
+                  <Label htmlFor="filter-user-lost-found" className="text-sm text-foreground flex-1">
+                    Lost & Found
+                  </Label>
+                </div>
+
+                <div className="flex items-center space-x-3">
+                  <Checkbox 
+                    id="filter-user-pets"
+                    checked={filters.showUserPets === true}
+                    onCheckedChange={(checked: boolean) => onFilterChange('showUserPets', !!checked)}
+                    data-testid="checkbox-filter-user-pets"
+                  />
+                  <Heart className="w-4 h-4 text-pink-500" />
+                  <Label htmlFor="filter-user-pets" className="text-sm text-foreground flex-1">
+                    Pets
                   </Label>
                 </div>
               </div>
