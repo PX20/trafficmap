@@ -4,7 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
 import AuthPage from "@/pages/auth-page";
@@ -13,10 +13,21 @@ import Profile from "@/pages/profile";
 import UserProfile from "@/pages/user-profile";
 import Messages from "@/pages/messages";
 import Notifications from "@/pages/notifications";
+import { TermsAndConditionsModal } from "@/components/terms-and-conditions-modal";
 
 function Router() {
   const { user, isLoading } = useAuth();
   const isAuthenticated = !!user;
+  const [showTermsModal, setShowTermsModal] = useState(false);
+
+  // Check if user needs to accept terms
+  useEffect(() => {
+    if (user && !user.termsAccepted) {
+      setShowTermsModal(true);
+    } else {
+      setShowTermsModal(false);
+    }
+  }, [user]);
 
   // Preload incident data as soon as app starts
   useEffect(() => {
@@ -66,17 +77,25 @@ function Router() {
 
   // Handle authenticated users
   return (
-    <Switch>
-      <Route path="/" component={Feed} />
-      <Route path="/map" component={Home} />
-      <Route path="/feed" component={Feed} />
-      <Route path="/profile" component={Profile} />
-      <Route path="/users/:userId" component={UserProfile} />
-      <Route path="/messages" component={Messages} />
-      <Route path="/messages/:conversationId" component={Messages} />
-      <Route path="/notifications" component={Notifications} />
-      <Route component={NotFound} />
-    </Switch>
+    <>
+      <Switch>
+        <Route path="/" component={Feed} />
+        <Route path="/map" component={Home} />
+        <Route path="/feed" component={Feed} />
+        <Route path="/profile" component={Profile} />
+        <Route path="/users/:userId" component={UserProfile} />
+        <Route path="/messages" component={Messages} />
+        <Route path="/messages/:conversationId" component={Messages} />
+        <Route path="/notifications" component={Notifications} />
+        <Route component={NotFound} />
+      </Switch>
+      
+      {/* Terms and Conditions Modal */}
+      <TermsAndConditionsModal
+        isOpen={showTermsModal}
+        onAccept={() => setShowTermsModal(false)}
+      />
+    </>
   );
 }
 
