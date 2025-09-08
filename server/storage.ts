@@ -47,7 +47,16 @@ import {
   type IncidentFollowUp,
   type InsertIncidentFollowUp,
   type Report,
-  type InsertReport
+  type InsertReport,
+  type AdCampaign,
+  type InsertAdCampaign,
+  type AdView,
+  type InsertAdView,
+  type AdClick,
+  type InsertAdClick,
+  adCampaigns,
+  adViews,
+  adClicks
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, or, ne, sql } from "drizzle-orm";
@@ -104,6 +113,17 @@ export interface IStorage {
   getEmergencyContacts(userId: string): Promise<EmergencyContact[]>;
   createEmergencyContact(contact: InsertEmergencyContact): Promise<EmergencyContact>;
   deleteEmergencyContact(id: string): Promise<boolean>;
+  
+  // Ad campaign operations
+  getActiveAdsForSuburb(suburb: string, limit: number): Promise<AdCampaign[]>;
+  getAdCampaign(id: string): Promise<AdCampaign | undefined>;
+  createAdCampaign(campaign: InsertAdCampaign): Promise<AdCampaign>;
+  updateAdCampaign(id: string, updates: Partial<AdCampaign>): Promise<AdCampaign | undefined>;
+  
+  // Ad tracking operations
+  recordAdView(viewData: InsertAdView): Promise<AdView>;
+  recordAdClick(clickData: InsertAdClick): Promise<AdClick>;
+  getAdViewsToday(userId: string, adId: string, date: string): Promise<number>;
   
   // Safety check-in operations
   createSafetyCheckIn(checkIn: InsertSafetyCheckIn): Promise<SafetyCheckIn>;
@@ -764,6 +784,106 @@ export class DatabaseStorage implements IStorage {
         eq(reports.entityId, entityId)
       ))
       .orderBy(desc(reports.createdAt));
+  }
+
+  // Ad Campaign Operations
+  async getActiveAdsForSuburb(suburb: string, limit: number): Promise<AdCampaign[]> {
+    // Find ads that target this suburb or neighboring areas
+    const campaigns = await db
+      .select()
+      .from(adCampaigns)
+      .where(
+        and(
+          eq(adCampaigns.status, 'active'),
+          or(
+            eq(adCampaigns.suburb, suburb),
+            sql`${suburb} = ANY(${adCampaigns.targetSuburbs})`
+          )
+        )
+      )
+      .limit(limit)
+      .orderBy(sql`RANDOM()`); // Random order for fair distribution
+
+    return campaigns;
+  }
+
+  async getAdCampaign(id: string): Promise<AdCampaign | undefined> {
+    const [campaign] = await db
+      .select()
+      .from(adCampaigns)
+      .where(eq(adCampaigns.id, id));
+    
+    return campaign;
+  }
+
+  async createAdCampaign(campaignData: InsertAdCampaign): Promise<AdCampaign> {
+    const [campaign] = await db
+      .insert(adCampaigns)
+      .values({
+        ...campaignData,
+        updatedAt: new Date(),
+      })
+      .returning();
+    
+    return campaign;
+  }
+
+  async updateAdCampaign(id: string, updates: Partial<AdCampaign>): Promise<AdCampaign | undefined> {
+    const [updated] = await db
+      .update(adCampaigns)
+      .set({ 
+        ...updates, 
+        updatedAt: new Date() 
+      })
+      .where(eq(adCampaigns.id, id))
+      .returning();
+    
+    return updated;
+  }
+
+  // Ad Tracking Operations
+  async recordAdView(viewData: InsertAdView): Promise<AdView> {
+    try {
+      const [view] = await db
+        .insert(adViews)
+        .values({
+          ...viewData,
+          date: viewData.viewedAt.toISOString().split('T')[0], // YYYY-MM-DD
+        })
+        .returning();
+      
+      return view;
+    } catch (error: any) {
+      // Handle duplicate view gracefully (user already viewed this ad today)
+      if (error.code === '23505') { // PostgreSQL unique violation
+        throw new Error('View already recorded for this user today');
+      }
+      throw error;
+    }
+  }
+
+  async recordAdClick(clickData: InsertAdClick): Promise<AdClick> {
+    const [click] = await db
+      .insert(adClicks)
+      .values(clickData)
+      .returning();
+    
+    return click;
+  }
+
+  async getAdViewsToday(userId: string, adId: string, date: string): Promise<number> {
+    const result = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(adViews)
+      .where(
+        and(
+          eq(adViews.userId, userId),
+          eq(adViews.adCampaignId, adId),
+          eq(adViews.date, date)
+        )
+      );
+    
+    return result[0]?.count || 0;
   }
 
 }
