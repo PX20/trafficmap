@@ -45,7 +45,11 @@ function Router() {
   return (
     <Switch>
       {isLoading || !isAuthenticated ? (
-        <Route path="/" component={AuthPage} />
+        <>
+          <Route path="/" component={AuthPage} />
+          {/* Redirect all other routes to auth page for unauthenticated users */}
+          <Route component={AuthPage} />
+        </>
       ) : (
         <>
           <Route path="/" component={Feed} />
@@ -56,9 +60,9 @@ function Router() {
           <Route path="/messages" component={Messages} />
           <Route path="/messages/:conversationId" component={Messages} />
           <Route path="/notifications" component={Notifications} />
+          <Route component={NotFound} />
         </>
       )}
-      <Route component={NotFound} />
     </Switch>
   );
 }
