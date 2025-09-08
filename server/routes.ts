@@ -1617,6 +1617,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Create a new category
+  app.post("/api/categories", async (req, res) => {
+    try {
+      const categoryData = req.body;
+      const category = await storage.createCategory(categoryData);
+      res.json(category);
+    } catch (error) {
+      console.error("Error creating category:", error);
+      res.status(500).json({ error: "Failed to create category" });
+    }
+  });
+
+  // Create a new subcategory
+  app.post("/api/subcategories", async (req, res) => {
+    try {
+      const subcategoryData = req.body;
+      const subcategory = await storage.createSubcategory(subcategoryData);
+      res.json(subcategory);
+    } catch (error) {
+      console.error("Error creating subcategory:", error);
+      res.status(500).json({ error: "Failed to create subcategory" });
+    }
+  });
+
   // Object Storage endpoints for photo uploads
   
   // Get upload URL for photos
