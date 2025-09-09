@@ -13,6 +13,7 @@ import { useMutation } from '@tanstack/react-query';
 import { ArrowLeft, Store, Coffee, Utensils, Wrench, Heart, Palette, Eye, Upload, Image } from 'lucide-react';
 import { Link } from 'wouter';
 import { ObjectUploader } from '@/components/ObjectUploader';
+import { LocationAutocomplete } from '@/components/location-autocomplete';
 
 // Template definitions for different business types
 const AD_TEMPLATES = {
@@ -387,24 +388,20 @@ export default function CreateAd() {
                 </div>
                 <div>
                   <Label htmlFor="suburb">Suburb *</Label>
-                  <Input
-                    id="suburb"
+                  <LocationAutocomplete
                     value={formData.suburb}
-                    onChange={(e) => setFormData(prev => ({ ...prev, suburb: e.target.value }))}
-                    placeholder="e.g., Caloundra"
-                    data-testid="input-suburb"
+                    onChange={(location) => setFormData(prev => ({ ...prev, suburb: location }))}
+                    placeholder="e.g., Caloundra, Maroochydore..."
                   />
                 </div>
               </div>
 
               <div>
                 <Label htmlFor="address">Business Address</Label>
-                <Input
-                  id="address"
+                <LocationAutocomplete
                   value={formData.address}
-                  onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
-                  placeholder="123 Main Street"
-                  data-testid="input-address"
+                  onChange={(location) => setFormData(prev => ({ ...prev, address: location }))}
+                  placeholder="123 Main Street, Suburb..."
                 />
               </div>
 
