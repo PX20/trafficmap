@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -113,6 +113,19 @@ export default function CreateAd() {
     logoUrl: '',
     backgroundUrl: ''
   });
+
+  // Auto-populate business information from user account
+  useEffect(() => {
+    if (user && user.accountType === 'business') {
+      setFormData(prev => ({
+        ...prev,
+        businessName: user.businessName || '',
+        websiteUrl: user.businessWebsite || '',
+        address: user.businessAddress || '',
+        suburb: user.homeSuburb || '', // Use home suburb as default
+      }));
+    }
+  }, [user]);
 
   const [previewMode, setPreviewMode] = useState(false);
 
