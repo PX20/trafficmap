@@ -287,12 +287,14 @@ export default function AuthPage() {
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="register-firstName">First Name</Label>
+                        <Label htmlFor="register-firstName">
+                          {registerForm.watch("accountType") === 'business' ? 'Contact First Name' : 'First Name'}
+                        </Label>
                         <Input
                           id="register-firstName"
                           data-testid="input-register-firstName"
                           {...registerForm.register("firstName")}
-                          placeholder="First name"
+                          placeholder={registerForm.watch("accountType") === 'business' ? 'Contact first name' : 'First name'}
                         />
                         {registerForm.formState.errors.firstName && (
                           <p className="text-sm text-red-600" data-testid="error-register-firstName">
@@ -302,12 +304,14 @@ export default function AuthPage() {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="register-lastName">Last Name</Label>
+                        <Label htmlFor="register-lastName">
+                          {registerForm.watch("accountType") === 'business' ? 'Contact Last Name' : 'Last Name'}
+                        </Label>
                         <Input
                           id="register-lastName"
                           data-testid="input-register-lastName"
                           {...registerForm.register("lastName")}
-                          placeholder="Last name"
+                          placeholder={registerForm.watch("accountType") === 'business' ? 'Contact last name' : 'Last name'}
                         />
                         {registerForm.formState.errors.lastName && (
                           <p className="text-sm text-red-600" data-testid="error-register-lastName">
