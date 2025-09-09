@@ -303,11 +303,30 @@ export default function CreateAd() {
   // Form submission
   const createAdMutation = useMutation({
     mutationFn: async () => {
+      // Validate required fields
+      if (!formData.businessName.trim()) {
+        throw new Error('Business name is required');
+      }
+      if (!formData.title.trim()) {
+        throw new Error('Headline is required');
+      }
+      if (!formData.content.trim()) {
+        throw new Error('Description is required');
+      }
+      if (!formData.suburb.trim()) {
+        throw new Error('Suburb is required');
+      }
+      if (!formData.cta.trim()) {
+        throw new Error('Call-to-action button text is required');
+      }
+
       const adData = {
         ...formData,
         status: 'pending', // Require approval
         template: selectedTemplate
       };
+      
+      console.log('Submitting ad data:', adData);
       return apiRequest('POST', '/api/ads/create', adData);
     },
     onSuccess: () => {
@@ -434,7 +453,7 @@ export default function CreateAd() {
           <div className="flex gap-4">
             <Button 
               onClick={() => createAdMutation.mutate()}
-              disabled={createAdMutation.isPending}
+              disabled={createAdMutation.isPending || !formData.businessName || !formData.title || !formData.content || !formData.suburb || !formData.cta}
               className="flex-1"
               data-testid="button-submit-ad"
             >
