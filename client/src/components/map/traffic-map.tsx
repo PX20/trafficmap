@@ -66,13 +66,13 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
 
     const map = L.map(mapRef.current, {
       minZoom: 8, // Prevent zooming out beyond Queensland state level
-      maxZoom: 18, // Allow detailed street-level viewing
+      maxZoom: 12, // Keep at regional/suburb level
     }).setView(centerCoords, zoomLevel);
     
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
       attribution: '© OpenStreetMap contributors, © CARTO',
       minZoom: 8, // Match map's minimum zoom
-      maxZoom: 18 // Match map's maximum zoom
+      maxZoom: 12 // Match map's maximum zoom
     }).addTo(map);
 
     mapInstanceRef.current = map;
