@@ -17,6 +17,7 @@ import CreateAd from "@/pages/create-ad";
 import BusinessUpgrade from "@/pages/business-upgrade";
 import BusinessDashboard from "@/pages/business-dashboard";
 import AccountSetup from "@/pages/account-setup";
+import Login from "@/pages/login";
 import { TermsAndConditionsModal } from "@/components/terms-and-conditions-modal";
 
 function Router() {
@@ -76,6 +77,7 @@ function Router() {
   if (!isAuthenticated) {
     return (
       <Switch>
+        <Route path="/login" component={Login} />
         <Route path="/" component={AuthPage} />
         <Route component={AuthPage} />
       </Switch>
@@ -107,6 +109,7 @@ function Router() {
             <Route path="/messages" component={Messages} />
             <Route path="/messages/:conversationId" component={Messages} />
             <Route path="/notifications" component={Notifications} />
+            <Route path="/login" component={Login} />
             <Route component={NotFound} />
           </>
         )}
