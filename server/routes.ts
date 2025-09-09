@@ -1538,6 +1538,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get campaigns for current business user
+  app.get('/api/ads/my-campaigns', isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any)?.claims?.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user || user.accountType !== 'business') {
+        return res.status(403).json({ message: "Business account required" });
+      }
+
+      const campaigns = await storage.getUserCampaigns(userId);
+      res.json(campaigns);
+    } catch (error) {
+      console.error("Error fetching user campaigns:", error);
+      res.status(500).json({ message: "Failed to fetch campaigns" });
+    }
+  });
+
+  // Get analytics for current business user
+  app.get('/api/ads/analytics', isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any)?.claims?.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user || user.accountType !== 'business') {
+        return res.status(403).json({ message: "Business account required" });
+      }
+
+      const analytics = await storage.getUserCampaignAnalytics(userId);
+      res.json(analytics);
+    } catch (error) {
+      console.error("Error fetching campaign analytics:", error);
+      res.status(500).json({ message: "Failed to fetch analytics" });
+    }
+  });
+
   app.get('/api/users/suburb/:suburb', async (req, res) => {
     try {
       const { suburb } = req.params;

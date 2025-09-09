@@ -124,6 +124,8 @@ export interface IStorage {
   // Ad campaign operations
   getActiveAdsForSuburb(suburb: string, limit: number): Promise<AdCampaign[]>;
   getAdCampaign(id: string): Promise<AdCampaign | undefined>;
+  getUserCampaigns(userId: string): Promise<AdCampaign[]>;
+  getUserCampaignAnalytics(userId: string): Promise<Array<{ campaignId: string; views: number; clicks: number; spend: number; ctr: number; cpm: number; }>>;
   createAdCampaign(campaign: InsertAdCampaign): Promise<AdCampaign>;
   updateAdCampaign(id: string, updates: Partial<AdCampaign>): Promise<AdCampaign | undefined>;
   
@@ -842,6 +844,39 @@ export class DatabaseStorage implements IStorage {
       .where(eq(adCampaigns.id, id));
     
     return campaign;
+  }
+
+  async getUserCampaigns(userId: string): Promise<AdCampaign[]> {
+    return await db.select().from(adCampaigns).where(eq(adCampaigns.userId, userId)).orderBy(desc(adCampaigns.createdAt));
+  }
+
+  async getUserCampaignAnalytics(userId: string): Promise<Array<{ campaignId: string; views: number; clicks: number; spend: number; ctr: number; cpm: number; }>> {
+    // Get user campaigns first
+    const userCampaigns = await this.getUserCampaigns(userId);
+    
+    const analytics = [];
+    for (const campaign of userCampaigns) {
+      // Get views for this campaign
+      const views = await db.select().from(adViews).where(eq(adViews.adCampaignId, campaign.id));
+      const clicks = await db.select().from(adClicks).where(eq(adClicks.adCampaignId, campaign.id));
+      
+      const viewCount = views.length;
+      const clickCount = clicks.length;
+      const ctr = viewCount > 0 ? (clickCount / viewCount) * 100 : 0;
+      const spend = parseFloat(campaign.dailyBudget) * 30; // Rough calculation
+      const cpm = parseFloat(campaign.cpmRate || "3.50");
+      
+      analytics.push({
+        campaignId: campaign.id,
+        views: viewCount,
+        clicks: clickCount,
+        spend,
+        ctr,
+        cpm
+      });
+    }
+    
+    return analytics;
   }
 
   async createAdCampaign(campaignData: InsertAdCampaign): Promise<AdCampaign> {
