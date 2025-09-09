@@ -80,6 +80,15 @@ export interface IStorage {
     businessPhone?: string; 
     businessAddress?: string; 
   }): Promise<User | undefined>;
+  completeUserSetup(userId: string, setupData: { 
+    accountType: 'regular' | 'business'; 
+    businessName?: string; 
+    businessCategory?: string; 
+    businessDescription?: string; 
+    businessWebsite?: string; 
+    businessPhone?: string; 
+    businessAddress?: string; 
+  }): Promise<User | undefined>;
   getUsersBySuburb(suburb: string): Promise<User[]>;
   
   // Terms and conditions
@@ -387,6 +396,39 @@ export class DatabaseStorage implements IStorage {
       .where(eq(users.id, id))
       .returning();
     return updated;
+  }
+
+  async completeUserSetup(userId: string, setupData: { 
+    accountType: 'regular' | 'business'; 
+    businessName?: string; 
+    businessCategory?: string; 
+    businessDescription?: string; 
+    businessWebsite?: string; 
+    businessPhone?: string; 
+    businessAddress?: string; 
+  }): Promise<User | undefined> {
+    const updateData: any = {
+      accountType: setupData.accountType,
+      updatedAt: new Date(),
+    };
+
+    // Add business fields if it's a business account
+    if (setupData.accountType === 'business') {
+      updateData.businessName = setupData.businessName;
+      updateData.businessCategory = setupData.businessCategory;
+      updateData.businessDescription = setupData.businessDescription || null;
+      updateData.businessWebsite = setupData.businessWebsite || null;
+      updateData.businessPhone = setupData.businessPhone || null;
+      updateData.businessAddress = setupData.businessAddress || null;
+    }
+
+    const [user] = await db
+      .update(users)
+      .set(updateData)
+      .where(eq(users.id, userId))
+      .returning();
+      
+    return user;
   }
 
   async getUsersBySuburb(suburb: string): Promise<User[]> {
