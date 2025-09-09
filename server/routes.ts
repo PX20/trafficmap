@@ -268,7 +268,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         businessName: z.string().min(1).max(100),
         title: z.string().min(1).max(100),
         content: z.string().min(1).max(500),
-        websiteUrl: z.string().url().optional().or(z.literal('')),
+        websiteUrl: z.string().optional().transform(val => {
+          if (!val || val.trim() === '') return '';
+          // Auto-add https:// if no protocol is provided
+          if (!val.match(/^https?:\/\//)) {
+            return `https://${val}`;
+          }
+          return val;
+        }).pipe(z.string().url().optional().or(z.literal(''))),
         address: z.string().max(200).optional().or(z.literal('')),
         suburb: z.string().min(1).max(100),
         cta: z.string().min(1).max(50),
@@ -1411,17 +1418,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Object storage routes for profile photos
-  app.post("/api/objects/upload", isAuthenticated, async (req, res) => {
-    const objectStorageService = new ObjectStorageService();
-    try {
-      const uploadURL = await objectStorageService.getObjectEntityUploadURL();
-      res.json({ uploadURL });
-    } catch (error) {
-      console.error("Error getting upload URL:", error);
-      res.status(500).json({ error: "Failed to get upload URL" });
-    }
-  });
+  // Object storage routes for profile photos (removed duplicate - see line 1903)
 
   // Serve object files
   app.get("/objects/:objectPath(*)", async (req, res) => {

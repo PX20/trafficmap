@@ -120,19 +120,47 @@ export default function CreateAd() {
 
   // Image upload helpers
   const handleLogoUpload = async () => {
-    const response: any = await apiRequest('POST', '/api/objects/upload');
-    return {
-      method: 'PUT' as const,
-      url: response.uploadURL
-    };
+    try {
+      const response: any = await apiRequest('POST', '/api/objects/upload');
+      console.log('Logo upload response:', response);
+      if (!response.uploadURL) {
+        throw new Error('No upload URL received');
+      }
+      return {
+        method: 'PUT' as const,
+        url: response.uploadURL
+      };
+    } catch (error) {
+      console.error('Logo upload error:', error);
+      toast({
+        title: "Upload Error",
+        description: "Failed to get upload URL for logo. Please try again.",
+        variant: "destructive",
+      });
+      throw error;
+    }
   };
 
   const handleBackgroundUpload = async () => {
-    const response: any = await apiRequest('POST', '/api/objects/upload');
-    return {
-      method: 'PUT' as const,
-      url: response.uploadURL
-    };
+    try {
+      const response: any = await apiRequest('POST', '/api/objects/upload');
+      console.log('Background upload response:', response);
+      if (!response.uploadURL) {
+        throw new Error('No upload URL received');
+      }
+      return {
+        method: 'PUT' as const,
+        url: response.uploadURL
+      };
+    } catch (error) {
+      console.error('Background upload error:', error);
+      toast({
+        title: "Upload Error", 
+        description: "Failed to get upload URL for background. Please try again.",
+        variant: "destructive",
+      });
+      throw error;
+    }
   };
 
   const onLogoComplete = (result: any) => {
