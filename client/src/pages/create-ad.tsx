@@ -121,14 +121,28 @@ export default function CreateAd() {
   // Image upload helpers
   const handleLogoUpload = async () => {
     try {
-      const response: any = await apiRequest('POST', '/api/objects/upload');
-      console.log('Logo upload response:', response);
-      if (!response.uploadURL) {
+      const response = await fetch('/api/objects/upload', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      console.log('Logo upload response:', data);
+      
+      if (!data.uploadURL) {
         throw new Error('No upload URL received');
       }
+      
       return {
         method: 'PUT' as const,
-        url: response.uploadURL
+        url: data.uploadURL
       };
     } catch (error) {
       console.error('Logo upload error:', error);
@@ -143,14 +157,28 @@ export default function CreateAd() {
 
   const handleBackgroundUpload = async () => {
     try {
-      const response: any = await apiRequest('POST', '/api/objects/upload');
-      console.log('Background upload response:', response);
-      if (!response.uploadURL) {
+      const response = await fetch('/api/objects/upload', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      console.log('Background upload response:', data);
+      
+      if (!data.uploadURL) {
         throw new Error('No upload URL received');
       }
+      
       return {
         method: 'PUT' as const,
-        url: response.uploadURL
+        url: data.uploadURL
       };
     } catch (error) {
       console.error('Background upload error:', error);
