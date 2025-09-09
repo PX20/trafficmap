@@ -27,8 +27,13 @@ function Router() {
 
   // Check if user needs to accept terms or complete account setup
   useEffect(() => {
-    if (user && user.id && !user.termsAccepted) {
-      setShowTermsModal(true);
+    if (user && user.id) {
+      // Check if user needs to accept terms (new user or outdated version)
+      const needsTermsAcceptance = !user.termsAccepted || 
+        !user.termsVersionAccepted ||
+        user.termsVersionAccepted !== "1.1"; // Current version
+      
+      setShowTermsModal(needsTermsAcceptance);
     } else {
       setShowTermsModal(false);
     }

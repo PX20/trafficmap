@@ -302,10 +302,18 @@ export class DatabaseStorage implements IStorage {
     return updated;
   }
 
-  async acceptUserTerms(id: string): Promise<User | undefined> {
+  async acceptUserTerms(id: string, version?: string): Promise<User | undefined> {
+    const { CURRENT_TERMS_VERSION } = await import("@shared/schema");
+    const termsVersion = version || CURRENT_TERMS_VERSION;
+    
     const [updated] = await db
       .update(users)
-      .set({ termsAccepted: true, termsAcceptedAt: new Date(), updatedAt: new Date() })
+      .set({ 
+        termsAccepted: true, 
+        termsAcceptedAt: new Date(), 
+        termsVersionAccepted: termsVersion,
+        updatedAt: new Date() 
+      })
       .where(eq(users.id, id))
       .returning();
     return updated;
