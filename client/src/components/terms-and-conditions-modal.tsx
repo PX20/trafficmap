@@ -12,10 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Shield, FileText, RefreshCw } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
-
-const CURRENT_TERMS_VERSION = "1.1";
+import { Shield, FileText } from "lucide-react";
 
 interface TermsAndConditionsModalProps {
   isOpen: boolean;
@@ -26,10 +23,6 @@ export function TermsAndConditionsModal({ isOpen, onAccept }: TermsAndConditions
   const [hasReadTerms, setHasReadTerms] = useState(false);
   const [hasAcceptedTerms, setHasAcceptedTerms] = useState(false);
   const { toast } = useToast();
-  const { user } = useAuth();
-  
-  // Check if this is a version update (user previously accepted but has old version)
-  const isVersionUpdate = user?.termsAccepted && user?.termsVersionAccepted && user.termsVersionAccepted !== CURRENT_TERMS_VERSION;
 
   const acceptTermsMutation = useMutation({
     mutationFn: async () => {
@@ -39,10 +32,8 @@ export function TermsAndConditionsModal({ isOpen, onAccept }: TermsAndConditions
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       toast({
-        title: isVersionUpdate ? "Updated Terms Accepted ✅" : "Terms Accepted ✅",
-        description: isVersionUpdate 
-          ? `You've successfully accepted the latest terms (v${CURRENT_TERMS_VERSION}). Thank you for staying up to date!`
-          : "Welcome to QLD Safety Monitor! You can now use all features.",
+        title: "Terms accepted",
+        description: "Welcome to QLD Safety Monitor! You can now use all features.",
       });
       onAccept();
     },
@@ -82,16 +73,8 @@ export function TermsAndConditionsModal({ isOpen, onAccept }: TermsAndConditions
               <FileText className="w-6 h-6 text-white" />
             </div>
             <div>
-              <DialogTitle className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                Terms and Conditions
-                {isVersionUpdate && <RefreshCw className="w-4 h-4 text-blue-600" />}
-              </DialogTitle>
-              <p className="text-sm text-gray-600 mt-1">
-                {isVersionUpdate 
-                  ? `Updated Terms (v${CURRENT_TERMS_VERSION}) - Please review and accept the latest version`
-                  : "Please read and accept our terms to continue"
-                }
-              </p>
+              <DialogTitle className="text-xl font-bold text-gray-900">Terms and Conditions</DialogTitle>
+              <p className="text-sm text-gray-600 mt-1">Please read and accept our terms to continue</p>
             </div>
           </div>
         </DialogHeader>
@@ -102,24 +85,6 @@ export function TermsAndConditionsModal({ isOpen, onAccept }: TermsAndConditions
           </div>
           <ScrollArea className="flex-1 pr-4 h-0 min-h-[200px] max-h-[60vh] md:max-h-[50vh]" onScrollCapture={() => setHasReadTerms(true)}>
             <div className="space-y-6 text-sm text-gray-700 leading-relaxed">
-              {isVersionUpdate && (
-                <div className="p-4 bg-blue-50 border-l-4 border-blue-400 mb-6">
-                  <div className="flex items-center gap-2 mb-2">
-                    <RefreshCw className="w-4 h-4 text-blue-600" />
-                    <h4 className="font-semibold text-blue-800">Terms Updated</h4>
-                  </div>
-                  <p className="text-blue-700">
-                    We've updated our Terms and Conditions (Version {CURRENT_TERMS_VERSION}) to better serve you. 
-                    Please review the changes and accept the updated terms to continue using QLD Safety Monitor.
-                  </p>
-                  {user?.termsVersionAccepted && (
-                    <p className="text-xs text-blue-600 mt-2">
-                      Previously accepted: Version {user.termsVersionAccepted}
-                    </p>
-                  )}
-                </div>
-              )}
-              
               <section>
                 <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
                   <Shield className="w-5 h-5 text-blue-600" />
@@ -211,12 +176,6 @@ export function TermsAndConditionsModal({ isOpen, onAccept }: TermsAndConditions
               <div className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                 <p className="text-blue-800 font-medium">
                   By accepting these terms, you confirm that you are at least 13 years old and have the legal capacity to enter into this agreement.
-                </p>
-              </div>
-              
-              <div className="mt-6 pt-4 border-t border-gray-200 text-center">
-                <p className="text-xs text-gray-500">
-                  Terms and Conditions Version {CURRENT_TERMS_VERSION} • Last Updated: {isVersionUpdate ? 'Today' : 'December 2024'}
                 </p>
               </div>
             </div>

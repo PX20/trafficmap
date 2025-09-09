@@ -40,8 +40,6 @@ export const users = pgTable("users", {
   allowDirectMessages: boolean("allow_direct_messages").default(true),
   termsAccepted: boolean("terms_accepted").default(false),
   termsAcceptedAt: timestamp("terms_accepted_at"),
-  termsVersionAccepted: varchar("terms_version_accepted"), // Track which version user accepted
-  currentTermsVersion: varchar("current_terms_version").default("1.0"), // Current terms version
   // Business account fields
   accountType: varchar("account_type", { enum: ["regular", "business"] }).default("regular"),
   businessName: varchar("business_name"),
