@@ -722,14 +722,12 @@ export default function Feed() {
                                 </span>
                               </Button>
                               
-                              {isUserReported && (
-                                <Button variant="ghost" size="sm" className="flex items-center gap-2 hover:text-red-500 transition-colors p-2 h-auto">
-                                  <Heart className="w-5 h-5" />
-                                  <span className="text-sm font-medium">
-                                    {/* No like count shown - functionality not implemented */}
-                                  </span>
-                                </Button>
-                              )}
+                              <Button variant="ghost" size="sm" className="flex items-center gap-2 hover:text-red-500 transition-colors p-2 h-auto">
+                                <Heart className="w-5 h-5" />
+                                <span className="text-sm font-medium">
+                                  {/* No like count shown - functionality not implemented */}
+                                </span>
+                              </Button>
                               
                               <Button variant="ghost" size="sm" className="flex items-center gap-2 hover:text-green-500 transition-colors p-2 h-auto">
                                 <Share className="w-5 h-5" />
