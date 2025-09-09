@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Shield, Users, AlertTriangle, MapPin } from "lucide-react";
 import { insertUserSchema } from "@shared/schema";
 import { Redirect } from "wouter";
+import { LocationAutocomplete } from "@/components/location-autocomplete";
 
 // Form schemas
 const loginSchema = z.object({
@@ -246,11 +247,11 @@ export default function AuthPage() {
 
                     <div className="space-y-2">
                       <Label htmlFor="register-homeSuburb">Home Suburb</Label>
-                      <Input
-                        id="register-homeSuburb"
+                      <LocationAutocomplete
+                        value={registerForm.watch("homeSuburb")}
+                        onChange={(location) => registerForm.setValue("homeSuburb", location)}
+                        placeholder="Start typing your suburb, city, or postcode..."
                         data-testid="input-register-homeSuburb"
-                        {...registerForm.register("homeSuburb")}
-                        placeholder="e.g. Caloundra, Brisbane, Gold Coast"
                       />
                       {registerForm.formState.errors.homeSuburb && (
                         <p className="text-sm text-red-600" data-testid="error-register-homeSuburb">
