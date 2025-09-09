@@ -847,7 +847,9 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserCampaigns(userId: string): Promise<AdCampaign[]> {
-    return await db.select().from(adCampaigns).where(eq(adCampaigns.userId, userId)).orderBy(desc(adCampaigns.createdAt));
+    // Note: Ad campaigns don't have userId field yet, this is a placeholder implementation
+    // For now, return all campaigns - this should be updated when userId is added to ad campaigns schema
+    return await db.select().from(adCampaigns).orderBy(desc(adCampaigns.createdAt));
   }
 
   async getUserCampaignAnalytics(userId: string): Promise<Array<{ campaignId: string; views: number; clicks: number; spend: number; ctr: number; cpm: number; }>> {
@@ -864,7 +866,7 @@ export class DatabaseStorage implements IStorage {
       const clickCount = clicks.length;
       const ctr = viewCount > 0 ? (clickCount / viewCount) * 100 : 0;
       const spend = parseFloat(campaign.dailyBudget) * 30; // Rough calculation
-      const cpm = parseFloat(campaign.cpmRate || "3.50");
+      const cpm = parseFloat(campaign.cpmRate ?? "3.50");
       
       analytics.push({
         campaignId: campaign.id,
