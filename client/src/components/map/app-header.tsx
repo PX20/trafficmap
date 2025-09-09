@@ -248,17 +248,30 @@ export function AppHeader({ onMenuToggle, onFilterToggle, showFilterButton }: Ap
                   </Button>
                 </Link>
                 {user?.accountType === 'business' && (
-                  <Link href="/advertise">
-                    <Button
-                      variant={location === "/advertise" || location === "/create-ad" ? "default" : "ghost"}
-                      size="sm"
-                      className="h-8"
-                      data-testid="button-advertise-view"
-                    >
-                      <Megaphone className="w-4 h-4 mr-1" />
-                      Advertise
-                    </Button>
-                  </Link>
+                  <>
+                    <Link href="/business-dashboard">
+                      <Button
+                        variant={location === "/business-dashboard" ? "default" : "ghost"}
+                        size="sm"
+                        className="h-8"
+                        data-testid="button-dashboard-view-desktop"
+                      >
+                        <BarChart3 className="w-4 h-4 mr-1" />
+                        Dashboard
+                      </Button>
+                    </Link>
+                    <Link href="/advertise">
+                      <Button
+                        variant={location === "/advertise" || location === "/create-ad" ? "default" : "ghost"}
+                        size="sm"
+                        className="h-8"
+                        data-testid="button-advertise-view"
+                      >
+                        <Megaphone className="w-4 h-4 mr-1" />
+                        Advertise
+                      </Button>
+                    </Link>
+                  </>
                 )}
               </div>
               
