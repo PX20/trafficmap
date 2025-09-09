@@ -121,6 +121,7 @@ export default function CreateAd() {
   // Image upload helpers
   const handleLogoUpload = async () => {
     try {
+      console.log('Requesting logo upload URL...');
       const response = await fetch('/api/objects/upload', {
         method: 'POST',
         headers: {
@@ -129,12 +130,25 @@ export default function CreateAd() {
         credentials: 'include'
       });
       
+      console.log('Response status:', response.status);
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+      
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
       
-      const data = await response.json();
-      console.log('Logo upload response:', data);
+      const responseText = await response.text();
+      console.log('Raw response text:', responseText);
+      
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('JSON parse error:', parseError);
+        throw new Error('Invalid JSON response from server');
+      }
+      
+      console.log('Parsed logo upload response:', data);
       
       if (!data.uploadURL) {
         throw new Error('No upload URL received');
@@ -157,6 +171,7 @@ export default function CreateAd() {
 
   const handleBackgroundUpload = async () => {
     try {
+      console.log('Requesting background upload URL...');
       const response = await fetch('/api/objects/upload', {
         method: 'POST',
         headers: {
@@ -165,12 +180,24 @@ export default function CreateAd() {
         credentials: 'include'
       });
       
+      console.log('Response status:', response.status);
+      
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
       
-      const data = await response.json();
-      console.log('Background upload response:', data);
+      const responseText = await response.text();
+      console.log('Raw response text:', responseText);
+      
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('JSON parse error:', parseError);
+        throw new Error('Invalid JSON response from server');
+      }
+      
+      console.log('Parsed background upload response:', data);
       
       if (!data.uploadURL) {
         throw new Error('No upload URL received');
