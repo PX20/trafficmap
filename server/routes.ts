@@ -33,7 +33,10 @@ const trafficCache = {
   sunshineCoast: { data: null as any, lastFetch: 0 }
 };
 
-const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes in milliseconds
+// Request debouncing to prevent multiple simultaneous API calls
+let ongoingTrafficRequest: Promise<any> | null = null;
+
+const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes in milliseconds (reduced frequency due to rate limiting)
 const SUNSHINE_COAST_CACHE_DURATION = 60 * 60 * 1000; // 1 hour for Sunshine Coast
 const RETRY_DELAY = 30 * 1000; // 30 seconds delay on rate limit
 
@@ -430,36 +433,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log("Using cached traffic events data");
         data = JSON.parse(JSON.stringify(trafficCache.events.data)); // Deep copy to avoid modifying cache
       } else {
-        // Try to fetch fresh data
+        // Try to fetch fresh data with debouncing to prevent multiple simultaneous requests
         try {
-          console.log("Fetching fresh traffic events data...");
-          const apiKey = process.env.QLD_TRAFFIC_API_KEY || PUBLIC_API_KEY;
-          const response = await fetchWithRetry(`${API_BASE_URL}/v2/events?apikey=${apiKey}`);
-          
-          if (!response.ok) {
-            throw new Error(`QLD Traffic API error: ${response.status} ${response.statusText}`);
+          if (!ongoingTrafficRequest) {
+            console.log("Fetching fresh traffic events data...");
+            const apiKey = process.env.QLD_TRAFFIC_API_KEY || PUBLIC_API_KEY;
+            
+            ongoingTrafficRequest = fetchWithRetry(`${API_BASE_URL}/v2/events?apikey=${apiKey}`)
+              .then(async (response) => {
+                if (!response.ok) {
+                  throw new Error(`QLD Traffic API error: ${response.status} ${response.statusText}`);
+                }
+                const responseData = await response.json();
+                
+                // Update general cache
+                trafficCache.events = {
+                  data: responseData,
+                  lastFetch: Date.now()
+                };
+                
+                // Also update Sunshine Coast specific cache with filtered data
+                if (responseData.features) {
+                  const sunshineCoastEvents = {
+                    ...responseData,
+                    features: responseData.features.filter(isSunshineCoastLocation)
+                  };
+                  trafficCache.sunshineCoast = {
+                    data: sunshineCoastEvents,
+                    lastFetch: Date.now()
+                  };
+                  console.log(`Cached ${sunshineCoastEvents.features.length} Sunshine Coast events for 1 hour`);
+                }
+                
+                return responseData;
+              })
+              .finally(() => {
+                ongoingTrafficRequest = null; // Clear the ongoing request
+              });
+          } else {
+            console.log("Traffic request already in progress, waiting for it to complete...");
           }
           
-          data = await response.json();
-          
-          // Update general cache
-          trafficCache.events = {
-            data: data,
-            lastFetch: Date.now()
-          };
-          
-          // Also update Sunshine Coast specific cache with filtered data
-          if (data.features) {
-            const sunshineCoastEvents = {
-              ...data,
-              features: data.features.filter(isSunshineCoastLocation)
-            };
-            trafficCache.sunshineCoast = {
-              data: sunshineCoastEvents,
-              lastFetch: Date.now()
-            };
-            console.log(`Cached ${sunshineCoastEvents.features.length} Sunshine Coast events for 1 hour`);
-          }
+          data = await ongoingTrafficRequest;
           
         } catch (error) {
           // If fetch fails and we have old cached data, use it
