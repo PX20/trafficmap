@@ -333,9 +333,19 @@ export default function Feed() {
 
   const getIncidentTitle = (incident: any) => {
     if (incident.type === 'traffic') {
+      // Debug: Log the actual structure to understand the data
+      console.log('TMR incident properties:', incident.properties);
+      
       // Show the specific event type for TMR posts
-      const eventType = incident.properties?.Event_Type || '';
-      const eventSubtype = incident.properties?.Event_Subtype || '';
+      // Check multiple possible field names for event type
+      const eventType = incident.properties?.event_type || 
+                       incident.properties?.Event_Type || 
+                       incident.properties?.eventType || '';
+      const eventSubtype = incident.properties?.event_subtype || 
+                          incident.properties?.Event_Subtype || 
+                          incident.properties?.eventSubtype || '';
+      
+      console.log('Event type found:', eventType, 'Event subtype found:', eventSubtype);
       
       if (eventType && eventSubtype && eventType !== eventSubtype) {
         return `${eventType} - ${eventSubtype}`;
