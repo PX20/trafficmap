@@ -72,7 +72,20 @@ export function setupAuth(app: Express) {
 
   app.post("/api/register", async (req, res, next) => {
     try {
-      const { password, email, firstName, lastName, homeSuburb } = req.body;
+      const { 
+        password, 
+        email, 
+        firstName, 
+        lastName, 
+        homeSuburb, 
+        accountType,
+        businessName,
+        businessDescription,
+        businessWebsite,
+        businessPhone,
+        businessAddress,
+        businessCategory
+      } = req.body;
       
       // Check if email already exists
       const existingUser = await storage.getUserByEmail(email);
@@ -80,14 +93,27 @@ export function setupAuth(app: Express) {
         return res.status(400).json({ error: "Email already registered" });
       }
 
-      const user = await storage.createUser({
+      const userData: any = {
         username: null, // No usernames - use email as identifier
         password: await hashPassword(password),
         email,
         firstName,
         lastName,
         homeSuburb,
-      });
+        accountType: accountType || 'regular'
+      };
+
+      // Add business fields if it's a business account
+      if (accountType === 'business') {
+        userData.businessName = businessName;
+        userData.businessDescription = businessDescription;
+        userData.businessWebsite = businessWebsite;
+        userData.businessPhone = businessPhone;
+        userData.businessAddress = businessAddress;
+        userData.businessCategory = businessCategory;
+      }
+
+      const user = await storage.createUser(userData);
 
       req.login(user, (err) => {
         if (err) return next(err);
