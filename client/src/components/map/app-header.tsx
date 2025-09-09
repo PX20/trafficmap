@@ -227,17 +227,32 @@ export function AppHeader({ onMenuToggle, onFilterToggle, showFilterButton }: Ap
                     )}
                   </Button>
                 </Link>
-                <Link href="/advertise">
-                  <Button
-                    variant={location === "/advertise" || location === "/create-ad" ? "default" : "ghost"}
-                    size="sm"
-                    className="h-8"
-                    data-testid="button-advertise-view"
-                  >
-                    <Megaphone className="w-4 h-4 mr-1" />
-                    Advertise
-                  </Button>
-                </Link>
+                {user?.accountType === 'business' && (
+                  <Link href="/advertise">
+                    <Button
+                      variant={location === "/advertise" || location === "/create-ad" ? "default" : "ghost"}
+                      size="sm"
+                      className="h-8"
+                      data-testid="button-advertise-view"
+                    >
+                      <Megaphone className="w-4 h-4 mr-1" />
+                      Advertise
+                    </Button>
+                  </Link>
+                )}
+                {user?.accountType !== 'business' && (
+                  <Link href="/business-upgrade">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8"
+                      data-testid="button-upgrade-business"
+                    >
+                      <Megaphone className="w-4 h-4 mr-1" />
+                      Business
+                    </Button>
+                  </Link>
+                )}
               </div>
               
               {/* Desktop User Menu */}

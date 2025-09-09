@@ -262,8 +262,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Ad creation endpoint - for businesses to submit ads
-  app.post("/api/ads/create", async (req, res) => {
+  app.post("/api/ads/create", isAuthenticated, async (req, res) => {
     try {
+      // Check if user has a business account
+      const userId = (req.user as any)?.claims?.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user || user.accountType !== 'business') {
+        return res.status(403).json({ 
+          message: "Only business accounts can create advertisements. Please upgrade to a business account." 
+        });
+      }
+
       const adData = z.object({
         businessName: z.string().min(1).max(100),
         title: z.string().min(1).max(100),
