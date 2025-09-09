@@ -63,7 +63,7 @@ export function TermsAndConditionsModal({ isOpen, onAccept }: TermsAndConditions
   return (
     <Dialog open={isOpen} onOpenChange={() => {}}>
       <DialogContent 
-        className="w-[95vw] max-w-2xl max-h-[90vh] flex flex-col p-0 bg-gradient-to-br from-white via-gray-50 to-white border-0 shadow-2xl" 
+        className="w-[95vw] max-w-2xl h-[90vh] max-h-[90vh] flex flex-col p-0 bg-gradient-to-br from-white via-gray-50 to-white border-0 shadow-2xl" 
         data-testid="modal-terms-conditions"
         aria-describedby="terms-description"
       >
@@ -79,11 +79,11 @@ export function TermsAndConditionsModal({ isOpen, onAccept }: TermsAndConditions
           </div>
         </DialogHeader>
 
-        <div className="flex-1 p-6 overflow-hidden flex flex-col min-h-0">
+        <div className="flex-1 p-6 overflow-hidden flex flex-col min-h-0 max-h-full">
           <div id="terms-description" className="sr-only">
             Terms and Conditions document that must be read and accepted to use QLD Safety Monitor
           </div>
-          <ScrollArea className="flex-1 pr-4 h-0 min-h-[300px] max-h-[50vh]" onScrollCapture={() => setHasReadTerms(true)}>
+          <ScrollArea className="flex-1 pr-4 h-0 min-h-[200px] max-h-[60vh] md:max-h-[50vh]" onScrollCapture={() => setHasReadTerms(true)}>
             <div className="space-y-6 text-sm text-gray-700 leading-relaxed">
               <section>
                 <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
