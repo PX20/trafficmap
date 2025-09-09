@@ -315,21 +315,11 @@ export default function CreateAd() {
         title: "Ad Submitted Successfully!",
         description: "Your ad is being reviewed and will be live within 24 hours.",
       });
-      // Reset form
-      setFormData({
-        businessName: '',
-        title: '',
-        content: '',
-        websiteUrl: '',
-        address: '',
-        suburb: '',
-        cta: '',
-        targetSuburbs: [],
-        dailyBudget: '50.00',
-        totalBudget: '1000.00',
-        logoUrl: '',
-        backgroundUrl: ''
-      });
+      
+      // Redirect to feed after showing success message
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 2000);
     },
     onError: (error: any) => {
       toast({
