@@ -1901,6 +1901,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Process uploaded image and return viewing URL
+  app.post("/api/objects/process-upload", isAuthenticated, async (req, res) => {
+    try {
+      const { uploadURL, type } = req.body;
+      
+      if (!uploadURL) {
+        return res.status(400).json({ error: "Upload URL is required" });
+      }
+      
+      // Extract the object path from the upload URL
+      const url = new URL(uploadURL);
+      const pathMatch = url.pathname.match(/^\/([^\/]+)\/(.+)$/);
+      
+      if (!pathMatch) {
+        return res.status(400).json({ error: "Invalid upload URL format" });
+      }
+      
+      const bucketName = pathMatch[1];
+      const objectPath = pathMatch[2];
+      
+      // Create a viewing URL that goes through our server
+      const viewURL = `/objects/${objectPath}`;
+      
+      console.log(`Processed ${type} upload: ${uploadURL} -> ${viewURL}`);
+      res.json({ viewURL });
+      
+    } catch (error) {
+      console.error("Error processing upload:", error);
+      res.status(500).json({ error: "Failed to process upload" });
+    }
+  });
+
   // Serve uploaded photos (publicly accessible)
   app.get("/objects/:objectPath(*)", async (req, res) => {
     try {

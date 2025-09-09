@@ -218,25 +218,85 @@ export default function CreateAd() {
     }
   };
 
-  const onLogoComplete = (result: any) => {
+  const onLogoComplete = async (result: any) => {
     if (result.successful && result.successful[0]) {
       const uploadedUrl = result.successful[0].uploadURL;
-      setFormData(prev => ({ ...prev, logoUrl: uploadedUrl }));
-      toast({
-        title: "Logo uploaded successfully!",
-        description: "Your business logo is now ready for your ad.",
-      });
+      console.log('Logo upload completed, URL:', uploadedUrl);
+      
+      try {
+        // Process the uploaded image and get a proper viewing URL
+        const response = await fetch('/api/objects/process-upload', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            uploadURL: uploadedUrl,
+            type: 'logo'
+          })
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          setFormData(prev => ({ ...prev, logoUrl: data.viewURL }));
+          toast({
+            title: "Logo uploaded successfully!",
+            description: "Your business logo is now ready for your ad.",
+          });
+        } else {
+          throw new Error('Failed to process upload');
+        }
+      } catch (error) {
+        console.error('Error processing logo upload:', error);
+        // Fallback: just use the upload URL for now
+        setFormData(prev => ({ ...prev, logoUrl: uploadedUrl }));
+        toast({
+          title: "Logo uploaded!",
+          description: "Upload completed, processing...",
+        });
+      }
     }
   };
 
-  const onBackgroundComplete = (result: any) => {
+  const onBackgroundComplete = async (result: any) => {
     if (result.successful && result.successful[0]) {
       const uploadedUrl = result.successful[0].uploadURL;
-      setFormData(prev => ({ ...prev, backgroundUrl: uploadedUrl }));
-      toast({
-        title: "Background image uploaded successfully!",
-        description: "Your ad background is now ready.",
-      });
+      console.log('Background upload completed, URL:', uploadedUrl);
+      
+      try {
+        // Process the uploaded image and get a proper viewing URL
+        const response = await fetch('/api/objects/process-upload', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            uploadURL: uploadedUrl,
+            type: 'background'
+          })
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          setFormData(prev => ({ ...prev, backgroundUrl: data.viewURL }));
+          toast({
+            title: "Background image uploaded successfully!",
+            description: "Your ad background is now ready.",
+          });
+        } else {
+          throw new Error('Failed to process upload');
+        }
+      } catch (error) {
+        console.error('Error processing background upload:', error);
+        // Fallback: just use the upload URL for now
+        setFormData(prev => ({ ...prev, backgroundUrl: uploadedUrl }));
+        toast({
+          title: "Background uploaded!",
+          description: "Upload completed, processing...",
+        });
+      }
     }
   };
 
