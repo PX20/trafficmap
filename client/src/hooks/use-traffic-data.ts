@@ -58,7 +58,7 @@ export function useTrafficData(filters: FilterState): ProcessedTrafficData {
   const { data: allIncidentsData } = useQuery({
     queryKey: ["/api/incidents"],
     queryFn: async () => {
-      const response = await fetch('/api/incidents');
+      const response = await fetch('/api/incidents?limit=200');
       if (!response.ok) throw new Error('Failed to fetch incidents');
       return response.json();
     },

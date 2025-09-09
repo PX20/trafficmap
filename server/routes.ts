@@ -550,16 +550,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const props = incident.properties as any || {};
         const isUserReported = incident.agency === 'User Report' || incident.incidentType === 'user_reported';
         
-        // Debug logging for user-reported incidents
-        if (isUserReported) {
-          console.log('User reported incident transformation:', {
-            original: props,
-            reportedBy: props.reportedBy,
-            reporterName: props.reporterName
-          });
-        }
-        
-        
         return {
           type: "Feature",
           properties: {
