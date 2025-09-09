@@ -164,6 +164,13 @@ export function findRegionBySuburb(suburb: string): Region | null {
   const normalizedSuburb = suburb.toLowerCase().trim();
   
   for (const region of QLD_REGIONS) {
+    // Check if the input matches the region name directly
+    if (region.name.toLowerCase().includes(normalizedSuburb) || 
+        normalizedSuburb.includes(region.name.toLowerCase())) {
+      return region;
+    }
+    
+    // Check if the input matches any suburb within the region
     const matchingSuburb = region.suburbs.find(s => 
       s.toLowerCase().includes(normalizedSuburb) || 
       normalizedSuburb.includes(s.toLowerCase())
