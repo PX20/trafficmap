@@ -1638,6 +1638,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Email/Password authentication routes
+  app.post('/api/auth/login', async (req, res) => {
+    try {
+      const { email, password } = req.body;
+      
+      if (!email || !password) {
+        return res.status(400).json({ message: "Email and password are required" });
+      }
+
+      const user = await storage.authenticateUser(email, password);
+      
+      if (!user) {
+        return res.status(401).json({ message: "Invalid email or password" });
+      }
+
+      // Set up session (simple approach)
+      (req.session as any).userId = user.id;
+      (req.session as any).authenticated = true;
+      
+      res.json({ 
+        success: true, 
+        user: {
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          accountType: user.accountType,
+          businessName: user.businessName
+        }
+      });
+    } catch (error) {
+      console.error("Error during login:", error);
+      res.status(500).json({ message: "Login failed" });
+    }
+  });
+
+  app.post('/api/auth/logout', (req, res) => {
+    req.session.destroy((err) => {
+      if (err) {
+        return res.status(500).json({ message: "Could not log out" });
+      }
+      res.json({ success: true });
+    });
+  });
+
+  // Simple session-based auth check (replace isAuthenticated)
+  app.get('/api/auth/user', async (req, res) => {
+    if (!(req.session as any).authenticated || !(req.session as any).userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    try {
+      const user = await storage.getUser((req.session as any).userId);
+      if (!user) {
+        return res.status(401).json({ message: "User not found" });
+      }
+
+      res.json({
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        accountType: user.accountType,
+        businessName: user.businessName,
+        homeSuburb: user.homeSuburb,
+        primarySuburb: user.primarySuburb
+      });
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
   // Comment voting routes
   app.post('/api/comments/:commentId/vote', isAuthenticated, async (req, res) => {
     try {

@@ -61,6 +61,7 @@ import {
 import { db } from "./db";
 import { eq, desc, and, or, ne, sql } from "drizzle-orm";
 import { randomUUID } from "crypto";
+import bcrypt from "bcryptjs";
 
 export interface IStorage {
   // User operations - required for Replit Auth
@@ -68,6 +69,10 @@ export interface IStorage {
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   upsertUser(user: UpsertUser): Promise<User>;
+  
+  // Password authentication methods
+  createUserWithPassword(email: string, password: string, userData: Partial<InsertUser>): Promise<User>;
+  authenticateUser(email: string, password: string): Promise<User | null>;
   updateUserSuburb(id: string, homeSuburb: string): Promise<User | undefined>;
   
   // Enhanced user profile operations
@@ -204,9 +209,12 @@ export class DatabaseStorage implements IStorage {
 
   async createTestBusinessUser(): Promise<User> {
     // Create test business user for development/testing
+    const hashedPassword = await bcrypt.hash('Coffee123!', 10);
+    
     const testBusinessData: InsertUser = {
       id: 'test-business-001',
       email: 'sarah.mitchell@sunshinecoastcoffee.com.au',
+      password: hashedPassword,
       firstName: 'Sarah',
       lastName: 'Mitchell',
       profileImageUrl: null,
@@ -233,6 +241,40 @@ export class DatabaseStorage implements IStorage {
       .values(testBusinessData)
       .returning();
     
+    return user;
+  }
+
+  // Password authentication methods implementation
+  async createUserWithPassword(email: string, password: string, userData: Partial<InsertUser>): Promise<User> {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    
+    const userInsert: InsertUser = {
+      email,
+      password: hashedPassword,
+      ...userData,
+    };
+
+    const [user] = await db
+      .insert(users)
+      .values(userInsert)
+      .returning();
+    
+    return user;
+  }
+
+  async authenticateUser(email: string, password: string): Promise<User | null> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    
+    if (!user || !user.password) {
+      return null;
+    }
+
+    const isValidPassword = await bcrypt.compare(password, user.password);
+    
+    if (!isValidPassword) {
+      return null;
+    }
+
     return user;
   }
 
