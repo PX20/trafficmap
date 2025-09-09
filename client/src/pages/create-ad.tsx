@@ -10,8 +10,9 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { useMutation } from '@tanstack/react-query';
-import { ArrowLeft, Store, Coffee, Utensils, Wrench, Heart, Palette, Eye } from 'lucide-react';
+import { ArrowLeft, Store, Coffee, Utensils, Wrench, Heart, Palette, Eye, Upload, Image } from 'lucide-react';
 import { Link } from 'wouter';
+import { ObjectUploader } from '@/components/ObjectUploader';
 
 // Template definitions for different business types
 const AD_TEMPLATES = {
@@ -107,24 +108,52 @@ export default function CreateAd() {
     cta: '',
     targetSuburbs: [] as string[],
     dailyBudget: '50.00',
-    totalBudget: '1000.00'
+    totalBudget: '1000.00',
+    logoUrl: '',
+    backgroundUrl: ''
   });
 
   const [previewMode, setPreviewMode] = useState(false);
 
   const template = AD_TEMPLATES[selectedTemplate];
 
-  // Auto-suggest helpers
-  const suggestHeadline = (index: number) => {
-    setFormData(prev => ({ ...prev, title: template.sampleHeadlines[index] }));
+  // Image upload helpers
+  const handleLogoUpload = async () => {
+    const response: any = await apiRequest('POST', '/api/objects/upload');
+    return {
+      method: 'PUT' as const,
+      url: response.uploadURL
+    };
   };
 
-  const suggestContent = (index: number) => {
-    setFormData(prev => ({ ...prev, content: template.sampleContent[index] }));
+  const handleBackgroundUpload = async () => {
+    const response: any = await apiRequest('POST', '/api/objects/upload');
+    return {
+      method: 'PUT' as const,
+      url: response.uploadURL
+    };
   };
 
-  const suggestCta = (cta: string) => {
-    setFormData(prev => ({ ...prev, cta }));
+  const onLogoComplete = (result: any) => {
+    if (result.successful && result.successful[0]) {
+      const uploadedUrl = result.successful[0].uploadURL;
+      setFormData(prev => ({ ...prev, logoUrl: uploadedUrl }));
+      toast({
+        title: "Logo uploaded successfully!",
+        description: "Your business logo is now ready for your ad.",
+      });
+    }
+  };
+
+  const onBackgroundComplete = (result: any) => {
+    if (result.successful && result.successful[0]) {
+      const uploadedUrl = result.successful[0].uploadURL;
+      setFormData(prev => ({ ...prev, backgroundUrl: uploadedUrl }));
+      toast({
+        title: "Background image uploaded successfully!",
+        description: "Your ad background is now ready.",
+      });
+    }
   };
 
   // Form submission
@@ -153,7 +182,9 @@ export default function CreateAd() {
         cta: '',
         targetSuburbs: [],
         dailyBudget: '50.00',
-        totalBudget: '1000.00'
+        totalBudget: '1000.00',
+        logoUrl: '',
+        backgroundUrl: ''
       });
     },
     onError: (error: any) => {
@@ -167,7 +198,17 @@ export default function CreateAd() {
 
   // Preview component
   const AdPreview = () => (
-    <Card className="mb-4 border-l-4 border-l-blue-500 bg-gradient-to-r from-blue-50 to-white">
+    <Card className="mb-4 border-l-4 border-l-blue-500 bg-gradient-to-r from-blue-50 to-white overflow-hidden">
+      {/* Background Image */}
+      {formData.backgroundUrl && (
+        <div 
+          className="h-32 bg-cover bg-center relative"
+          style={{ backgroundImage: `url(${formData.backgroundUrl})` }}
+        >
+          <div className="absolute inset-0 bg-black bg-opacity-20"></div>
+        </div>
+      )}
+      
       <CardContent className="p-4">
         <div className="flex items-center justify-between mb-3">
           <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-300">
@@ -180,9 +221,20 @@ export default function CreateAd() {
         </div>
 
         <div className="space-y-3">
-          <h3 className="font-semibold text-gray-900">
-            {formData.businessName || 'Your Business Name'}
-          </h3>
+          {/* Business Name with Logo */}
+          <div className="flex items-center gap-3">
+            {formData.logoUrl && (
+              <img 
+                src={formData.logoUrl} 
+                alt="Business Logo" 
+                className="w-8 h-8 rounded object-cover"
+              />
+            )}
+            <h3 className="font-semibold text-gray-900">
+              {formData.businessName || 'Your Business Name'}
+            </h3>
+          </div>
+          
           <h4 className="font-medium text-gray-800">
             {formData.title || 'Your Headline Here'}
           </h4>
@@ -386,19 +438,6 @@ export default function CreateAd() {
                   maxLength={60}
                   data-testid="input-headline"
                 />
-                <div className="flex gap-2 mt-2">
-                  <span className="text-xs text-gray-500">Try these:</span>
-                  {template.sampleHeadlines.map((headline, index) => (
-                    <button
-                      key={index}
-                      onClick={() => suggestHeadline(index)}
-                      className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:bg-blue-200"
-                      data-testid={`suggest-headline-${index}`}
-                    >
-                      {headline}
-                    </button>
-                  ))}
-                </div>
               </div>
 
               <div>
@@ -412,19 +451,6 @@ export default function CreateAd() {
                   rows={4}
                   data-testid="input-content"
                 />
-                <div className="flex gap-2 mt-2 flex-wrap">
-                  <span className="text-xs text-gray-500">Suggestions:</span>
-                  {template.sampleContent.map((content, index) => (
-                    <button
-                      key={index}
-                      onClick={() => suggestContent(index)}
-                      className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded hover:bg-green-200"
-                      data-testid={`suggest-content-${index}`}
-                    >
-                      Option {index + 1}
-                    </button>
-                  ))}
-                </div>
               </div>
 
               <div>
@@ -437,17 +463,50 @@ export default function CreateAd() {
                   maxLength={15}
                   data-testid="input-cta"
                 />
-                <div className="flex gap-2 mt-2">
-                  {template.sampleCtas.map((cta) => (
-                    <button
-                      key={cta}
-                      onClick={() => suggestCta(cta)}
-                      className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded hover:bg-purple-200"
-                      data-testid={`suggest-cta-${cta.replace(' ', '-').toLowerCase()}`}
+              </div>
+
+              {/* Image Uploads */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Business Logo</Label>
+                  <div className="space-y-2">
+                    <ObjectUploader
+                      maxNumberOfFiles={1}
+                      maxFileSize={5242880} // 5MB
+                      onGetUploadParameters={handleLogoUpload}
+                      onComplete={onLogoComplete}
+                      buttonClassName="w-full"
                     >
-                      {cta}
-                    </button>
-                  ))}
+                      <div className="flex items-center gap-2 justify-center">
+                        <Upload className="w-4 h-4" />
+                        {formData.logoUrl ? 'Change Logo' : 'Upload Logo'}
+                      </div>
+                    </ObjectUploader>
+                    {formData.logoUrl && (
+                      <div className="text-xs text-green-600">✓ Logo uploaded</div>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <Label>Background Image</Label>
+                  <div className="space-y-2">
+                    <ObjectUploader
+                      maxNumberOfFiles={1}
+                      maxFileSize={5242880} // 5MB
+                      onGetUploadParameters={handleBackgroundUpload}
+                      onComplete={onBackgroundComplete}
+                      buttonClassName="w-full"
+                    >
+                      <div className="flex items-center gap-2 justify-center">
+                        <Image className="w-4 h-4" />
+                        {formData.backgroundUrl ? 'Change Background' : 'Upload Background'}
+                      </div>
+                    </ObjectUploader>
+                    {formData.backgroundUrl && (
+                      <div className="text-xs text-green-600">✓ Background uploaded</div>
+                    )}
+                  </div>
                 </div>
               </div>
             </CardContent>

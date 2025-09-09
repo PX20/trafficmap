@@ -70,16 +70,18 @@ export function SponsoredPost({ ad, onAdClick }: SponsoredPostProps) {
 
         {/* Business Content */}
         <div className="space-y-3">
-          <h3 className="font-semibold text-gray-900">{ad.businessName}</h3>
+          {/* Business Name with Logo */}
+          <div className="flex items-center gap-3">
+            {ad.imageUrl && (
+              <img 
+                src={ad.imageUrl} 
+                alt="Business Logo" 
+                className="w-8 h-8 rounded object-cover"
+              />
+            )}
+            <h3 className="font-semibold text-gray-900">{ad.businessName}</h3>
+          </div>
           <h4 className="font-medium text-gray-800">{ad.title}</h4>
-          
-          {ad.imageUrl && (
-            <img 
-              src={ad.imageUrl} 
-              alt={ad.title}
-              className="w-full h-48 object-cover rounded-lg"
-            />
-          )}
           
           <p className="text-gray-700 leading-relaxed">{ad.content}</p>
           

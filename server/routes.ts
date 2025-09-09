@@ -276,6 +276,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         dailyBudget: z.string(),
         totalBudget: z.string().optional(),
         template: z.string().optional(),
+        logoUrl: z.string().optional(),
+        backgroundUrl: z.string().optional(),
         status: z.enum(['pending', 'active', 'paused', 'rejected']).default('pending')
       }).parse(req.body);
 
@@ -297,7 +299,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         businessName: adData.businessName,
         title: adData.title,
         content: adData.content,
-        imageUrl: null, // Will add image upload later
+        imageUrl: adData.logoUrl || null, // Use logo as the main image
         websiteUrl: adData.websiteUrl || null,
         address: adData.address || null,
         suburb: adData.suburb,
