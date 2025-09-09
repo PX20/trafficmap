@@ -135,6 +135,11 @@ export function ObjectUploader({
                   e.currentTarget.classList.remove('border-blue-500', 'bg-blue-100');
                   const files = e.dataTransfer.files;
                   if (files && files.length > 0) {
+                    // Clear existing files to prevent duplicates
+                    uppy.getFiles().forEach(file => {
+                      uppy.removeFile(file.id);
+                    });
+                    
                     uppy.addFile({
                       name: files[0].name,
                       type: files[0].type,
@@ -149,6 +154,11 @@ export function ObjectUploader({
                   fileInput.onchange = (event) => {
                     const files = (event.target as HTMLInputElement).files;
                     if (files && files.length > 0) {
+                      // Clear existing files to prevent duplicates
+                      uppy.getFiles().forEach(file => {
+                        uppy.removeFile(file.id);
+                      });
+                      
                       uppy.addFile({
                         name: files[0].name,
                         type: files[0].type,
