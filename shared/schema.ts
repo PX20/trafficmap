@@ -37,6 +37,14 @@ export const users = pgTable("users", {
   allowDirectMessages: boolean("allow_direct_messages").default(true),
   termsAccepted: boolean("terms_accepted").default(false),
   termsAcceptedAt: timestamp("terms_accepted_at"),
+  // Business account fields
+  accountType: varchar("account_type", { enum: ["regular", "business"] }).default("regular"),
+  businessName: varchar("business_name"),
+  businessDescription: varchar("business_description", { length: 500 }),
+  businessWebsite: varchar("business_website"),
+  businessPhone: varchar("business_phone"),
+  businessAddress: varchar("business_address"),
+  businessCategory: varchar("business_category"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
