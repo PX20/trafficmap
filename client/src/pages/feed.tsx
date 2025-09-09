@@ -255,13 +255,54 @@ export default function Feed() {
     enabled: !!user?.homeSuburb,
   });
 
-  const finalFilteredIncidents = [
+  // Combine all incidents before deduplication
+  const combinedIncidents = [
     ...filteredRegionalIncidents.map((inc: any) => ({ ...inc, type: 'incident' })),
     ...filteredRegionalEvents.map((event: any) => ({ ...event, type: 'traffic' }))
   ];
 
-  // Sort all incidents by time (most recent first)
-  const sortedIncidents = finalFilteredIncidents
+  // Deduplicate incidents using a Map for better performance and accuracy
+  const incidentMap = new Map();
+  
+  for (const incident of combinedIncidents) {
+    // Generate a unique identifier for each incident
+    let incidentId: string;
+    
+    if (incident.type === 'traffic') {
+      incidentId = incident.properties?.id || incident.properties?.event_id || `traffic-${incident.properties?.description}-${incident.properties?.road_summary?.road_name}`;
+    } else if (incident.properties?.userReported) {
+      // User reported incidents - use database ID
+      incidentId = incident.id || `user-${incident.properties?.title}-${incident.properties?.createdAt}`;
+    } else {
+      // ESQ incidents - use incident number or fallback to other identifying info
+      const incidentNumber = incident.properties?.IncidentNumber || incident.properties?.incidentNumber;
+      const objectId = incident.properties?.ObjectId || incident.properties?.objectId;
+      const description = incident.properties?.Description || incident.properties?.description;
+      const eventType = incident.properties?.Event_Type || incident.properties?.event_type;
+      const location = incident.properties?.Location || incident.properties?.location;
+      
+      incidentId = incidentNumber || objectId || `esq-${eventType}-${description}-${location}` || incident.id || `incident-${Date.now()}-${Math.random()}`;
+    }
+    
+    // Only keep the most recent version if we have duplicates
+    if (incidentMap.has(incidentId)) {
+      const existing = incidentMap.get(incidentId);
+      const existingDate = new Date(existing.properties?.Response_Date || existing.properties?.last_updated || existing.properties?.createdAt || 0);
+      const currentDate = new Date(incident.properties?.Response_Date || incident.properties?.last_updated || incident.properties?.createdAt || 0);
+      
+      // Keep the more recent incident
+      if (currentDate > existingDate) {
+        incidentMap.set(incidentId, incident);
+      }
+    } else {
+      incidentMap.set(incidentId, incident);
+    }
+  }
+  
+  const deduplicatedIncidents = Array.from(incidentMap.values());
+
+  // Sort all deduplicated incidents by time (most recent first)
+  const sortedIncidents = deduplicatedIncidents
     .sort((a, b) => {
       const dateA = new Date(a.properties?.Response_Date || a.properties?.last_updated || a.properties?.createdAt || 0);
       const dateB = new Date(b.properties?.Response_Date || b.properties?.last_updated || b.properties?.createdAt || 0);
