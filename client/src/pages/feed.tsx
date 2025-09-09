@@ -333,6 +333,18 @@ export default function Feed() {
 
   const getIncidentTitle = (incident: any) => {
     if (incident.type === 'traffic') {
+      // Show the specific event type for TMR posts
+      const eventType = incident.properties?.Event_Type || '';
+      const eventSubtype = incident.properties?.Event_Subtype || '';
+      
+      if (eventType && eventSubtype && eventType !== eventSubtype) {
+        return `${eventType} - ${eventSubtype}`;
+      } else if (eventType) {
+        return eventType;
+      } else if (eventSubtype) {
+        return eventSubtype;
+      }
+      
       return incident.properties?.description || 'Traffic Event';
     }
     if (incident.properties?.userReported) {
