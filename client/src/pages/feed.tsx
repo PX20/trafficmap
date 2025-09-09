@@ -333,11 +333,7 @@ export default function Feed() {
 
   const getIncidentTitle = (incident: any) => {
     if (incident.type === 'traffic') {
-      // Debug: Log the actual structure to understand the data
-      console.log('TMR incident properties:', incident.properties);
-      
       // Show the specific event type for TMR posts
-      // Check multiple possible field names for event type
       const eventType = incident.properties?.event_type || 
                        incident.properties?.Event_Type || 
                        incident.properties?.eventType || '';
@@ -345,13 +341,11 @@ export default function Feed() {
                           incident.properties?.Event_Subtype || 
                           incident.properties?.eventSubtype || '';
       
-      console.log('Event type found:', eventType, 'Event subtype found:', eventSubtype);
-      
-      if (eventType && eventSubtype && eventType !== eventSubtype) {
+      if (eventType && eventSubtype && eventType !== eventSubtype && eventSubtype !== 'N/A') {
         return `${eventType} - ${eventSubtype}`;
       } else if (eventType) {
         return eventType;
-      } else if (eventSubtype) {
+      } else if (eventSubtype && eventSubtype !== 'N/A') {
         return eventSubtype;
       }
       
@@ -378,10 +372,7 @@ export default function Feed() {
 
   const getIncidentDescription = (incident: any) => {
     if (incident.type === 'traffic') {
-      const roadInfo = incident.properties?.road_summary;
-      if (roadInfo?.road_name && roadInfo?.locality) {
-        return `${roadInfo.road_name}, ${roadInfo.locality}`;
-      }
+      // For TMR posts, show the actual description rather than just road info
       return incident.properties?.description || 'Traffic disruption reported';
     }
     if (incident.properties?.userReported) {
