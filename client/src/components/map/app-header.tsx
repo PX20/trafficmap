@@ -144,7 +144,13 @@ export function AppHeader({ onMenuToggle, onFilterToggle, showFilterButton }: Ap
                       <Avatar className="w-8 h-8 cursor-pointer hover:opacity-80 transition-opacity">
                         <AvatarImage src={user.profileImageUrl || undefined} alt={user.firstName || 'User'} />
                         <AvatarFallback className="text-xs">
-                          {user.firstName ? user.firstName[0].toUpperCase() : user.email ? user.email[0].toUpperCase() : 'U'}
+                          {user.accountType === 'business' && user.businessName 
+                            ? user.businessName[0].toUpperCase() 
+                            : user.firstName 
+                              ? user.firstName[0].toUpperCase() 
+                              : user.email 
+                                ? user.email[0].toUpperCase() 
+                                : 'U'}
                         </AvatarFallback>
                       </Avatar>
                     </DropdownMenuTrigger>
@@ -264,11 +270,19 @@ export function AppHeader({ onMenuToggle, onFilterToggle, showFilterButton }: Ap
                         <Avatar className="w-8 h-8">
                           <AvatarImage src={user.profileImageUrl || undefined} alt={user.firstName || 'User'} />
                           <AvatarFallback className="text-xs">
-                            {user.firstName ? user.firstName[0].toUpperCase() : user.email ? user.email[0].toUpperCase() : 'U'}
+                            {user.accountType === 'business' && user.businessName 
+                              ? user.businessName[0].toUpperCase() 
+                              : user.firstName 
+                                ? user.firstName[0].toUpperCase() 
+                                : user.email 
+                                  ? user.email[0].toUpperCase() 
+                                  : 'U'}
                           </AvatarFallback>
                         </Avatar>
                         <span className="text-sm text-foreground hidden lg:block">
-                          {user.firstName || user.email}
+                          {user.accountType === 'business' && user.businessName 
+                            ? user.businessName 
+                            : user.firstName || user.email}
                         </span>
                       </div>
                     </DropdownMenuTrigger>
