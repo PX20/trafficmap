@@ -1015,7 +1015,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await storage.incrementSubcategoryReportCount(reportData.subcategoryId);
       }
 
-      // Geocode the location to get coordinates for mapping
+      // Geocode the location to get coordinates for mapping (with timeout)
       let geometry = null;
       try {
         const geocodeResponse = await fetch(
@@ -1025,7 +1025,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           {
             headers: {
               'User-Agent': 'QLD Safety Monitor (contact: support@example.com)'
-            }
+            },
+            signal: AbortSignal.timeout(3000) // 3 second timeout
           }
         );
         
@@ -1042,6 +1043,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } catch (error) {
         console.error("Error geocoding user incident location:", error);
         // Continue without coordinates - incident will still be created but won't appear on map
+        // Note: Timeout after 3 seconds to prevent delays in incident reporting
       }
 
       const incident = {

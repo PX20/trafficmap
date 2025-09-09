@@ -132,8 +132,8 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
     },
     onSuccess: () => {
       toast({
-        title: "Incident Reported",
-        description: "Your incident report has been submitted successfully.",
+        title: "Report Submitted! ✅",
+        description: "Your incident will appear on the map shortly. Thank you for keeping the community informed.",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/incidents"] });
       form.reset();
@@ -142,19 +142,19 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
     onError: (error) => {
       if (isUnauthorizedError(error)) {
         toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
+          title: "Login Required",
+          description: "You need to be logged in to report incidents. Redirecting to login...",
           variant: "destructive",
         });
         setTimeout(() => {
           window.location.href = "/api/login";
-        }, 500);
+        }, 1500); // Give users time to read the message
         return;
       }
       
       toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to submit incident report",
+        title: "Report Failed",
+        description: error instanceof Error ? error.message : "Failed to submit incident report. Please try again.",
         variant: "destructive",
       });
     },
@@ -549,7 +549,7 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
                 {reportIncidentMutation.isPending ? (
                   <div className="flex items-center gap-2">
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Sharing Information...
+                    Submitting Report...
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">
