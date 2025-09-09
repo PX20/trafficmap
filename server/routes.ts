@@ -1498,6 +1498,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Business account upgrade endpoint
+  app.post('/api/users/upgrade-to-business', isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any)?.claims?.sub;
+      
+      const businessData = z.object({
+        businessName: z.string().min(1, "Business name is required"),
+        businessCategory: z.string().min(1, "Business category is required"),
+        businessDescription: z.string().optional(),
+        businessWebsite: z.string().optional(),
+        businessPhone: z.string().optional(),
+        businessAddress: z.string().optional(),
+      }).parse(req.body);
+
+      const updatedUser = await storage.upgradeToBusinessAccount(userId, businessData);
+      
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      res.json({ success: true, user: updatedUser });
+    } catch (error) {
+      console.error("Error upgrading to business account:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid business data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to upgrade to business account" });
+    }
+  });
+
   app.get('/api/users/suburb/:suburb', async (req, res) => {
     try {
       const { suburb } = req.params;

@@ -72,6 +72,14 @@ export interface IStorage {
   
   // Enhanced user profile operations
   updateUserProfile(id: string, profile: Partial<User>): Promise<User | undefined>;
+  upgradeToBusinessAccount(id: string, businessData: { 
+    businessName: string; 
+    businessCategory: string; 
+    businessDescription?: string; 
+    businessWebsite?: string; 
+    businessPhone?: string; 
+    businessAddress?: string; 
+  }): Promise<User | undefined>;
   getUsersBySuburb(suburb: string): Promise<User[]>;
   
   // Terms and conditions
@@ -349,6 +357,31 @@ export class DatabaseStorage implements IStorage {
     const [updated] = await db
       .update(users)
       .set({ ...profile, updatedAt: new Date() })
+      .where(eq(users.id, id))
+      .returning();
+    return updated;
+  }
+
+  async upgradeToBusinessAccount(id: string, businessData: { 
+    businessName: string; 
+    businessCategory: string; 
+    businessDescription?: string; 
+    businessWebsite?: string; 
+    businessPhone?: string; 
+    businessAddress?: string; 
+  }): Promise<User | undefined> {
+    const [updated] = await db
+      .update(users)
+      .set({
+        accountType: 'business',
+        businessName: businessData.businessName,
+        businessCategory: businessData.businessCategory,
+        businessDescription: businessData.businessDescription || null,
+        businessWebsite: businessData.businessWebsite || null,
+        businessPhone: businessData.businessPhone || null,
+        businessAddress: businessData.businessAddress || null,
+        updatedAt: new Date()
+      })
       .where(eq(users.id, id))
       .returning();
     return updated;

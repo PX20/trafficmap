@@ -14,6 +14,7 @@ import UserProfile from "@/pages/user-profile";
 import Messages from "@/pages/messages";
 import Notifications from "@/pages/notifications";
 import CreateAd from "@/pages/create-ad";
+import BusinessUpgrade from "@/pages/business-upgrade";
 import { TermsAndConditionsModal } from "@/components/terms-and-conditions-modal";
 
 function Router() {
@@ -85,6 +86,7 @@ function Router() {
         <Route path="/feed" component={Feed} />
         <Route path="/advertise" component={CreateAd} />
         <Route path="/create-ad" component={CreateAd} />
+        <Route path="/business-upgrade" component={BusinessUpgrade} />
         <Route path="/profile" component={Profile} />
         <Route path="/users/:userId" component={UserProfile} />
         <Route path="/messages" component={Messages} />
