@@ -1574,6 +1574,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Complete account setup for new users
+  app.post('/api/users/complete-setup', isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any)?.claims?.sub;
+      
+      const setupData = z.object({
+        accountType: z.enum(['regular', 'business']),
+        businessName: z.string().optional(),
+        businessCategory: z.string().optional(),
+        businessDescription: z.string().optional(),
+        businessWebsite: z.string().optional(),
+        businessPhone: z.string().optional(),
+        businessAddress: z.string().optional(),
+      }).parse(req.body);
+
+      // Validate business data if business account
+      if (setupData.accountType === 'business') {
+        if (!setupData.businessName?.trim()) {
+          return res.status(400).json({ message: "Business name is required for business accounts" });
+        }
+        if (!setupData.businessCategory) {
+          return res.status(400).json({ message: "Business category is required for business accounts" });
+        }
+      }
+
+      // Update user with account setup data
+      const updatedUser = await storage.completeUserSetup(userId, setupData);
+      
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      res.json({ success: true, user: updatedUser });
+    } catch (error) {
+      console.error("Error completing account setup:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid setup data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to complete account setup" });
+    }
+  });
+
   app.get('/api/users/suburb/:suburb', async (req, res) => {
     try {
       const { suburb } = req.params;

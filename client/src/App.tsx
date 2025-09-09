@@ -16,6 +16,7 @@ import Notifications from "@/pages/notifications";
 import CreateAd from "@/pages/create-ad";
 import BusinessUpgrade from "@/pages/business-upgrade";
 import BusinessDashboard from "@/pages/business-dashboard";
+import AccountSetup from "@/pages/account-setup";
 import { TermsAndConditionsModal } from "@/components/terms-and-conditions-modal";
 
 function Router() {
@@ -23,7 +24,7 @@ function Router() {
   const isAuthenticated = !!user;
   const [showTermsModal, setShowTermsModal] = useState(false);
 
-  // Check if user needs to accept terms
+  // Check if user needs to accept terms or complete account setup
   useEffect(() => {
     if (user && user.id && !user.termsAccepted) {
       setShowTermsModal(true);
@@ -31,6 +32,9 @@ function Router() {
       setShowTermsModal(false);
     }
   }, [user]);
+
+  // Check if new user needs account setup
+  const needsAccountSetup = user && !user.accountType;
 
   // Preload incident data as soon as app starts
   useEffect(() => {
@@ -82,19 +86,30 @@ function Router() {
   return (
     <>
       <Switch>
-        <Route path="/" component={Feed} />
-        <Route path="/map" component={Home} />
-        <Route path="/feed" component={Feed} />
-        <Route path="/advertise" component={CreateAd} />
-        <Route path="/create-ad" component={CreateAd} />
-        <Route path="/business-upgrade" component={BusinessUpgrade} />
-        <Route path="/business-dashboard" component={BusinessDashboard} />
-        <Route path="/profile" component={Profile} />
-        <Route path="/users/:userId" component={UserProfile} />
-        <Route path="/messages" component={Messages} />
-        <Route path="/messages/:conversationId" component={Messages} />
-        <Route path="/notifications" component={Notifications} />
-        <Route component={NotFound} />
+        {/* Redirect new users to account setup */}
+        {needsAccountSetup ? (
+          <>
+            <Route path="/account-setup" component={AccountSetup} />
+            <Route component={AccountSetup} />
+          </>
+        ) : (
+          <>
+            <Route path="/" component={Feed} />
+            <Route path="/map" component={Home} />
+            <Route path="/feed" component={Feed} />
+            <Route path="/advertise" component={CreateAd} />
+            <Route path="/create-ad" component={CreateAd} />
+            <Route path="/business-upgrade" component={BusinessUpgrade} />
+            <Route path="/business-dashboard" component={BusinessDashboard} />
+            <Route path="/account-setup" component={AccountSetup} />
+            <Route path="/profile" component={Profile} />
+            <Route path="/users/:userId" component={UserProfile} />
+            <Route path="/messages" component={Messages} />
+            <Route path="/messages/:conversationId" component={Messages} />
+            <Route path="/notifications" component={Notifications} />
+            <Route component={NotFound} />
+          </>
+        )}
       </Switch>
       
       {/* Terms and Conditions Modal */}
