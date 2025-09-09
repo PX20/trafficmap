@@ -23,6 +23,7 @@ import {
   QLD_REGIONS,
 } from "./region-utils";
 
+
 const API_BASE_URL = "https://api.qldtraffic.qld.gov.au";
 const PUBLIC_API_KEY = "3e83add325cbb69ac4d8e5bf433d770b";
 
@@ -519,25 +520,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Apply regional filtering if suburb provided
       if (suburb) {
         const region = findRegionBySuburb(suburb as string);
+        
         if (region) {
           recentIncidents = recentIncidents.filter((incident: any) => {
-            // Extract coordinates using the robust function
-            const coords = extractCoordinatesFromGeometry(incident.geometry);
-            
-            if (coords) {
-              const [lat, lng] = coords;
-              // Check if coordinates are within region boundary
-              if (region.boundary && isPointInPolygon([lng, lat], region.boundary)) {
-                return true;
+            // Create a feature-like object for the robust filtering function
+            const feature = {
+              geometry: incident.geometry,
+              properties: {
+                ...incident.properties,
+                location: incident.location,
+                suburb: incident.properties?.suburb,
+                locationDescription: incident.location,
+                // Add user-reported incident fields
+                ...(incident.agency === 'User Report' && {
+                  location: incident.location,
+                  suburb: incident.properties?.suburb || incident.location?.split(',').pop()?.trim() || ''
+                })
               }
-            }
+            };
             
-            // Fallback to text-based matching
-            const locationText = `${incident.location || ''} ${incident.properties?.Locality || ''} ${incident.properties?.suburb || ''}`.toLowerCase();
-            return region.suburbs.some(suburbName => {
-              const suburbLower = suburbName.toLowerCase();
-              return locationText.includes(suburbLower) || suburbLower.includes(locationText);
-            });
+            // Use the robust region filtering function
+            return isFeatureInRegion(feature, region);
           });
         }
       }
@@ -600,18 +603,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         };
       });
       
-      // Filter by suburb if provided
-      if (suburb) {
-        incidentFeatures = incidentFeatures.filter((feature: any) => {
-          const locality = feature.properties?.Locality?.toLowerCase();
-          const location = feature.properties?.Location?.toLowerCase();
-          const locationDesc = feature.properties?.locationDescription?.toLowerCase();
-          const searchSuburb = (suburb as string).toLowerCase();
-          return locality?.includes(searchSuburb) || 
-                 location?.includes(searchSuburb) || 
-                 locationDesc?.includes(searchSuburb);
-        });
-      }
+      // Regional filtering already done above, no need for duplicate filtering
       
       const data = {
         type: "FeatureCollection",
