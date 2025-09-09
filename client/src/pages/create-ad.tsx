@@ -114,9 +114,38 @@ export default function CreateAd() {
     backgroundUrl: ''
   });
 
+  // Map business categories to ad templates
+  const getTemplateFromCategory = (category: string): keyof typeof AD_TEMPLATES => {
+    const categoryMapping: Record<string, keyof typeof AD_TEMPLATES> = {
+      'Restaurant & Food': 'food-cafe',
+      'Food & Beverage': 'food-cafe',
+      'Cafe': 'food-cafe',
+      'Restaurant': 'food-cafe',
+      'Gift & Supplies': 'gift-supplies',
+      'Retail': 'gift-supplies',
+      'Gift Shop': 'gift-supplies',
+      'Health & Beauty': 'health-beauty',
+      'Beauty': 'health-beauty',
+      'Fitness': 'health-beauty',
+      'Wellness': 'health-beauty',
+      'Professional Service': 'professional',
+      'Legal': 'professional',
+      'Automotive': 'professional',
+      'Home Services': 'professional'
+    };
+    
+    return categoryMapping[category] || 'gift-supplies';
+  };
+
   // Auto-populate business information from user account
   useEffect(() => {
     if (user && user.accountType === 'business') {
+      // Auto-select template based on business category
+      if (user.businessCategory) {
+        const template = getTemplateFromCategory(user.businessCategory);
+        setSelectedTemplate(template);
+      }
+      
       setFormData(prev => ({
         ...prev,
         businessName: user.businessName || '',
