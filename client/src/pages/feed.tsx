@@ -174,7 +174,7 @@ export default function Feed() {
   }, []);
 
   // Use the same traffic data hook as the map for consistent filtering
-  const { regionalEvents, regionalIncidents, events: allEvents, incidents: allIncidents } = useTrafficData(filters);
+  const { regionalEvents, regionalIncidents } = useTrafficData(filters);
   
   // Sync selected suburb with filter location
   useEffect(() => {
@@ -212,14 +212,9 @@ export default function Feed() {
   });
 
   // Apply category/type filtering to regional data (already filtered by region from backend)
-  // Fallback to all data if regional data is empty (user not logged in or no location set)
-  const hasRegionalData = regionalEvents.length > 0 || regionalIncidents.length > 0;
-  const eventsToFilter = hasRegionalData ? regionalEvents : allEvents;
-  const incidentsToFilter = hasRegionalData ? regionalIncidents : allIncidents;
+  const filteredRegionalEvents = regionalEvents.filter(() => filters.showTrafficEvents === true);
   
-  const filteredRegionalEvents = eventsToFilter.filter(() => filters.showTrafficEvents === true);
-  
-  const filteredRegionalIncidents = incidentsToFilter.filter((incident: any) => {
+  const filteredRegionalIncidents = regionalIncidents.filter((incident: any) => {
     const isUserReported = incident.properties?.userReported;
     
     if (isUserReported) {
