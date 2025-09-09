@@ -202,6 +202,40 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
+  async createTestBusinessUser(): Promise<User> {
+    // Create test business user for development/testing
+    const testBusinessData: InsertUser = {
+      id: 'test-business-001',
+      email: 'sarah.mitchell@sunshinecoastcoffee.com.au',
+      firstName: 'Sarah',
+      lastName: 'Mitchell',
+      profileImageUrl: null,
+      homeSuburb: 'Caloundra',
+      primarySuburb: 'Caloundra',
+      accountType: 'business',
+      businessName: 'Sunshine Coast Coffee Co.',
+      businessCategory: 'Restaurant & Food',
+      businessDescription: 'Locally roasted coffee beans and specialty drinks serving the Sunshine Coast community',
+      businessWebsite: 'https://sunshinecoastcoffee.com.au',
+      businessPhone: '(07) 5491 2345',
+      businessAddress: '123 Bulcock Street, Caloundra QLD 4551',
+      termsAccepted: true,
+    };
+
+    // Check if user already exists
+    const existingUser = await this.getUser(testBusinessData.id!);
+    if (existingUser) {
+      return existingUser;
+    }
+
+    const [user] = await db
+      .insert(users)
+      .values(testBusinessData)
+      .returning();
+    
+    return user;
+  }
+
   async upsertUser(userData: UpsertUser): Promise<User> {
     const [user] = await db
       .insert(users)
@@ -907,8 +941,8 @@ export class DatabaseStorage implements IStorage {
       const viewCount = views.length;
       const clickCount = clicks.length;
       const ctr = viewCount > 0 ? (clickCount / viewCount) * 100 : 0;
-      const spend = parseFloat(campaign.dailyBudget) * 30; // Rough calculation
-      const cpm = parseFloat(campaign.cpmRate ?? "3.50");
+      const spend = parseFloat(campaign.dailyBudget || "0") * 30; // Rough calculation
+      const cpm = parseFloat(campaign.cpmRate || "3.50");
       
       analytics.push({
         campaignId: campaign.id,

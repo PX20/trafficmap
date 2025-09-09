@@ -1627,6 +1627,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Create test business user for development
+  app.post('/api/test/create-business-user', async (req, res) => {
+    try {
+      const user = await storage.createTestBusinessUser();
+      res.json({ success: true, user });
+    } catch (error) {
+      console.error("Error creating test business user:", error);
+      res.status(500).json({ message: "Failed to create test business user" });
+    }
+  });
+
   // Comment voting routes
   app.post('/api/comments/:commentId/vote', isAuthenticated, async (req, res) => {
     try {
