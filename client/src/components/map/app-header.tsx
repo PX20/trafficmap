@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Link, useLocation } from "wouter";
-import { Map, List, Bell, MessageCircle, Filter, Plus, MapPin, Menu, LogOut, Settings } from "lucide-react";
+import { Map, List, Bell, MessageCircle, Filter, Plus, MapPin, Menu, LogOut, Settings, Megaphone } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -111,6 +111,16 @@ export function AppHeader({ onMenuToggle, onFilterToggle, showFilterButton }: Ap
                     )}
                   </Button>
                 </Link>
+                <Link href="/advertise">
+                  <Button
+                    variant={location === "/advertise" || location === "/create-ad" ? "default" : "ghost"}
+                    size="sm"
+                    className="h-8 px-2 text-xs"
+                    data-testid="button-advertise-view"
+                  >
+                    <Megaphone className="w-4 h-4" />
+                  </Button>
+                </Link>
               </div>
 
               {/* User Menu - Only for authenticated users */}
@@ -215,6 +225,17 @@ export function AppHeader({ onMenuToggle, onFilterToggle, showFilterButton }: Ap
                         {unreadMessages}
                       </Badge>
                     )}
+                  </Button>
+                </Link>
+                <Link href="/advertise">
+                  <Button
+                    variant={location === "/advertise" || location === "/create-ad" ? "default" : "ghost"}
+                    size="sm"
+                    className="h-8"
+                    data-testid="button-advertise-view"
+                  >
+                    <Megaphone className="w-4 h-4 mr-1" />
+                    Advertise
                   </Button>
                 </Link>
               </div>

@@ -261,6 +261,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Ad creation endpoint - for businesses to submit ads
+  app.post("/api/ads/create", async (req, res) => {
+    try {
+      const adData = z.object({
+        businessName: z.string().min(1).max(100),
+        title: z.string().min(1).max(100),
+        content: z.string().min(1).max(500),
+        websiteUrl: z.string().url().optional().or(z.literal('')),
+        address: z.string().max(200).optional().or(z.literal('')),
+        suburb: z.string().min(1).max(100),
+        cta: z.string().min(1).max(50),
+        targetSuburbs: z.array(z.string()).optional(),
+        dailyBudget: z.string(),
+        totalBudget: z.string().optional(),
+        template: z.string().optional(),
+        status: z.enum(['pending', 'active', 'paused', 'rejected']).default('pending')
+      }).parse(req.body);
+
+      // Auto-populate target suburbs with the main suburb if not provided
+      if (!adData.targetSuburbs || adData.targetSuburbs.length === 0) {
+        adData.targetSuburbs = [adData.suburb];
+      }
+
+      // Set default total budget based on daily budget if not provided
+      if (!adData.totalBudget) {
+        const dailyAmount = parseFloat(adData.dailyBudget);
+        adData.totalBudget = (dailyAmount * 30).toString(); // 30 days default
+      }
+
+      // Set default CPM rate
+      const cpmRate = "3.50";
+
+      const newAd = await storage.createAdCampaign({
+        businessName: adData.businessName,
+        title: adData.title,
+        content: adData.content,
+        imageUrl: null, // Will add image upload later
+        websiteUrl: adData.websiteUrl || null,
+        address: adData.address || null,
+        suburb: adData.suburb,
+        cta: adData.cta,
+        targetSuburbs: adData.targetSuburbs,
+        dailyBudget: adData.dailyBudget,
+        totalBudget: adData.totalBudget,
+        cpmRate,
+        status: adData.status
+      });
+
+      console.log(`New ad created: ${newAd.businessName} - ${newAd.title}`);
+      res.json({ 
+        success: true, 
+        id: newAd.id,
+        message: "Ad submitted successfully and is pending review" 
+      });
+
+    } catch (error) {
+      console.error("Error creating ad:", error);
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ 
+          message: "Invalid ad data", 
+          errors: error.errors 
+        });
+      } else {
+        res.status(500).json({ message: "Failed to create ad" });
+      }
+    }
+  });
+
   // Ad view tracking endpoint
   app.post("/api/ads/track-view", async (req, res) => {
     try {
