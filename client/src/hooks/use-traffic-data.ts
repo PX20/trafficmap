@@ -102,7 +102,7 @@ export function useTrafficData(filters: FilterState): ProcessedTrafficData {
         return { features: [] };
       }
       
-      const url = `/api/incidents?suburb=${encodeURIComponent(suburb)}`;
+      const url = `/api/incidents?suburb=${encodeURIComponent(suburb)}&limit=200`;
       const response = await fetch(url);
       if (!response.ok) throw new Error('Failed to fetch incidents');
       return response.json();
