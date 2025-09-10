@@ -17,7 +17,8 @@ export const QLD_REGIONS: Region[] = [
       'Nambour', 'Palmwoods', 'Maleny', 'Montville', 'Yandina',
       'Cooroy', 'Pomona', 'Eumundi', 'Peregian Beach', 'Coolum Beach',
       'Buderim', 'Sippy Downs', 'Chancellor Park', 'Birtinya',
-      'Kawana', 'Currimundi', 'Dicky Beach', 'Kings Beach', 'Bulcock Beach'
+      'Kawana', 'Currimundi', 'Dicky Beach', 'Kings Beach', 'Bulcock Beach',
+      'Bells Creek'
     ],
     boundary: [
       [152.7, -26.9],   // North-west (inland near Cooroy)
