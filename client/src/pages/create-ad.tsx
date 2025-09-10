@@ -374,7 +374,7 @@ export default function CreateAd() {
     onSuccess: () => {
       toast({
         title: "Ad Submitted Successfully!",
-        description: "Your ad is being reviewed and will be live within 24 hours.",
+        description: "Your ad will be reviewed for approval now.",
       });
       
       // Redirect to feed after showing success message
