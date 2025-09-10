@@ -1270,9 +1270,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Messaging Routes
-  app.get('/api/conversations', isAuthenticated, async (req: any, res) => {
+  app.get('/api/conversations', async (req: any, res) => {
     try {
-      const userId = (req.user as any).claims.sub;
+      // Check session-based authentication
+      if (!(req.session as any).authenticated || !(req.session as any).userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const userId = (req.session as any).userId;
       const conversations = await storage.getConversationsByUserId(userId);
       res.json(conversations);
     } catch (error) {
@@ -1281,13 +1286,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/conversations', isAuthenticated, async (req: any, res) => {
+  app.post('/api/conversations', async (req: any, res) => {
     try {
+      // Check session-based authentication
+      if (!(req.session as any).authenticated || !(req.session as any).userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
       const { otherUserId } = z.object({
         otherUserId: z.string().min(1),
       }).parse(req.body);
 
-      const currentUserId = (req.user as any).claims.sub;
+      const currentUserId = (req.session as any).userId;
       
       // Check if conversation already exists
       let conversation = await storage.getConversationBetweenUsers(currentUserId, otherUserId);
@@ -1307,10 +1317,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/conversations/:conversationId/messages', isAuthenticated, async (req: any, res) => {
+  app.get('/api/conversations/:conversationId/messages', async (req: any, res) => {
     try {
+      // Check session-based authentication
+      if (!(req.session as any).authenticated || !(req.session as any).userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
       const { conversationId } = req.params;
-      const userId = (req.user as any).claims.sub;
+      const userId = (req.session as any).userId;
       
       // Verify user has access to this conversation
       const conversation = await storage.getConversationBetweenUsers(userId, "dummy"); // We'll check properly
@@ -1329,14 +1344,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/conversations/:conversationId/messages', isAuthenticated, async (req: any, res) => {
+  app.post('/api/conversations/:conversationId/messages', async (req: any, res) => {
     try {
+      // Check session-based authentication
+      if (!(req.session as any).authenticated || !(req.session as any).userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
       const { conversationId } = req.params;
       const { content } = z.object({
         content: z.string().min(1).max(1000),
       }).parse(req.body);
 
-      const userId = (req.user as any).claims.sub;
+      const userId = (req.session as any).userId;
       
       // Verify user has access to this conversation
       const conversations = await storage.getConversationsByUserId(userId);
@@ -1359,10 +1379,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch('/api/conversations/:conversationId/read', isAuthenticated, async (req: any, res) => {
+  app.patch('/api/conversations/:conversationId/read', async (req: any, res) => {
     try {
+      // Check session-based authentication
+      if (!(req.session as any).authenticated || !(req.session as any).userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
       const { conversationId } = req.params;
-      const userId = (req.user as any).claims.sub;
+      const userId = (req.session as any).userId;
       
       // Verify user has access to this conversation
       const conversations = await storage.getConversationsByUserId(userId);
