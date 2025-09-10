@@ -37,9 +37,11 @@ export default function AdminDashboard() {
   const [rejectionReason, setRejectionReason] = useState("");
   const [selectedAdId, setSelectedAdId] = useState<string | null>(null);
 
-  // Redirect to home if not authenticated
+  // Only run access checks when component actually mounts (user is on /admin page)
   useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
+    if (authLoading) return; // Wait for auth to load
+    
+    if (!isAuthenticated) {
       toast({
         title: "Unauthorized",
         description: "You are logged out. Logging in again...",
@@ -50,11 +52,8 @@ export default function AdminDashboard() {
       }, 500);
       return;
     }
-  }, [isAuthenticated, authLoading, toast]);
-
-  // Check if user is admin
-  useEffect(() => {
-    if (!authLoading && isAuthenticated && user && (user as any).role !== 'admin') {
+    
+    if (user && (user as any).role !== 'admin') {
       toast({
         title: "Access Denied",
         description: "You need admin privileges to access this page.",
@@ -65,7 +64,7 @@ export default function AdminDashboard() {
       }, 1000);
       return;
     }
-  }, [user, isAuthenticated, authLoading, toast]);
+  }, []); // Only run once on mount - this component should only mount when user visits /admin
 
   const { data: pendingAds, isLoading, error } = useQuery<AdCampaign[]>({
     queryKey: ['/api/admin/ads/pending'],
