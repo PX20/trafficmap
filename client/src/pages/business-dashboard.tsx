@@ -336,7 +336,12 @@ export default function BusinessDashboard() {
                                 Edit & Resubmit
                               </Button>
                             ) : null}
-                            <Button variant="outline" size="sm" data-testid={`button-edit-${campaign.id}`}>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              data-testid={`button-edit-${campaign.id}`}
+                              onClick={() => window.location.href = `/edit-ad/${campaign.id}`}
+                            >
                               <Settings className="w-4 h-4" />
                             </Button>
                           </div>

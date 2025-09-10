@@ -35,7 +35,7 @@ export function AppHeader({ onMenuToggle, onFilterToggle, showFilterButton }: Ap
     retry: false,
   });
   
-  const unreadNotifications = notifications?.filter((n: any) => !n.isRead)?.length || 0;
+  const unreadNotifications = (notifications as any[])?.filter((n: any) => !n.isRead)?.length || 0;
   const unreadMessages = 0;
 
   const handleLocationChange = (location: string, coordinates?: { lat: number; lon: number }, boundingBox?: [number, number, number, number]) => {
