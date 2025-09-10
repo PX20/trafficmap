@@ -123,7 +123,14 @@ export default function Profile() {
       lastName: user?.lastName || "",
       primarySuburb: user?.primarySuburb || "",
       phoneNumber: user?.phoneNumber || "",
-      bio: user?.bio || ""
+      bio: user?.bio || "",
+      // Business fields
+      businessName: user?.businessName || "",
+      businessCategory: user?.businessCategory || "",
+      businessDescription: user?.businessDescription || "",
+      businessWebsite: user?.businessWebsite || "",
+      businessPhone: user?.businessPhone || "",
+      businessAddress: user?.businessAddress || ""
     });
     setIsEditing(false);
   };
