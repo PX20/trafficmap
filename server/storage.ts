@@ -56,7 +56,19 @@ import {
   type InsertAdClick,
   adCampaigns,
   adViews,
-  adClicks
+  adClicks,
+  billingPlans,
+  billingCycles,
+  payments,
+  campaignAnalytics,
+  type BillingPlan,
+  type InsertBillingPlan,
+  type BillingCycle,
+  type InsertBillingCycle,
+  type Payment,
+  type InsertPayment,
+  type CampaignAnalytics,
+  type InsertCampaignAnalytics
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, or, ne, sql } from "drizzle-orm";
@@ -186,6 +198,18 @@ export interface IStorage {
   getReports(status?: string): Promise<Report[]>;
   updateReportStatus(reportId: string, status: string, moderatorId?: string, moderatorNotes?: string): Promise<Report | undefined>;
   getReportsByEntity(entityType: string, entityId: string): Promise<Report[]>;
+
+  // Billing operations
+  getBillingPlans(): Promise<BillingPlan[]>;
+  createBillingPlan(plan: InsertBillingPlan): Promise<BillingPlan>;
+  createBillingCycle(cycle: InsertBillingCycle): Promise<BillingCycle>;
+  getBillingCycle(cycleId: string): Promise<BillingCycle | undefined>;
+  updateBillingCycleStatus(cycleId: string, status: string): Promise<BillingCycle | undefined>;
+  createPayment(payment: InsertPayment): Promise<Payment>;
+  updatePaymentStatus(paymentId: string, status: string, paidAt?: Date): Promise<Payment | undefined>;
+  getBusinessPayments(businessId: string): Promise<Payment[]>;
+  getCampaignAnalytics(campaignId: string, startDate: string, endDate: string): Promise<CampaignAnalytics[]>;
+  upsertCampaignAnalytics(analytics: InsertCampaignAnalytics): Promise<CampaignAnalytics>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -793,7 +817,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Notification operations
-  async getUserNotifications(userId: string, limit: number = 50): Promise<Notification[]> {
+  async getNotifications(userId: string, limit: number = 50): Promise<Notification[]> {
     return await db
       .select()
       .from(notifications)
@@ -1119,6 +1143,133 @@ export class DatabaseStorage implements IStorage {
       );
     
     return result[0]?.count || 0;
+  }
+
+  // Billing operations
+  async getBillingPlans(): Promise<BillingPlan[]> {
+    return await db
+      .select()
+      .from(billingPlans)
+      .where(eq(billingPlans.isActive, true))
+      .orderBy(billingPlans.createdAt);
+  }
+
+  async createBillingPlan(plan: InsertBillingPlan): Promise<BillingPlan> {
+    const id = randomUUID();
+    const [newPlan] = await db
+      .insert(billingPlans)
+      .values({
+        ...plan,
+        id,
+      })
+      .returning();
+    
+    return newPlan;
+  }
+
+  async createBillingCycle(cycle: InsertBillingCycle): Promise<BillingCycle> {
+    const id = randomUUID();
+    const [newCycle] = await db
+      .insert(billingCycles)
+      .values({
+        ...cycle,
+        id,
+      })
+      .returning();
+    
+    return newCycle;
+  }
+
+  async getBillingCycle(cycleId: string): Promise<BillingCycle | undefined> {
+    const [cycle] = await db
+      .select()
+      .from(billingCycles)
+      .where(eq(billingCycles.id, cycleId));
+    
+    return cycle;
+  }
+
+  async updateBillingCycleStatus(cycleId: string, status: string): Promise<BillingCycle | undefined> {
+    const [updated] = await db
+      .update(billingCycles)
+      .set({ 
+        status, 
+        updatedAt: new Date() 
+      })
+      .where(eq(billingCycles.id, cycleId))
+      .returning();
+    
+    return updated;
+  }
+
+  async createPayment(payment: InsertPayment): Promise<Payment> {
+    const id = randomUUID();
+    const [newPayment] = await db
+      .insert(payments)
+      .values({
+        ...payment,
+        id,
+      })
+      .returning();
+    
+    return newPayment;
+  }
+
+  async updatePaymentStatus(paymentId: string, status: string, paidAt?: Date): Promise<Payment | undefined> {
+    const updateData: Partial<Payment> = { status };
+    if (paidAt) {
+      updateData.paidAt = paidAt;
+    }
+
+    const [updated] = await db
+      .update(payments)
+      .set(updateData)
+      .where(eq(payments.id, paymentId))
+      .returning();
+    
+    return updated;
+  }
+
+  async getBusinessPayments(businessId: string): Promise<Payment[]> {
+    return await db
+      .select()
+      .from(payments)
+      .where(eq(payments.businessId, businessId))
+      .orderBy(desc(payments.createdAt));
+  }
+
+  async getCampaignAnalytics(campaignId: string, startDate: string, endDate: string): Promise<CampaignAnalytics[]> {
+    return await db
+      .select()
+      .from(campaignAnalytics)
+      .where(
+        and(
+          eq(campaignAnalytics.campaignId, campaignId),
+          sql`${campaignAnalytics.date} >= ${startDate}`,
+          sql`${campaignAnalytics.date} <= ${endDate}`
+        )
+      )
+      .orderBy(campaignAnalytics.date);
+  }
+
+  async upsertCampaignAnalytics(analytics: InsertCampaignAnalytics): Promise<CampaignAnalytics> {
+    const id = randomUUID();
+    const [upserted] = await db
+      .insert(campaignAnalytics)
+      .values({
+        ...analytics,
+        id,
+      })
+      .onConflictDoUpdate({
+        target: [campaignAnalytics.campaignId, campaignAnalytics.date],
+        set: {
+          ...analytics,
+          updatedAt: new Date()
+        }
+      })
+      .returning();
+    
+    return upserted;
   }
 
 }
