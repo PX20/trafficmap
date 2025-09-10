@@ -36,7 +36,7 @@ const trafficCache = {
 // Request debouncing to prevent multiple simultaneous API calls
 let ongoingTrafficRequest: Promise<any> | null = null;
 
-const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes in milliseconds (reduced frequency due to rate limiting)
+const CACHE_DURATION = 60 * 1000; // Force refresh to sync with regional data
 const SUNSHINE_COAST_CACHE_DURATION = 60 * 60 * 1000; // 1 hour for Sunshine Coast
 const RETRY_DELAY = 30 * 1000; // 30 seconds delay on rate limit
 
