@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Link, useLocation } from "wouter";
-import { Map, List, Bell, MessageCircle, Filter, Plus, MapPin, Menu, LogOut, Settings, Megaphone, BarChart3 } from "lucide-react";
+import { Map, List, Bell, MessageCircle, Filter, Plus, MapPin, Menu, LogOut, Settings, Megaphone, BarChart3, Shield } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -180,6 +180,15 @@ export function AppHeader({ onMenuToggle, onFilterToggle, showFilterButton }: Ap
                           Profile Settings
                         </Link>
                       </DropdownMenuItem>
+                      {/* Admin Dashboard - Only show for admin users */}
+                      {user && (user as any).role === 'admin' && (
+                        <DropdownMenuItem asChild>
+                          <Link href="/admin" className="flex items-center w-full">
+                            <Shield className="w-4 h-4 mr-2" />
+                            Admin Dashboard
+                          </Link>
+                        </DropdownMenuItem>
+                      )}
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={() => window.location.href = '/api/logout'} className="text-red-600">
                         <LogOut className="w-4 h-4 mr-2" />
@@ -325,6 +334,15 @@ export function AppHeader({ onMenuToggle, onFilterToggle, showFilterButton }: Ap
                           Profile Settings
                         </Link>
                       </DropdownMenuItem>
+                      {/* Admin Dashboard - Only show for admin users */}
+                      {user && (user as any).role === 'admin' && (
+                        <DropdownMenuItem asChild>
+                          <Link href="/admin" className="flex items-center w-full">
+                            <Shield className="w-4 h-4 mr-2" />
+                            Admin Dashboard
+                          </Link>
+                        </DropdownMenuItem>
+                      )}
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={() => window.location.href = '/api/logout'} className="text-red-600">
                         <LogOut className="w-4 h-4 mr-2" />

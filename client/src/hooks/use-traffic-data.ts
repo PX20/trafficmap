@@ -166,14 +166,6 @@ export function useTrafficData(filters: FilterState): ProcessedTrafficData {
   // Apply filtering for display based on ALL data (for map)
   const filteredEvents = filters.showTrafficEvents ? allEvents : [];
   
-  // Debug: Log filtering decisions
-  console.log('useTrafficData Debug:', {
-    allEventsCount: allEvents.length,
-    allIncidentsCount: allIncidents.length,
-    showTrafficEvents: filters.showTrafficEvents,
-    filteredEventsCount: filteredEvents.length
-  });
-  
   const filteredIncidents = allIncidents.filter((incident: any) => {
     const isUserReported = incident.properties?.userReported;
     

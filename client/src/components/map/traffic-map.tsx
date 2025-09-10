@@ -130,17 +130,6 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
   useEffect(() => {
     if (!mapInstanceRef.current) return;
 
-    // Debug: Log what data we're receiving
-    console.log('TrafficMap Debug:', {
-      filteredEvents: filteredEvents?.length || 0,
-      filteredIncidents: filteredIncidents?.length || 0,
-      filtersState: {
-        showTrafficEvents: filters.showTrafficEvents,
-        showUserCommunity: filters.showUserCommunity,
-        showIncidents: filters.showIncidents
-      }
-    });
-
     // Clear existing markers
     markersRef.current.forEach(marker => {
       mapInstanceRef.current?.removeLayer(marker);
