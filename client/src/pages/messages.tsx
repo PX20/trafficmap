@@ -147,27 +147,38 @@ export default function Messages() {
                           }}
                           data-testid={`conversation-${conversation.id}`}
                         >
-                          <Avatar className="w-10 h-10 mr-3">
-                            <AvatarImage 
-                              src={otherUser?.profileImageUrl || undefined} 
-                              alt={otherUser?.firstName || 'User'} 
-                            />
-                            <AvatarFallback>
-                              {otherUser?.firstName?.[0] || otherUser?.email?.[0] || 'U'}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1 text-left">
-                            <div className="font-medium text-sm">
-                              {otherUser?.firstName && otherUser?.lastName 
-                                ? `${otherUser.firstName} ${otherUser.lastName}`
-                                : otherUser?.email || 'Unknown User'
+                          <div 
+                            className="flex items-center cursor-pointer"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (otherUser?.id) {
+                                setLocation(`/users/${otherUser.id}`);
                               }
-                            </div>
-                            <div className="text-xs text-muted-foreground">
-                              {conversation.lastMessageAt 
-                                ? new Date(conversation.lastMessageAt).toLocaleDateString()
-                                : 'No messages yet'
-                              }
+                            }}
+                            data-testid={`profile-link-${otherUser?.id}`}
+                          >
+                            <Avatar className="w-10 h-10 mr-3">
+                              <AvatarImage 
+                                src={otherUser?.profileImageUrl || undefined} 
+                                alt={otherUser?.firstName || 'User'} 
+                              />
+                              <AvatarFallback>
+                                {otherUser?.firstName?.[0] || otherUser?.email?.[0] || 'U'}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1 text-left">
+                              <div className="font-medium text-sm hover:underline">
+                                {otherUser?.firstName && otherUser?.lastName 
+                                  ? `${otherUser.firstName} ${otherUser.lastName}`
+                                  : otherUser?.email || 'Unknown User'
+                                }
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                {conversation.lastMessageAt 
+                                  ? new Date(conversation.lastMessageAt).toLocaleDateString()
+                                  : 'No messages yet'
+                                }
+                              </div>
                             </div>
                           </div>
                         </Button>
@@ -195,24 +206,35 @@ export default function Messages() {
                     >
                       <ArrowLeft className="w-4 h-4" />
                     </Button>
-                    <Avatar className="w-8 h-8">
-                      <AvatarImage 
-                        src={getOtherUser(selectedConversation)?.profileImageUrl || undefined} 
-                        alt="User" 
-                      />
-                      <AvatarFallback>
-                        {getOtherUser(selectedConversation)?.firstName?.[0] || 'U'}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <CardTitle className="text-lg">
-                        {(() => {
-                          const otherUser = getOtherUser(selectedConversation);
-                          return otherUser?.firstName && otherUser?.lastName 
-                            ? `${otherUser.firstName} ${otherUser.lastName}`
-                            : otherUser?.email || 'Unknown User';
-                        })()}
-                      </CardTitle>
+                    <div 
+                      className="flex items-center gap-3 cursor-pointer"
+                      onClick={() => {
+                        const otherUser = getOtherUser(selectedConversation);
+                        if (otherUser?.id) {
+                          setLocation(`/users/${otherUser.id}`);
+                        }
+                      }}
+                      data-testid={`header-profile-link-${getOtherUser(selectedConversation)?.id}`}
+                    >
+                      <Avatar className="w-8 h-8">
+                        <AvatarImage 
+                          src={getOtherUser(selectedConversation)?.profileImageUrl || undefined} 
+                          alt="User" 
+                        />
+                        <AvatarFallback>
+                          {getOtherUser(selectedConversation)?.firstName?.[0] || 'U'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <CardTitle className="text-lg hover:underline">
+                          {(() => {
+                            const otherUser = getOtherUser(selectedConversation);
+                            return otherUser?.firstName && otherUser?.lastName 
+                              ? `${otherUser.firstName} ${otherUser.lastName}`
+                              : otherUser?.email || 'Unknown User';
+                          })()}
+                        </CardTitle>
+                      </div>
                     </div>
                   </div>
                 </CardHeader>
