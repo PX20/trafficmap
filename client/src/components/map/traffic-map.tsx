@@ -123,7 +123,10 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
           let coords: [number, number] | null = null;
           
           // Handle different geometry types
-          if (feature.geometry.type === 'MultiPoint' && feature.geometry.coordinates?.[0]) {
+          if (feature.geometry.type === 'Point' && feature.geometry.coordinates) {
+            // Simple Point geometry (most common case)
+            coords = [feature.geometry.coordinates[1], feature.geometry.coordinates[0]];
+          } else if (feature.geometry.type === 'MultiPoint' && feature.geometry.coordinates?.[0]) {
             // MultiPoint: use first point
             const point = feature.geometry.coordinates[0];
             coords = [point[1], point[0]];
