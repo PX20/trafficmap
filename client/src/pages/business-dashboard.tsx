@@ -356,7 +356,10 @@ export default function BusinessDashboard() {
                               variant="outline" 
                               size="sm" 
                               data-testid={`button-edit-${campaign.id}`}
-                              onClick={() => window.location.href = `/edit-ad/${campaign.id}`}
+                              onClick={() => {
+                                console.log('Edit button clicked for campaign:', campaign.id);
+                                setLocation(`/edit-ad/${campaign.id}`);
+                              }}
                             >
                               <Settings className="w-4 h-4" />
                             </Button>
