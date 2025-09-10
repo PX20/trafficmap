@@ -70,26 +70,26 @@ export function AppHeader({ onMenuToggle, onFilterToggle, showFilterButton }: Ap
           {isMobile ? (
             <div className="flex items-center space-x-3">
               {/* View Toggle - Main Navigation */}
-              <div className="flex items-center bg-muted p-1 rounded-lg gap-0.5">
+              <div className="flex items-center bg-muted p-1.5 rounded-lg gap-1">
                 <Link href="/map">
                   <Button
                     variant={location === "/map" ? "default" : "ghost"}
                     size="sm"
-                    className="h-8 px-3 text-xs"
+                    className="h-9 px-4 text-xs font-medium"
                     data-testid="button-map-view"
                   >
-                    <Map className="w-4 h-4 mr-1.5" />
-                    🗺️ TEST MAP
+                    <Map className="w-4 h-4 mr-2" />
+                    Map
                   </Button>
                 </Link>
                 <Link href="/feed">
                   <Button
                     variant={location === "/feed" || location === "/" ? "default" : "ghost"}
                     size="sm"
-                    className="h-8 px-3 text-xs"
+                    className="h-9 px-4 text-xs font-medium"
                     data-testid="button-feed-view"
                   >
-                    <List className="w-4 h-4 mr-1.5" />
+                    <List className="w-4 h-4 mr-2" />
                     Feed
                   </Button>
                 </Link>
@@ -100,7 +100,7 @@ export function AppHeader({ onMenuToggle, onFilterToggle, showFilterButton }: Ap
                     className="h-8 px-3 text-xs relative"
                     data-testid="button-messages-view"
                   >
-                    <MessageCircle className="w-4 h-4 mr-1.5" />
+                    <MessageCircle className="w-4 h-4 mr-2" />
                     Messages
                     {unreadMessages > 0 && (
                       <Badge
@@ -118,10 +118,10 @@ export function AppHeader({ onMenuToggle, onFilterToggle, showFilterButton }: Ap
                       <Button
                         variant={location === "/business-dashboard" ? "default" : "ghost"}
                         size="sm"
-                        className="h-8 px-3 text-xs"
+                        className="h-9 px-4 text-xs font-medium"
                         data-testid="button-dashboard-view"
                       >
-                        <BarChart3 className="w-4 h-4 mr-1.5" />
+                        <BarChart3 className="w-4 h-4 mr-2" />
                         Dashboard
                       </Button>
                     </Link>
@@ -129,10 +129,10 @@ export function AppHeader({ onMenuToggle, onFilterToggle, showFilterButton }: Ap
                       <Button
                         variant={location === "/advertise" || location === "/create-ad" ? "default" : "ghost"}
                         size="sm"
-                        className="h-8 px-3 text-xs"
+                        className="h-9 px-4 text-xs font-medium"
                         data-testid="button-advertise-view"
                       >
-                        <Megaphone className="w-4 h-4 mr-1.5" />
+                        <Megaphone className="w-4 h-4 mr-2" />
                         Advertise
                       </Button>
                     </Link>
@@ -208,26 +208,26 @@ export function AppHeader({ onMenuToggle, onFilterToggle, showFilterButton }: Ap
               )}
               
               {/* Desktop View Toggle */}
-              <div className="flex items-center bg-muted p-1 rounded-lg gap-0.5">
+              <div className="flex items-center bg-muted p-1.5 rounded-lg gap-1">
                 <Link href="/map">
                   <Button
                     variant={location === "/map" ? "default" : "ghost"}
                     size="sm"
-                    className="h-8 px-3"
+                    className="h-9 px-4 font-medium"
                     data-testid="button-map-view"
                   >
-                    <Map className="w-4 h-4 mr-1.5" />
-                    🗺️ TEST MAP
+                    <Map className="w-4 h-4 mr-2" />
+                    Map
                   </Button>
                 </Link>
                 <Link href="/feed">
                   <Button
                     variant={location === "/feed" || location === "/" ? "default" : "ghost"}
                     size="sm"
-                    className="h-8 px-3"
+                    className="h-9 px-4 font-medium"
                     data-testid="button-feed-view"
                   >
-                    <List className="w-4 h-4 mr-1.5" />
+                    <List className="w-4 h-4 mr-2" />
                     Feed
                   </Button>
                 </Link>
@@ -238,7 +238,7 @@ export function AppHeader({ onMenuToggle, onFilterToggle, showFilterButton }: Ap
                     className="h-8 px-3 relative"
                     data-testid="button-messages-view"
                   >
-                    <MessageCircle className="w-4 h-4 mr-1.5" />
+                    <MessageCircle className="w-4 h-4 mr-2" />
                     Messages
                     {unreadMessages > 0 && (
                       <Badge
@@ -256,10 +256,10 @@ export function AppHeader({ onMenuToggle, onFilterToggle, showFilterButton }: Ap
                       <Button
                         variant={location === "/business-dashboard" ? "default" : "ghost"}
                         size="sm"
-                        className="h-8 px-3"
+                        className="h-9 px-4 font-medium"
                         data-testid="button-dashboard-view-desktop"
                       >
-                        <BarChart3 className="w-4 h-4 mr-1.5" />
+                        <BarChart3 className="w-4 h-4 mr-2" />
                         Dashboard
                       </Button>
                     </Link>
@@ -267,10 +267,10 @@ export function AppHeader({ onMenuToggle, onFilterToggle, showFilterButton }: Ap
                       <Button
                         variant={location === "/advertise" || location === "/create-ad" ? "default" : "ghost"}
                         size="sm"
-                        className="h-8 px-3"
+                        className="h-9 px-4 font-medium"
                         data-testid="button-advertise-view"
                       >
-                        <Megaphone className="w-4 h-4 mr-1.5" />
+                        <Megaphone className="w-4 h-4 mr-2" />
                         Advertise
                       </Button>
                     </Link>
