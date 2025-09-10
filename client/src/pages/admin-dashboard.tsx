@@ -54,7 +54,7 @@ export default function AdminDashboard() {
 
   // Check if user is admin
   useEffect(() => {
-    if (!authLoading && isAuthenticated && user && user.role !== 'admin') {
+    if (!authLoading && isAuthenticated && user && (user as any).role !== 'admin') {
       toast({
         title: "Access Denied",
         description: "You need admin privileges to access this page.",
@@ -67,10 +67,10 @@ export default function AdminDashboard() {
     }
   }, [user, isAuthenticated, authLoading, toast]);
 
-  const { data: pendingAds, isLoading, error } = useQuery({
+  const { data: pendingAds, isLoading, error } = useQuery<AdCampaign[]>({
     queryKey: ['/api/admin/ads/pending'],
     retry: false,
-    enabled: isAuthenticated && user?.role === 'admin',
+    enabled: isAuthenticated && (user as any)?.role === 'admin',
   });
 
   const approveMutation = useMutation({
@@ -145,7 +145,7 @@ export default function AdminDashboard() {
     );
   }
 
-  if (!isAuthenticated || user?.role !== 'admin') {
+  if (!isAuthenticated || (user as any)?.role !== 'admin') {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">

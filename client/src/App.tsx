@@ -18,6 +18,7 @@ import BusinessUpgrade from "@/pages/business-upgrade";
 import BusinessDashboard from "@/pages/business-dashboard";
 import AccountSetup from "@/pages/account-setup";
 import Login from "@/pages/login";
+import AdminDashboard from "@/pages/admin-dashboard";
 import { TermsAndConditionsModal } from "@/components/terms-and-conditions-modal";
 
 function Router() {
@@ -109,6 +110,7 @@ function Router() {
             <Route path="/messages" component={Messages} />
             <Route path="/messages/:conversationId" component={Messages} />
             <Route path="/notifications" component={Notifications} />
+            <Route path="/admin" component={AdminDashboard} />
             <Route path="/login" component={Login} />
             {/* <Route component={NotFound} /> */}
           </>
