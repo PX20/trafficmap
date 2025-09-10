@@ -245,6 +245,38 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
+  async createAdminUser(): Promise<User> {
+    // Create admin user for management access
+    const hashedPassword = await bcrypt.hash('Admin123!', 10);
+    
+    const adminUserData: InsertUser = {
+      id: 'admin-001',
+      email: 'admin@qldsafety.com.au',
+      password: hashedPassword,
+      firstName: 'Admin',
+      lastName: 'User',
+      profileImageUrl: null,
+      homeSuburb: 'Brisbane',
+      primarySuburb: 'Brisbane',
+      accountType: 'regular',
+      role: 'admin',
+      termsAccepted: true,
+    };
+
+    // Check if admin user already exists
+    const existingAdmin = await this.getUser(adminUserData.id!);
+    if (existingAdmin) {
+      return existingAdmin;
+    }
+
+    const [adminUser] = await db
+      .insert(users)
+      .values(adminUserData)
+      .returning();
+    
+    return adminUser;
+  }
+
   // Password authentication methods implementation
   async createUserWithPassword(email: string, password: string, userData: Partial<InsertUser>): Promise<User> {
     const hashedPassword = await bcrypt.hash(password, 10);

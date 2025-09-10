@@ -48,6 +48,7 @@ export const users = pgTable("users", {
   businessPhone: varchar("business_phone"),
   businessAddress: varchar("business_address"),
   businessCategory: varchar("business_category"),
+  role: varchar("role").default("user"), // 'user' | 'admin'
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

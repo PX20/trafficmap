@@ -1690,6 +1690,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Initialize admin user on startup
+  try {
+    await storage.createAdminUser();
+    console.log('Admin user created/verified');
+  } catch (error) {
+    console.error('Error creating admin user:', error);
+  }
+
   // Email/Password authentication routes
   app.post('/api/auth/login', async (req, res) => {
     try {
