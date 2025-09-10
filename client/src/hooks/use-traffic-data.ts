@@ -69,7 +69,7 @@ export function useTrafficData(filters: FilterState): ProcessedTrafficData {
       });
       return Array.isArray(recentFeatures) ? recentFeatures : [];
     },
-    refetchInterval: filters.autoRefresh ? 30000 : 2 * 60 * 1000, // Auto-refresh every 2 minutes
+    refetchInterval: filters.autoRefresh ? 30000 : 60 * 1000, // Auto-refresh every 1 minute to stay fresh
   });
 
   // Fetch ALL incidents for map display (big picture view)

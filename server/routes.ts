@@ -37,7 +37,7 @@ const trafficCache = {
 let ongoingTrafficRequest: Promise<any> | null = null;
 
 const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes in milliseconds (reduced frequency due to rate limiting)
-const SUNSHINE_COAST_CACHE_DURATION = 1000; // Force refresh for debugging
+const SUNSHINE_COAST_CACHE_DURATION = 60 * 60 * 1000; // 1 hour for Sunshine Coast
 const RETRY_DELAY = 30 * 1000; // 30 seconds delay on rate limit
 
 // Configure web push - Generate VAPID keys for production
