@@ -55,11 +55,21 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return;
 
-    // Use home location if available, otherwise default to Brisbane
+    // Try to restore saved map position and zoom from localStorage
+    const savedMapState = localStorage.getItem('qldSafetyMap_position');
     let centerCoords: [number, number] = [-27.4698, 153.0251]; // Brisbane default
     let zoomLevel = 11; // Regional view - within our restricted range
     
-    if (filters.homeCoordinates) {
+    if (savedMapState) {
+      try {
+        const { lat, lng, zoom } = JSON.parse(savedMapState);
+        centerCoords = [lat, lng];
+        zoomLevel = zoom;
+      } catch (e) {
+        console.log('Failed to parse saved map state, using defaults');
+      }
+    } else if (filters.homeCoordinates) {
+      // Only use home coordinates if no saved state exists
       centerCoords = [filters.homeCoordinates.lat, filters.homeCoordinates.lon];
       zoomLevel = 14; // Suburb-level view for home location
     }
@@ -84,6 +94,24 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
     }).addTo(map);
 
     mapInstanceRef.current = map;
+
+    // Save map position and zoom when user moves or zooms the map
+    const saveMapState = () => {
+      if (mapInstanceRef.current) {
+        const center = mapInstanceRef.current.getCenter();
+        const zoom = mapInstanceRef.current.getZoom();
+        const mapState = {
+          lat: center.lat,
+          lng: center.lng,
+          zoom: zoom
+        };
+        localStorage.setItem('qldSafetyMap_position', JSON.stringify(mapState));
+      }
+    };
+
+    // Add event listeners to save state on map interactions
+    map.on('moveend', saveMapState);
+    map.on('zoomend', saveMapState);
 
     return () => {
       if (mapInstanceRef.current) {
