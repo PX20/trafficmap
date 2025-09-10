@@ -575,12 +575,94 @@ export const adClicks = pgTable("ad_clicks", {
 });
 
 // Ad table type exports
+// Billing and payment tracking tables
+export const billingPlans = pgTable("billing_plans", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name").notNull(), // "Basic Daily", "Premium Daily"
+  description: text("description"),
+  pricePerDay: text("price_per_day").notNull(), // $8.00, stored as string for precision
+  minimumDays: integer("minimum_days").default(7), // 7-day minimum
+  features: jsonb("features"), // Array of features included
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const billingCycles = pgTable("billing_cycles", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  campaignId: varchar("campaign_id").notNull(),
+  planId: varchar("plan_id").notNull(),
+  businessId: varchar("business_id").notNull(), // User ID for business account
+  status: varchar("status").notNull().default("active"), // 'active' | 'paused' | 'cancelled' | 'expired'
+  startDate: timestamp("start_date").notNull(),
+  endDate: timestamp("end_date"),
+  dailyRate: text("daily_rate").notNull(), // Current daily rate (allows for historical pricing)
+  totalDays: integer("total_days"),
+  totalAmount: text("total_amount"),
+  stripeCustomerId: varchar("stripe_customer_id"),
+  stripeSubscriptionId: varchar("stripe_subscription_id"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => ({
+  businessDateIdx: index("idx_billing_business_date").on(table.businessId, table.startDate),
+  campaignIdx: index("idx_billing_campaign").on(table.campaignId),
+}));
+
+export const payments = pgTable("payments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  billingCycleId: varchar("billing_cycle_id").notNull(),
+  businessId: varchar("business_id").notNull(),
+  amount: text("amount").notNull(), // Payment amount in dollars
+  currency: varchar("currency", { length: 3 }).default("AUD"),
+  status: varchar("status").notNull(), // 'pending' | 'completed' | 'failed' | 'refunded'
+  paymentMethod: varchar("payment_method").notNull(), // 'stripe'
+  stripePaymentIntentId: varchar("stripe_payment_intent_id"),
+  stripeInvoiceId: varchar("stripe_invoice_id"),
+  failureReason: text("failure_reason"),
+  paidAt: timestamp("paid_at"),
+  daysCharged: integer("days_charged"), // Number of days this payment covers
+  periodStart: timestamp("period_start"),
+  periodEnd: timestamp("period_end"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  businessDateIdx: index("idx_payments_business_date").on(table.businessId, table.paidAt),
+  statusIdx: index("idx_payments_status").on(table.status),
+}));
+
+export const campaignAnalytics = pgTable("campaign_analytics", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  campaignId: varchar("campaign_id").notNull(),
+  date: varchar("date").notNull(), // YYYY-MM-DD format
+  totalViews: integer("total_views").default(0),
+  uniqueViews: integer("unique_views").default(0),
+  totalClicks: integer("total_clicks").default(0),
+  uniqueClicks: integer("unique_clicks").default(0),
+  ctr: text("ctr").default("0"), // Click-through rate as percentage
+  impressionDuration: integer("impression_duration").default(0), // Average view duration in ms
+  costPerView: text("cost_per_view").default("0"),
+  costPerClick: text("cost_per_click").default("0"),
+  totalSpent: text("total_spent").default("0"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => ({
+  campaignDateIdx: index("idx_campaign_analytics_date").on(table.campaignId, table.date),
+}));
+
 export type AdCampaign = typeof adCampaigns.$inferSelect;
 export type InsertAdCampaign = typeof adCampaigns.$inferInsert;
 export type AdView = typeof adViews.$inferSelect;
 export type InsertAdView = typeof adViews.$inferInsert;
 export type AdClick = typeof adClicks.$inferSelect;
 export type InsertAdClick = typeof adClicks.$inferInsert;
+
+// Billing types
+export type BillingPlan = typeof billingPlans.$inferSelect;
+export type InsertBillingPlan = typeof billingPlans.$inferInsert;
+export type BillingCycle = typeof billingCycles.$inferSelect;
+export type InsertBillingCycle = typeof billingCycles.$inferInsert;
+export type Payment = typeof payments.$inferSelect;
+export type InsertPayment = typeof payments.$inferInsert;
+export type CampaignAnalytics = typeof campaignAnalytics.$inferSelect;
+export type InsertCampaignAnalytics = typeof campaignAnalytics.$inferInsert;
 
 // Analytics types
 export interface AdStats {

@@ -167,7 +167,7 @@ export interface IStorage {
   getNotifications(userId: string, limit?: number): Promise<Notification[]>;
   getUnreadNotificationCount(userId: string): Promise<number>;
   createNotification(notification: InsertNotification): Promise<Notification>;
-  markNotificationAsRead(notificationId: string): Promise<void>;
+  markNotificationAsRead(notificationId: string, userId: string): Promise<void>;
   markAllNotificationsAsRead(userId: string): Promise<void>;
   
   // Category operations
@@ -827,13 +827,11 @@ export class DatabaseStorage implements IStorage {
     return newNotification;
   }
 
-  async markNotificationAsRead(notificationId: string, userId: string): Promise<Notification | undefined> {
-    const [notification] = await db
+  async markNotificationAsRead(notificationId: string, userId: string): Promise<void> {
+    await db
       .update(notifications)
       .set({ isRead: true })
-      .where(and(eq(notifications.id, notificationId), eq(notifications.userId, userId)))
-      .returning();
-    return notification;
+      .where(and(eq(notifications.id, notificationId), eq(notifications.userId, userId)));
   }
 
   async markAllNotificationsAsRead(userId: string): Promise<void> {
