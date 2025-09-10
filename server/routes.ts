@@ -2496,6 +2496,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Ad not found" });
       }
       
+      // TODO: Add notification system when userId field is added to adCampaigns schema
+      // For now, the rejection reason is stored and will be visible in business dashboard
+      
       console.log(`Admin rejected ad: ${updatedAd.businessName} - ${updatedAd.title}`);
       res.json({ success: true, ad: updatedAd });
     } catch (error) {

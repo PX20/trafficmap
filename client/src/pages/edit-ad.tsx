@@ -101,6 +101,7 @@ export default function EditAd() {
     cta: string;
     rejectionReason?: string;
     createdAt: string;
+    backgroundUrl?: string;
   }
 
   // Fetch existing ad data
