@@ -543,6 +543,7 @@ export const adCampaigns = pgTable("ad_campaigns", {
   totalBudget: text("total_budget"),
   cpmRate: text("cpm_rate").default("2.00"),
   status: varchar("status", { length: 50 }).default("active"),
+  rejectionReason: text("rejection_reason"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
