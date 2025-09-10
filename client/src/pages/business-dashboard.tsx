@@ -5,31 +5,17 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Plus, Eye, MousePointer, TrendingUp, DollarSign, Calendar, Settings, PauseCircle, PlayCircle } from "lucide-react";
+import { ArrowLeft, Plus, Eye, MousePointer, TrendingUp, DollarSign, Calendar, Settings, PauseCircle, PlayCircle, CreditCard, Receipt } from "lucide-react";
+import type { AdCampaign, BillingPlan, Payment, CampaignAnalytics, BillingCycle } from "@shared/schema";
 
-interface AdCampaign {
-  id: string;
-  businessName: string;
-  title: string;
-  content: string;
-  status: 'active' | 'paused' | 'pending' | 'rejected';
-  dailyBudget: string;
-  totalBudget: string;
-  suburb: string;
-  targetSuburbs: string[];
-  imageUrl?: string;
-  websiteUrl?: string;
-  createdAt: string;
-  rejectionReason?: string;
-}
-
-interface CampaignAnalytics {
+// Helper interface for analytics display (maps from CampaignAnalytics schema)
+interface DisplayAnalytics {
   campaignId: string;
   views: number;
   clicks: number;
   spend: number;
-  ctr: number; // Click-through rate
-  cpm: number; // Cost per mille
+  ctr: number;
+  cpm: number;
 }
 
 export default function BusinessDashboard() {
@@ -42,11 +28,45 @@ export default function BusinessDashboard() {
     enabled: isAuthenticated && user?.accountType === 'business',
   });
 
-  // Fetch campaign analytics
-  const { data: analytics = [], isLoading: analyticsLoading } = useQuery<CampaignAnalytics[]>({
+  // Fetch campaign analytics (raw from backend)
+  const { data: rawAnalytics = [], isLoading: analyticsLoading } = useQuery<CampaignAnalytics[]>({
     queryKey: ['/api/ads/analytics'],
     enabled: isAuthenticated && user?.accountType === 'business',
   });
+
+  // Fetch billing plans
+  const { data: billingPlans = [], isLoading: plansLoading } = useQuery<BillingPlan[]>({
+    queryKey: ['/api/billing/plans'],
+    enabled: isAuthenticated && user?.accountType === 'business',
+  });
+
+  // Fetch payment history
+  const { data: paymentHistory = [], isLoading: paymentsLoading } = useQuery<Payment[]>({
+    queryKey: ['/api/billing/history'],
+    enabled: isAuthenticated && user?.accountType === 'business',
+  });
+
+  // Fetch billing cycles for current plan logic
+  const { data: billingCycles = [], isLoading: cyclesLoading } = useQuery<BillingCycle[]>({
+    queryKey: ['/api/billing/cycles'],
+    enabled: isAuthenticated && user?.accountType === 'business',
+  });
+
+  // Transform raw analytics to display format
+  const analytics: DisplayAnalytics[] = rawAnalytics.map((item: CampaignAnalytics) => ({
+    campaignId: item.campaignId,
+    views: item.totalViews ?? 0,
+    clicks: item.totalClicks ?? 0,
+    spend: parseFloat(item.totalSpent ?? '0'),
+    ctr: parseFloat(item.ctr ?? '0'),
+    cpm: (item.totalViews ?? 0) > 0 ? (parseFloat(item.totalSpent ?? '0') / (item.totalViews ?? 1)) * 1000 : 0,
+  }));
+
+  // Get current active plan from billing cycles
+  const currentActiveCycle = billingCycles.find(cycle => cycle.status === 'active');
+  const currentPlan = currentActiveCycle ? 
+    billingPlans.find(plan => plan.id === currentActiveCycle.planId) : 
+    null;
 
   if (!isAuthenticated) {
     return (
@@ -73,10 +93,10 @@ export default function BusinessDashboard() {
   }
 
   // Calculate totals from analytics
-  const totalViews = analytics.reduce((sum: number, item: CampaignAnalytics) => sum + item.views, 0);
-  const totalClicks = analytics.reduce((sum: number, item: CampaignAnalytics) => sum + item.clicks, 0);
-  const totalSpend = analytics.reduce((sum: number, item: CampaignAnalytics) => sum + item.spend, 0);
-  const averageCTR = analytics.length > 0 ? analytics.reduce((sum: number, item: CampaignAnalytics) => sum + item.ctr, 0) / analytics.length : 0;
+  const totalViews = analytics.reduce((sum: number, item: DisplayAnalytics) => sum + item.views, 0);
+  const totalClicks = analytics.reduce((sum: number, item: DisplayAnalytics) => sum + item.clicks, 0);
+  const totalSpend = analytics.reduce((sum: number, item: DisplayAnalytics) => sum + item.spend, 0);
+  const averageCTR = analytics.length > 0 ? analytics.reduce((sum: number, item: DisplayAnalytics) => sum + item.ctr, 0) / analytics.length : 0;
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -89,7 +109,7 @@ export default function BusinessDashboard() {
   };
 
   const getCampaignAnalytics = (campaignId: string) => {
-    return analytics.find((item: CampaignAnalytics) => item.campaignId === campaignId);
+    return analytics.find((item: DisplayAnalytics) => item.campaignId === campaignId);
   };
 
   return (
@@ -122,6 +142,7 @@ export default function BusinessDashboard() {
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="campaigns">Campaigns</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
+          <TabsTrigger value="billing">Billing</TabsTrigger>
           <TabsTrigger value="settings">Settings</TabsTrigger>
         </TabsList>
 
@@ -209,8 +230,8 @@ export default function BusinessDashboard() {
                         <div className="flex-1">
                           <div className="flex items-center gap-3">
                             <h3 className="font-semibold">{campaign.title}</h3>
-                            <Badge className={getStatusColor(campaign.status)}>
-                              {campaign.status}
+                            <Badge className={getStatusColor(campaign.status ?? 'pending')}>
+                              {campaign.status ?? 'pending'}
                             </Badge>
                           </div>
                           <p className="text-sm text-gray-600">{campaign.content}</p>
@@ -268,8 +289,8 @@ export default function BusinessDashboard() {
                           <div className="flex-1">
                             <div className="flex items-center gap-3 mb-2">
                               <h3 className="text-lg font-semibold">{campaign.title}</h3>
-                              <Badge className={getStatusColor(campaign.status)}>
-                                {campaign.status}
+                              <Badge className={getStatusColor(campaign.status ?? 'pending')}>
+                                {campaign.status ?? 'pending'}
                               </Badge>
                             </div>
                             <p className="text-gray-600 mb-3">{campaign.content}</p>
@@ -382,6 +403,223 @@ export default function BusinessDashboard() {
             </CardHeader>
             <CardContent>
               <p className="text-gray-600">Detailed analytics coming soon...</p>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="billing" className="space-y-6">
+          {/* Billing Overview */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <DollarSign className="w-4 h-4 text-green-600" />
+                  Current Plan
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {plansLoading ? (
+                  <div className="space-y-2">
+                    <div className="h-6 bg-gray-200 rounded animate-pulse"></div>
+                    <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                  </div>
+                ) : (
+                  billingPlans.filter(plan => plan.isActive)[0] ? (
+                    <div>
+                      <div className="text-lg font-bold">{billingPlans.filter(plan => plan.isActive)[0].name}</div>
+                      <p className="text-sm text-gray-600">${billingPlans.filter(plan => plan.isActive)[0].pricePerDay}/day</p>
+                      <p className="text-xs text-gray-500 mt-1">{billingPlans.filter(plan => plan.isActive)[0].minimumDays || 7} day minimum</p>
+                    </div>
+                  ) : (
+                    <div className="text-sm text-gray-500">No active plan</div>
+                  )
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <Receipt className="w-4 h-4 text-blue-600" />
+                  Total Payments
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {paymentsLoading ? (
+                  <div className="space-y-2">
+                    <div className="h-6 bg-gray-200 rounded animate-pulse"></div>
+                    <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                  </div>
+                ) : (
+                  <div>
+                    <div className="text-lg font-bold">
+                      ${paymentHistory.filter(p => p.status === 'completed').reduce((sum, p) => sum + parseFloat(p.amount), 0).toFixed(2)}
+                    </div>
+                    <p className="text-sm text-gray-600">
+                      {paymentHistory.filter(p => p.status === 'completed').length} completed payments
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <Calendar className="w-4 h-4 text-purple-600" />
+                  Days Purchased
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {paymentsLoading ? (
+                  <div className="space-y-2">
+                    <div className="h-6 bg-gray-200 rounded animate-pulse"></div>
+                    <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                  </div>
+                ) : (
+                  <div>
+                    <div className="text-lg font-bold">
+                      {paymentHistory.filter(p => p.status === 'completed').reduce((sum, p) => sum + (p.daysCharged ?? 0), 0)}
+                    </div>
+                    <p className="text-sm text-gray-600">Total advertising days</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Payment History */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CreditCard className="w-5 h-5" />
+                Payment History
+              </CardTitle>
+              <CardDescription>View your billing and payment records</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {paymentsLoading ? (
+                <div className="space-y-3">
+                  {[...Array(3)].map((_, i) => (
+                    <div key={i} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div className="space-y-2">
+                        <div className="h-4 bg-gray-200 rounded animate-pulse w-32"></div>
+                        <div className="h-3 bg-gray-200 rounded animate-pulse w-24"></div>
+                      </div>
+                      <div className="h-6 bg-gray-200 rounded animate-pulse w-16"></div>
+                    </div>
+                  ))}
+                </div>
+              ) : paymentHistory.length === 0 ? (
+                <div className="text-center py-8">
+                  <Receipt className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No payments yet</h3>
+                  <p className="text-gray-500">Your payment history will appear here once you make your first purchase.</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {paymentHistory.map((payment) => (
+                    <div key={payment.id} className="flex items-center justify-between p-3 border rounded-lg" data-testid={`payment-${payment.id}`}>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">${payment.amount} {payment.currency}</span>
+                              <Badge variant={payment.status === 'completed' ? 'default' : 
+                                payment.status === 'pending' ? 'secondary' : 
+                                payment.status === 'failed' ? 'destructive' : 'outline'}
+                                data-testid={`status-${payment.status}`}
+                              >
+                                {payment.status}
+                              </Badge>
+                            </div>
+                            <div className="text-sm text-gray-500 mt-1">
+                              {payment.daysCharged ?? 0} days • {payment.periodStart ? new Date(payment.periodStart).toLocaleDateString() : 'N/A'} - {payment.periodEnd ? new Date(payment.periodEnd).toLocaleDateString() : 'N/A'}
+                            </div>
+                            <div className="text-xs text-gray-400">
+                              Payment: {payment.createdAt ? new Date(payment.createdAt).toLocaleDateString() : 'N/A'} via {payment.paymentMethod}
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            {payment.paidAt && (
+                              <div className="text-sm text-green-600">
+                                Paid {new Date(payment.paidAt).toLocaleDateString()}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Billing Plans */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Available Plans</CardTitle>
+              <CardDescription>Choose the advertising plan that works for your business</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {plansLoading ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {[...Array(2)].map((_, i) => (
+                    <div key={i} className="border rounded-lg p-4">
+                      <div className="h-6 bg-gray-200 rounded animate-pulse mb-2"></div>
+                      <div className="h-4 bg-gray-200 rounded animate-pulse mb-4"></div>
+                      <div className="space-y-2">
+                        <div className="h-3 bg-gray-200 rounded animate-pulse"></div>
+                        <div className="h-3 bg-gray-200 rounded animate-pulse"></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : billingPlans.length === 0 ? (
+                <div className="text-center py-8">
+                  <CreditCard className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No plans available</h3>
+                  <p className="text-gray-500">Billing plans will be available soon.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {billingPlans.map((plan) => {
+                    const isCurrentPlan = currentPlan?.id === plan.id;
+                    const planFeatures = Array.isArray(plan.features) ? plan.features : [];
+                    return (
+                      <div key={plan.id} className={`border rounded-lg p-4 ${isCurrentPlan ? 'border-blue-500 bg-blue-50' : 'border-gray-200'}`} data-testid={`plan-${plan.id}`}>
+                        <div className="flex items-center justify-between mb-2">
+                          <h3 className="text-lg font-semibold">{plan.name}</h3>
+                          {isCurrentPlan && <Badge>Current Plan</Badge>}
+                        </div>
+                        <p className="text-gray-600 mb-3">{plan.description}</p>
+                        <div className="text-2xl font-bold text-blue-600 mb-2">
+                          ${plan.pricePerDay}<span className="text-sm font-normal text-gray-500">/day</span>
+                        </div>
+                        <p className="text-sm text-gray-500 mb-4">{plan.minimumDays || 7} day minimum purchase</p>
+                        
+                        {planFeatures && planFeatures.length > 0 && (
+                          <div className="space-y-1 mb-4">
+                            {planFeatures.map((feature, index) => (
+                              <div key={index} className="flex items-center text-sm text-gray-600">
+                                <svg className="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                </svg>
+                                {feature}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        
+                        <div className="text-xs text-gray-500">
+                          Payments processed securely via Stripe
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
