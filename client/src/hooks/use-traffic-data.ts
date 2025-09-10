@@ -54,7 +54,8 @@ export function useTrafficData(filters: FilterState): ProcessedTrafficData {
         try {
           const publishedDate = feature.properties?.published ? new Date(feature.properties.published) : null;
           const lastUpdated = feature.properties?.last_updated ? new Date(feature.properties.last_updated) : null;
-          const eventDate = publishedDate || lastUpdated;
+          // PRIORITIZE last_updated over published for current relevance
+          const eventDate = lastUpdated || publishedDate;
           
           if (eventDate && !isNaN(eventDate.getTime())) {
             const daysSince = (Date.now() - eventDate.getTime()) / (1000 * 60 * 60 * 24);

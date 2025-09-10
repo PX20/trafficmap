@@ -516,10 +516,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let trafficAgeFilteredCount = 0;
       if (data.features) {
         for (const feature of data.features) {
-          // Filter out traffic events older than 7 days
+          // Filter out traffic events older than 7 days - prioritize last_updated for current relevance
           const publishedDate = feature.properties.published ? new Date(feature.properties.published) : null;
           const lastUpdated = feature.properties.last_updated ? new Date(feature.properties.last_updated) : null;
-          const eventDate = publishedDate || lastUpdated;
+          const eventDate = lastUpdated || publishedDate;
           
           if (eventDate) {
             const daysSinceEvent = (Date.now() - eventDate.getTime()) / (1000 * 60 * 60 * 24);
@@ -568,7 +568,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           try {
             const publishedDate = feature.properties?.published ? new Date(feature.properties.published) : null;
             const lastUpdated = feature.properties?.last_updated ? new Date(feature.properties.last_updated) : null;
-            const eventDate = publishedDate || lastUpdated;
+            // PRIORITIZE last_updated over published for current relevance
+            const eventDate = lastUpdated || publishedDate;
             
             if (eventDate && !isNaN(eventDate.getTime())) {
               const daysSince = (Date.now() - eventDate.getTime()) / (1000 * 60 * 60 * 24);
