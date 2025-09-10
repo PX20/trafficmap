@@ -217,7 +217,7 @@ export function useTrafficData(filters: FilterState): ProcessedTrafficData {
     counts,
     filteredEvents,
     filteredIncidents,
-    // NEW: Flag to indicate which data should be used
-    dataSource: 'unified' as const
+    // NEW: Flag to indicate which data should be used  
+    // dataSource: 'unified' as const
   };
 }
