@@ -1241,8 +1241,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // User Profile Routes
-  app.get('/api/users/:userId', isAuthenticated, async (req: any, res) => {
+  app.get('/api/users/:userId', async (req: any, res) => {
     try {
+      // Use the same auth pattern as other routes
+      if (!req.user) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
       const { userId } = req.params;
       const user = await storage.getUser(userId);
       
@@ -1251,7 +1256,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Check privacy settings - only return public information for non-own profiles
-      const currentUserId = (req.user as any).claims.sub;
+      const currentUserId = req.user.id;
       if (currentUserId !== userId && user.profileVisibility === 'private') {
         return res.status(403).json({ message: "This profile is private" });
       }
