@@ -385,14 +385,42 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
         return '#9ca3af'; // Grey for completed incidents
       }
       
-      // Time-based auto-greying for TMR incidents
-      if (properties.last_updated) {
-        const lastUpdated = new Date(properties.last_updated);
-        const hoursSinceUpdate = (Date.now() - lastUpdated.getTime()) / (1000 * 60 * 60);
+      // Time-based auto-greying for ALL incident types (TMR, ESQ, QFES)
+      // Check multiple timestamp fields used by different services
+      const timestamp = properties.last_updated || 
+                       properties.Response_Date || 
+                       properties.published || 
+                       properties.createdAt || 
+                       properties.timeReported;
+      
+      if (timestamp) {
+        const incidentTime = new Date(timestamp);
+        const hoursSinceIncident = (Date.now() - incidentTime.getTime()) / (1000 * 60 * 60);
         
-        // Auto-grey TMR incidents older than 24 hours
-        if (hoursSinceUpdate > 24) {
-          return '#9ca3af'; // Grey for likely resolved incidents
+        // Auto-grey incidents based on type and age:
+        // - TMR traffic incidents: 24 hours
+        // - ESQ emergency incidents: 12 hours (faster resolution expected)  
+        // - QFES fire/rescue incidents: 8 hours (fastest emergency response)
+        // - User reports: 48 hours (may take longer to verify/resolve)
+        
+        const isQFES = isQFESIncident({ properties });
+        const isTrafficEvent = properties.eventType || markerType === 'traffic' || markerType === 'crash' || markerType === 'hazard';
+        const isUserReport = properties.userId || properties.reportedBy;
+        
+        let greyingHours = 24; // Default TMR/ESQ incidents
+        
+        if (isQFES) {
+          greyingHours = 8; // QFES incidents grey out after 8 hours
+        } else if (properties.incidentType?.toLowerCase().includes('emergency') || markerType === 'emergency') {
+          greyingHours = 12; // ESQ emergency incidents grey out after 12 hours  
+        } else if (isUserReport) {
+          greyingHours = 48; // User reports grey out after 48 hours
+        } else if (isTrafficEvent) {
+          greyingHours = 24; // TMR traffic events grey out after 24 hours
+        }
+        
+        if (hoursSinceIncident > greyingHours) {
+          return '#9ca3af'; // Grey for likely resolved/old incidents
         }
       }
     }
