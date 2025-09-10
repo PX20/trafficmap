@@ -20,6 +20,7 @@ interface AdCampaign {
   imageUrl?: string;
   websiteUrl?: string;
   createdAt: string;
+  rejectionReason?: string;
 }
 
 interface CampaignAnalytics {
