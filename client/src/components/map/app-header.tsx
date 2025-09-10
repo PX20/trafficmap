@@ -70,15 +70,15 @@ export function AppHeader({ onMenuToggle, onFilterToggle, showFilterButton }: Ap
           {isMobile ? (
             <div className="flex items-center space-x-3">
               {/* View Toggle - Main Navigation */}
-              <div className="flex items-center bg-muted p-1 rounded-lg">
+              <div className="flex items-center bg-muted p-1 rounded-lg gap-0.5">
                 <Link href="/map">
                   <Button
                     variant={location === "/map" ? "default" : "ghost"}
                     size="sm"
-                    className="h-8 px-2 text-xs"
+                    className="h-8 px-3 text-xs"
                     data-testid="button-map-view"
                   >
-                    <Map className="w-4 h-4 mr-1" />
+                    <Map className="w-4 h-4 mr-1.5" />
                     Map
                   </Button>
                 </Link>
@@ -86,10 +86,10 @@ export function AppHeader({ onMenuToggle, onFilterToggle, showFilterButton }: Ap
                   <Button
                     variant={location === "/feed" || location === "/" ? "default" : "ghost"}
                     size="sm"
-                    className="h-8 px-2 text-xs"
+                    className="h-8 px-3 text-xs"
                     data-testid="button-feed-view"
                   >
-                    <List className="w-4 h-4 mr-1" />
+                    <List className="w-4 h-4 mr-1.5" />
                     Feed
                   </Button>
                 </Link>
@@ -97,14 +97,15 @@ export function AppHeader({ onMenuToggle, onFilterToggle, showFilterButton }: Ap
                   <Button
                     variant={location === "/messages" ? "default" : "ghost"}
                     size="sm"
-                    className="h-8 px-2 text-xs relative"
+                    className="h-8 px-3 text-xs relative"
                     data-testid="button-messages-view"
                   >
-                    <MessageCircle className="w-4 h-4" />
+                    <MessageCircle className="w-4 h-4 mr-1.5" />
+                    Messages
                     {unreadMessages > 0 && (
                       <Badge
                         variant="destructive"
-                        className="absolute -top-1 -right-1 h-3 w-3 p-0 text-xs"
+                        className="absolute -top-1 -right-1 h-4 w-4 p-0 text-xs flex items-center justify-center"
                       >
                         {unreadMessages}
                       </Badge>
@@ -117,20 +118,22 @@ export function AppHeader({ onMenuToggle, onFilterToggle, showFilterButton }: Ap
                       <Button
                         variant={location === "/business-dashboard" ? "default" : "ghost"}
                         size="sm"
-                        className="h-8 px-2 text-xs"
+                        className="h-8 px-3 text-xs"
                         data-testid="button-dashboard-view"
                       >
-                        <BarChart3 className="w-4 h-4" />
+                        <BarChart3 className="w-4 h-4 mr-1.5" />
+                        Dashboard
                       </Button>
                     </Link>
                     <Link href="/advertise">
                       <Button
                         variant={location === "/advertise" || location === "/create-ad" ? "default" : "ghost"}
                         size="sm"
-                        className="h-8 px-2 text-xs"
+                        className="h-8 px-3 text-xs"
                         data-testid="button-advertise-view"
                       >
-                        <Megaphone className="w-4 h-4" />
+                        <Megaphone className="w-4 h-4 mr-1.5" />
+                        Advertise
                       </Button>
                     </Link>
                   </>
@@ -205,15 +208,15 @@ export function AppHeader({ onMenuToggle, onFilterToggle, showFilterButton }: Ap
               )}
               
               {/* Desktop View Toggle */}
-              <div className="flex items-center bg-muted p-1 rounded-lg">
+              <div className="flex items-center bg-muted p-1 rounded-lg gap-0.5">
                 <Link href="/map">
                   <Button
                     variant={location === "/map" ? "default" : "ghost"}
                     size="sm"
-                    className="h-8"
+                    className="h-8 px-3"
                     data-testid="button-map-view"
                   >
-                    <Map className="w-4 h-4 mr-1" />
+                    <Map className="w-4 h-4 mr-1.5" />
                     Map
                   </Button>
                 </Link>
@@ -221,10 +224,10 @@ export function AppHeader({ onMenuToggle, onFilterToggle, showFilterButton }: Ap
                   <Button
                     variant={location === "/feed" || location === "/" ? "default" : "ghost"}
                     size="sm"
-                    className="h-8"
+                    className="h-8 px-3"
                     data-testid="button-feed-view"
                   >
-                    <List className="w-4 h-4 mr-1" />
+                    <List className="w-4 h-4 mr-1.5" />
                     Feed
                   </Button>
                 </Link>
@@ -232,15 +235,15 @@ export function AppHeader({ onMenuToggle, onFilterToggle, showFilterButton }: Ap
                   <Button
                     variant={location === "/messages" ? "default" : "ghost"}
                     size="sm"
-                    className="h-8 relative"
+                    className="h-8 px-3 relative"
                     data-testid="button-messages-view"
                   >
-                    <MessageCircle className="w-4 h-4 mr-1" />
+                    <MessageCircle className="w-4 h-4 mr-1.5" />
                     Messages
                     {unreadMessages > 0 && (
                       <Badge
                         variant="destructive"
-                        className="absolute -top-1 -right-1 h-4 w-4 p-0 text-xs"
+                        className="absolute -top-1 -right-1 h-4 w-4 p-0 text-xs flex items-center justify-center"
                       >
                         {unreadMessages}
                       </Badge>
@@ -253,10 +256,10 @@ export function AppHeader({ onMenuToggle, onFilterToggle, showFilterButton }: Ap
                       <Button
                         variant={location === "/business-dashboard" ? "default" : "ghost"}
                         size="sm"
-                        className="h-8"
+                        className="h-8 px-3"
                         data-testid="button-dashboard-view-desktop"
                       >
-                        <BarChart3 className="w-4 h-4 mr-1" />
+                        <BarChart3 className="w-4 h-4 mr-1.5" />
                         Dashboard
                       </Button>
                     </Link>
@@ -264,10 +267,10 @@ export function AppHeader({ onMenuToggle, onFilterToggle, showFilterButton }: Ap
                       <Button
                         variant={location === "/advertise" || location === "/create-ad" ? "default" : "ghost"}
                         size="sm"
-                        className="h-8"
+                        className="h-8 px-3"
                         data-testid="button-advertise-view"
                       >
-                        <Megaphone className="w-4 h-4 mr-1" />
+                        <Megaphone className="w-4 h-4 mr-1.5" />
                         Advertise
                       </Button>
                     </Link>
