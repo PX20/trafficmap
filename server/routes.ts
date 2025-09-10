@@ -1272,12 +1272,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Messaging Routes
   app.get('/api/conversations', async (req: any, res) => {
     try {
-      // Check session-based authentication
-      if (!(req.session as any).authenticated || !(req.session as any).userId) {
+      // Use the same auth pattern as /api/auth/user
+      if (!req.user) {
         return res.status(401).json({ message: "Unauthorized" });
       }
       
-      const userId = (req.session as any).userId;
+      const userId = req.user.id;
       const conversations = await storage.getConversationsByUserId(userId);
       res.json(conversations);
     } catch (error) {
@@ -1288,8 +1288,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/conversations', async (req: any, res) => {
     try {
-      // Check session-based authentication
-      if (!(req.session as any).authenticated || !(req.session as any).userId) {
+      // Use the same auth pattern as /api/auth/user
+      if (!req.user) {
         return res.status(401).json({ message: "Unauthorized" });
       }
       
@@ -1297,7 +1297,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         otherUserId: z.string().min(1),
       }).parse(req.body);
 
-      const currentUserId = (req.session as any).userId;
+      const currentUserId = req.user.id;
       
       // Check if conversation already exists
       let conversation = await storage.getConversationBetweenUsers(currentUserId, otherUserId);
@@ -1319,13 +1319,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/conversations/:conversationId/messages', async (req: any, res) => {
     try {
-      // Check session-based authentication
-      if (!(req.session as any).authenticated || !(req.session as any).userId) {
+      // Use the same auth pattern as /api/auth/user
+      if (!req.user) {
         return res.status(401).json({ message: "Unauthorized" });
       }
       
       const { conversationId } = req.params;
-      const userId = (req.session as any).userId;
+      const userId = req.user.id;
       
       // Verify user has access to this conversation
       const conversation = await storage.getConversationBetweenUsers(userId, "dummy"); // We'll check properly
@@ -1346,8 +1346,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/conversations/:conversationId/messages', async (req: any, res) => {
     try {
-      // Check session-based authentication
-      if (!(req.session as any).authenticated || !(req.session as any).userId) {
+      // Use the same auth pattern as /api/auth/user
+      if (!req.user) {
         return res.status(401).json({ message: "Unauthorized" });
       }
       
@@ -1356,7 +1356,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         content: z.string().min(1).max(1000),
       }).parse(req.body);
 
-      const userId = (req.session as any).userId;
+      const userId = req.user.id;
       
       // Verify user has access to this conversation
       const conversations = await storage.getConversationsByUserId(userId);
@@ -1381,13 +1381,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch('/api/conversations/:conversationId/read', async (req: any, res) => {
     try {
-      // Check session-based authentication
-      if (!(req.session as any).authenticated || !(req.session as any).userId) {
+      // Use the same auth pattern as /api/auth/user
+      if (!req.user) {
         return res.status(401).json({ message: "Unauthorized" });
       }
       
       const { conversationId } = req.params;
-      const userId = (req.session as any).userId;
+      const userId = req.user.id;
       
       // Verify user has access to this conversation
       const conversations = await storage.getConversationsByUserId(userId);
