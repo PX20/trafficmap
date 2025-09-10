@@ -19,6 +19,7 @@ import BusinessDashboard from "@/pages/business-dashboard";
 import AccountSetup from "@/pages/account-setup";
 import Login from "@/pages/login";
 import AdminDashboard from "@/pages/admin-dashboard";
+import EditAd from "@/pages/edit-ad";
 import { TermsAndConditionsModal } from "@/components/terms-and-conditions-modal";
 
 function Router() {
@@ -102,6 +103,7 @@ function Router() {
             <Route path="/feed" component={Feed} />
             <Route path="/advertise" component={CreateAd} />
             <Route path="/create-ad" component={CreateAd} />
+            <Route path="/edit-ad/:id" component={EditAd} />
             <Route path="/business-upgrade" component={BusinessUpgrade} />
             <Route path="/business-dashboard" component={BusinessDashboard} />
             <Route path="/account-setup" component={AccountSetup} />

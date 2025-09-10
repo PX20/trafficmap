@@ -84,8 +84,27 @@ export default function EditAd() {
     backgroundUrl: ''
   });
 
+  // Define the ad type based on the schema
+  interface AdCampaign {
+    id: string;
+    businessName: string;
+    title: string;
+    content: string;
+    status: 'active' | 'paused' | 'pending' | 'rejected';
+    dailyBudget: string;
+    totalBudget: string;
+    suburb: string;
+    targetSuburbs: string[];
+    imageUrl?: string;
+    websiteUrl?: string;
+    address?: string;
+    cta: string;
+    rejectionReason?: string;
+    createdAt: string;
+  }
+
   // Fetch existing ad data
-  const { data: existingAd, isLoading: adLoading, error: adError } = useQuery({
+  const { data: existingAd, isLoading: adLoading, error: adError } = useQuery<AdCampaign>({
     queryKey: [`/api/ads/${adId}`],
     enabled: !!adId && isAuthenticated,
   });

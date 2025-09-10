@@ -1626,6 +1626,125 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get single ad by ID (for editing)
+  app.get('/api/ads/:id', isAuthenticated, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const userId = (req.user as any)?.claims?.sub;
+      
+      const ad = await storage.getAdCampaign(id);
+      
+      if (!ad) {
+        return res.status(404).json({ message: "Ad not found" });
+      }
+
+      // Check if user owns this ad (business users can only edit their own ads)
+      const user = await storage.getUser(userId);
+      if (user?.accountType === 'business') {
+        const userCampaigns = await storage.getUserCampaigns(userId);
+        const userOwnsAd = userCampaigns.some(campaign => campaign.id === id);
+        
+        if (!userOwnsAd) {
+          return res.status(403).json({ message: "You can only edit your own ads" });
+        }
+      }
+
+      res.json(ad);
+    } catch (error) {
+      console.error("Error fetching ad:", error);
+      res.status(500).json({ message: "Failed to fetch ad" });
+    }
+  });
+
+  // Update ad (for resubmission)
+  app.put('/api/ads/:id', isAuthenticated, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const userId = (req.user as any)?.claims?.sub;
+      
+      // Check if user owns this ad
+      const user = await storage.getUser(userId);
+      if (user?.accountType !== 'business') {
+        return res.status(403).json({ message: "Business account required" });
+      }
+
+      const userCampaigns = await storage.getUserCampaigns(userId);
+      const userOwnsAd = userCampaigns.some(campaign => campaign.id === id);
+      
+      if (!userOwnsAd) {
+        return res.status(403).json({ message: "You can only edit your own ads" });
+      }
+
+      // Validate ad data
+      const adData = z.object({
+        businessName: z.string().min(1, "Business name is required"),
+        title: z.string().min(1, "Title is required"),
+        content: z.string().min(1, "Content is required"),
+        websiteUrl: z.string().optional(),
+        address: z.string().optional(),
+        suburb: z.string().min(1, "Suburb is required"),
+        cta: z.string().min(1, "Call-to-action is required"),
+        targetSuburbs: z.array(z.string()).optional(),
+        dailyBudget: z.string(),
+        totalBudget: z.string(),
+        logoUrl: z.string().optional(),
+        backgroundUrl: z.string().optional(),
+        template: z.string().optional(),
+        status: z.enum(['pending', 'active', 'paused', 'rejected']).optional()
+      }).parse(req.body);
+
+      // Auto-populate target suburbs with the main suburb if not provided
+      if (!adData.targetSuburbs || adData.targetSuburbs.length === 0) {
+        adData.targetSuburbs = [adData.suburb];
+      }
+
+      // Set default total budget based on daily budget if not provided
+      if (!adData.totalBudget) {
+        const dailyAmount = parseFloat(adData.dailyBudget);
+        adData.totalBudget = (dailyAmount * 30).toString(); // 30 days default
+      }
+
+      const updatedAd = await storage.updateAdCampaign(id, {
+        businessName: adData.businessName,
+        title: adData.title,
+        content: adData.content,
+        imageUrl: adData.logoUrl || null,
+        websiteUrl: adData.websiteUrl || null,
+        address: adData.address || null,
+        suburb: adData.suburb,
+        cta: adData.cta,
+        targetSuburbs: adData.targetSuburbs,
+        dailyBudget: adData.dailyBudget,
+        totalBudget: adData.totalBudget,
+        status: adData.status || 'pending', // Default to pending for resubmission
+        rejectionReason: null, // Clear rejection reason when updating
+        updatedAt: new Date()
+      });
+
+      if (!updatedAd) {
+        return res.status(404).json({ message: "Ad not found" });
+      }
+
+      console.log(`Ad updated and resubmitted: ${updatedAd.businessName} - ${updatedAd.title}`);
+      res.json({ 
+        success: true, 
+        ad: updatedAd,
+        message: "Ad updated and resubmitted for review" 
+      });
+
+    } catch (error) {
+      console.error("Error updating ad:", error);
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ 
+          message: "Invalid ad data", 
+          errors: error.errors 
+        });
+      } else {
+        res.status(500).json({ message: "Failed to update ad" });
+      }
+    }
+  });
+
   // Complete account setup for new users
   app.post('/api/users/complete-setup', isAuthenticated, async (req, res) => {
     try {
