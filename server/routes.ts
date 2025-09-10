@@ -2308,6 +2308,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin middleware for role checking
+  const isAdmin = async (req: any, res: any, next: any) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const user = await storage.getUser(req.user.id);
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      next();
+    } catch (error) {
+      console.error("Admin auth error:", error);
+      res.status(500).json({ message: "Admin authentication failed" });
+    }
+  };
+
+  // Admin Routes for Ad Management
+  app.get('/api/admin/ads/pending', isAdmin, async (req, res) => {
+    try {
+      const pendingAds = await storage.getPendingAds();
+      res.json(pendingAds);
+    } catch (error) {
+      console.error("Error fetching pending ads:", error);
+      res.status(500).json({ message: "Failed to fetch pending ads" });
+    }
+  });
+
+  app.put('/api/admin/ads/:id/approve', isAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updatedAd = await storage.updateAdCampaign(id, { status: 'active' });
+      
+      if (!updatedAd) {
+        return res.status(404).json({ message: "Ad not found" });
+      }
+      
+      console.log(`Admin approved ad: ${updatedAd.businessName} - ${updatedAd.title}`);
+      res.json({ success: true, ad: updatedAd });
+    } catch (error) {
+      console.error("Error approving ad:", error);
+      res.status(500).json({ message: "Failed to approve ad" });
+    }
+  });
+
+  app.put('/api/admin/ads/:id/reject', isAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { reason } = req.body;
+      
+      const updatedAd = await storage.updateAdCampaign(id, { 
+        status: 'rejected',
+        rejectionReason: reason || 'Does not meet guidelines'
+      });
+      
+      if (!updatedAd) {
+        return res.status(404).json({ message: "Ad not found" });
+      }
+      
+      console.log(`Admin rejected ad: ${updatedAd.businessName} - ${updatedAd.title}`);
+      res.json({ success: true, ad: updatedAd });
+    } catch (error) {
+      console.error("Error rejecting ad:", error);
+      res.status(500).json({ message: "Failed to reject ad" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
