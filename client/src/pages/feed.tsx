@@ -174,7 +174,14 @@ export default function Feed() {
   }, []);
 
   // Use the same traffic data hook as the map for consistent filtering
-  const { regionalEvents, regionalIncidents } = useTrafficData(filters);
+  // 🎯 UNIFIED PIPELINE: Use same data as map, then filter by location
+  const { events: allEvents, incidents: allIncidents, regionalEvents, regionalIncidents } = useTrafficData(filters);
+  
+  // Filter to user's region for personalized feed view
+  const feedEvents = filters.locationFilter ? regionalEvents : allEvents;
+  const feedIncidents = filters.locationFilter ? regionalIncidents : allIncidents;
+  
+  console.log('📱 FEED: Using', feedEvents.length, 'events,', feedIncidents.length, 'incidents (location filter:', filters.locationFilter + ')');
   
   // Sync selected suburb with filter location
   useEffect(() => {
@@ -211,10 +218,10 @@ export default function Feed() {
     },
   });
 
-  // Apply category/type filtering to regional data (already filtered by region from backend)
-  const filteredRegionalEvents = regionalEvents.filter(() => filters.showTrafficEvents === true);
+  // Apply category/type filtering to unified feed data
+  const filteredFeedEvents = feedEvents.filter(() => filters.showTrafficEvents === true);
   
-  const filteredRegionalIncidents = regionalIncidents.filter((incident: any) => {
+  const filteredFeedIncidents = feedIncidents.filter((incident: any) => {
     const isUserReported = incident.properties?.userReported;
     
     if (isUserReported) {
@@ -257,8 +264,8 @@ export default function Feed() {
 
   // Combine all incidents before deduplication
   const combinedIncidents = [
-    ...filteredRegionalIncidents.map((inc: any) => ({ ...inc, type: 'incident' })),
-    ...filteredRegionalEvents.map((event: any) => ({ ...event, type: 'traffic' }))
+    ...filteredFeedIncidents.map((inc: any) => ({ ...inc, type: 'incident' })),
+    ...filteredFeedEvents.map((event: any) => ({ ...event, type: 'traffic' }))
   ];
 
   // Deduplicate incidents using a Map for better performance and accuracy

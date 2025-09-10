@@ -199,15 +199,25 @@ export function useTrafficData(filters: FilterState): ProcessedTrafficData {
     }
   });
 
+  // 🎯 UNIFIED DATA PIPELINE: Both map and feed use the same source data
+  // Feed will filter this data at the component level for personalization
+  const unifiedEvents = allEvents;
+  const unifiedIncidents = allIncidents;
+  
+  console.log('🔄 UNIFIED PIPELINE: Events:', unifiedEvents.length, 'Incidents:', unifiedIncidents.length);
+  console.log('📍 REGIONAL: Events:', regionalEvents.length, 'Incidents:', regionalIncidents.length);
+
   return {
-    // Map gets ALL Queensland data (big picture)
-    events: allEvents,
-    incidents: allIncidents,
-    // Feed gets REGIONAL data only (personalized)
+    // UNIFIED: Both map and feed get the same source data
+    events: unifiedEvents,
+    incidents: unifiedIncidents,
+    // Legacy support for regional data (now used only for filtering)
     regionalEvents,
     regionalIncidents,
     counts,
     filteredEvents,
-    filteredIncidents
+    filteredIncidents,
+    // NEW: Flag to indicate which data should be used
+    dataSource: 'unified' as const
   };
 }
