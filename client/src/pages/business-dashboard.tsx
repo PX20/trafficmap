@@ -418,8 +418,7 @@ export default function BusinessDashboard() {
                 variant="outline" 
                 data-testid="button-edit-business-info"
                 onClick={() => {
-                  // TODO: Add business profile editing functionality
-                  alert('Edit business information functionality coming soon!');
+                  setLocation('/profile');
                 }}
               >
                 Edit Business Information
