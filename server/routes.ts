@@ -265,10 +265,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Ad creation endpoint - for businesses to submit ads
-  app.post("/api/ads/create", isAuthenticated, async (req, res) => {
+  app.post("/api/ads/create", async (req: any, res) => {
     try {
+      // Use the same auth pattern as other routes
+      if (!req.user) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
       // Check if user has a business account
-      const userId = (req.user as any)?.claims?.sub;
+      const userId = req.user.id;
       const user = await storage.getUser(userId);
       
       if (!user || user.accountType !== 'business') {
