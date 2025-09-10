@@ -272,6 +272,22 @@ export default function BusinessDashboard() {
                               </Badge>
                             </div>
                             <p className="text-gray-600 mb-3">{campaign.content}</p>
+                            
+                            {/* Show rejection reason for rejected ads */}
+                            {campaign.status === 'rejected' && campaign.rejectionReason && (
+                              <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-3">
+                                <div className="flex items-start gap-2">
+                                  <svg className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                                  </svg>
+                                  <div>
+                                    <h4 className="text-sm font-medium text-red-800 mb-1">Ad Rejected</h4>
+                                    <p className="text-sm text-red-700">{campaign.rejectionReason}</p>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                            
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                               <div>
                                 <span className="text-gray-500">Daily Budget:</span>
@@ -305,6 +321,18 @@ export default function BusinessDashboard() {
                               <Button variant="outline" size="sm" data-testid={`button-resume-${campaign.id}`}>
                                 <PlayCircle className="w-4 h-4 mr-1" />
                                 Resume
+                              </Button>
+                            ) : campaign.status === 'rejected' ? (
+                              <Button 
+                                variant="default" 
+                                size="sm" 
+                                data-testid={`button-resubmit-${campaign.id}`}
+                                onClick={() => window.location.href = `/edit-ad/${campaign.id}`}
+                              >
+                                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                                Edit & Resubmit
                               </Button>
                             ) : null}
                             <Button variant="outline" size="sm" data-testid={`button-edit-${campaign.id}`}>
