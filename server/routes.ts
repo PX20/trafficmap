@@ -435,8 +435,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log("Using cached Sunshine Coast traffic data");
         data = JSON.parse(JSON.stringify(trafficCache.sunshineCoast.data)); // Deep copy to avoid modifying cache
       } else if (!isSunshineCoastRequest && isCacheValid(trafficCache.events)) {
-        console.log("Using cached traffic events data");
-        data = JSON.parse(JSON.stringify(trafficCache.events.data)); // Deep copy to avoid modifying cache
+        // Check if regional cache is newer than unified cache - if so, sync them
+        if (trafficCache.sunshineCoast.lastFetch > trafficCache.events.lastFetch) {
+          console.log("Regional cache is newer, forcing unified refresh for consistency");
+        } else {
+          console.log("Using cached traffic events data");
+          data = JSON.parse(JSON.stringify(trafficCache.events.data)); // Deep copy to avoid modifying cache
+        }
       } else {
         // Try to fetch fresh data with debouncing to prevent multiple simultaneous requests
         try {
