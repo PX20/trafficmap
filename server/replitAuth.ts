@@ -59,9 +59,8 @@ async function upsertUser(
 ) {
   await storage.upsertUser({
     id: String(claims["sub"]), // Ensure ID is a string
-    username: null, // No usernames needed - use full names like social media
     password: null, // OAuth users don't need passwords
-    email: claims["email"] || null,
+    email: claims["email"] ? claims["email"].toLowerCase() : null,
     firstName: claims["first_name"] || null,
     lastName: claims["last_name"] || null,
     profileImageUrl: claims["profile_image_url"] || null,

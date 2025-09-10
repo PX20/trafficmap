@@ -196,7 +196,7 @@ export class DatabaseStorage implements IStorage {
 
 
   async getUserByEmail(email: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.email, email));
+    const [user] = await db.select().from(users).where(eq(users.email, email.toLowerCase()));
     return user;
   }
 
@@ -282,7 +282,7 @@ export class DatabaseStorage implements IStorage {
     const hashedPassword = await bcrypt.hash(password, 10);
     
     const userInsert: InsertUser = {
-      email,
+      email: email.toLowerCase(),
       password: hashedPassword,
       ...userData,
     };

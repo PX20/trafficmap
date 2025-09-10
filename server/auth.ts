@@ -94,9 +94,8 @@ export function setupAuth(app: Express) {
       }
 
       const userData: any = {
-        username: null, // No usernames - use email as identifier
         password: await hashPassword(password),
-        email,
+        email: email.toLowerCase(),
         firstName,
         lastName,
         homeSuburb,
