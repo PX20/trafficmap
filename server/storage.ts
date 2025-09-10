@@ -793,7 +793,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Notification operations
-  async getNotifications(userId: string, limit: number = 50): Promise<Notification[]> {
+  async getUserNotifications(userId: string, limit: number = 50): Promise<Notification[]> {
     return await db
       .select()
       .from(notifications)
@@ -827,11 +827,13 @@ export class DatabaseStorage implements IStorage {
     return newNotification;
   }
 
-  async markNotificationAsRead(notificationId: string): Promise<void> {
-    await db
+  async markNotificationAsRead(notificationId: string, userId: string): Promise<Notification | undefined> {
+    const [notification] = await db
       .update(notifications)
       .set({ isRead: true })
-      .where(eq(notifications.id, notificationId));
+      .where(and(eq(notifications.id, notificationId), eq(notifications.userId, userId)))
+      .returning();
+    return notification;
   }
 
   async markAllNotificationsAsRead(userId: string): Promise<void> {
@@ -999,8 +1001,17 @@ export class DatabaseStorage implements IStorage {
 
   async getUserCampaigns(userId: string): Promise<AdCampaign[]> {
     // Note: Ad campaigns don't have userId field yet, this is a placeholder implementation
-    // For now, return all campaigns - this should be updated when userId is added to ad campaigns schema
-    return await db.select().from(adCampaigns).orderBy(desc(adCampaigns.createdAt));
+    // For now, return campaigns that match user's business name as a workaround
+    const user = await this.getUser(userId);
+    if (!user || !user.businessName) {
+      return [];
+    }
+    
+    return await db
+      .select()
+      .from(adCampaigns)
+      .where(eq(adCampaigns.businessName, user.businessName))
+      .orderBy(desc(adCampaigns.createdAt));
   }
 
   async getUserCampaignAnalytics(userId: string): Promise<Array<{ campaignId: string; views: number; clicks: number; spend: number; ctr: number; cpm: number; }>> {

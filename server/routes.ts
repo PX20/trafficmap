@@ -1593,10 +1593,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get campaigns for current business user
   app.get('/api/ads/my-campaigns', isAuthenticated, async (req, res) => {
     try {
-      const userId = (req.user as any)?.claims?.sub;
+      const userId = (req.user as any)?.claims?.sub || (req.user as any)?.id;
+      console.log('Debug my-campaigns - userId:', userId, 'user object:', req.user);
       const user = await storage.getUser(userId);
+      console.log('Debug my-campaigns - found user:', user?.id, 'accountType:', user?.accountType);
       
       if (!user || user.accountType !== 'business') {
+        console.log('Debug my-campaigns - Business account check failed. User exists:', !!user, 'Account type:', user?.accountType);
         return res.status(403).json({ message: "Business account required" });
       }
 
@@ -1611,7 +1614,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get analytics for current business user
   app.get('/api/ads/analytics', isAuthenticated, async (req, res) => {
     try {
-      const userId = (req.user as any)?.claims?.sub;
+      const userId = (req.user as any)?.claims?.sub || (req.user as any)?.id;
       const user = await storage.getUser(userId);
       
       if (!user || user.accountType !== 'business') {
@@ -2378,10 +2381,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get notifications for current user
+  app.get('/api/notifications', isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any)?.claims?.sub || (req.user as any)?.id;
+      const notifications = await storage.getUserNotifications(userId);
+      res.json(notifications);
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+      res.status(500).json({ message: "Failed to fetch notifications" });
+    }
+  });
+
+  // Mark notification as read
+  app.put('/api/notifications/:id/read', isAuthenticated, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const userId = (req.user as any)?.claims?.sub || (req.user as any)?.id;
+      
+      const notification = await storage.markNotificationAsRead(id, userId);
+      if (!notification) {
+        return res.status(404).json({ message: "Notification not found" });
+      }
+      
+      res.json(notification);
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+      res.status(500).json({ message: "Failed to mark notification as read" });
+    }
+  });
+
   // Test push notification endpoint (for development)
   app.post('/api/push/test', isAuthenticated, async (req, res) => {
     try {
-      const userId = (req.user as any)?.claims?.sub;
+      const userId = (req.user as any)?.claims?.sub || (req.user as any)?.id;
       
       // In a real implementation, you'd fetch user's subscription from database
       // For demo purposes, we'll return success without sending actual notification
@@ -2468,11 +2501,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put('/api/admin/ads/:id/approve', isAdmin, async (req, res) => {
     try {
       const { id } = req.params;
+      const userId = (req.user as any)?.claims?.sub || (req.user as any)?.id; // Admin user ID
       const updatedAd = await storage.updateAdCampaign(id, { status: 'active' });
       
       if (!updatedAd) {
         return res.status(404).json({ message: "Ad not found" });
       }
+      
+      // TODO: Create notification for business user about approval
+      // Note: Need to add userId field to adCampaigns schema to properly link ads to users
+      // For now, notification system will be implemented when user ownership is added
       
       console.log(`Admin approved ad: ${updatedAd.businessName} - ${updatedAd.title}`);
       res.json({ success: true, ad: updatedAd });

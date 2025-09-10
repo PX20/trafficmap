@@ -28,8 +28,14 @@ export function AppHeader({ onMenuToggle, onFilterToggle, showFilterButton }: Ap
     typeof window !== 'undefined' ? localStorage.getItem('homeLocation') || '' : ''
   );
 
-  // Temporarily disable notification and message count queries until APIs are implemented
-  const unreadNotifications = 0;
+  // Fetch notifications for authenticated users
+  const { data: notifications } = useQuery({
+    queryKey: ['/api/notifications'],
+    enabled: isAuthenticated,
+    retry: false,
+  });
+  
+  const unreadNotifications = notifications?.filter((n: any) => !n.isRead)?.length || 0;
   const unreadMessages = 0;
 
   const handleLocationChange = (location: string, coordinates?: { lat: number; lon: number }, boundingBox?: [number, number, number, number]) => {
@@ -291,14 +297,24 @@ export function AppHeader({ onMenuToggle, onFilterToggle, showFilterButton }: Ap
               {isAuthenticated && user && (
                 <div className="flex items-center space-x-2">
                   {/* Notifications */}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="relative h-8 w-8 p-0"
-                    data-testid="button-notifications"
-                  >
-                    <Bell className="w-4 h-4" />
-                  </Button>
+                  <Link href="/notifications">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="relative h-8 w-8 p-0"
+                      data-testid="button-notifications"
+                    >
+                      <Bell className="w-4 h-4" />
+                      {unreadNotifications > 0 && (
+                        <Badge
+                          variant="destructive"
+                          className="absolute -top-1 -right-1 h-4 w-4 p-0 text-xs flex items-center justify-center"
+                        >
+                          {unreadNotifications}
+                        </Badge>
+                      )}
+                    </Button>
+                  </Link>
                   
                   {/* Profile Dropdown */}
                   <DropdownMenu>
