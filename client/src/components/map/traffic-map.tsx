@@ -57,22 +57,30 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
 
     // Use home location if available, otherwise default to Brisbane
     let centerCoords: [number, number] = [-27.4698, 153.0251]; // Brisbane default
-    let zoomLevel = 10; // State-wide view
+    let zoomLevel = 11; // Regional view - within our restricted range
     
     if (filters.homeCoordinates) {
       centerCoords = [filters.homeCoordinates.lat, filters.homeCoordinates.lon];
-      zoomLevel = 13; // Suburb-level view for home location
+      zoomLevel = 14; // Suburb-level view for home location
     }
 
+    // Queensland geographical bounds to restrict panning
+    const queenslandBounds = L.latLngBounds(
+      [-29.5, 137.0], // Southwest corner
+      [-9.0, 154.0]   // Northeast corner
+    );
+
     const map = L.map(mapRef.current, {
-      minZoom: 8, // Prevent zooming out beyond Queensland state level
-      maxZoom: 12, // Keep at regional/suburb level
+      minZoom: 10, // Tighter restriction - roughly Queensland region level
+      maxZoom: 16, // Allow more detail for local areas
+      maxBounds: queenslandBounds, // Restrict panning to Queensland
+      maxBoundsViscosity: 1.0 // Firm boundary - no bouncing past limits
     }).setView(centerCoords, zoomLevel);
     
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
       attribution: '© OpenStreetMap contributors, © CARTO',
-      minZoom: 8, // Match map's minimum zoom
-      maxZoom: 12 // Match map's maximum zoom
+      minZoom: 10, // Match map's minimum zoom
+      maxZoom: 16 // Match map's maximum zoom
     }).addTo(map);
 
     mapInstanceRef.current = map;
