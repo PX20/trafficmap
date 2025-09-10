@@ -36,7 +36,7 @@ export default function Messages() {
   });
 
   // Fetch user details for conversations
-  const { data: users = {} } = useQuery<Record<string, User>>({
+  const { data: users = {}, isLoading: usersLoading } = useQuery<Record<string, User>>({
     queryKey: ['/api/users/batch', conversations.map(c => `${c.user1Id}-${c.user2Id}`).join(',')],
     queryFn: async () => {
       const userIds = Array.from(new Set(
@@ -98,7 +98,8 @@ export default function Messages() {
 
   const selectedConversation = conversations.find(c => c.id === conversationId);
 
-  if (conversationsLoading) {
+  // Show loading state while conversations or user data loads
+  if (conversationsLoading || (conversations.length > 0 && usersLoading)) {
     return (
       <div className="min-h-screen bg-background">
         <AppHeader onMenuToggle={() => {}} />
