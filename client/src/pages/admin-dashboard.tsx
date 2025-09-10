@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle, XCircle, Clock, Building, MapPin, DollarSign } from "lucide-react";
+import { CheckCircle, XCircle, Clock, Building, MapPin, DollarSign, ArrowLeft, Home } from "lucide-react";
 import { isUnauthorizedError } from "@/lib/authUtils";
 
 interface AdCampaign {
@@ -193,6 +193,28 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
       <div className="max-w-7xl mx-auto">
+        {/* Navigation Header */}
+        <div className="flex items-center gap-4 mb-6">
+          <Button 
+            variant="ghost" 
+            onClick={() => window.location.href = '/'}
+            className="flex items-center gap-2"
+            data-testid="button-back-to-home"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to Home
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={() => window.location.href = '/feed'}
+            className="flex items-center gap-2"
+            data-testid="button-back-to-feed"
+          >
+            <Home className="w-4 h-4" />
+            Feed
+          </Button>
+        </div>
+
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
             Admin Dashboard
