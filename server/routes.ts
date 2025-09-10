@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { isAuthenticated, setupAuth as setupReplitAuth } from "./replitAuth";
 import webpush from "web-push";
+import Stripe from "stripe";
 import { insertIncidentSchema, insertCommentSchema, insertConversationSchema, insertMessageSchema, insertNotificationSchema } from "@shared/schema";
 import { z } from "zod";
 import {
@@ -39,6 +40,12 @@ let ongoingTrafficRequest: Promise<any> | null = null;
 const CACHE_DURATION = 60 * 1000; // Force refresh to sync with regional data
 const SUNSHINE_COAST_CACHE_DURATION = 60 * 60 * 1000; // 1 hour for Sunshine Coast
 const RETRY_DELAY = 30 * 1000; // 30 seconds delay on rate limit
+
+// Initialize Stripe
+if (!process.env.STRIPE_SECRET_KEY) {
+  console.log('Stripe integration disabled - STRIPE_SECRET_KEY not found');
+}
+const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SECRET_KEY) : null;
 
 // Configure web push - Generate VAPID keys for production
 // For now, skip configuration to avoid startup errors
@@ -1452,7 +1459,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch('/api/notifications/:notificationId/read', isAuthenticated, async (req: any, res) => {
     try {
       const { notificationId } = req.params;
-      await storage.markNotificationAsRead(notificationId);
+      const userId = (req.user as any)?.claims?.sub || (req.user as any)?.id;
+      await storage.markNotificationAsRead(notificationId, userId);
       res.json({ message: "Notification marked as read" });
     } catch (error) {
       console.error("Error marking notification as read:", error);
@@ -2391,7 +2399,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/notifications', isAuthenticated, async (req, res) => {
     try {
       const userId = (req.user as any)?.claims?.sub || (req.user as any)?.id;
-      const notifications = await storage.getUserNotifications(userId);
+      const notifications = await storage.getNotifications(userId);
       res.json(notifications);
     } catch (error) {
       console.error("Error fetching notifications:", error);
@@ -2405,12 +2413,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { id } = req.params;
       const userId = (req.user as any)?.claims?.sub || (req.user as any)?.id;
       
-      const notification = await storage.markNotificationAsRead(id, userId);
-      if (!notification) {
-        return res.status(404).json({ message: "Notification not found" });
-      }
+      await storage.markNotificationAsRead(id, userId);
       
-      res.json(notification);
+      res.json({ success: true, message: "Notification marked as read" });
     } catch (error) {
       console.error("Error marking notification as read:", error);
       res.status(500).json({ message: "Failed to mark notification as read" });
@@ -2548,6 +2553,303 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error rejecting ad:", error);
       res.status(500).json({ message: "Failed to reject ad" });
+    }
+  });
+
+  // Initialize default billing plan if it doesn't exist
+  async function initializeBillingPlans() {
+    try {
+      const existingPlans = await storage.getBillingPlans();
+      if (existingPlans.length === 0) {
+        await storage.createBillingPlan({
+          name: "Basic Daily",
+          description: "Standard daily advertising rate with 7-day minimum",
+          pricePerDay: "8.00",
+          minimumDays: 7,
+          features: ["Standard placement", "Analytics dashboard", "Campaign management"],
+          isActive: true
+        });
+        console.log('✅ Default billing plan created');
+      }
+    } catch (error) {
+      console.error('Error initializing billing plans:', error);
+    }
+  }
+  
+  initializeBillingPlans();
+
+  // BILLING ENDPOINTS
+  
+  // Get available billing plans
+  app.get('/api/billing/plans', async (req, res) => {
+    try {
+      const plans = await storage.getBillingPlans();
+      res.json(plans);
+    } catch (error) {
+      console.error('Error fetching billing plans:', error);
+      res.status(500).json({ message: 'Failed to fetch billing plans' });
+    }
+  });
+
+  // Get billing quote for a campaign
+  app.post('/api/billing/quote', isAuthenticated, async (req, res) => {
+    try {
+      const { campaignId, days } = req.body;
+      const userId = (req.user as any)?.claims?.sub || (req.user as any)?.id;
+
+      if (!campaignId || !days || days < 7) {
+        return res.status(400).json({ message: 'Campaign ID and minimum 7 days required' });
+      }
+
+      // Get the default plan (could be made configurable later)
+      const plans = await storage.getBillingPlans();
+      const plan = plans.find(p => p.isActive) || plans[0];
+
+      if (!plan) {
+        return res.status(404).json({ message: 'No billing plans available' });
+      }
+
+      const dailyRate = parseFloat(plan.pricePerDay);
+      const totalAmount = dailyRate * days;
+      const amountCents = Math.round(totalAmount * 100); // Convert to cents for Stripe
+
+      const startDate = new Date();
+      const endDate = new Date(startDate);
+      endDate.setDate(endDate.getDate() + days);
+
+      res.json({
+        campaignId,
+        days,
+        dailyRate: plan.pricePerDay,
+        totalAmount: totalAmount.toFixed(2),
+        amountCents,
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+        planId: plan.id,
+        minDaysEnforced: Math.max(days, plan.minimumDays || 7)
+      });
+    } catch (error) {
+      console.error('Error creating billing quote:', error);
+      res.status(500).json({ message: 'Failed to create quote' });
+    }
+  });
+
+  // Create Stripe payment intent for campaign billing
+  app.post('/api/billing/create-payment-intent', isAuthenticated, async (req, res) => {
+    try {
+      // Enhanced request validation using Zod
+      const paymentIntentSchema = z.object({
+        campaignId: z.string().min(1, 'Campaign ID is required'),
+        days: z.number().int().min(7, 'Minimum 7 days required').max(365, 'Maximum 365 days allowed'),
+        planId: z.string().optional()
+      });
+
+      const validatedData = paymentIntentSchema.parse(req.body);
+      const { campaignId, days, planId } = validatedData;
+      
+      const userId = (req.user as any)?.claims?.sub || (req.user as any)?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ message: 'User authentication failed' });
+      }
+
+      if (!stripe) {
+        return res.status(503).json({ message: 'Payment processing unavailable' });
+      }
+
+      // Get plan and calculate amount server-side (never trust client)
+      const plans = await storage.getBillingPlans();
+      const plan = plans.find(p => p.id === planId) || plans.find(p => p.isActive) || plans[0];
+
+      if (!plan) {
+        return res.status(404).json({ message: 'Billing plan not found' });
+      }
+
+      const dailyRate = parseFloat(plan.pricePerDay);
+      const enforcedDays = Math.max(days, plan.minimumDays || 7);
+      const totalAmount = dailyRate * enforcedDays;
+      const amountCents = Math.round(totalAmount * 100);
+
+      const startDate = new Date();
+      const endDate = new Date(startDate);
+      endDate.setDate(endDate.getDate() + enforcedDays);
+
+      // Create billing cycle (pending status)
+      const billingCycle = await storage.createBillingCycle({
+        campaignId,
+        planId: plan.id,
+        businessId: userId,
+        status: 'pending',
+        startDate,
+        endDate,
+        dailyRate: plan.pricePerDay,
+        totalDays: enforcedDays,
+        totalAmount: totalAmount.toFixed(2)
+      });
+
+      // Create Stripe payment intent
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amountCents,
+        currency: 'aud',
+        metadata: {
+          billing_cycle_id: billingCycle.id,
+          campaign_id: campaignId,
+          business_id: userId,
+          days: enforcedDays.toString()
+        }
+      });
+
+      // Create payment record (pending status)
+      await storage.createPayment({
+        billingCycleId: billingCycle.id,
+        businessId: userId,
+        amount: totalAmount.toFixed(2),
+        currency: 'AUD',
+        status: 'pending',
+        paymentMethod: 'stripe',
+        stripePaymentIntentId: paymentIntent.id,
+        daysCharged: enforcedDays,
+        periodStart: startDate,
+        periodEnd: endDate
+      });
+
+      res.json({
+        clientSecret: paymentIntent.client_secret,
+        billingCycleId: billingCycle.id,
+        amount: totalAmount.toFixed(2),
+        days: enforcedDays
+      });
+    } catch (error) {
+      console.error('Error creating payment intent:', error);
+      
+      // Handle Zod validation errors with detailed messages
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: 'Invalid request data', 
+          errors: error.errors.map(err => ({
+            field: err.path.join('.'),
+            message: err.message
+          }))
+        });
+      }
+      
+      res.status(500).json({ message: 'Failed to create payment intent' });
+    }
+  });
+
+  // Get business payment history
+  app.get('/api/billing/history', isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any)?.claims?.sub || (req.user as any)?.id;
+      const payments = await storage.getBusinessPayments(userId);
+      res.json(payments);
+    } catch (error) {
+      console.error('Error fetching payment history:', error);
+      res.status(500).json({ message: 'Failed to fetch payment history' });
+    }
+  });
+
+  // Stripe webhook endpoint - CRITICAL for payment completion
+  app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+    if (!stripe) {
+      return res.status(503).json({ error: 'Stripe not configured' });
+    }
+
+    const sig = req.headers['stripe-signature'];
+    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+    if (!sig || !webhookSecret) {
+      console.error('Missing Stripe webhook signature or secret');
+      return res.status(400).json({ error: 'Missing webhook signature or secret' });
+    }
+
+    let event: Stripe.Event;
+
+    try {
+      // Verify webhook signature for security
+      event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
+    } catch (err) {
+      console.error('Webhook signature verification failed:', err);
+      return res.status(400).json({ error: 'Invalid signature' });
+    }
+
+    try {
+      // Handle the payment completion event
+      if (event.type === 'payment_intent.succeeded') {
+        const paymentIntent = event.data.object as Stripe.PaymentIntent;
+        const { billing_cycle_id, business_id } = paymentIntent.metadata || {};
+
+        if (!billing_cycle_id || !business_id) {
+          console.error('Missing metadata in payment intent:', paymentIntent.id);
+          return res.status(400).json({ error: 'Missing payment metadata' });
+        }
+
+        console.log(`Processing payment completion for billing cycle: ${billing_cycle_id}`);
+
+        // Find the payment record by Stripe payment intent ID
+        const existingPayments = await storage.getBusinessPayments(business_id);
+        const payment = existingPayments.find(p => p.stripePaymentIntentId === paymentIntent.id);
+
+        if (!payment) {
+          console.error('Payment record not found for payment intent:', paymentIntent.id);
+          return res.status(404).json({ error: 'Payment record not found' });
+        }
+
+        // Idempotent processing - check if already processed
+        if (payment.status === 'completed') {
+          console.log('Payment already processed, skipping:', payment.id);
+          return res.json({ received: true, status: 'already_processed' });
+        }
+
+        // Update payment status to completed
+        await storage.updatePaymentStatus(payment.id, 'completed', new Date());
+
+        // Update billing cycle status to active
+        await storage.updateBillingCycleStatus(billing_cycle_id, 'active');
+
+        console.log(`Payment completed successfully: ${payment.id}, Billing cycle activated: ${billing_cycle_id}`);
+
+        return res.json({ 
+          received: true, 
+          status: 'processed',
+          payment_id: payment.id,
+          billing_cycle_id 
+        });
+      }
+
+      // Handle payment failure events
+      if (event.type === 'payment_intent.payment_failed') {
+        const paymentIntent = event.data.object as Stripe.PaymentIntent;
+        const { billing_cycle_id } = paymentIntent.metadata || {};
+
+        console.log('Payment failed for payment intent:', paymentIntent.id);
+
+        // Find and update payment record
+        const { business_id } = paymentIntent.metadata || {};
+        if (!business_id) {
+          console.error('Missing business_id in payment intent metadata:', paymentIntent.id);
+          return res.json({ received: true, status: 'missing_business_id' });
+        }
+        
+        const existingPayments = await storage.getBusinessPayments(business_id);
+        const payment = existingPayments.find(p => p.stripePaymentIntentId === paymentIntent.id);
+
+        if (payment) {
+          await storage.updatePaymentStatus(payment.id, 'failed');
+          if (billing_cycle_id) {
+            await storage.updateBillingCycleStatus(billing_cycle_id, 'failed');
+          }
+        }
+
+        return res.json({ received: true, status: 'payment_failed' });
+      }
+
+      console.log('Unhandled webhook event type:', event.type);
+      return res.json({ received: true, status: 'unhandled_event' });
+
+    } catch (error) {
+      console.error('Error processing webhook:', error);
+      return res.status(500).json({ error: 'Webhook processing failed' });
     }
   });
 
