@@ -25,7 +25,14 @@ export default function Profile() {
     lastName: user?.lastName || "",
     primarySuburb: user?.primarySuburb || "",
     phoneNumber: user?.phoneNumber || "",
-    bio: user?.bio || ""
+    bio: user?.bio || "",
+    // Business fields
+    businessName: user?.businessName || "",
+    businessCategory: user?.businessCategory || "",
+    businessDescription: user?.businessDescription || "",
+    businessWebsite: user?.businessWebsite || "",
+    businessPhone: user?.businessPhone || "",
+    businessAddress: user?.businessAddress || ""
   });
 
   const updateProfileMutation = useMutation({
@@ -258,6 +265,82 @@ export default function Profile() {
                         data-testid="input-bio"
                       />
                     </div>
+
+                    {/* Business Information Section for Business Accounts */}
+                    {user.accountType === 'business' && (
+                      <>
+                        <Separator className="my-6" />
+                        <h3 className="text-lg font-semibold mb-4">Business Information</h3>
+                        
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <Label htmlFor="businessName">Business Name</Label>
+                            <Input
+                              id="businessName"
+                              value={formData.businessName}
+                              onChange={(e) => setFormData(prev => ({ ...prev, businessName: e.target.value }))}
+                              placeholder="Your business name"
+                              data-testid="input-business-name"
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="businessCategory">Business Category</Label>
+                            <Input
+                              id="businessCategory"
+                              value={formData.businessCategory}
+                              onChange={(e) => setFormData(prev => ({ ...prev, businessCategory: e.target.value }))}
+                              placeholder="e.g., Restaurant & Food"
+                              data-testid="input-business-category"
+                            />
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <Label htmlFor="businessDescription">Business Description</Label>
+                          <Input
+                            id="businessDescription"
+                            value={formData.businessDescription}
+                            onChange={(e) => setFormData(prev => ({ ...prev, businessDescription: e.target.value }))}
+                            placeholder="Describe your business..."
+                            data-testid="input-business-description"
+                          />
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <Label htmlFor="businessWebsite">Business Website</Label>
+                            <Input
+                              id="businessWebsite"
+                              value={formData.businessWebsite}
+                              onChange={(e) => setFormData(prev => ({ ...prev, businessWebsite: e.target.value }))}
+                              placeholder="https://yourbusiness.com"
+                              data-testid="input-business-website"
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="businessPhone">Business Phone</Label>
+                            <Input
+                              id="businessPhone"
+                              value={formData.businessPhone}
+                              onChange={(e) => setFormData(prev => ({ ...prev, businessPhone: e.target.value }))}
+                              placeholder="(07) 1234 5678"
+                              data-testid="input-business-phone"
+                            />
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <Label htmlFor="businessAddress">Business Address</Label>
+                          <Input
+                            id="businessAddress"
+                            value={formData.businessAddress}
+                            onChange={(e) => setFormData(prev => ({ ...prev, businessAddress: e.target.value }))}
+                            placeholder="123 Business Street, City QLD 4000"
+                            data-testid="input-business-address"
+                          />
+                        </div>
+                      </>
+                    )}
                     
                     <div className="flex gap-2 pt-4">
                       <Button 
@@ -289,6 +372,58 @@ export default function Profile() {
                           <span data-testid="text-user-phone">{user.phoneNumber}</span>
                         </div>
                       </div>
+                    )}
+
+                    {/* Business Information Display for Business Accounts */}
+                    {user.accountType === 'business' && (
+                      <>
+                        <Separator className="my-4" />
+                        <div>
+                          <h4 className="font-medium mb-3">Business Information</h4>
+                          <div className="space-y-3">
+                            {user.businessName && (
+                              <div>
+                                <span className="text-sm text-muted-foreground">Business Name</span>
+                                <p className="font-medium" data-testid="text-business-name">{user.businessName}</p>
+                              </div>
+                            )}
+                            {user.businessCategory && (
+                              <div>
+                                <span className="text-sm text-muted-foreground">Category</span>
+                                <p className="font-medium" data-testid="text-business-category">{user.businessCategory}</p>
+                              </div>
+                            )}
+                            {user.businessDescription && (
+                              <div>
+                                <span className="text-sm text-muted-foreground">Description</span>
+                                <p className="text-sm text-muted-foreground" data-testid="text-business-description">{user.businessDescription}</p>
+                              </div>
+                            )}
+                            {user.businessWebsite && (
+                              <div>
+                                <span className="text-sm text-muted-foreground">Website</span>
+                                <p className="font-medium" data-testid="text-business-website">
+                                  <a href={user.businessWebsite} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                                    {user.businessWebsite}
+                                  </a>
+                                </p>
+                              </div>
+                            )}
+                            {user.businessPhone && (
+                              <div>
+                                <span className="text-sm text-muted-foreground">Business Phone</span>
+                                <p className="font-medium" data-testid="text-business-phone">{user.businessPhone}</p>
+                              </div>
+                            )}
+                            {user.businessAddress && (
+                              <div>
+                                <span className="text-sm text-muted-foreground">Address</span>
+                                <p className="font-medium" data-testid="text-business-address">{user.businessAddress}</p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </>
                     )}
                   </div>
                 )}
