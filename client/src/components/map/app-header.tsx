@@ -79,7 +79,7 @@ export function AppHeader({ onMenuToggle, onFilterToggle, showFilterButton }: Ap
                     data-testid="button-map-view"
                   >
                     <Map className="w-4 h-4 mr-1.5" />
-                    Map
+                    🗺️ TEST MAP
                   </Button>
                 </Link>
                 <Link href="/feed">
@@ -217,7 +217,7 @@ export function AppHeader({ onMenuToggle, onFilterToggle, showFilterButton }: Ap
                     data-testid="button-map-view"
                   >
                     <Map className="w-4 h-4 mr-1.5" />
-                    Map
+                    🗺️ TEST MAP
                   </Button>
                 </Link>
                 <Link href="/feed">
