@@ -314,12 +314,28 @@ export default function BusinessDashboard() {
                           </div>
                           <div className="flex gap-2 ml-4">
                             {campaign.status === 'active' ? (
-                              <Button variant="outline" size="sm" data-testid={`button-pause-${campaign.id}`}>
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                data-testid={`button-pause-${campaign.id}`}
+                                onClick={() => {
+                                  // TODO: Add pause campaign functionality
+                                  alert('Pause campaign functionality coming soon!');
+                                }}
+                              >
                                 <PauseCircle className="w-4 h-4 mr-1" />
                                 Pause
                               </Button>
                             ) : campaign.status === 'paused' ? (
-                              <Button variant="outline" size="sm" data-testid={`button-resume-${campaign.id}`}>
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                data-testid={`button-resume-${campaign.id}`}
+                                onClick={() => {
+                                  // TODO: Add resume campaign functionality
+                                  alert('Resume campaign functionality coming soon!');
+                                }}
+                              >
                                 <PlayCircle className="w-4 h-4 mr-1" />
                                 Resume
                               </Button>
@@ -395,7 +411,14 @@ export default function BusinessDashboard() {
                   </div>
                 </div>
               </div>
-              <Button variant="outline" data-testid="button-edit-business-info">
+              <Button 
+                variant="outline" 
+                data-testid="button-edit-business-info"
+                onClick={() => {
+                  // TODO: Add business profile editing functionality
+                  alert('Edit business information functionality coming soon!');
+                }}
+              >
                 Edit Business Information
               </Button>
             </CardContent>
