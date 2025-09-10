@@ -39,7 +39,7 @@ const isQFESIncident = (incident: any) => {
 };
 
 export function useTrafficData(filters: FilterState): ProcessedTrafficData {
-  // Fetch ALL events for map display (big picture view)
+  // Fetch ALL events for map display (big picture view) with client-side age filtering
   const { data: allEventsData } = useQuery({
     queryKey: ["/api/traffic/events"],
     queryFn: async () => {
@@ -49,7 +49,24 @@ export function useTrafficData(filters: FilterState): ProcessedTrafficData {
     },
     select: (data: any) => {
       const features = data?.features || [];
-      return Array.isArray(features) ? features : [];
+      // Apply client-side age filtering for consistency with feed
+      const recentFeatures = features.filter((feature: any) => {
+        try {
+          const publishedDate = feature.properties?.published ? new Date(feature.properties.published) : null;
+          const lastUpdated = feature.properties?.last_updated ? new Date(feature.properties.last_updated) : null;
+          const eventDate = publishedDate || lastUpdated;
+          
+          if (eventDate && !isNaN(eventDate.getTime())) {
+            const daysSince = (Date.now() - eventDate.getTime()) / (1000 * 60 * 60 * 24);
+            return daysSince <= 7;
+          }
+          
+          return false;
+        } catch (error) {
+          return false;
+        }
+      });
+      return Array.isArray(recentFeatures) ? recentFeatures : [];
     },
     refetchInterval: filters.autoRefresh ? 30000 : 2 * 60 * 1000, // Auto-refresh every 2 minutes
   });
