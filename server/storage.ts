@@ -142,6 +142,7 @@ export interface IStorage {
   getUserCampaignAnalytics(userId: string): Promise<Array<{ campaignId: string; views: number; clicks: number; spend: number; ctr: number; cpm: number; }>>;
   createAdCampaign(campaign: InsertAdCampaign): Promise<AdCampaign>;
   updateAdCampaign(id: string, updates: Partial<AdCampaign>): Promise<AdCampaign | undefined>;
+  getPendingAds(): Promise<AdCampaign[]>;
   
   // Ad tracking operations
   recordAdView(viewData: InsertAdView): Promise<AdView>;
@@ -1022,6 +1023,16 @@ export class DatabaseStorage implements IStorage {
       .returning();
     
     return updated;
+  }
+
+  async getPendingAds(): Promise<AdCampaign[]> {
+    const pending = await db
+      .select()
+      .from(adCampaigns)
+      .where(eq(adCampaigns.status, 'pending'))
+      .orderBy(adCampaigns.createdAt);
+    
+    return pending;
   }
 
   // Ad Tracking Operations
