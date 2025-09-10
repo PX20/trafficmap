@@ -110,7 +110,8 @@ function Router() {
             <Route path="/messages/:conversationId" component={Messages} />
             <Route path="/notifications" component={Notifications} />
             <Route path="/login" component={Login} />
-            <Route component={NotFound} />
+            {/* Temporarily commenting out catch-all to debug */}
+            {/* <Route component={NotFound} /> */}
           </>
         )}
       </Switch>
