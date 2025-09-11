@@ -3,6 +3,7 @@ import { TrafficMap } from "@/components/map/traffic-map";
 import { SimpleFilterSidebar } from "@/components/map/simple-filter-sidebar";
 import { AppHeader } from "@/components/map/app-header";
 import { IncidentDetailModal } from "@/components/incident-detail-modal";
+import { EventModal } from "@/components/map/event-modal";
 import { IncidentReportForm } from "@/components/incident-report-form";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
@@ -276,9 +277,9 @@ export default function Home() {
         </button>
       )}
 
-      <IncidentDetailModal 
-        incident={selectedIncident}
-        isOpen={!!selectedIncident}
+      {/* Use enhanced EventModal instead of IncidentDetailModal for unified data */}
+      <EventModal 
+        eventId={selectedIncident ? (selectedIncident.properties?.id || selectedIncident.id) : null}
         onClose={() => setSelectedIncident(null)}
       />
       

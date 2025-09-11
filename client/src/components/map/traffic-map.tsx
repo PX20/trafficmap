@@ -205,16 +205,9 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
               icon: createCustomMarker(eventType, getMarkerColor(eventType, feature.properties))
             });
 
-            const popupContent = createEventPopup(feature.properties);
-            marker.bindPopup(popupContent, {
-              maxWidth: 400,
-              maxHeight: 500,
-              autoPan: true,
-              autoPanPadding: [20, 20],
-              offset: [0, -10],
-              closeButton: true,
-              autoClose: true,
-              closeOnEscapeKey: true
+            // Use enhanced EventModal instead of Leaflet popup
+            marker.on('click', () => {
+              onEventSelect(feature);
             });
 
             marker.addTo(mapInstanceRef.current!);
@@ -275,16 +268,9 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
               icon: createCustomMarker(markerType, getMarkerColor(markerType, feature.properties))
             });
 
-            const popupContent = createIncidentPopup(feature.properties);
-            marker.bindPopup(popupContent, {
-              maxWidth: 400,
-              maxHeight: 500,
-              autoPan: true,
-              autoPanPadding: [20, 20],
-              offset: [0, -10],
-              closeButton: true,
-              autoClose: true,
-              closeOnEscapeKey: true
+            // Use enhanced EventModal instead of Leaflet popup
+            marker.on('click', () => {
+              onEventSelect(feature);
             });
 
             marker.addTo(mapInstanceRef.current!);
