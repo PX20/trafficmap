@@ -443,7 +443,14 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
         }
       }
       if (originalProps.duration) {
-        return originalProps.duration;
+        if (typeof originalProps.duration === 'string') {
+          return originalProps.duration;
+        }
+        // Handle duration objects
+        if (typeof originalProps.duration === 'object') {
+          const durationStr = extractStringFromObject(originalProps.duration);
+          return durationStr || 'Duration information available';
+        }
       }
     }
     return null;
