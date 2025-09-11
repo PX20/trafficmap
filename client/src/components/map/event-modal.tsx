@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MessageCircle, Heart, Share2, MapPin, Clock, AlertTriangle, Car, Shield, Eye, Zap } from "lucide-react";
+import { MessageCircle, Heart, Share2, MapPin, Clock, AlertTriangle, Car, Shield, Eye, Zap, Info, Timer, Route, Construction } from "lucide-react";
 import { useLocation } from "wouter";
 
 interface EventModalProps {
@@ -190,6 +190,63 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
     return date.toLocaleDateString();
   };
 
+  const getDescription = () => {
+    if (isTrafficEvent) {
+      const originalProps = props.originalProperties || {};
+      return originalProps.description || originalProps.information || props.description || 'No detailed description available';
+    }
+    
+    if (isEmergencyEvent) {
+      const originalProps = props.originalProperties || {};
+      // Build a meaningful description from available emergency data
+      const parts = [];
+      if (originalProps.GroupedType) parts.push(originalProps.GroupedType);
+      if (originalProps.CurrentStatus && originalProps.CurrentStatus !== originalProps.GroupedType) {
+        parts.push(`Status: ${originalProps.CurrentStatus}`);
+      }
+      if (originalProps.VehiclesOnScene > 0) {
+        parts.push(`${originalProps.VehiclesOnScene} vehicles on scene`);
+      }
+      return parts.length > 0 ? parts.join(' - ') : 'Emergency response in progress';
+    }
+    
+    if (isUserReported) {
+      return props.description || props.details || 'Community reported incident';
+    }
+    
+    return 'No description available';
+  };
+
+  const getDuration = () => {
+    if (isTrafficEvent) {
+      const originalProps = props.originalProperties || {};
+      if (originalProps.start_time && originalProps.end_time) {
+        const start = new Date(originalProps.start_time);
+        const end = new Date(originalProps.end_time);
+        const duration = Math.floor((end.getTime() - start.getTime()) / (1000 * 60));
+        if (duration > 0) {
+          return duration < 60 ? `${duration} minutes` : `${Math.floor(duration / 60)} hours ${duration % 60} minutes`;
+        }
+      }
+      if (originalProps.duration) {
+        return originalProps.duration;
+      }
+    }
+    return null;
+  };
+
+  const getRoadConditions = () => {
+    if (isTrafficEvent) {
+      const originalProps = props.originalProperties || {};
+      const conditions = [];
+      if (originalProps.road_condition) conditions.push(originalProps.road_condition);
+      if (originalProps.lane_closure) conditions.push(`Lane closure: ${originalProps.lane_closure}`);
+      if (originalProps.traffic_management) conditions.push(originalProps.traffic_management);
+      return conditions.length > 0 ? conditions : null;
+    }
+    return null;
+  };
+
   return (
     <Dialog open={!!eventId} onOpenChange={onClose}>
       <DialogContent className="max-w-md" data-testid="modal-event-details">
@@ -258,6 +315,19 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
             </div>
           )}
 
+          {/* Prominent Description Section */}
+          <div className="bg-muted/30 rounded-lg p-3 border-l-4 border-primary/40" data-testid="section-description">
+            <div className="flex items-start space-x-2">
+              <Info className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+              <div className="flex-1">
+                <h4 className="text-sm font-medium text-foreground mb-1">Description</h4>
+                <p className="text-sm text-muted-foreground leading-relaxed" data-testid="text-incident-description">
+                  {getDescription()}
+                </p>
+              </div>
+            </div>
+          </div>
+
           {/* Enhanced Status Info - Source Specific */}
           <div className="space-y-2">
             <div className="flex items-center justify-between text-xs">
@@ -277,69 +347,181 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
               </Badge>
             </div>
 
-            {/* TMR Traffic Rich Information */}
+            {/* TMR Traffic Comprehensive Information */}
             {isTrafficEvent && props.originalProperties && (
-              <div className="text-xs space-y-1" data-testid="traffic-details">
-                {props.originalProperties.advice && (
-                  <p className="text-muted-foreground italic" data-testid="traffic-advice">{props.originalProperties.advice}</p>
-                )}
-                {props.originalProperties.impact && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Traffic impact:</span>
-                    <span className="font-medium" data-testid="traffic-impact">{props.originalProperties.impact}</span>
+              <div className="space-y-3" data-testid="traffic-details">
+                {/* Traffic Impact & Advice */}
+                {(props.originalProperties.impact || props.originalProperties.advice) && (
+                  <div className="bg-orange-50 dark:bg-orange-950/20 rounded-lg p-3 border border-orange-200 dark:border-orange-800">
+                    <div className="flex items-start space-x-2">
+                      <AlertTriangle className="w-4 h-4 text-orange-600 mt-0.5 flex-shrink-0" />
+                      <div className="flex-1 space-y-2">
+                        {props.originalProperties.impact && (
+                          <div>
+                            <h5 className="text-xs font-medium text-orange-800 dark:text-orange-200 mb-1">Traffic Impact</h5>
+                            <p className="text-xs text-orange-700 dark:text-orange-300" data-testid="traffic-impact">{props.originalProperties.impact}</p>
+                          </div>
+                        )}
+                        {props.originalProperties.advice && (
+                          <div>
+                            <h5 className="text-xs font-medium text-orange-800 dark:text-orange-200 mb-1">Advice</h5>
+                            <p className="text-xs text-orange-700 dark:text-orange-300" data-testid="traffic-advice">{props.originalProperties.advice}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 )}
-                {props.originalProperties.information && (
-                  <p className="text-sm text-muted-foreground" data-testid="traffic-info">{props.originalProperties.information}</p>
+
+                {/* Timeline & Duration */}
+                {getDuration() && (
+                  <div className="bg-blue-50 dark:bg-blue-950/20 rounded-lg p-3 border border-blue-200 dark:border-blue-800">
+                    <div className="flex items-start space-x-2">
+                      <Timer className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                      <div className="flex-1">
+                        <h5 className="text-xs font-medium text-blue-800 dark:text-blue-200 mb-1">Duration</h5>
+                        <p className="text-xs text-blue-700 dark:text-blue-300" data-testid="traffic-duration">{getDuration()}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Road Conditions & Restrictions */}
+                {getRoadConditions() && (
+                  <div className="bg-yellow-50 dark:bg-yellow-950/20 rounded-lg p-3 border border-yellow-200 dark:border-yellow-800">
+                    <div className="flex items-start space-x-2">
+                      <Construction className="w-4 h-4 text-yellow-600 mt-0.5 flex-shrink-0" />
+                      <div className="flex-1">
+                        <h5 className="text-xs font-medium text-yellow-800 dark:text-yellow-200 mb-1">Road Conditions</h5>
+                        <div className="space-y-1">
+                          {getRoadConditions()?.map((condition, index) => (
+                            <p key={index} className="text-xs text-yellow-700 dark:text-yellow-300" data-testid={`road-condition-${index}`}>{condition}</p>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Additional Information */}
+                {props.originalProperties.information && props.originalProperties.information !== getDescription() && (
+                  <div className="text-xs space-y-1">
+                    <h5 className="font-medium text-foreground">Additional Information</h5>
+                    <p className="text-muted-foreground" data-testid="traffic-additional-info">{props.originalProperties.information}</p>
+                  </div>
                 )}
               </div>
             )}
 
-            {/* Emergency Services Rich Information */}
+            {/* Emergency Services Comprehensive Information */}
             {isEmergencyEvent && props.originalProperties && (
-              <div className="text-xs space-y-1" data-testid="emergency-details">
-                {props.originalProperties.VehiclesOnScene !== undefined && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Vehicles on scene:</span>
-                    <span className="font-medium" data-testid="vehicles-on-scene">{props.originalProperties.VehiclesOnScene}</span>
+              <div className="space-y-3" data-testid="emergency-details">
+                {/* Response Status */}
+                <div className="bg-red-50 dark:bg-red-950/20 rounded-lg p-3 border border-red-200 dark:border-red-800">
+                  <div className="flex items-start space-x-2">
+                    <Shield className="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" />
+                    <div className="flex-1">
+                      <h5 className="text-xs font-medium text-red-800 dark:text-red-200 mb-2">Emergency Response</h5>
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        {props.originalProperties.VehiclesOnScene !== undefined && (
+                          <div className="flex justify-between">
+                            <span className="text-red-700 dark:text-red-300">On scene:</span>
+                            <span className="font-medium text-red-800 dark:text-red-200" data-testid="vehicles-on-scene">{props.originalProperties.VehiclesOnScene}</span>
+                          </div>
+                        )}
+                        {props.originalProperties.VehiclesOnRoute !== undefined && (
+                          <div className="flex justify-between">
+                            <span className="text-red-700 dark:text-red-300">En route:</span>
+                            <span className="font-medium text-red-800 dark:text-red-200" data-testid="vehicles-en-route">{props.originalProperties.VehiclesOnRoute}</span>
+                          </div>
+                        )}
+                        {props.originalProperties.VehiclesAssigned !== undefined && (
+                          <div className="flex justify-between col-span-2">
+                            <span className="text-red-700 dark:text-red-300">Total assigned:</span>
+                            <span className="font-medium text-red-800 dark:text-red-200" data-testid="vehicles-assigned">{props.originalProperties.VehiclesAssigned}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                )}
-                {props.originalProperties.VehiclesOnRoute !== undefined && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">En route:</span>
-                    <span className="font-medium" data-testid="vehicles-en-route">{props.originalProperties.VehiclesOnRoute}</span>
+                </div>
+
+                {/* Incident Details */}
+                <div className="bg-gray-50 dark:bg-gray-950/20 rounded-lg p-3 border border-gray-200 dark:border-gray-800">
+                  <div className="flex items-start space-x-2">
+                    <Info className="w-4 h-4 text-gray-600 mt-0.5 flex-shrink-0" />
+                    <div className="flex-1 space-y-2">
+                      <h5 className="text-xs font-medium text-gray-800 dark:text-gray-200">Incident Information</h5>
+                      {props.originalProperties.Master_Incident_Number && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-700 dark:text-gray-300 text-xs">Incident #:</span>
+                          <span className="font-mono text-xs text-gray-800 dark:text-gray-200" data-testid="incident-number">{props.originalProperties.Master_Incident_Number}</span>
+                        </div>
+                      )}
+                      {props.originalProperties.Jurisdiction && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-700 dark:text-gray-300 text-xs">Jurisdiction:</span>
+                          <span className="text-xs text-gray-800 dark:text-gray-200" data-testid="jurisdiction">{props.originalProperties.Jurisdiction}</span>
+                        </div>
+                      )}
+                      {props.originalProperties.Response_Date && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-700 dark:text-gray-300 text-xs">Response time:</span>
+                          <span className="text-xs text-gray-800 dark:text-gray-200" data-testid="response-time">{formatDate(props.originalProperties.Response_Date)}</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                )}
-                {props.originalProperties.VehiclesAssigned !== undefined && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Total assigned:</span>
-                    <span className="font-medium" data-testid="vehicles-assigned">{props.originalProperties.VehiclesAssigned}</span>
-                  </div>
-                )}
-                {props.originalProperties.Master_Incident_Number && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Incident #:</span>
-                    <span className="font-mono text-xs" data-testid="incident-number">{props.originalProperties.Master_Incident_Number}</span>
-                  </div>
-                )}
-                {props.originalProperties.Jurisdiction && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Jurisdiction:</span>
-                    <span className="font-medium" data-testid="jurisdiction">{props.originalProperties.Jurisdiction}</span>
-                  </div>
-                )}
+                </div>
               </div>
             )}
 
-            {/* User Report Verification */}
+            {/* User Report Comprehensive Details */}
             {isUserReported && (
-              <div className="text-xs space-y-1" data-testid="user-report-details">
+              <div className="space-y-3" data-testid="user-report-details">
+                {/* Verification Status */}
                 {props.verificationStatus && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Verification:</span>
-                    <Badge variant={props.verificationStatus === 'official_verified' ? 'default' : 'outline'} className="text-xs" data-testid="verification-status">
-                      {props.verificationStatus.replace('_', ' ')}
-                    </Badge>
+                  <div className="bg-purple-50 dark:bg-purple-950/20 rounded-lg p-3 border border-purple-200 dark:border-purple-800">
+                    <div className="flex items-start space-x-2">
+                      <Eye className="w-4 h-4 text-purple-600 mt-0.5 flex-shrink-0" />
+                      <div className="flex-1">
+                        <h5 className="text-xs font-medium text-purple-800 dark:text-purple-200 mb-1">Verification Status</h5>
+                        <Badge variant={props.verificationStatus === 'official_verified' ? 'default' : 'outline'} className="text-xs" data-testid="verification-status">
+                          {props.verificationStatus.replace('_', ' ')}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Community Impact */}
+                {(props.category || props.incidentType) && (
+                  <div className="bg-indigo-50 dark:bg-indigo-950/20 rounded-lg p-3 border border-indigo-200 dark:border-indigo-800">
+                    <div className="flex items-start space-x-2">
+                      <Zap className="w-4 h-4 text-indigo-600 mt-0.5 flex-shrink-0" />
+                      <div className="flex-1">
+                        <h5 className="text-xs font-medium text-indigo-800 dark:text-indigo-200 mb-1">Incident Type</h5>
+                        <p className="text-xs text-indigo-700 dark:text-indigo-300" data-testid="incident-category">{props.category || props.incidentType}</p>
+                        {props.urgency && (
+                          <p className="text-xs text-indigo-600 dark:text-indigo-400 mt-1">Urgency: {props.urgency}</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Additional Details */}
+                {(props.details || props.locationDescription) && (
+                  <div className="text-xs space-y-1">
+                    <h5 className="font-medium text-foreground">Additional Details</h5>
+                    {props.details && (
+                      <p className="text-muted-foreground" data-testid="user-report-details-text">{props.details}</p>
+                    )}
+                    {props.locationDescription && props.locationDescription !== getLocation() && (
+                      <p className="text-muted-foreground" data-testid="location-description">
+                        <strong>Location:</strong> {props.locationDescription}
+                      </p>
+                    )}
                   </div>
                 )}
               </div>
