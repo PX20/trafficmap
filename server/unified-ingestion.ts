@@ -148,7 +148,8 @@ class UnifiedIngestionEngine {
   // ============================================================================
 
   private async fetchTMRTrafficEvents(): Promise<any> {
-    const url = `${QLD_TRAFFIC_BASE_URL}/events?apikey=${QLD_TRAFFIC_API_KEY}`;
+    // Public API - no key required according to TMR specification
+    const url = `${QLD_TRAFFIC_BASE_URL}/events`;
     
     const response = await fetchWithRetry(url, {
       maxRetries: 3,
@@ -261,20 +262,20 @@ class UnifiedIngestionEngine {
         const incident: InsertUnifiedIncident = {
           source: 'emergency',
           sourceId: feature.id?.toString() || props.OBJECTID?.toString() || `emg-${Date.now()}`,
-          title: props.Category || props.IncidentType || 'Emergency Incident',
-          description: props.Location || props.Description || '',
-          location: props.Locality || props.Address || '',
+          title: props.Master_Incident_Number || props.Incident_Number || 'Emergency Incident',
+          description: `${props.GroupedType || 'Emergency incident'} in ${props.Locality || props.Location || 'Queensland'}. Status: ${props.CurrentStatus || 'Active'}. Vehicles: ${props.VehiclesOnScene || 0} on scene, ${props.VehiclesOnRoute || 0} en route.`,
+          location: props.Locality ? `${props.Location}, ${props.Locality}` : (props.Location || 'Queensland'),
           category: this.getEmergencyCategory(props),
-          subcategory: props.SubCategory || props.IncidentType || '',
+          subcategory: props.Incident_Type || props.Type || 'emergency',
           severity: this.getEmergencySeverity(props),
-          status: props.Status === 'Closed' ? 'resolved' : 'active',
+          status: (props.CurrentStatus === 'Closed' || props.CurrentStatus === 'Resolved') ? 'resolved' : 'active',
           geometry,
           centroidLat: centroid.lat,
           centroidLng: centroid.lng,
           regionIds,
           geocell: computeGeocellForIncident({ centroidLat: centroid.lat, centroidLng: centroid.lng }),
-          incidentTime: props.CreateDate ? new Date(props.CreateDate) : new Date(),
-          lastUpdated: props.EditDate ? new Date(props.EditDate) : new Date(),
+          incidentTime: props.Response_Date ? new Date(props.Response_Date) : new Date(),
+          lastUpdated: props.LastUpdate ? new Date(props.LastUpdate) : new Date(),
           publishedAt: new Date(),
           properties: props
         };
@@ -527,24 +528,36 @@ class UnifiedIngestionEngine {
   }
 
   private getEmergencyCategory(props: any): string {
-    const category = props.Category?.toLowerCase() || '';
-    const type = props.IncidentType?.toLowerCase() || '';
+    const jurisdiction = props.Jurisdiction?.toLowerCase() || '';
+    const incidentNumber = props.Master_Incident_Number?.toLowerCase() || '';
+    const groupedType = props.GroupedType?.toLowerCase() || '';
     
-    if (category.includes('fire') || type.includes('fire')) return 'fire';
-    if (category.includes('medical') || type.includes('ambulance')) return 'medical';
-    if (category.includes('police') || type.includes('crime')) return 'crime';
-    if (category.includes('rescue')) return 'rescue';
+    // Detect category from jurisdiction and incident patterns
+    if (jurisdiction.includes('fire') || incidentNumber.includes('qf') || groupedType.includes('fire')) return 'fire';
+    if (jurisdiction.includes('ambulance') || incidentNumber.includes('qa') || groupedType.includes('medical')) return 'medical';
+    if (jurisdiction.includes('police') || incidentNumber.includes('qp') || groupedType.includes('police')) return 'crime';
+    if (jurisdiction.includes('ses') || jurisdiction.includes('rescue') || groupedType.includes('rescue')) return 'rescue';
     
     return 'emergency';
   }
 
   private getEmergencySeverity(props: any): 'low' | 'medium' | 'high' | 'critical' {
-    const priority = props.Priority?.toLowerCase() || '';
-    const status = props.Status?.toLowerCase() || '';
+    const status = props.CurrentStatus?.toLowerCase() || '';
+    const jurisdiction = props.Jurisdiction?.toLowerCase() || '';
+    const vehiclesOnScene = parseInt(props.VehiclesOnScene) || 0;
+    const vehiclesOnRoute = parseInt(props.VehiclesOnRoute) || 0;
     
-    if (priority.includes('urgent') || priority.includes('critical')) return 'critical';
-    if (priority.includes('high') || status.includes('active')) return 'high';
-    if (priority.includes('low') || status.includes('monitoring')) return 'low';
+    // Multiple vehicles indicates higher severity
+    if (vehiclesOnScene >= 3 || vehiclesOnRoute >= 3) return 'critical';
+    if (vehiclesOnScene >= 2 || vehiclesOnRoute >= 2) return 'high';
+    
+    // Active emergency responses are generally high priority
+    if (status.includes('going') || status.includes('responding')) return 'high';
+    if (status.includes('arrived') || status.includes('onscene')) return 'critical';
+    if (status.includes('returning') || status.includes('finished')) return 'low';
+    
+    // Fire emergencies generally higher severity
+    if (jurisdiction.includes('fire')) return 'high';
     
     return 'medium';
   }
