@@ -68,7 +68,14 @@ import {
   type Payment,
   type InsertPayment,
   type CampaignAnalytics,
-  type InsertCampaignAnalytics
+  type InsertCampaignAnalytics,
+  unifiedIncidents,
+  type SelectUnifiedIncident,
+  type InsertUnifiedIncident,
+  type UnifiedFeature,
+  type UnifiedIncidentsResponse,
+  generateUnifiedIncidentId,
+  prepareUnifiedIncidentForInsert
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, or, ne, sql } from "drizzle-orm";
@@ -111,7 +118,31 @@ export interface IStorage {
   // Terms and conditions
   acceptUserTerms(id: string): Promise<User | undefined>;
   
-  // Traffic and incident operations
+  // ============================================================================
+  // UNIFIED INCIDENT OPERATIONS - Single source for all incident types
+  // ============================================================================
+  
+  // Unified incident management
+  getAllUnifiedIncidents(): Promise<SelectUnifiedIncident[]>;
+  getUnifiedIncident(id: string): Promise<SelectUnifiedIncident | undefined>;
+  getUnifiedIncidentsByRegion(regionId: string): Promise<SelectUnifiedIncident[]>;
+  getUnifiedIncidentsBySource(source: 'tmr' | 'emergency' | 'user'): Promise<SelectUnifiedIncident[]>;
+  getUnifiedIncidentsByCategory(category: string): Promise<SelectUnifiedIncident[]>;
+  createUnifiedIncident(incident: InsertUnifiedIncident): Promise<SelectUnifiedIncident>;
+  updateUnifiedIncident(id: string, incident: Partial<SelectUnifiedIncident>): Promise<SelectUnifiedIncident | undefined>;
+  upsertUnifiedIncident(source: 'tmr' | 'emergency' | 'user', sourceId: string, incident: InsertUnifiedIncident): Promise<SelectUnifiedIncident>;
+  deleteUnifiedIncident(id: string): Promise<boolean>;
+  
+  // Spatial and temporal queries
+  getUnifiedIncidentsInArea(southWest: [number, number], northEast: [number, number]): Promise<SelectUnifiedIncident[]>;
+  getUnifiedIncidentsSince(timestamp: Date): Promise<SelectUnifiedIncident[]>;
+  getActiveUnifiedIncidents(): Promise<SelectUnifiedIncident[]>;
+  
+  // Unified data conversion to GeoJSON
+  getUnifiedIncidentsAsGeoJSON(): Promise<UnifiedIncidentsResponse>;
+  getUnifiedIncidentsByRegionAsGeoJSON(regionId: string): Promise<UnifiedIncidentsResponse>;
+  
+  // Legacy traffic and incident operations (deprecated - use unified instead)
   getTrafficEvents(): Promise<TrafficEvent[]>;
   createTrafficEvent(event: InsertTrafficEvent): Promise<TrafficEvent>;
   updateTrafficEvent(id: string, event: Partial<TrafficEvent>): Promise<TrafficEvent | undefined>;
@@ -450,6 +481,200 @@ export class DatabaseStorage implements IStorage {
   async deleteIncident(id: string): Promise<boolean> {
     const result = await db.delete(incidents).where(eq(incidents.id, id));
     return (result.rowCount ?? 0) > 0;
+  }
+
+  // ============================================================================
+  // UNIFIED INCIDENT OPERATIONS - Single source for all incident types
+  // ============================================================================
+
+  async getAllUnifiedIncidents(): Promise<SelectUnifiedIncident[]> {
+    return await db.select().from(unifiedIncidents).orderBy(desc(unifiedIncidents.lastUpdated));
+  }
+
+  async getUnifiedIncident(id: string): Promise<SelectUnifiedIncident | undefined> {
+    const [incident] = await db.select().from(unifiedIncidents).where(eq(unifiedIncidents.id, id));
+    return incident;
+  }
+
+  async getUnifiedIncidentsByRegion(regionId: string): Promise<SelectUnifiedIncident[]> {
+    return await db
+      .select()
+      .from(unifiedIncidents)
+      .where(sql`${unifiedIncidents.regionIds} @> ARRAY[${regionId}]`)
+      .orderBy(desc(unifiedIncidents.lastUpdated));
+  }
+
+  async getUnifiedIncidentsBySource(source: 'tmr' | 'emergency' | 'user'): Promise<SelectUnifiedIncident[]> {
+    return await db
+      .select()
+      .from(unifiedIncidents)
+      .where(eq(unifiedIncidents.source, source))
+      .orderBy(desc(unifiedIncidents.lastUpdated));
+  }
+
+  async getUnifiedIncidentsByCategory(category: string): Promise<SelectUnifiedIncident[]> {
+    return await db
+      .select()
+      .from(unifiedIncidents)
+      .where(eq(unifiedIncidents.category, category))
+      .orderBy(desc(unifiedIncidents.lastUpdated));
+  }
+
+  async createUnifiedIncident(incident: InsertUnifiedIncident): Promise<SelectUnifiedIncident> {
+    const id = generateUnifiedIncidentId(incident.source, incident.sourceId);
+    const [newIncident] = await db
+      .insert(unifiedIncidents)
+      .values({
+        ...incident,
+        id,
+        lastUpdated: new Date(),
+        publishedAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .returning();
+    return newIncident;
+  }
+
+  async updateUnifiedIncident(id: string, incident: Partial<SelectUnifiedIncident>): Promise<SelectUnifiedIncident | undefined> {
+    const [updated] = await db
+      .update(unifiedIncidents)
+      .set({ 
+        ...incident, 
+        lastUpdated: new Date(), 
+        updatedAt: new Date(),
+        version: sql`${unifiedIncidents.version} + 1`
+      })
+      .where(eq(unifiedIncidents.id, id))
+      .returning();
+    return updated;
+  }
+
+  async upsertUnifiedIncident(source: 'tmr' | 'emergency' | 'user', sourceId: string, incident: InsertUnifiedIncident): Promise<SelectUnifiedIncident> {
+    const id = generateUnifiedIncidentId(source, sourceId);
+    const [upserted] = await db
+      .insert(unifiedIncidents)
+      .values({
+        ...incident,
+        id,
+        source,
+        sourceId,
+        lastUpdated: new Date(),
+        publishedAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .onConflictDoUpdate({
+        target: [unifiedIncidents.source, unifiedIncidents.sourceId],
+        set: {
+          ...incident,
+          lastUpdated: new Date(),
+          updatedAt: new Date(),
+          version: sql`${unifiedIncidents.version} + 1`,
+        },
+      })
+      .returning();
+    return upserted;
+  }
+
+  async deleteUnifiedIncident(id: string): Promise<boolean> {
+    const result = await db.delete(unifiedIncidents).where(eq(unifiedIncidents.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  async getUnifiedIncidentsInArea(southWest: [number, number], northEast: [number, number]): Promise<SelectUnifiedIncident[]> {
+    const [swLat, swLng] = southWest;
+    const [neLat, neLng] = northEast;
+    
+    return await db
+      .select()
+      .from(unifiedIncidents)
+      .where(
+        and(
+          sql`${unifiedIncidents.centroidLat} >= ${swLat}`,
+          sql`${unifiedIncidents.centroidLat} <= ${neLat}`,
+          sql`${unifiedIncidents.centroidLng} >= ${swLng}`,
+          sql`${unifiedIncidents.centroidLng} <= ${neLng}`
+        )
+      )
+      .orderBy(desc(unifiedIncidents.lastUpdated));
+  }
+
+  async getUnifiedIncidentsSince(timestamp: Date): Promise<SelectUnifiedIncident[]> {
+    return await db
+      .select()
+      .from(unifiedIncidents)
+      .where(sql`${unifiedIncidents.lastUpdated} >= ${timestamp}`)
+      .orderBy(desc(unifiedIncidents.lastUpdated));
+  }
+
+  async getActiveUnifiedIncidents(): Promise<SelectUnifiedIncident[]> {
+    return await db
+      .select()
+      .from(unifiedIncidents)
+      .where(eq(unifiedIncidents.status, 'active'))
+      .orderBy(desc(unifiedIncidents.lastUpdated));
+  }
+
+  async getUnifiedIncidentsAsGeoJSON(): Promise<UnifiedIncidentsResponse> {
+    const incidents = await this.getAllUnifiedIncidents();
+    return this.convertIncidentsToGeoJSON(incidents);
+  }
+
+  async getUnifiedIncidentsByRegionAsGeoJSON(regionId: string): Promise<UnifiedIncidentsResponse> {
+    const incidents = await this.getUnifiedIncidentsByRegion(regionId);
+    return this.convertIncidentsToGeoJSON(incidents);
+  }
+
+  // Helper method for GeoJSON conversion
+  private convertIncidentsToGeoJSON(incidents: SelectUnifiedIncident[]): UnifiedIncidentsResponse {
+    const features: UnifiedFeature[] = incidents.map(incident => ({
+      type: "Feature",
+      id: incident.id,
+      properties: {
+        id: incident.id,
+        source: incident.source,
+        title: incident.title,
+        description: incident.description || undefined,
+        category: incident.category,
+        subcategory: incident.subcategory || undefined,
+        severity: incident.severity || "medium",
+        status: incident.status || "active",
+        location: incident.location || undefined,
+        incidentTime: incident.incidentTime?.toISOString(),
+        lastUpdated: incident.lastUpdated.toISOString(),
+        publishedAt: incident.publishedAt.toISOString(),
+        regionIds: incident.regionIds || [],
+        userId: incident.userId || undefined,
+        photoUrl: incident.photoUrl || undefined,
+        verificationStatus: incident.verificationStatus || undefined,
+        originalProperties: incident.properties,
+      },
+      geometry: incident.geometry as any,
+    }));
+
+    // Calculate metadata
+    const sourceCounts = incidents.reduce((acc, incident) => {
+      acc[incident.source] = (acc[incident.source] || 0) + 1;
+      return acc;
+    }, { tmr: 0, emergency: 0, user: 0 });
+
+    const regionCounts = incidents.reduce((acc, incident) => {
+      incident.regionIds?.forEach(regionId => {
+        acc[regionId] = (acc[regionId] || 0) + 1;
+      });
+      return acc;
+    }, {} as Record<string, number>);
+
+    return {
+      type: "FeatureCollection",
+      features,
+      metadata: {
+        total: incidents.length,
+        updated: new Date().toISOString(),
+        version: 1,
+        sources: sourceCounts,
+        regions: regionCounts,
+      },
+    };
   }
 
   async getCommentsByIncidentId(incidentId: string): Promise<Comment[]> {
