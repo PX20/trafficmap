@@ -1,8 +1,155 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, timestamp, jsonb, boolean, index, integer } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, timestamp, jsonb, boolean, index, integer, real, doublePrecision, unique } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+
+// ============================================================================
+// UNIFIED INCIDENT SCHEMA - Single source of truth for all incident types
+// ============================================================================
+
+// Unified incident storage - replaces complex separate flows
+export const unifiedIncidents = pgTable("unified_incidents", {
+  id: varchar("id").primaryKey(), // Composite ID: source:sourceId (generated in app layer)
+  
+  // Source identification
+  source: varchar("source", { enum: ["tmr", "emergency", "user"] }).notNull(),
+  sourceId: varchar("source_id").notNull(), // Original ID from source system
+  
+  // Core incident data
+  title: text("title").notNull(),
+  description: text("description"),
+  location: text("location"), // Human-readable location
+  category: varchar("category").notNull(), // traffic, fire, medical, crime, etc.
+  subcategory: varchar("subcategory"), // congestion, accident, structure-fire, etc.
+  severity: varchar("severity", { enum: ["low", "medium", "high", "critical"] }).default("medium"),
+  status: varchar("status", { enum: ["active", "resolved", "monitoring", "closed"] }).default("active"),
+  
+  // Spatial data
+  geometry: jsonb("geometry").notNull(), // Original GeoJSON geometry
+  centroidLat: doublePrecision("centroid_lat").notNull(), // Computed centroid for fast lookups
+  centroidLng: doublePrecision("centroid_lng").notNull(),
+  regionIds: text("region_ids").array().default([]), // Pre-computed region assignments
+  geocell: varchar("geocell"), // Spatial grid cell for fast regional queries
+  
+  // Temporal data
+  incidentTime: timestamp("incident_time"), // When incident actually occurred
+  lastUpdated: timestamp("last_updated").notNull().defaultNow(),
+  publishedAt: timestamp("published_at").notNull().defaultNow(),
+  expiresAt: timestamp("expires_at"), // For auto-cleanup of old incidents
+  
+  // Source-specific data
+  properties: jsonb("properties").notNull().default('{}'), // Original properties from source
+  
+  // User-reported specific fields
+  userId: varchar("user_id"), // Only for user reports
+  photoUrl: text("photo_url"), // Only for user reports
+  verificationStatus: varchar("verification_status", { enum: ["unverified", "community_verified", "official_verified"] }),
+  
+  // System fields
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  version: integer("version").default(1), // For optimistic concurrency
+}, (table) => [
+  // Uniqueness constraint to prevent ID collisions
+  unique("unique_source_sourceid").on(table.source, table.sourceId),
+  
+  // Performance indexes
+  index("idx_unified_source").on(table.source),
+  index("idx_unified_category").on(table.category),
+  index("idx_unified_severity").on(table.severity),
+  index("idx_unified_status").on(table.status),
+  index("idx_unified_centroid").on(table.centroidLat, table.centroidLng),
+  index("idx_unified_geocell").on(table.geocell),
+  index("idx_unified_region").using("gin", table.regionIds), // GIN index for array queries
+  index("idx_unified_time").on(table.incidentTime),
+  index("idx_unified_updated").on(table.lastUpdated),
+]);
+
+// Unified Incidents Zod Schemas
+export const insertUnifiedIncidentSchema = createInsertSchema(unifiedIncidents).omit({
+  id: true, // Auto-generated from source + sourceId
+  createdAt: true,
+  updatedAt: true,
+  version: true,
+}).extend({
+  // Custom validation rules
+  source: z.enum(["tmr", "emergency", "user"]),
+  sourceId: z.string().min(1, "Source ID is required"),
+  severity: z.enum(["low", "medium", "high", "critical"]).default("medium"),
+  status: z.enum(["active", "resolved", "monitoring", "closed"]).default("active"),
+  category: z.string().min(1, "Category is required"),
+  title: z.string().min(1, "Title is required"),
+  centroidLat: z.number().min(-90).max(90),
+  centroidLng: z.number().min(-180).max(180),
+  regionIds: z.array(z.string()).default([]),
+});
+
+// Select schema is just the table inference - no need for separate schema
+// export const selectUnifiedIncidentSchema = createInsertSchema(unifiedIncidents);
+
+export type InsertUnifiedIncident = z.infer<typeof insertUnifiedIncidentSchema>;
+export type SelectUnifiedIncident = typeof unifiedIncidents.$inferSelect;
+
+// Helper function to generate composite IDs for unified incidents
+export function generateUnifiedIncidentId(source: "tmr" | "emergency" | "user", sourceId: string): string {
+  return `${source}:${sourceId}`;
+}
+
+// Helper function to validate unified incident data before insert
+export function prepareUnifiedIncidentForInsert(data: InsertUnifiedIncident): InsertUnifiedIncident & { id: string } {
+  const id = generateUnifiedIncidentId(data.source, data.sourceId);
+  return {
+    ...data,
+    id,
+  };
+}
+
+// GeoJSON Feature type for API responses
+export interface UnifiedFeature {
+  type: "Feature";
+  id: string;
+  properties: {
+    id: string;
+    source: "tmr" | "emergency" | "user";
+    title: string;
+    description?: string;
+    category: string;
+    subcategory?: string;
+    severity: "low" | "medium" | "high" | "critical";
+    status: "active" | "resolved" | "monitoring" | "closed";
+    location?: string;
+    incidentTime?: string;
+    lastUpdated: string;
+    publishedAt: string;
+    regionIds: string[];
+    userId?: string;
+    photoUrl?: string;
+    verificationStatus?: "unverified" | "community_verified" | "official_verified";
+    originalProperties: any; // Original source properties
+  };
+  geometry: {
+    type: "Point" | "Polygon" | "LineString";
+    coordinates: number[] | number[][] | number[][][];
+  };
+}
+
+// API Response type
+export interface UnifiedIncidentsResponse {
+  type: "FeatureCollection";
+  features: UnifiedFeature[];
+  metadata: {
+    total: number;
+    updated: string;
+    version: number;
+    sources: {
+      tmr: number;
+      emergency: number;  
+      user: number;
+    };
+    regions: Record<string, number>; // Region ID -> count
+  };
+}
 
 // Current Terms Version - Update this when terms change to prompt re-acceptance
 export const CURRENT_TERMS_VERSION = "1.1";
