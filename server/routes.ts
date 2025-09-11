@@ -28,14 +28,7 @@ import {
 const API_BASE_URL = "https://api.qldtraffic.qld.gov.au";
 const PUBLIC_API_KEY = "3e83add325cbb69ac4d8e5bf433d770b";
 
-// Traffic data cache to avoid hitting rate limits
-const trafficCache = {
-  events: { data: null as any, lastFetch: 0 },
-  sunshineCoast: { data: null as any, lastFetch: 0 }
-};
-
-// Request debouncing to prevent multiple simultaneous API calls
-let ongoingTrafficRequest: Promise<any> | null = null;
+// Legacy cache structures removed - now using unified SWR dataCache system
 
 // Enhanced constants for background ingestion architecture
 const CACHE_DURATION = 60 * 1000; // 1 minute base cache for compatibility
@@ -763,138 +756,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get traffic events from cache-only (SWR pattern)
-  app.get("/api/traffic/events", async (req, res) => {
-    try {
-      const { suburb } = req.query;
-      
-      // Get data from unified cache only - no on-demand network calls
-      const cacheKey = 'traffic-events-unified';
-      const cacheEntry = getCacheEntry(cacheKey);
-      
-      if (!cacheEntry || !cacheEntry.data) {
-        return res.status(503).json({ 
-          message: "Traffic data not available yet - background ingestion in progress",
-          retryAfter: 30 
-        });
-      }
-      
-      // SWR pattern: return cached data immediately
-      let data = JSON.parse(JSON.stringify(cacheEntry.data)); // Deep copy
-      
-      // Trigger background refresh if cache is stale (but don't wait for it)
-      if (isCacheStale(cacheEntry)) {
-        console.log("📡 Cache is stale, triggering background refresh");
-        // Trigger async refresh without blocking the response
-        setImmediate(() => {
-          ingestTrafficEvents(false); // Non-adaptive to avoid scheduling conflicts
-        });
-      }
-      
-      // Filter by region if suburb provided
-      if (suburb && data.features) {
-        const region = findRegionBySuburb(suburb as string);
-        if (region) {
-          data.features = data.features.filter((feature: any) => {
-            return isFeatureInRegion(feature, region);
-          });
-        } else {
-          // Fallback to basic suburb filtering if no region found
-          data.features = data.features.filter((feature: any) => {
-            const locality = feature.properties?.road_summary?.locality?.toLowerCase();
-            const roadName = feature.properties?.road_summary?.road_name?.toLowerCase();
-            const searchSuburb = (suburb as string).toLowerCase();
-            return locality?.includes(searchSuburb) || roadName?.includes(searchSuburb);
-          });
-        }
-      }
-      
-      // Transform and store events in local storage for caching (filter by age only)
-      let trafficStoredCount = 0;
-      let trafficAgeFilteredCount = 0;
-      if (data.features) {
-        for (const feature of data.features) {
-          // Filter out traffic events older than 7 days - prioritize last_updated for current relevance
-          const publishedDate = feature.properties.published ? new Date(feature.properties.published) : null;
-          const lastUpdated = feature.properties.last_updated ? new Date(feature.properties.last_updated) : null;
-          const eventDate = lastUpdated || publishedDate;
-          
-          if (eventDate) {
-            const daysSinceEvent = (Date.now() - eventDate.getTime()) / (1000 * 60 * 60 * 24);
-            if (daysSinceEvent > 7) {
-              trafficAgeFilteredCount++;
-              continue;
-            }
-          }
-          
-          const event = {
-            id: feature.properties.id.toString(),
-            eventType: feature.properties.event_type,
-            eventSubtype: feature.properties.event_subtype || null,
-            title: feature.properties.description || feature.properties.event_type,
-            description: feature.properties.description || null,
-            location: feature.properties.road_summary?.road_name || 'Unknown location',
-            impact: feature.properties.event_priority?.toLowerCase() || 'unknown',
-            priority: feature.properties.event_priority,
-            status: feature.properties.status,
-            advice: feature.properties.advice || null,
-            information: feature.properties.information || null,
-            geometry: feature.geometry,
-            properties: feature.properties,
-            nextInspection: feature.properties.next_inspection ? new Date(feature.properties.next_inspection) : null,
-            webLink: feature.properties.web_link || null,
-            areaAlert: feature.properties.area_area || false,
-            alertMessage: feature.properties.alert_message || null,
-          };
-          
-          
-          await storage.updateTrafficEvent(event.id, event) || await storage.createTrafficEvent(event);
-          trafficStoredCount++;
-        }
-        
-        if (trafficAgeFilteredCount > 0) {
-          console.log(`Filtered out ${trafficAgeFilteredCount} traffic events older than 7 days`);
-        }
-      }
-      
-      
-      // Apply 7-day age filter to data being returned to client
-      if (data && data.features && Array.isArray(data.features)) {
-        const originalCount = data.features.length;
-        
-        data.features = data.features.filter((feature: any) => {
-          try {
-            const publishedDate = feature.properties?.published ? new Date(feature.properties.published) : null;
-            const lastUpdated = feature.properties?.last_updated ? new Date(feature.properties.last_updated) : null;
-            // PRIORITIZE last_updated over published for current relevance
-            const eventDate = lastUpdated || publishedDate;
-            
-            if (eventDate && !isNaN(eventDate.getTime())) {
-              const daysSince = (Date.now() - eventDate.getTime()) / (1000 * 60 * 60 * 24);
-              return daysSince <= 7;
-            }
-            
-            // If no valid date available, exclude it
-            return false;
-          } catch (error) {
-            return false;
-          }
-        });
-        
-        const filteredCount = originalCount - data.features.length;
-        if (filteredCount > 0) {
-          console.log(`Filtered out ${filteredCount} traffic events older than 7 days (${data.features.length} remaining)`);
-        }
-      }
-      
-      res.json(data);
-    } catch (error) {
-      console.error("Error fetching traffic events:", error);
-      res.status(500).json({ 
-        error: "Failed to fetch traffic events", 
-        message: error instanceof Error ? error.message : "Unknown error" 
+  // Get traffic events from cache-only (SWR pattern) - STRICT CACHE ONLY
+  app.get("/api/traffic/events", (req, res) => {
+    const cacheEntry = getCacheEntry('traffic-events-unified');
+    
+    if (!cacheEntry || !cacheEntry.data) {
+      // Trigger background refresh but don't wait
+      setImmediate(() => ingestTrafficEvents(false));
+      return res.status(503).json({ 
+        error: 'Traffic data not available yet, please try again shortly' 
       });
     }
+
+    // Check ETag for 304
+    if (req.headers['if-none-match'] === cacheEntry.etag) {
+      return res.status(304).end();
+    }
+
+    // Set cache headers and return data immediately  
+    if (cacheEntry.etag) {
+      res.set('ETag', cacheEntry.etag);
+    }
+    res.set('Cache-Control', 'public, max-age=60');
+    
+    // Trigger background refresh if stale (but don't wait)
+    if (isCacheStale(cacheEntry)) {
+      setImmediate(() => ingestTrafficEvents(false));
+    }
+
+    // Return cache data immediately - NO processing
+    res.json(cacheEntry.data);
   });
 
 
