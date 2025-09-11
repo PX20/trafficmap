@@ -39,32 +39,101 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
     
     // First check normalized top-level properties
     for (const key of keys) {
-      if (props[key] && typeof props[key] === 'string' && props[key].trim()) {
-        return props[key].trim();
+      if (props[key]) {
+        if (typeof props[key] === 'string' && props[key].trim()) {
+          return props[key].trim();
+        }
+        // Handle objects by converting to JSON or extracting relevant info
+        if (typeof props[key] === 'object' && props[key] !== null) {
+          const objStr = extractStringFromObject(props[key]);
+          if (objStr) return objStr;
+        }
       }
     }
     
     // Then check originalProperties with both camelCase and snake_case variants
     for (const key of keys) {
       // Check exact key
-      if (originalProps[key] && typeof originalProps[key] === 'string' && originalProps[key].trim()) {
-        return originalProps[key].trim();
+      if (originalProps[key]) {
+        if (typeof originalProps[key] === 'string' && originalProps[key].trim()) {
+          return originalProps[key].trim();
+        }
+        // Handle objects by converting to JSON or extracting relevant info
+        if (typeof originalProps[key] === 'object' && originalProps[key] !== null) {
+          const objStr = extractStringFromObject(originalProps[key]);
+          if (objStr) return objStr;
+        }
       }
       
       // Check snake_case variant
       const snakeKey = key.replace(/([A-Z])/g, '_$1').toLowerCase();
-      if (originalProps[snakeKey] && typeof originalProps[snakeKey] === 'string' && originalProps[snakeKey].trim()) {
-        return originalProps[snakeKey].trim();
+      if (originalProps[snakeKey]) {
+        if (typeof originalProps[snakeKey] === 'string' && originalProps[snakeKey].trim()) {
+          return originalProps[snakeKey].trim();
+        }
+        if (typeof originalProps[snakeKey] === 'object' && originalProps[snakeKey] !== null) {
+          const objStr = extractStringFromObject(originalProps[snakeKey]);
+          if (objStr) return objStr;
+        }
       }
       
       // Check camelCase variant
       const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
-      if (originalProps[camelKey] && typeof originalProps[camelKey] === 'string' && originalProps[camelKey].trim()) {
-        return originalProps[camelKey].trim();
+      if (originalProps[camelKey]) {
+        if (typeof originalProps[camelKey] === 'string' && originalProps[camelKey].trim()) {
+          return originalProps[camelKey].trim();
+        }
+        if (typeof originalProps[camelKey] === 'object' && originalProps[camelKey] !== null) {
+          const objStr = extractStringFromObject(originalProps[camelKey]);
+          if (objStr) return objStr;
+        }
       }
     }
     
     return fallback;
+  };
+
+  // Helper to extract meaningful string from complex objects
+  const extractStringFromObject = (obj: any): string => {
+    try {
+      if (!obj || typeof obj !== 'object') return '';
+      
+      // Handle traffic impact objects
+      if (obj.impact_type && obj.direction) {
+        const parts = [];
+        if (obj.impact_type) parts.push(obj.impact_type);
+        if (obj.direction) parts.push(`towards ${obj.direction}`);
+        if (obj.delay) parts.push(`${obj.delay} delay`);
+        return parts.join(' - ');
+      }
+      
+      // Handle duration objects
+      if (obj.start && obj.end) {
+        const parts = [];
+        if (obj.start) parts.push(`From ${obj.start}`);
+        if (obj.end) parts.push(`until ${obj.end}`);
+        if (obj.active_days && Array.isArray(obj.active_days)) {
+          parts.push(`on ${obj.active_days.join(', ')}`);
+        }
+        return parts.join(' ');
+      }
+      
+      // Handle arrays
+      if (Array.isArray(obj)) {
+        return obj.filter(item => typeof item === 'string').join(', ');
+      }
+      
+      // Extract first string value found
+      for (const [key, value] of Object.entries(obj)) {
+        if (typeof value === 'string' && value.trim()) {
+          return value.trim();
+        }
+      }
+      
+      return '';
+    } catch (e) {
+      return '';
+    }
   };
   
   // Get nested value helper for complex objects
