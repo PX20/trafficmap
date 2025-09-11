@@ -3051,6 +3051,116 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(status);
   });
 
+  // ============================================================================
+  // UNIFIED API ENDPOINT - Single endpoint for all consolidated incident data
+  // ============================================================================
+  
+  app.get('/api/unified', async (req, res) => {
+    console.log('🔍 Unified API endpoint called with query:', req.query);
+    
+    try {
+      const { 
+        region, 
+        category, 
+        source, 
+        status: statusFilter, 
+        southwest, 
+        northeast,
+        since 
+      } = req.query;
+
+      let result;
+
+      console.log('📊 Getting unified incidents...');
+      
+      // Spatial filtering with bounding box
+      if (southwest && northeast) {
+        console.log('🗺️ Applying spatial filtering');
+        const [swLat, swLng] = (southwest as string).split(',').map(Number);
+        const [neLat, neLng] = (northeast as string).split(',').map(Number);
+        
+        // Get all incidents first, then filter spatially in the result
+        // This is a temporary fix - we could optimize this later with a dedicated spatial GeoJSON method
+        result = await storage.getUnifiedIncidentsAsGeoJSON();
+        
+        // Filter features to only include those within the bounding box
+        result.features = result.features.filter(feature => {
+          if (!feature.geometry || feature.geometry.type !== 'Point') return false;
+          
+          const [lng, lat] = feature.geometry.coordinates as [number, number];
+          return (
+            lat >= Math.min(swLat, neLat) && 
+            lat <= Math.max(swLat, neLat) &&
+            lng >= Math.min(swLng, neLng) && 
+            lng <= Math.max(swLng, neLng)
+          );
+        });
+      }
+      // Regional filtering 
+      else if (region) {
+        console.log('🌍 Applying regional filtering for:', region);
+        result = await storage.getUnifiedIncidentsByRegionAsGeoJSON(region as string);
+      }
+      // All unified incidents
+      else {
+        console.log('📋 Getting all unified incidents');
+        result = await storage.getUnifiedIncidentsAsGeoJSON();
+      }
+      
+      console.log('✅ Successfully retrieved incidents, features count:', result?.features?.length || 0);
+
+      // Apply additional filters on the result
+      if (category || source || statusFilter || since) {
+        const sinceDate = since ? new Date(since as string) : null;
+        
+        result.features = result.features.filter(feature => {
+          const props = feature.properties;
+          
+          // Category filter
+          if (category && props.category !== category) return false;
+          
+          // Source filter
+          if (source && props.source !== source) return false;
+          
+          // Status filter
+          if (statusFilter && props.status !== statusFilter) return false;
+          
+          // Time filter
+          if (sinceDate && new Date(props.lastUpdated) < sinceDate) return false;
+          
+          return true;
+        });
+      }
+
+      // Add response metadata
+      const response = {
+        ...result,
+        metadata: {
+          totalFeatures: result.features.length,
+          sources: ['tmr', 'emergency', 'user'],
+          lastUpdated: new Date().toISOString(),
+          cached: true,
+          filters: {
+            region: region || null,
+            category: category || null,
+            source: source || null,
+            status: statusFilter || null,
+            spatialBounds: southwest && northeast ? { southwest, northeast } : null,
+            since: since || null
+          }
+        }
+      };
+
+      res.json(response);
+    } catch (error) {
+      console.error('❌ Unified API error:', error);
+      res.status(500).json({ 
+        error: 'Failed to fetch unified incidents',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
   // Initialize background ingestion system
   console.log('🚀 Initializing background ingestion system...');
   initializeBackgroundIngestion();
