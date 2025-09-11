@@ -81,6 +81,7 @@ import { db } from "./db";
 import { eq, desc, and, or, ne, sql } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import bcrypt from "bcryptjs";
+import { spatialLookup, computeGeocellForIncident, type SpatialQuery, type SpatialQueryResult } from "./spatial-lookup";
 
 export interface IStorage {
   // User operations - required for Replit Auth
@@ -141,6 +142,19 @@ export interface IStorage {
   // Unified data conversion to GeoJSON
   getUnifiedIncidentsAsGeoJSON(): Promise<UnifiedIncidentsResponse>;
   getUnifiedIncidentsByRegionAsGeoJSON(regionId: string): Promise<UnifiedIncidentsResponse>;
+  
+  // ============================================================================
+  // 3-STAGE SPATIAL LOOKUP SYSTEM - High-performance spatial queries
+  // ============================================================================
+  
+  // Advanced spatial queries with grid index, bounding box, and point-in-polygon
+  spatialQuery(query: SpatialQuery): Promise<SpatialQueryResult>;
+  spatialQueryInViewport(southWest: [number, number], northEast: [number, number], filters?: { category?: string; source?: 'tmr' | 'emergency' | 'user'; activeOnly?: boolean }): Promise<SpatialQueryResult>;
+  spatialQueryNearLocation(lat: number, lng: number, radiusKm: number, filters?: { category?: string; source?: 'tmr' | 'emergency' | 'user'; activeOnly?: boolean }): Promise<SpatialQueryResult>;
+  
+  // Cache and performance utilities
+  refreshSpatialIndex(): Promise<void>;
+  getSpatialCacheStats(): { size: number; maxSize: number; hitRate: number };
   
   // Legacy traffic and incident operations (deprecated - use unified instead)
   getTrafficEvents(): Promise<TrafficEvent[]>;
@@ -1495,6 +1509,78 @@ export class DatabaseStorage implements IStorage {
       .returning();
     
     return upserted;
+  }
+
+  // ============================================================================
+  // 3-STAGE SPATIAL LOOKUP IMPLEMENTATIONS
+  // ============================================================================
+
+  async spatialQuery(query: SpatialQuery): Promise<SpatialQueryResult> {
+    // Only load incidents if spatial index is empty (first query or after restart)
+    if (!spatialLookup.hasData()) {
+      const incidents = await this.getAllUnifiedIncidents();
+      spatialLookup.loadIncidents(incidents);
+    }
+    
+    return spatialLookup.query(query);
+  }
+
+  async spatialQueryInViewport(
+    southWest: [number, number], 
+    northEast: [number, number], 
+    filters?: { category?: string; source?: 'tmr' | 'emergency' | 'user'; activeOnly?: boolean }
+  ): Promise<SpatialQueryResult> {
+    const query: SpatialQuery = {
+      boundingBox: { southWest, northEast },
+      ...(filters?.category && { category: filters.category }),
+      ...(filters?.source && { source: filters.source }),
+      ...(filters?.activeOnly && { activeOnly: filters.activeOnly })
+    };
+    
+    return this.spatialQuery(query);
+  }
+
+  async spatialQueryNearLocation(
+    lat: number, 
+    lng: number, 
+    radiusKm: number, 
+    filters?: { category?: string; source?: 'tmr' | 'emergency' | 'user'; activeOnly?: boolean }
+  ): Promise<SpatialQueryResult> {
+    // Convert radius to approximate bounding box
+    const latOffset = radiusKm / 111; // Rough: 1 degree lat ≈ 111 km
+    const lngOffset = radiusKm / (111 * Math.cos((lat * Math.PI) / 180));
+    
+    const southWest: [number, number] = [lat - latOffset, lng - lngOffset];
+    const northEast: [number, number] = [lat + latOffset, lng + lngOffset];
+    
+    return this.spatialQueryInViewport(southWest, northEast, filters);
+  }
+
+  async refreshSpatialIndex(): Promise<void> {
+    const incidents = await this.getAllUnifiedIncidents();
+    
+    // Ensure all incidents have geocells computed
+    const incidentsWithGeocells = incidents.map(incident => ({
+      ...incident,
+      geocell: incident.geocell || computeGeocellForIncident(incident)
+    }));
+    
+    // Update database with computed geocells
+    for (const incident of incidentsWithGeocells) {
+      if (!incident.geocell) continue;
+      
+      await db
+        .update(unifiedIncidents)
+        .set({ geocell: incident.geocell })
+        .where(eq(unifiedIncidents.id, incident.id));
+    }
+    
+    // Load into spatial lookup engine
+    spatialLookup.loadIncidents(incidentsWithGeocells);
+  }
+
+  getSpatialCacheStats(): { size: number; maxSize: number; hitRate: number; hits: number; misses: number; totalRequests: number; } {
+    return spatialLookup.getCacheStats();
   }
 
 }
