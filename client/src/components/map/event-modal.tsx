@@ -139,6 +139,12 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
     }
     
     if (isEmergencyEvent) {
+      // First try the processed location field which is already properly formatted
+      if (props.location && props.location !== 'Queensland') {
+        return props.location;
+      }
+      
+      // Fallback to original properties if processed location is generic
       const originalProps = props.originalProperties || {};
       const location = originalProps.Location || '';
       const locality = originalProps.Locality || '';
@@ -214,8 +220,8 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
                 <Clock className="w-3 h-3" />
                 <span data-testid="text-event-time">
                   {formatDate(
-                    isTrafficEvent && props.originalProperties?.published ||
-                    isEmergencyEvent && props.originalProperties?.Response_Date ||
+                    isTrafficEvent && (props.originalProperties?.published || props.originalProperties?.last_updated || props.incidentTime) ||
+                    isEmergencyEvent && (props.originalProperties?.Response_Date || props.originalProperties?.LastUpdate || props.incidentTime) ||
                     isUserReported && props.publishedAt ||
                     props.lastUpdated
                   )}
