@@ -32,6 +32,51 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
   const isUserReported = source === 'user';
   const isTrafficEvent = source === 'tmr';
   const isEmergencyEvent = source === 'emergency';
+  
+  // Robust data access helper - checks prioritized key lists across normalized and original properties
+  const valueFrom = (keys: string[], fallback: string = ''): string => {
+    const originalProps = props.originalProperties || {};
+    
+    // First check normalized top-level properties
+    for (const key of keys) {
+      if (props[key] && typeof props[key] === 'string' && props[key].trim()) {
+        return props[key].trim();
+      }
+    }
+    
+    // Then check originalProperties with both camelCase and snake_case variants
+    for (const key of keys) {
+      // Check exact key
+      if (originalProps[key] && typeof originalProps[key] === 'string' && originalProps[key].trim()) {
+        return originalProps[key].trim();
+      }
+      
+      // Check snake_case variant
+      const snakeKey = key.replace(/([A-Z])/g, '_$1').toLowerCase();
+      if (originalProps[snakeKey] && typeof originalProps[snakeKey] === 'string' && originalProps[snakeKey].trim()) {
+        return originalProps[snakeKey].trim();
+      }
+      
+      // Check camelCase variant
+      const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+      if (originalProps[camelKey] && typeof originalProps[camelKey] === 'string' && originalProps[camelKey].trim()) {
+        return originalProps[camelKey].trim();
+      }
+    }
+    
+    return fallback;
+  };
+  
+  // Get nested value helper for complex objects
+  const getNestedValue = (obj: any, path: string): string => {
+    const keys = path.split('.');
+    let current = obj;
+    for (const key of keys) {
+      if (!current || typeof current !== 'object') return '';
+      current = current[key];
+    }
+    return (typeof current === 'string' && current.trim()) ? current.trim() : '';
+  };
   const getIncidentIcon = () => {
     if (isTrafficEvent) {
       const originalProps = props.originalProperties || {};
@@ -111,55 +156,88 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
   
   const getTitle = () => {
     if (isTrafficEvent) {
-      return props.description || props.event_type || "Traffic Event";
+      // Prioritized title keys for traffic events
+      const title = valueFrom([
+        'title', 'heading', 'summary', 'description', 'information', 
+        'event_type', 'eventType', 'category', 'type'
+      ]);
+      return title || "Traffic Event";
     }
-    if (isUserReported) {
-      return props.title || props.description || "Community Report";
-    }
-    // For emergency incidents, create a meaningful title
-    const groupedType = props.GroupedType || '';
-    const locality = props.Locality || '';
     
-    if (groupedType && locality) {
-      return `${groupedType} - ${locality}`;
+    if (isUserReported) {
+      // Prioritized title keys for user reports
+      const title = valueFrom([
+        'title', 'heading', 'subject', 'summary', 'description', 
+        'category', 'incidentType', 'type'
+      ]);
+      return title || "Community Report";
     }
-    return groupedType || "Emergency Incident";
+    
+    if (isEmergencyEvent) {
+      // For emergency incidents, create a meaningful title
+      const groupedType = valueFrom(['GroupedType', 'groupedType', 'type', 'category', 'incidentType']);
+      const locality = valueFrom(['Locality', 'locality', 'location', 'address', 'suburb']);
+      
+      if (groupedType && locality) {
+        return `${groupedType} - ${locality}`;
+      }
+      return groupedType || "Emergency Incident";
+    }
+    
+    // Fallback for any other source types
+    return valueFrom(['title', 'heading', 'description', 'type'], 'Incident');
   };
   
   const getLocation = () => {
     if (isTrafficEvent) {
+      // Check for road summary data first
       const originalProps = props.originalProperties || {};
-      const roadSummary = originalProps.road_summary || {};
-      const roadName = roadSummary.road_name || '';
-      const locality = roadSummary.locality || '';
+      const roadName = getNestedValue(originalProps, 'road_summary.road_name') || 
+                      getNestedValue(originalProps, 'roadSummary.roadName');
+      const locality = getNestedValue(originalProps, 'road_summary.locality') || 
+                      getNestedValue(originalProps, 'roadSummary.locality');
+      
       if (roadName && locality) {
         return `${roadName}, ${locality}`;
       }
-      return roadName || locality || props.location || 'Location not specified';
+      
+      // Fallback to general location fields
+      const location = valueFrom([
+        'location', 'address', 'road', 'street', 'roadName', 'road_name',
+        'locality', 'suburb', 'city', 'place'
+      ]);
+      
+      return roadName || locality || location || 'Location not specified';
     }
     
     if (isEmergencyEvent) {
       // First try the processed location field which is already properly formatted
-      if (props.location && props.location !== 'Queensland') {
-        return props.location;
+      const processedLocation = valueFrom(['location', 'address', 'formattedLocation']);
+      if (processedLocation && processedLocation !== 'Queensland') {
+        return processedLocation;
       }
       
-      // Fallback to original properties if processed location is generic
-      const originalProps = props.originalProperties || {};
-      const location = originalProps.Location || '';
-      const locality = originalProps.Locality || '';
+      // Build location from components
+      const location = valueFrom(['Location', 'location', 'address', 'street', 'road']);
+      const locality = valueFrom(['Locality', 'locality', 'suburb', 'city', 'place']);
       
       if (location && locality && location !== locality) {
         return `${location}, ${locality}`;
       }
-      return location || locality || props.location || 'Location not specified';
+      
+      return location || locality || processedLocation || 'Location not specified';
     }
     
     if (isUserReported) {
-      return props.location || props.locationDescription || 'Location not specified';
+      const location = valueFrom([
+        'location', 'locationDescription', 'address', 'place', 
+        'street', 'road', 'suburb', 'locality'
+      ]);
+      return location || 'Location not specified';
     }
     
-    return props.location || 'Location not specified';
+    // Fallback for any other source types
+    return valueFrom(['location', 'address', 'place'], 'Location not specified');
   };
   
   const getThumbnail = () => {
@@ -181,40 +259,107 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
 
   const formatDate = (dateString: string) => {
     if (!dateString) return 'Unknown';
-    const date = new Date(dateString);
-    const now = new Date();
-    const diff = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
     
-    if (diff < 60) return `${diff} minutes ago`;
-    if (diff < 1440) return `${Math.floor(diff / 60)} hours ago`;
-    return date.toLocaleDateString();
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return 'Unknown';
+      
+      const now = new Date();
+      const diff = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+      
+      if (diff < 1) return 'Just now';
+      if (diff < 60) return `${diff} minutes ago`;
+      if (diff < 1440) return `${Math.floor(diff / 60)} hours ago`;
+      if (diff < 10080) return `${Math.floor(diff / 1440)} days ago`;
+      return date.toLocaleDateString();
+    } catch {
+      return 'Unknown';
+    }
+  };
+  
+  // Get timestamp using robust data access
+  const getTimestamp = () => {
+    if (isTrafficEvent) {
+      return valueFrom([
+        'published', 'publishedAt', 'timestamp', 'lastUpdated', 'incidentTime',
+        'last_updated', 'updated', 'created', 'createdAt', 'date'
+      ]);
+    }
+    
+    if (isEmergencyEvent) {
+      return valueFrom([
+        'published', 'publishedAt', 'timestamp', 'lastUpdated', 'incidentTime',
+        'Response_Date', 'ResponseDate', 'LastUpdate', 'lastUpdate',
+        'updated', 'created', 'createdAt', 'date'
+      ]);
+    }
+    
+    if (isUserReported) {
+      return valueFrom([
+        'publishedAt', 'published', 'timestamp', 'lastUpdated', 'incidentTime',
+        'createdAt', 'created', 'submitted', 'date'
+      ]);
+    }
+    
+    // Fallback for any source
+    return valueFrom([
+      'published', 'publishedAt', 'timestamp', 'lastUpdated', 'incidentTime',
+      'created', 'createdAt', 'date'
+    ]);
   };
 
   const getDescription = () => {
     if (isTrafficEvent) {
-      const originalProps = props.originalProperties || {};
-      return originalProps.description || originalProps.information || props.description || 'No detailed description available';
+      // Prioritized description keys for traffic events
+      const description = valueFrom([
+        'description', 'information', 'details', 'message', 'summary',
+        'advice', 'impact', 'notes', 'comments'
+      ]);
+      return description || 'No detailed description available';
     }
     
     if (isEmergencyEvent) {
-      const originalProps = props.originalProperties || {};
+      // Try to get a direct description first
+      const directDescription = valueFrom([
+        'description', 'information', 'details', 'message', 'summary', 'notes'
+      ]);
+      
+      if (directDescription) {
+        return directDescription;
+      }
+      
       // Build a meaningful description from available emergency data
+      const originalProps = props.originalProperties || {};
       const parts = [];
-      if (originalProps.GroupedType) parts.push(originalProps.GroupedType);
-      if (originalProps.CurrentStatus && originalProps.CurrentStatus !== originalProps.GroupedType) {
-        parts.push(`Status: ${originalProps.CurrentStatus}`);
+      
+      const groupedType = valueFrom(['GroupedType', 'groupedType', 'type', 'category']);
+      const currentStatus = valueFrom(['CurrentStatus', 'currentStatus', 'status']);
+      
+      if (groupedType) parts.push(groupedType);
+      if (currentStatus && currentStatus !== groupedType) {
+        parts.push(`Status: ${currentStatus}`);
       }
-      if (originalProps.VehiclesOnScene > 0) {
-        parts.push(`${originalProps.VehiclesOnScene} vehicles on scene`);
+      
+      // Check vehicles data from both normalized and original props
+      const vehiclesOnScene = props.vehiclesOnScene || originalProps.VehiclesOnScene || originalProps.vehiclesOnScene;
+      if (vehiclesOnScene && vehiclesOnScene > 0) {
+        parts.push(`${vehiclesOnScene} vehicles on scene`);
       }
+      
       return parts.length > 0 ? parts.join(' - ') : 'Emergency response in progress';
     }
     
     if (isUserReported) {
-      return props.description || props.details || 'Community reported incident';
+      // Prioritized description keys for user reports
+      const description = valueFrom([
+        'description', 'details', 'information', 'message', 'summary',
+        'notes', 'comments', 'report'
+      ]);
+      return description || 'Community reported incident';
     }
     
-    return 'No description available';
+    // Fallback for any other source types
+    return valueFrom(['description', 'information', 'details', 'message'], 'No description available');
   };
 
   const getDuration = () => {
@@ -276,12 +421,7 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
               <div className="flex items-center space-x-2 text-xs text-muted-foreground">
                 <Clock className="w-3 h-3" />
                 <span data-testid="text-event-time">
-                  {formatDate(
-                    isTrafficEvent && (props.originalProperties?.published || props.originalProperties?.last_updated || props.incidentTime) ||
-                    isEmergencyEvent && (props.originalProperties?.Response_Date || props.originalProperties?.LastUpdate || props.incidentTime) ||
-                    isUserReported && props.publishedAt ||
-                    props.lastUpdated
-                  )}
+                  {formatDate(getTimestamp())}
                 </span>
               </div>
             </div>
