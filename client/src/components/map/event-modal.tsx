@@ -13,49 +13,50 @@ interface EventModalProps {
 
 export function EventModal({ eventId, onClose }: EventModalProps) {
   const [, setLocation] = useLocation();
-  const { data: trafficData } = useQuery({
-    queryKey: ["/api/traffic/events"],
-  });
   
-  const { data: incidentsData } = useQuery({
-    queryKey: ["/api/incidents"],
+  // Use unified incidents API
+  const { data: unifiedData } = useQuery({
+    queryKey: ["/api/unified"],
   });
 
-  // Find event in either traffic or incidents data
-  let event = null;
-  let eventType = 'traffic';
-  
-  if ((trafficData as any)?.features) {
-    event = (trafficData as any).features.find((f: any) => f.properties.id?.toString() === eventId);
-  }
-  
-  if (!event && (incidentsData as any)?.features) {
-    event = (incidentsData as any).features.find((f: any) => 
-      f.properties.id?.toString() === eventId ||
-      f.properties.Master_Incident_Number === eventId
-    );
-    eventType = 'incident';
-  }
+  // Find event in unified incidents data
+  const event = (unifiedData as any)?.features?.find((f: any) => 
+    f.properties.id?.toString() === eventId ||
+    f.id?.toString() === eventId
+  );
 
   if (!event) return null;
 
   const props = event.properties;
-  const isUserReported = props.userReported;
-  const isTrafficEvent = eventType === 'traffic';
+  const source = props.source; // 'tmr', 'emergency', 'user'
+  const isUserReported = source === 'user';
+  const isTrafficEvent = source === 'tmr';
+  const isEmergencyEvent = source === 'emergency';
   const getIncidentIcon = () => {
     if (isTrafficEvent) {
-      const eventTypeStr = props.event_type?.toLowerCase();
-      if (eventTypeStr === 'crash') return <Car className="w-5 h-5 text-red-500" />;
-      if (eventTypeStr === 'hazard') return <AlertTriangle className="w-5 h-5 text-yellow-500" />;
+      const originalProps = props.originalProperties || {};
+      const eventTypeStr = originalProps.event_type?.toLowerCase() || props.category?.toLowerCase();
+      if (eventTypeStr?.includes('crash') || eventTypeStr?.includes('accident')) return <Car className="w-5 h-5 text-red-500" />;
+      if (eventTypeStr?.includes('hazard')) return <AlertTriangle className="w-5 h-5 text-yellow-500" />;
+      if (eventTypeStr?.includes('congestion')) return <Car className="w-5 h-5 text-orange-500" />;
       return <AlertTriangle className="w-5 h-5 text-orange-500" />;
     }
     
+    if (isEmergencyEvent) {
+      const originalProps = props.originalProperties || {};
+      const groupedType = originalProps.GroupedType || '';
+      if (groupedType.includes('FIRE')) return <AlertTriangle className="w-5 h-5 text-red-600" />;
+      if (groupedType.includes('POLICE')) return <Shield className="w-5 h-5 text-blue-600" />;
+      if (groupedType.includes('AMBULANCE')) return <AlertTriangle className="w-5 h-5 text-green-600" />;
+      return <AlertTriangle className="w-5 h-5 text-red-600" />;
+    }
+    
     if (isUserReported) {
-      const incidentType = props.incidentType;
-      if (['Crime', 'Theft', 'Violence', 'Vandalism'].includes(incidentType)) {
+      const incidentType = props.category || props.incidentType;
+      if (['crime', 'theft', 'violence', 'vandalism'].includes(incidentType?.toLowerCase())) {
         return <Shield className="w-5 h-5 text-purple-600" />;
       }
-      if (incidentType === 'Suspicious') {
+      if (incidentType?.toLowerCase() === 'suspicious') {
         return <Eye className="w-5 h-5 text-amber-600" />;
       }
       return <Zap className="w-5 h-5 text-indigo-600" />;
@@ -90,18 +91,22 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
       };
     }
     
-    // Emergency incident - determine agency
-    const groupedType = props.GroupedType || '';
-    if (groupedType.includes('FIRE')) {
-      return { name: 'QLD Fire & Emergency', agency: 'QFES', initials: 'QFES' };
+    if (isEmergencyEvent) {
+      const originalProps = props.originalProperties || {};
+      const groupedType = originalProps.GroupedType || '';
+      if (groupedType.includes('FIRE')) {
+        return { name: 'QLD Fire & Emergency', agency: 'QFES', initials: 'QFES' };
+      }
+      if (groupedType.includes('POLICE')) {
+        return { name: 'QLD Police Service', agency: 'QPS', initials: 'QPS' };
+      }
+      if (groupedType.includes('AMBULANCE')) {
+        return { name: 'QLD Ambulance Service', agency: 'QAS', initials: 'QAS' };
+      }
+      return { name: 'Emergency Services QLD', agency: 'ESQ', initials: 'ESQ' };
     }
-    if (groupedType.includes('POLICE')) {
-      return { name: 'QLD Police Service', agency: 'QPS', initials: 'QPS' };
-    }
-    if (groupedType.includes('AMBULANCE')) {
-      return { name: 'QLD Ambulance Service', agency: 'QAS', initials: 'QAS' };
-    }
-    return { name: 'Emergency Services QLD', agency: 'ESQ', initials: 'ESQ' };
+    
+    return { name: 'Queensland Services', agency: 'QLD', initials: 'QLD' };
   };
   
   const getTitle = () => {
@@ -123,29 +128,32 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
   
   const getLocation = () => {
     if (isTrafficEvent) {
-      const roadName = props.road_summary?.road_name || '';
-      const locality = props.road_summary?.locality || '';
+      const originalProps = props.originalProperties || {};
+      const roadSummary = originalProps.road_summary || {};
+      const roadName = roadSummary.road_name || '';
+      const locality = roadSummary.locality || '';
       if (roadName && locality) {
         return `${roadName}, ${locality}`;
       }
-      return roadName || locality || 'Location not specified';
+      return roadName || locality || props.location || 'Location not specified';
     }
+    
+    if (isEmergencyEvent) {
+      const originalProps = props.originalProperties || {};
+      const location = originalProps.Location || '';
+      const locality = originalProps.Locality || '';
+      
+      if (location && locality && location !== locality) {
+        return `${location}, ${locality}`;
+      }
+      return location || locality || props.location || 'Location not specified';
+    }
+    
     if (isUserReported) {
-      return props.locationDescription || props.Location || 'Location not specified';
+      return props.location || props.locationDescription || 'Location not specified';
     }
-    // For emergency incidents, build location intelligently
-    const location = props.Location || '';
-    const locality = props.Locality || '';
-    const locationDesc = props.LocationDescription || '';
     
-    if (location && locality && location !== locality) {
-      return `${location}, ${locality}`;
-    }
-    if (location) return location;
-    if (locality) return locality;
-    if (locationDesc) return locationDesc;
-    
-    return 'Location not specified';
+    return props.location || 'Location not specified';
   };
   
   const getThumbnail = () => {
