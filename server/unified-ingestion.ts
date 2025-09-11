@@ -577,7 +577,7 @@ class UnifiedIngestionEngine {
   }
 
   private getTMRSeverity(props: any): 'low' | 'medium' | 'high' | 'critical' {
-    const impact = props.impact?.toLowerCase() || '';
+    const impact = String(props.impact || '').toLowerCase();
     
     if (impact.includes('blocked') || impact.includes('closed')) return 'critical';
     if (impact.includes('major') || impact.includes('severe')) return 'high';
