@@ -272,7 +272,7 @@ class UnifiedIngestionEngine {
 
         return prepareUnifiedIncidentForInsert(incident);
       })
-      .filter((incident: InsertUnifiedIncident | null): incident is InsertUnifiedIncident => incident !== null);
+      .filter((incident): incident is InsertUnifiedIncident => incident !== null);
   }
 
   private normalizeEmergencyIncidents(data: any): InsertUnifiedIncident[] {

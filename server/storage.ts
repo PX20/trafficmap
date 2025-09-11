@@ -73,6 +73,12 @@ import {
   type SelectUnifiedIncident,
   type InsertUnifiedIncident,
   type UnifiedFeature,
+  incidentComments,
+  incidentLikes,
+  type IncidentComment,
+  type InsertIncidentComment,
+  type IncidentLike,
+  type InsertIncidentLike,
   type UnifiedIncidentsResponse,
   generateUnifiedIncidentId,
   prepareUnifiedIncidentForInsert
@@ -243,6 +249,22 @@ export interface IStorage {
   getReports(status?: string): Promise<Report[]>;
   updateReportStatus(reportId: string, status: string, moderatorId?: string, moderatorNotes?: string): Promise<Report | undefined>;
   getReportsByEntity(entityType: string, entityId: string): Promise<Report[]>;
+  
+  // ============================================================================
+  // INCIDENT SOCIAL INTERACTION OPERATIONS - Comments and Likes
+  // ============================================================================
+  
+  // Incident comment operations
+  getIncidentComments(incidentId: string): Promise<IncidentComment[]>;
+  getIncidentCommentsCount(incidentId: string): Promise<number>;
+  createIncidentComment(comment: InsertIncidentComment): Promise<IncidentComment>;
+  deleteIncidentComment(id: string, userId: string): Promise<boolean>;
+  
+  // Incident like operations
+  getIncidentLikes(incidentId: string): Promise<IncidentLike[]>;
+  getIncidentLikesCount(incidentId: string): Promise<number>;
+  toggleIncidentLike(incidentId: string, userId: string): Promise<{ liked: boolean; count: number }>;
+  isIncidentLikedByUser(incidentId: string, userId: string): Promise<boolean>;
 
   // Billing operations
   getBillingPlans(): Promise<BillingPlan[]>;
