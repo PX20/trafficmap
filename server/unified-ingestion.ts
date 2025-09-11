@@ -148,8 +148,9 @@ class UnifiedIngestionEngine {
   // ============================================================================
 
   private async fetchTMRTrafficEvents(): Promise<any> {
-    // Public API - no key required according to TMR specification
-    const url = `${QLD_TRAFFIC_BASE_URL}/events`;
+    // Public API with common public key from TMR specification document
+    const publicApiKey = '3e83add325cbb69ac4d8e5bf433d770b';
+    const url = `${QLD_TRAFFIC_BASE_URL}/events?apikey=${publicApiKey}&f=geojson`;
     
     const response = await fetchWithRetry(url, {
       maxRetries: 3,
@@ -161,7 +162,15 @@ class UnifiedIngestionEngine {
       throw new Error(`TMR API HTTP ${response.status}: ${response.statusText}`);
     }
 
-    return response.json();
+    const data = await response.json();
+    console.log(`📊 TMR API Response structure:`, Object.keys(data));
+    if (data.features) {
+      console.log(`📊 TMR GeoJSON: ${data.features.length} features`);
+    } else if (data.events) {
+      console.log(`📊 TMR Events: ${data.events.length} events`);
+    }
+    
+    return data;
   }
 
   private async fetchEmergencyIncidents(): Promise<any> {
@@ -203,9 +212,30 @@ class UnifiedIngestionEngine {
   // ============================================================================
 
   private normalizeTMREvents(data: any): InsertUnifiedIncident[] {
-    if (!data.features || !Array.isArray(data.features)) return [];
+    let events: any[] = [];
+    
+    // Handle GeoJSON format
+    if (data.type === 'FeatureCollection' && Array.isArray(data.features)) {
+      events = data.features;
+    }
+    // Handle non-GeoJSON format  
+    else if (Array.isArray(data.events)) {
+      events = data.events.map((event: any) => ({
+        type: 'Feature',
+        id: event.id,
+        geometry: event.geometry || null,
+        properties: event
+      }));
+    }
+    
+    if (events.length === 0) {
+      console.log(`⚠️ TMR normalizer: No events found. Data keys:`, Object.keys(data));
+      return [];
+    }
 
-    return data.features
+    console.log(`📊 TMR normalizer: Processing ${events.length} events`);
+
+    return events
       .filter(this.filterRecentEvents)
       .map((feature: any) => {
         const props = feature.properties || {};
@@ -221,14 +251,14 @@ class UnifiedIngestionEngine {
         // Create unified incident
         const incident: InsertUnifiedIncident = {
           source: 'tmr',
-          sourceId: feature.id?.toString() || props.incident_id || `tmr-${Date.now()}`,
-          title: props.headline || props.summary || 'Traffic Event',
-          description: props.description || props.advice || '',
-          location: props.location || '',
+          sourceId: feature.id?.toString() || props.id || `tmr-${Date.now()}`,
+          title: `${props.event_type || 'Traffic'} - ${props.event_subtype || 'Event'}`,
+          description: [props.description, props.advice, props.information].filter(Boolean).join('. '),
+          location: props.road_summary ? `${props.road_summary.road_name}, ${props.road_summary.locality}` : 'Queensland',
           category: 'traffic',
           subcategory: this.getTMRSubcategory(props),
           severity: this.getTMRSeverity(props),
-          status: props.status === 'RESOLVED' ? 'resolved' : 'active',
+          status: props.status === 'Published' ? 'active' : 'resolved',
           geometry,
           centroidLat: centroid.lat,
           centroidLng: centroid.lng,
@@ -484,7 +514,36 @@ class UnifiedIngestionEngine {
           const sumLng = ring.reduce((sum: number, coord: number[]) => sum + coord[0], 0);
           return { lng: sumLng / ring.length, lat: sumLat / ring.length };
         
+        case 'MultiPoint':
+          // Use centroid of all points
+          const points = geometry.coordinates;
+          const multiPointSumLat = points.reduce((sum: number, coord: number[]) => sum + coord[1], 0);
+          const multiPointSumLng = points.reduce((sum: number, coord: number[]) => sum + coord[0], 0);
+          return { lng: multiPointSumLng / points.length, lat: multiPointSumLat / points.length };
+        
+        case 'MultiLineString':
+          // Use midpoint of first linestring
+          const firstLine = geometry.coordinates[0];
+          const multiLineMidIndex = Math.floor(firstLine.length / 2);
+          return { lng: firstLine[multiLineMidIndex][0], lat: firstLine[multiLineMidIndex][1] };
+        
+        case 'MultiPolygon':
+          // Use centroid of first ring of first polygon
+          const firstPolygon = geometry.coordinates[0][0];
+          const multiPolygonSumLat = firstPolygon.reduce((sum: number, coord: number[]) => sum + coord[1], 0);
+          const multiPolygonSumLng = firstPolygon.reduce((sum: number, coord: number[]) => sum + coord[0], 0);
+          return { lng: multiPolygonSumLng / firstPolygon.length, lat: multiPolygonSumLat / firstPolygon.length };
+        
+        case 'GeometryCollection':
+          // Use first supported geometry
+          for (const subGeom of geometry.geometries) {
+            const centroid = this.computeCentroid(subGeom);
+            if (centroid) return centroid;
+          }
+          return null;
+        
         default:
+          console.warn(`Unsupported geometry type: ${geometry.type}`);
           return null;
       }
     } catch (error) {
@@ -506,8 +565,8 @@ class UnifiedIngestionEngine {
   }
 
   private getTMRSubcategory(props: any): string {
-    const impact = props.impact || '';
-    const type = props.event_type || '';
+    const impact = String(props.impact || '').toLowerCase();
+    const type = String(props.event_type || '').toLowerCase();
     
     if (impact.includes('blocked') || impact.includes('closed')) return 'road-closure';
     if (impact.includes('congestion') || impact.includes('delays')) return 'congestion';
