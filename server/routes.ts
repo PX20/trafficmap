@@ -37,9 +37,51 @@ const trafficCache = {
 // Request debouncing to prevent multiple simultaneous API calls
 let ongoingTrafficRequest: Promise<any> | null = null;
 
-const CACHE_DURATION = 60 * 1000; // Force refresh to sync with regional data
+// Enhanced constants for background ingestion architecture
+const CACHE_DURATION = 60 * 1000; // 1 minute base cache for compatibility
+const CACHE_TTL = 3 * 60 * 1000; // 3 minutes TTL
+const CACHE_SWR = 12 * 60 * 1000; // 12 minutes stale-while-revalidate
 const SUNSHINE_COAST_CACHE_DURATION = 60 * 60 * 1000; // 1 hour for Sunshine Coast
 const RETRY_DELAY = 30 * 1000; // 30 seconds delay on rate limit
+
+// QLD Traffic API constants
+const QLD_TRAFFIC_API_KEY = '3e83add325cbb69ac4d8e5bf433d770b';
+const QLD_TRAFFIC_BASE_URL = 'https://api.qldtraffic.qld.gov.au/v2';
+const QLD_EMERGENCY_API = 'https://services7.arcgis.com/V6ZHFr6zdgNZuVG0/arcgis/rest/services/QLDEmergency_Incidents/FeatureServer/0/query';
+
+// Background ingestion system interfaces
+interface CacheEntry {
+  data: any;
+  lastFetch: number;
+  lastSuccessfulFetch: number;
+  lastAttempt: number;
+  retryAfterUntil: number;
+  consecutive429s: number;
+  isStale: boolean;
+  etag?: string;
+  lastModified?: string;
+}
+
+interface CircuitBreaker {
+  isOpen: boolean;
+  openUntil: number;
+  consecutiveFailures: number;
+  lastFailure: number;
+}
+
+// Global cache with SWR support
+const dataCache = new Map<string, CacheEntry>();
+const circuitBreakers = new Map<string, CircuitBreaker>();
+let backgroundPollers = new Map<string, NodeJS.Timeout>();
+
+// Adaptive polling intervals (milliseconds) - aligned with QLD API rate limits (100 requests/minute = 1.67/second)
+const POLLING_INTERVALS = {
+  active: 90000,      // 1.5 minutes when updates detected
+  normal: 300000,     // 5 minutes normal polling  
+  backoff: 900000,    // 15 minutes when rate limited
+  quiet: 1800000,     // 30 minutes when very quiet
+  circuit: 600000     // 10 minutes circuit breaker recovery
+};
 
 // Initialize Stripe
 if (!process.env.STRIPE_SECRET_KEY) {
@@ -91,17 +133,313 @@ function isSunshineCoastLocation(feature: any): boolean {
   );
 }
 
-async function fetchWithRetry(url: string, retryDelay: number = RETRY_DELAY): Promise<Response> {
-  const response = await fetch(url);
+// Enhanced rate limiting with exponential backoff and Retry-After support
+async function fetchWithRetry(url: string, options: {
+  maxRetries?: number;
+  baseDelay?: number;
+  maxDelay?: number;
+  jitter?: boolean;
+} = {}): Promise<Response> {
+  const { maxRetries = 6, baseDelay = 1000, maxDelay = 300000, jitter = true } = options;
   
-  if (response.status === 429) {
-    console.log(`Rate limited, waiting ${retryDelay/1000}s before next attempt...`);
-    throw new Error(`Rate limited - try again in ${retryDelay/1000} seconds`);
+  let lastError: Error | null = null;
+  
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const response = await fetch(url);
+      
+      // Success - only treat 2xx as success
+      if (response.status >= 200 && response.status < 300) {
+        return response;
+      }
+      
+      // Rate limited - implement exponential backoff with Retry-After support
+      if (response.status === 429) {
+        const retryAfter = response.headers.get('Retry-After');
+        let delay: number;
+        
+        if (retryAfter) {
+          // Use Retry-After header (seconds or HTTP-date)
+          const retryAfterNum = parseInt(retryAfter);
+          if (!isNaN(retryAfterNum)) {
+            delay = retryAfterNum * 1000; // Convert to milliseconds
+          } else {
+            // HTTP-date format
+            const retryDate = new Date(retryAfter);
+            delay = Math.max(0, retryDate.getTime() - Date.now());
+          }
+        } else {
+          // Exponential backoff: delay = min(maxDelay, baseDelay * (2^attempt)) + jitter
+          delay = Math.min(maxDelay, baseDelay * Math.pow(2, attempt));
+          if (jitter) {
+            delay += Math.random() * (delay * 0.1); // Add up to 10% jitter
+          }
+        }
+        
+        delay = Math.min(delay, maxDelay);
+        
+        if (attempt === maxRetries) {
+          lastError = new Error(`Rate limited after ${maxRetries} attempts - final delay would be ${delay/1000}s`);
+          break;
+        }
+        
+        console.log(`Rate limited (attempt ${attempt + 1}/${maxRetries + 1}), waiting ${(delay/1000).toFixed(1)}s...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        continue;
+      }
+      
+      // Other HTTP errors
+      lastError = new Error(`HTTP ${response.status}: ${response.statusText}`);
+      
+      // Don't retry on 4xx errors (except 429)
+      if (response.status >= 400 && response.status < 500) {
+        break;
+      }
+      
+      // Retry on 5xx errors with backoff
+      if (attempt < maxRetries) {
+        const delay = Math.min(maxDelay, baseDelay * Math.pow(2, attempt));
+        console.log(`HTTP ${response.status} error (attempt ${attempt + 1}/${maxRetries + 1}), retrying in ${(delay/1000).toFixed(1)}s...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+      
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error('Unknown error');
+      
+      // Network errors - retry with exponential backoff
+      if (attempt < maxRetries) {
+        const delay = Math.min(maxDelay, baseDelay * Math.pow(2, attempt));
+        console.log(`Network error (attempt ${attempt + 1}/${maxRetries + 1}), retrying in ${(delay/1000).toFixed(1)}s...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
   }
   
-  return response;
+  throw lastError || new Error('All retry attempts failed');
 }
 
+
+// Circuit breaker management
+function getCircuitBreaker(service: string): CircuitBreaker {
+  if (!circuitBreakers.has(service)) {
+    circuitBreakers.set(service, {
+      isOpen: false,
+      openUntil: 0,
+      consecutiveFailures: 0,
+      lastFailure: 0
+    });
+  }
+  return circuitBreakers.get(service)!;
+}
+
+function updateCircuitBreaker(service: string, success: boolean) {
+  const breaker = getCircuitBreaker(service);
+  
+  if (success) {
+    breaker.consecutiveFailures = 0;
+    breaker.isOpen = false;
+    breaker.openUntil = 0;
+  } else {
+    breaker.consecutiveFailures++;
+    breaker.lastFailure = Date.now();
+    
+    // Open circuit after 3 consecutive failures
+    if (breaker.consecutiveFailures >= 3) {
+      breaker.isOpen = true;
+      breaker.openUntil = Date.now() + POLLING_INTERVALS.circuit;
+      console.log(`Circuit breaker OPEN for ${service} - cooling down for ${POLLING_INTERVALS.circuit/60000} minutes`);
+    }
+  }
+}
+
+function isCircuitOpen(service: string): boolean {
+  const breaker = getCircuitBreaker(service);
+  if (breaker.isOpen && Date.now() > breaker.openUntil) {
+    breaker.isOpen = false;
+    breaker.openUntil = 0;
+    console.log(`Circuit breaker CLOSED for ${service} - attempting recovery`);
+  }
+  return breaker.isOpen;
+}
+
+// Stale-while-revalidate cache management
+function getCacheEntry(key: string): CacheEntry | null {
+  return dataCache.get(key) || null;
+}
+
+function setCacheEntry(key: string, data: any, metadata: Partial<CacheEntry> = {}) {
+  const now = Date.now();
+  const existing = getCacheEntry(key);
+  
+  dataCache.set(key, {
+    data,
+    lastFetch: now,
+    lastSuccessfulFetch: now,
+    lastAttempt: now,
+    retryAfterUntil: 0,
+    consecutive429s: 0,
+    isStale: false,
+    // Only preserve specific metadata from existing entry
+    etag: metadata.etag ?? existing?.etag,
+    lastModified: metadata.lastModified ?? existing?.lastModified,
+    // Apply any other metadata from parameter
+    ...metadata
+  });
+}
+
+function isCacheStale(entry: CacheEntry): boolean {
+  const age = Date.now() - entry.lastSuccessfulFetch;
+  return age > CACHE_TTL;
+}
+
+function isCacheExpired(entry: CacheEntry): boolean {
+  const age = Date.now() - entry.lastSuccessfulFetch;
+  return age > CACHE_SWR;
+}
+
+// Background ingestion for traffic events
+async function ingestTrafficEvents(adaptive: boolean = true) {
+  const service = 'traffic-events';
+  let nextInterval = POLLING_INTERVALS.normal; // Default interval
+  
+  if (isCircuitOpen(service)) {
+    console.log(`Circuit breaker open for ${service}, skipping ingestion`);
+    if (adaptive) {
+      scheduleNextIngestion(service, POLLING_INTERVALS.circuit);
+    }
+    return;
+  }
+  
+  const cacheKey = 'traffic-events-unified';
+  const cacheEntry = getCacheEntry(cacheKey);
+  
+  // Check if we should skip based on retry-after
+  if (cacheEntry && Date.now() < cacheEntry.retryAfterUntil) {
+    console.log(`Respecting Retry-After for ${service}, skipping until ${new Date(cacheEntry.retryAfterUntil).toLocaleTimeString()}`);
+    if (adaptive) {
+      scheduleNextIngestion(service, Math.max(1000, cacheEntry.retryAfterUntil - Date.now()));
+    }
+    return;
+  }
+  
+  try {
+    console.log(`🔄 Background ingestion: Fetching ${service}...`);
+    const url = `${QLD_TRAFFIC_BASE_URL}/events?apikey=${QLD_TRAFFIC_API_KEY}`;
+    
+    const response = await fetchWithRetry(url, {
+      maxRetries: 3,
+      baseDelay: 2000,
+      maxDelay: 120000
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    
+    const data = await response.json();
+    
+    // Age filter - remove events older than 7 days
+    if (data.features) {
+      const originalCount = data.features.length;
+      data.features = data.features.filter((feature: any) => {
+        const publishedDate = feature.properties?.published ? new Date(feature.properties.published) : null;
+        const lastUpdated = feature.properties?.last_updated ? new Date(feature.properties.last_updated) : null;
+        const eventDate = lastUpdated || publishedDate;
+        
+        if (eventDate && !isNaN(eventDate.getTime())) {
+          const daysSince = (Date.now() - eventDate.getTime()) / (1000 * 60 * 60 * 24);
+          return daysSince <= 7;
+        }
+        return true;
+      });
+      
+      const filteredCount = originalCount - data.features.length;
+      if (filteredCount > 0) {
+        console.log(`📊 Filtered out ${filteredCount} traffic events older than 7 days (${data.features.length} remaining)`);
+      }
+    }
+    
+    // Cache the data
+    setCacheEntry(cacheKey, data, {
+      etag: response.headers.get('etag') || undefined,
+      lastModified: response.headers.get('last-modified') || undefined
+    });
+    
+    updateCircuitBreaker(service, true);
+    
+    // Adaptive polling - reduce interval if we got new data
+    if (adaptive && data.features?.length > 0) {
+      nextInterval = POLLING_INTERVALS.active;
+    } else if (adaptive) {
+      nextInterval = POLLING_INTERVALS.quiet;
+    }
+    
+    console.log(`✅ ${service} ingestion successful: ${data.features?.length || 0} events cached`);
+    
+  } catch (error) {
+    console.error(`❌ ${service} ingestion failed:`, error instanceof Error ? error.message : 'Unknown error');
+    
+    // Handle rate limiting
+    if (error instanceof Error && error.message.includes('Rate limited')) {
+      const cacheEntry = getCacheEntry(cacheKey) || {
+        data: null,
+        lastFetch: 0,
+        lastSuccessfulFetch: 0,
+        lastAttempt: Date.now(),
+        retryAfterUntil: Date.now() + POLLING_INTERVALS.backoff,
+        consecutive429s: 0,
+        isStale: true
+      };
+      
+      cacheEntry.consecutive429s++;
+      cacheEntry.retryAfterUntil = Date.now() + POLLING_INTERVALS.backoff;
+      cacheEntry.lastAttempt = Date.now();
+      
+      setCacheEntry(cacheKey, cacheEntry.data, cacheEntry);
+      nextInterval = POLLING_INTERVALS.backoff;
+    } else {
+      // Other errors - use backoff interval
+      nextInterval = POLLING_INTERVALS.backoff;
+    }
+    
+    updateCircuitBreaker(service, false);
+  } finally {
+    // ALWAYS schedule next ingestion regardless of outcome
+    if (adaptive) {
+      scheduleNextIngestion(service, nextInterval);
+    }
+  }
+}
+
+// Schedule next ingestion with adaptive intervals
+function scheduleNextIngestion(service: string, interval: number) {
+  // Clear existing timer
+  const existingTimer = backgroundPollers.get(service);
+  if (existingTimer) {
+    clearTimeout(existingTimer);
+  }
+  
+  // Schedule next ingestion
+  const timer = setTimeout(() => {
+    if (service === 'traffic-events') {
+      ingestTrafficEvents();
+    }
+    // Add other services here
+  }, interval);
+  
+  backgroundPollers.set(service, timer);
+  console.log(`⏰ Next ${service} ingestion scheduled in ${(interval/60000).toFixed(1)} minutes`);
+}
+
+// Initialize background ingestion system
+function initializeBackgroundIngestion() {
+  console.log('🚀 Initializing background ingestion system...');
+  
+  // Start traffic events ingestion
+  scheduleNextIngestion('traffic-events', 5000); // Start after 5 seconds
+  
+  console.log('✅ Background ingestion system initialized');
+}
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Debug: log the path being used
@@ -425,84 +763,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get traffic events from QLD Traffic API (with enhanced caching)
+  // Get traffic events from cache-only (SWR pattern)
   app.get("/api/traffic/events", async (req, res) => {
     try {
       const { suburb } = req.query;
-      let data;
       
-      // Check if this is a Sunshine Coast request
-      const isSunshineCoastRequest = suburb && 
-        SUNSHINE_COAST_SUBURBS.some(scSuburb => 
-          (suburb as string).toLowerCase().includes(scSuburb)
-        );
-
-      // Use Sunshine Coast specific cache if applicable  
-      if (isSunshineCoastRequest && isCacheValid(trafficCache.sunshineCoast, SUNSHINE_COAST_CACHE_DURATION)) {
-        console.log("Using cached Sunshine Coast traffic data");
-        data = JSON.parse(JSON.stringify(trafficCache.sunshineCoast.data)); // Deep copy to avoid modifying cache
-      } else if (!isSunshineCoastRequest && isCacheValid(trafficCache.events)) {
-        // Check if regional cache is newer than unified cache - if so, sync them
-        if (trafficCache.sunshineCoast.lastFetch > trafficCache.events.lastFetch) {
-          console.log("Regional cache is newer, forcing unified refresh for consistency");
-        } else {
-          console.log("Using cached traffic events data");
-          data = JSON.parse(JSON.stringify(trafficCache.events.data)); // Deep copy to avoid modifying cache
-        }
-      } else {
-        // Try to fetch fresh data with debouncing to prevent multiple simultaneous requests
-        try {
-          if (!ongoingTrafficRequest) {
-            console.log("Fetching fresh traffic events data...");
-            const apiKey = process.env.QLD_TRAFFIC_API_KEY || PUBLIC_API_KEY;
-            
-            ongoingTrafficRequest = fetchWithRetry(`${API_BASE_URL}/v2/events?apikey=${apiKey}`)
-              .then(async (response) => {
-                if (!response.ok) {
-                  throw new Error(`QLD Traffic API error: ${response.status} ${response.statusText}`);
-                }
-                const responseData = await response.json();
-                
-                // Update general cache
-                trafficCache.events = {
-                  data: responseData,
-                  lastFetch: Date.now()
-                };
-                
-                // Also update Sunshine Coast specific cache with filtered data
-                if (responseData.features) {
-                  const sunshineCoastEvents = {
-                    ...responseData,
-                    features: responseData.features.filter(isSunshineCoastLocation)
-                  };
-                  trafficCache.sunshineCoast = {
-                    data: sunshineCoastEvents,
-                    lastFetch: Date.now()
-                  };
-                  console.log(`Cached ${sunshineCoastEvents.features.length} Sunshine Coast events for 1 hour`);
-                }
-                
-                return responseData;
-              })
-              .finally(() => {
-                ongoingTrafficRequest = null; // Clear the ongoing request
-              });
-          } else {
-            console.log("Traffic request already in progress, waiting for it to complete...");
-          }
-          
-          data = await ongoingTrafficRequest;
-          
-        } catch (error) {
-          // If fetch fails and we have old cached data, use it
-          const fallbackCache = isSunshineCoastRequest ? trafficCache.sunshineCoast : trafficCache.events;
-          if (fallbackCache.data) {
-            console.log("API fetch failed, using stale cached data");
-            data = JSON.parse(JSON.stringify(fallbackCache.data)); // Deep copy
-          } else {
-            throw error;
-          }
-        }
+      // Get data from unified cache only - no on-demand network calls
+      const cacheKey = 'traffic-events-unified';
+      const cacheEntry = getCacheEntry(cacheKey);
+      
+      if (!cacheEntry || !cacheEntry.data) {
+        return res.status(503).json({ 
+          message: "Traffic data not available yet - background ingestion in progress",
+          retryAfter: 30 
+        });
+      }
+      
+      // SWR pattern: return cached data immediately
+      let data = JSON.parse(JSON.stringify(cacheEntry.data)); // Deep copy
+      
+      // Trigger background refresh if cache is stale (but don't wait for it)
+      if (isCacheStale(cacheEntry)) {
+        console.log("📡 Cache is stale, triggering background refresh");
+        // Trigger async refresh without blocking the response
+        setImmediate(() => {
+          ingestTrafficEvents(false); // Non-adaptive to avoid scheduling conflicts
+        });
       }
       
       // Filter by region if suburb provided
@@ -2852,6 +3138,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(500).json({ error: 'Webhook processing failed' });
     }
   });
+
+  // Add status endpoint for monitoring data freshness
+  app.get('/api/traffic/status', (req, res) => {
+    const trafficCache = getCacheEntry('traffic-events-unified');
+    const circuitBreaker = getCircuitBreaker('traffic-events');
+    
+    const status = {
+      isStale: trafficCache ? isCacheStale(trafficCache) : true,
+      isExpired: trafficCache ? isCacheExpired(trafficCache) : true,
+      lastSuccessfulFetch: trafficCache?.lastSuccessfulFetch || null,
+      lastAttempt: trafficCache?.lastAttempt || null,
+      retryAfterUntil: trafficCache?.retryAfterUntil || null,
+      consecutive429s: trafficCache?.consecutive429s || 0,
+      circuitOpen: circuitBreaker.isOpen,
+      circuitConsecutiveFailures: circuitBreaker.consecutiveFailures,
+      cacheAge: trafficCache ? Date.now() - trafficCache.lastSuccessfulFetch : null,
+      nextScheduledIngestion: null // Could track this if needed
+    };
+    
+    res.json(status);
+  });
+
+  // Initialize background ingestion system
+  console.log('🚀 Initializing background ingestion system...');
+  initializeBackgroundIngestion();
+  console.log('✅ Background ingestion system initialized');
 
   const httpServer = createServer(app);
   return httpServer;
