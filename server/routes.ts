@@ -3056,6 +3056,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   initializeBackgroundIngestion();
   console.log('✅ Background ingestion system initialized');
 
+  // Initialize unified ingestion pipeline for multi-source consolidation
+  console.log('🚀 Initializing Unified Ingestion Pipeline...');
+  const { unifiedIngestion } = await import('./unified-ingestion');
+  await unifiedIngestion.initialize();
+  console.log('✅ Unified Ingestion Pipeline initialized');
+
   const httpServer = createServer(app);
   return httpServer;
 }
