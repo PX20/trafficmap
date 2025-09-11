@@ -568,13 +568,23 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
                         {props.originalProperties.impact && (
                           <div>
                             <h5 className="text-xs font-medium text-orange-800 dark:text-orange-200 mb-1">Traffic Impact</h5>
-                            <p className="text-xs text-orange-700 dark:text-orange-300" data-testid="traffic-impact">{props.originalProperties.impact}</p>
+                            <p className="text-xs text-orange-700 dark:text-orange-300" data-testid="traffic-impact">
+                              {typeof props.originalProperties.impact === 'string' 
+                                ? props.originalProperties.impact 
+                                : extractStringFromObject(props.originalProperties.impact) || 'Traffic impact information available'
+                              }
+                            </p>
                           </div>
                         )}
                         {props.originalProperties.advice && (
                           <div>
                             <h5 className="text-xs font-medium text-orange-800 dark:text-orange-200 mb-1">Advice</h5>
-                            <p className="text-xs text-orange-700 dark:text-orange-300" data-testid="traffic-advice">{props.originalProperties.advice}</p>
+                            <p className="text-xs text-orange-700 dark:text-orange-300" data-testid="traffic-advice">
+                              {typeof props.originalProperties.advice === 'string' 
+                                ? props.originalProperties.advice 
+                                : extractStringFromObject(props.originalProperties.advice) || 'Traffic advice information available'
+                              }
+                            </p>
                           </div>
                         )}
                       </div>
