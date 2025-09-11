@@ -5,11 +5,32 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useTrafficData } from "@/hooks/use-traffic-data";
 
+// Safe property accessor for unified and legacy data structures
+const getProperty = (properties: any, key: string, fallback: any = '') => {
+  // Try unified structure first (top-level properties)
+  if (properties && properties[key] !== undefined) {
+    return properties[key];
+  }
+  // Try original properties for source-specific data
+  if (properties && properties.originalProperties && properties.originalProperties[key] !== undefined) {
+    return properties.originalProperties[key];
+  }
+  // Return fallback
+  return fallback;
+};
+
+// Safe string accessor with toLowerCase
+const getSafeString = (properties: any, key: string, fallback: string = '') => {
+  const value = getProperty(properties, key, fallback);
+  return typeof value === 'string' ? value.toLowerCase() : fallback;
+};
+
 // Import QFES detection function from the hook
 const isQFESIncident = (incident: any) => {
-  const incidentType = incident.properties?.incidentType?.toLowerCase() || '';
-  const groupedType = incident.properties?.GroupedType?.toLowerCase() || '';
-  const description = incident.properties?.description?.toLowerCase() || '';
+  const props = incident.properties || {};
+  const incidentType = getSafeString(props, 'incidentType');
+  const groupedType = getSafeString(props, 'GroupedType');
+  const description = getSafeString(props, 'description');
   
   return incidentType.includes('fire') || 
          groupedType.includes('fire') ||
@@ -147,7 +168,7 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
     // Add event markers (already filtered by shared hook)
     if ((filteredEventsData as any)?.features) {
       (filteredEventsData as any).features.forEach((feature: any) => {
-        const eventType = feature.properties.event_type?.toLowerCase();
+        const eventType = getSafeString(feature.properties, 'event_type');
 
         if (feature.geometry) {
           let coords: [number, number] | null = null;
@@ -280,13 +301,13 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
   const categorizeIncident = (incident: any) => {
     const props = incident.properties || {};
     
-    const datasource = props.datasource?.source_name || props.source || props.datasource || 'unknown';
-    const providedBy = props.datasource?.provided_by || '';
+    const datasource = getProperty(props, 'datasource')?.source_name || getProperty(props, 'source') || getProperty(props, 'datasource', 'unknown');
+    const providedBy = getProperty(props, 'datasource')?.provided_by || '';
     
     // Handle traffic events from QLD Traffic API
-    const trafficEventType = props.event_type || props.eventType || props.type;
+    const trafficEventType = getProperty(props, 'event_type') || getProperty(props, 'eventType') || getProperty(props, 'type');
     if (trafficEventType) {
-      const eventTypeLower = trafficEventType.toLowerCase();
+      const eventTypeLower = getSafeString(props, 'event_type') || getSafeString(props, 'eventType') || getSafeString(props, 'type');
       // All traffic events go to Infrastructure & Hazards
       if (eventTypeLower === 'crash' || eventTypeLower === 'hazard' || 
           eventTypeLower === 'roadworks' || eventTypeLower === 'special_event' ||
@@ -296,30 +317,30 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
     }
     
     // For user-reported incidents, use their categoryId
-    if (props.userReported && props.categoryId) {
-      return props.categoryId;
+    if (getProperty(props, 'userReported') && getProperty(props, 'categoryId')) {
+      return getProperty(props, 'categoryId');
     }
     
     // Handle ESQ (Emergency Services Queensland) incidents
-    if (datasource === 'ESQ' || providedBy?.includes('Emergency') || props.source === 'ESQ') {
+    if (datasource === 'ESQ' || providedBy?.includes('Emergency') || getProperty(props, 'source') === 'ESQ') {
       return '54d31da5-fc10-4ad2-8eca-04bac680e668'; // Emergency Situations
     }
     
     // Handle TMR (Transport and Main Roads) incidents  
-    if (datasource === 'TMR' || datasource === 'EPS' || providedBy?.includes('Transport') || providedBy?.includes('Main Roads') || props.source === 'TMR') {
+    if (datasource === 'TMR' || datasource === 'EPS' || providedBy?.includes('Transport') || providedBy?.includes('Main Roads') || getProperty(props, 'source') === 'TMR') {
       return '9b1d58d9-cfd1-4c31-93e9-754276a5f265'; // Infrastructure & Hazards
     }
     
     // Handle QPS (Queensland Police Service) incidents
-    if (datasource === 'QPS' || providedBy?.includes('Police') || props.source === 'QPS') {
+    if (datasource === 'QPS' || providedBy?.includes('Police') || getProperty(props, 'source') === 'QPS') {
       return '792759f4-1b98-4665-b14c-44a54e9969e9'; // Safety & Crime
     }
     
     // For QFES incidents, categorize based on GroupedType and other properties
-    const groupedType = props.GroupedType?.toLowerCase() || '';
-    const eventType = props.Event_Type?.toLowerCase() || '';
-    const description = (props.description || '').toLowerCase();
-    const title = (incident.title || '').toLowerCase();
+    const groupedType = getSafeString(props, 'GroupedType');
+    const eventType = getSafeString(props, 'Event_Type');
+    const description = getSafeString(props, 'description');
+    const title = getSafeString(incident, 'title');
     
     // Safety & Crime - Police incidents, suspicious activity, break-ins
     if (groupedType.includes('police') || 
@@ -378,7 +399,7 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
   const getMarkerColor = (markerType: string, properties?: any) => {
     // Check if incident is completed/closed - show grey for historical context
     if (properties) {
-      const status = (properties.status || properties.CurrentStatus || '').toLowerCase();
+      const status = getSafeString(properties, 'status') || getSafeString(properties, 'CurrentStatus');
       
       // Check for explicitly completed statuses (user-reported incidents)
       if (status === 'completed' || status === 'closed' || status === 'resolved' || status === 'cleared' || status === 'patrolled') {
@@ -387,11 +408,12 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
       
       // Time-based auto-greying for ALL incident types (TMR, ESQ, QFES)
       // Check multiple timestamp fields used by different services
-      const timestamp = properties.last_updated || 
-                       properties.Response_Date || 
-                       properties.published || 
-                       properties.createdAt || 
-                       properties.timeReported;
+      const timestamp = getProperty(properties, 'lastUpdated') || 
+                       getProperty(properties, 'last_updated') || 
+                       getProperty(properties, 'Response_Date') || 
+                       getProperty(properties, 'published') || 
+                       getProperty(properties, 'createdAt') || 
+                       getProperty(properties, 'timeReported');
       
       if (timestamp) {
         const incidentTime = new Date(timestamp);
@@ -404,14 +426,14 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
         // - User reports: 48 hours (may take longer to verify/resolve)
         
         const isQFES = isQFESIncident({ properties });
-        const isTrafficEvent = properties.eventType || markerType === 'traffic' || markerType === 'crash' || markerType === 'hazard';
-        const isUserReport = properties.userId || properties.reportedBy;
+        const isTrafficEvent = getProperty(properties, 'eventType') || markerType === 'traffic' || markerType === 'crash' || markerType === 'hazard';
+        const isUserReport = getProperty(properties, 'userId') || getProperty(properties, 'reportedBy');
         
         let greyingHours = 24; // Default TMR/ESQ incidents
         
         if (isQFES) {
           greyingHours = 8; // QFES incidents grey out after 8 hours
-        } else if (properties.incidentType?.toLowerCase().includes('emergency') || markerType === 'emergency') {
+        } else if (getSafeString(properties, 'incidentType').includes('emergency') || markerType === 'emergency') {
           greyingHours = 12; // ESQ emergency incidents grey out after 12 hours  
         } else if (isUserReport) {
           greyingHours = 48; // User reports grey out after 48 hours
@@ -710,9 +732,9 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
       }
     };
     
-    const agencyInfo = getAgencyInfo(properties.GroupedType || '');
-    const shortIncidentDesc = (properties.GroupedType || 'Emergency Incident')
-      .substring(0, 60) + ((properties.GroupedType || '').length > 60 ? '...' : '');
+    const groupedType = getProperty(properties, 'GroupedType') || '';
+    const agencyInfo = getAgencyInfo(groupedType);
+    const shortIncidentDesc = groupedType.substring(0, 60) + (groupedType.length > 60 ? '...' : '');
     
     return `
       <div class="relative p-4 min-w-[340px] max-w-[400px] bg-gradient-to-br from-white via-red-50/30 to-white rounded-2xl shadow-2xl border border-gray-100 font-sans overflow-hidden backdrop-blur-sm">
@@ -734,7 +756,7 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
                 <svg class="w-3.5 h-3.5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
                   <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path>
                 </svg>
-                <span class="font-medium">${formatEventTime(properties.Response_Date || properties.createdAt || properties.published)}</span>
+                <span class="font-medium">${formatEventTime(getProperty(properties, 'Response_Date') || getProperty(properties, 'createdAt') || getProperty(properties, 'published'))}</span>
               </div>
             </div>
           </div>
@@ -773,7 +795,7 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
         <!-- Enhanced Footer -->
         <div class="relative flex items-center justify-between pt-3 border-t border-gray-200/50">
           <div class="flex items-center gap-4">
-            <button onclick="window.likeIncident('${properties.Master_Incident_Number || properties.id}', 'emergency', event)" class="group flex items-center gap-2 px-3 py-2 rounded-xl bg-white/80 hover:bg-blue-50 border border-gray-200 hover:border-blue-300 transition-all duration-200 shadow-sm hover:shadow-md like-button" data-incident-id="${properties.Master_Incident_Number || properties.id}">
+            <button onclick="window.likeIncident('${getProperty(properties, 'Master_Incident_Number') || getProperty(properties, 'id')}', 'emergency', event)" class="group flex items-center gap-2 px-3 py-2 rounded-xl bg-white/80 hover:bg-blue-50 border border-gray-200 hover:border-blue-300 transition-all duration-200 shadow-sm hover:shadow-md like-button" data-incident-id="${getProperty(properties, 'Master_Incident_Number') || getProperty(properties, 'id')}">
               <svg class="w-4 h-4 text-gray-500 group-hover:text-blue-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
               </svg>

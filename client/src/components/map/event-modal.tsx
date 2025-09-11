@@ -44,7 +44,7 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
     
     if (isEmergencyEvent) {
       const originalProps = props.originalProperties || {};
-      const groupedType = originalProps.GroupedType || '';
+      const groupedType = (originalProps.GroupedType || '').toUpperCase();
       if (groupedType.includes('FIRE')) return <AlertTriangle className="w-5 h-5 text-red-600" />;
       if (groupedType.includes('POLICE')) return <Shield className="w-5 h-5 text-blue-600" />;
       if (groupedType.includes('AMBULANCE')) return <AlertTriangle className="w-5 h-5 text-green-600" />;
@@ -93,7 +93,7 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
     
     if (isEmergencyEvent) {
       const originalProps = props.originalProperties || {};
-      const groupedType = originalProps.GroupedType || '';
+      const groupedType = (originalProps.GroupedType || '').toUpperCase();
       if (groupedType.includes('FIRE')) {
         return { name: 'QLD Fire & Emergency', agency: 'QFES', initials: 'QFES' };
       }
@@ -206,13 +206,19 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
                 onClick={isUserReported && props.reporterId ? () => {
                   setLocation(`/users/${props.reporterId}`);
                 } : undefined}
+                data-testid="link-reporter-profile"
               >
                 {reporterInfo.name}
               </p>
               <div className="flex items-center space-x-2 text-xs text-muted-foreground">
                 <Clock className="w-3 h-3" />
                 <span data-testid="text-event-time">
-                  {formatDate(props.published || props.Response_Date || props.createdAt || props.timeReported)}
+                  {formatDate(
+                    isTrafficEvent && props.originalProperties?.published ||
+                    isEmergencyEvent && props.originalProperties?.Response_Date ||
+                    isUserReported && props.publishedAt ||
+                    props.lastUpdated
+                  )}
                 </span>
               </div>
             </div>
@@ -246,14 +252,92 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
             </div>
           )}
 
-          {/* Compact Status Info */}
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <Badge variant="secondary" className="text-xs">
-              {isTrafficEvent ? props.event_type : (props.CurrentStatus || props.status || reporterInfo.agency)}
-            </Badge>
-            <span className="text-xs">
-              {isTrafficEvent ? 'Traffic Update' : (isUserReported ? 'Community Report' : 'Emergency Response')}
-            </span>
+          {/* Enhanced Status Info - Source Specific */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-xs">
+              <Badge variant="secondary" className="text-xs" data-testid="badge-incident-status">
+                {isTrafficEvent && (props.originalProperties?.event_type || props.category) || 
+                 isEmergencyEvent && (props.originalProperties?.CurrentStatus || props.status) || 
+                 isUserReported && (props.status || props.category) || 
+                 'Active'}
+              </Badge>
+              <Badge variant="outline" className={`text-xs ${
+                props.severity === 'critical' ? 'border-red-500 text-red-600' :
+                props.severity === 'high' ? 'border-orange-500 text-orange-600' :
+                props.severity === 'medium' ? 'border-yellow-500 text-yellow-600' :
+                'border-green-500 text-green-600'
+              }`} data-testid="badge-priority">
+                {props.severity || 'Low'} Priority
+              </Badge>
+            </div>
+
+            {/* TMR Traffic Rich Information */}
+            {isTrafficEvent && props.originalProperties && (
+              <div className="text-xs space-y-1" data-testid="traffic-details">
+                {props.originalProperties.advice && (
+                  <p className="text-muted-foreground italic" data-testid="traffic-advice">{props.originalProperties.advice}</p>
+                )}
+                {props.originalProperties.impact && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Traffic impact:</span>
+                    <span className="font-medium" data-testid="traffic-impact">{props.originalProperties.impact}</span>
+                  </div>
+                )}
+                {props.originalProperties.information && (
+                  <p className="text-sm text-muted-foreground" data-testid="traffic-info">{props.originalProperties.information}</p>
+                )}
+              </div>
+            )}
+
+            {/* Emergency Services Rich Information */}
+            {isEmergencyEvent && props.originalProperties && (
+              <div className="text-xs space-y-1" data-testid="emergency-details">
+                {props.originalProperties.VehiclesOnScene !== undefined && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Vehicles on scene:</span>
+                    <span className="font-medium" data-testid="vehicles-on-scene">{props.originalProperties.VehiclesOnScene}</span>
+                  </div>
+                )}
+                {props.originalProperties.VehiclesOnRoute !== undefined && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">En route:</span>
+                    <span className="font-medium" data-testid="vehicles-en-route">{props.originalProperties.VehiclesOnRoute}</span>
+                  </div>
+                )}
+                {props.originalProperties.VehiclesAssigned !== undefined && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Total assigned:</span>
+                    <span className="font-medium" data-testid="vehicles-assigned">{props.originalProperties.VehiclesAssigned}</span>
+                  </div>
+                )}
+                {props.originalProperties.Master_Incident_Number && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Incident #:</span>
+                    <span className="font-mono text-xs" data-testid="incident-number">{props.originalProperties.Master_Incident_Number}</span>
+                  </div>
+                )}
+                {props.originalProperties.Jurisdiction && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Jurisdiction:</span>
+                    <span className="font-medium" data-testid="jurisdiction">{props.originalProperties.Jurisdiction}</span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* User Report Verification */}
+            {isUserReported && (
+              <div className="text-xs space-y-1" data-testid="user-report-details">
+                {props.verificationStatus && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Verification:</span>
+                    <Badge variant={props.verificationStatus === 'official_verified' ? 'default' : 'outline'} className="text-xs" data-testid="verification-status">
+                      {props.verificationStatus.replace('_', ' ')}
+                    </Badge>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Social Interaction Bar */}
