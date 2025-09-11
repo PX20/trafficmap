@@ -30,51 +30,18 @@ const PUBLIC_API_KEY = "3e83add325cbb69ac4d8e5bf433d770b";
 
 // Legacy cache structures removed - now using unified SWR dataCache system
 
-// Enhanced constants for background ingestion architecture
-const CACHE_DURATION = 60 * 1000; // 1 minute base cache for compatibility
-const CACHE_TTL = 3 * 60 * 1000; // 3 minutes TTL
-const CACHE_SWR = 12 * 60 * 1000; // 12 minutes stale-while-revalidate
-const SUNSHINE_COAST_CACHE_DURATION = 60 * 60 * 1000; // 1 hour for Sunshine Coast
-const RETRY_DELAY = 30 * 1000; // 30 seconds delay on rate limit
+// Legacy constants removed - unified pipeline handles all caching
 
 // QLD Traffic API constants
 const QLD_TRAFFIC_API_KEY = '3e83add325cbb69ac4d8e5bf433d770b';
 const QLD_TRAFFIC_BASE_URL = 'https://api.qldtraffic.qld.gov.au/v2';
 const QLD_EMERGENCY_API = 'https://services7.arcgis.com/V6ZHFr6zdgNZuVG0/arcgis/rest/services/QLDEmergency_Incidents/FeatureServer/0/query';
 
-// Background ingestion system interfaces
-interface CacheEntry {
-  data: any;
-  lastFetch: number;
-  lastSuccessfulFetch: number;
-  lastAttempt: number;
-  retryAfterUntil: number;
-  consecutive429s: number;
-  isStale: boolean;
-  etag?: string;
-  lastModified?: string;
-}
+// Legacy interfaces removed - unified pipeline uses its own caching
 
-interface CircuitBreaker {
-  isOpen: boolean;
-  openUntil: number;
-  consecutiveFailures: number;
-  lastFailure: number;
-}
+// Legacy cache removed - unified pipeline manages its own cache
 
-// Global cache with SWR support
-const dataCache = new Map<string, CacheEntry>();
-const circuitBreakers = new Map<string, CircuitBreaker>();
-let backgroundPollers = new Map<string, NodeJS.Timeout>();
-
-// Adaptive polling intervals (milliseconds) - aligned with QLD API rate limits (100 requests/minute = 1.67/second)
-const POLLING_INTERVALS = {
-  active: 90000,      // 1.5 minutes when updates detected
-  normal: 300000,     // 5 minutes normal polling  
-  backoff: 900000,    // 15 minutes when rate limited
-  quiet: 1800000,     // 30 minutes when very quiet
-  circuit: 600000     // 10 minutes circuit breaker recovery
-};
+// Legacy polling intervals removed - unified pipeline manages its own timing
 
 // Initialize Stripe
 if (!process.env.STRIPE_SECRET_KEY) {
@@ -112,9 +79,6 @@ const SUNSHINE_COAST_SUBURBS = [
   'warana', 'wurtulla', 'landsborough', 'beerwah', 'glass house mountains'
 ];
 
-function isCacheValid(cacheEntry: any, duration: number = CACHE_DURATION): boolean {
-  return cacheEntry.data && (Date.now() - cacheEntry.lastFetch) < duration;
-}
 
 function isSunshineCoastLocation(feature: any): boolean {
   const locality = feature.properties?.road_summary?.locality?.toLowerCase() || '';
@@ -126,313 +90,15 @@ function isSunshineCoastLocation(feature: any): boolean {
   );
 }
 
-// Enhanced rate limiting with exponential backoff and Retry-After support
-async function fetchWithRetry(url: string, options: {
-  maxRetries?: number;
-  baseDelay?: number;
-  maxDelay?: number;
-  jitter?: boolean;
-} = {}): Promise<Response> {
-  const { maxRetries = 6, baseDelay = 1000, maxDelay = 300000, jitter = true } = options;
-  
-  let lastError: Error | null = null;
-  
-  for (let attempt = 0; attempt <= maxRetries; attempt++) {
-    try {
-      const response = await fetch(url);
-      
-      // Success - only treat 2xx as success
-      if (response.status >= 200 && response.status < 300) {
-        return response;
-      }
-      
-      // Rate limited - implement exponential backoff with Retry-After support
-      if (response.status === 429) {
-        const retryAfter = response.headers.get('Retry-After');
-        let delay: number;
-        
-        if (retryAfter) {
-          // Use Retry-After header (seconds or HTTP-date)
-          const retryAfterNum = parseInt(retryAfter);
-          if (!isNaN(retryAfterNum)) {
-            delay = retryAfterNum * 1000; // Convert to milliseconds
-          } else {
-            // HTTP-date format
-            const retryDate = new Date(retryAfter);
-            delay = Math.max(0, retryDate.getTime() - Date.now());
-          }
-        } else {
-          // Exponential backoff: delay = min(maxDelay, baseDelay * (2^attempt)) + jitter
-          delay = Math.min(maxDelay, baseDelay * Math.pow(2, attempt));
-          if (jitter) {
-            delay += Math.random() * (delay * 0.1); // Add up to 10% jitter
-          }
-        }
-        
-        delay = Math.min(delay, maxDelay);
-        
-        if (attempt === maxRetries) {
-          lastError = new Error(`Rate limited after ${maxRetries} attempts - final delay would be ${delay/1000}s`);
-          break;
-        }
-        
-        console.log(`Rate limited (attempt ${attempt + 1}/${maxRetries + 1}), waiting ${(delay/1000).toFixed(1)}s...`);
-        await new Promise(resolve => setTimeout(resolve, delay));
-        continue;
-      }
-      
-      // Other HTTP errors
-      lastError = new Error(`HTTP ${response.status}: ${response.statusText}`);
-      
-      // Don't retry on 4xx errors (except 429)
-      if (response.status >= 400 && response.status < 500) {
-        break;
-      }
-      
-      // Retry on 5xx errors with backoff
-      if (attempt < maxRetries) {
-        const delay = Math.min(maxDelay, baseDelay * Math.pow(2, attempt));
-        console.log(`HTTP ${response.status} error (attempt ${attempt + 1}/${maxRetries + 1}), retrying in ${(delay/1000).toFixed(1)}s...`);
-        await new Promise(resolve => setTimeout(resolve, delay));
-      }
-      
-    } catch (error) {
-      lastError = error instanceof Error ? error : new Error('Unknown error');
-      
-      // Network errors - retry with exponential backoff
-      if (attempt < maxRetries) {
-        const delay = Math.min(maxDelay, baseDelay * Math.pow(2, attempt));
-        console.log(`Network error (attempt ${attempt + 1}/${maxRetries + 1}), retrying in ${(delay/1000).toFixed(1)}s...`);
-        await new Promise(resolve => setTimeout(resolve, delay));
-      }
-    }
-  }
-  
-  throw lastError || new Error('All retry attempts failed');
-}
+// Legacy fetchWithRetry removed - unified pipeline handles retries
 
 
-// Circuit breaker management
-function getCircuitBreaker(service: string): CircuitBreaker {
-  if (!circuitBreakers.has(service)) {
-    circuitBreakers.set(service, {
-      isOpen: false,
-      openUntil: 0,
-      consecutiveFailures: 0,
-      lastFailure: 0
-    });
-  }
-  return circuitBreakers.get(service)!;
-}
+// Legacy circuit breaker functions removed - unified pipeline handles circuit breaking
 
-function updateCircuitBreaker(service: string, success: boolean) {
-  const breaker = getCircuitBreaker(service);
-  
-  if (success) {
-    breaker.consecutiveFailures = 0;
-    breaker.isOpen = false;
-    breaker.openUntil = 0;
-  } else {
-    breaker.consecutiveFailures++;
-    breaker.lastFailure = Date.now();
-    
-    // Open circuit after 3 consecutive failures
-    if (breaker.consecutiveFailures >= 3) {
-      breaker.isOpen = true;
-      breaker.openUntil = Date.now() + POLLING_INTERVALS.circuit;
-      console.log(`Circuit breaker OPEN for ${service} - cooling down for ${POLLING_INTERVALS.circuit/60000} minutes`);
-    }
-  }
-}
+// Legacy cache management functions removed - unified pipeline handles caching
 
-function isCircuitOpen(service: string): boolean {
-  const breaker = getCircuitBreaker(service);
-  if (breaker.isOpen && Date.now() > breaker.openUntil) {
-    breaker.isOpen = false;
-    breaker.openUntil = 0;
-    console.log(`Circuit breaker CLOSED for ${service} - attempting recovery`);
-  }
-  return breaker.isOpen;
-}
 
-// Stale-while-revalidate cache management
-function getCacheEntry(key: string): CacheEntry | null {
-  return dataCache.get(key) || null;
-}
 
-function setCacheEntry(key: string, data: any, metadata: Partial<CacheEntry> = {}) {
-  const now = Date.now();
-  const existing = getCacheEntry(key);
-  
-  dataCache.set(key, {
-    data,
-    lastFetch: now,
-    lastSuccessfulFetch: now,
-    lastAttempt: now,
-    retryAfterUntil: 0,
-    consecutive429s: 0,
-    isStale: false,
-    // Only preserve specific metadata from existing entry
-    etag: metadata.etag ?? existing?.etag,
-    lastModified: metadata.lastModified ?? existing?.lastModified,
-    // Apply any other metadata from parameter
-    ...metadata
-  });
-}
-
-function isCacheStale(entry: CacheEntry): boolean {
-  const age = Date.now() - entry.lastSuccessfulFetch;
-  return age > CACHE_TTL;
-}
-
-function isCacheExpired(entry: CacheEntry): boolean {
-  const age = Date.now() - entry.lastSuccessfulFetch;
-  return age > CACHE_SWR;
-}
-
-// Background ingestion for traffic events
-async function ingestTrafficEvents(adaptive: boolean = true) {
-  const service = 'traffic-events';
-  let nextInterval = POLLING_INTERVALS.normal; // Default interval
-  
-  if (isCircuitOpen(service)) {
-    console.log(`Circuit breaker open for ${service}, skipping ingestion`);
-    if (adaptive) {
-      scheduleNextIngestion(service, POLLING_INTERVALS.circuit);
-    }
-    return;
-  }
-  
-  const cacheKey = 'traffic-events-unified';
-  const cacheEntry = getCacheEntry(cacheKey);
-  
-  // Check if we should skip based on retry-after
-  if (cacheEntry && Date.now() < cacheEntry.retryAfterUntil) {
-    console.log(`Respecting Retry-After for ${service}, skipping until ${new Date(cacheEntry.retryAfterUntil).toLocaleTimeString()}`);
-    if (adaptive) {
-      scheduleNextIngestion(service, Math.max(1000, cacheEntry.retryAfterUntil - Date.now()));
-    }
-    return;
-  }
-  
-  try {
-    console.log(`🔄 Background ingestion: Fetching ${service}...`);
-    const url = `${QLD_TRAFFIC_BASE_URL}/events?apikey=${QLD_TRAFFIC_API_KEY}`;
-    
-    const response = await fetchWithRetry(url, {
-      maxRetries: 3,
-      baseDelay: 2000,
-      maxDelay: 120000
-    });
-    
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-    
-    const data = await response.json();
-    
-    // Age filter - remove events older than 7 days
-    if (data.features) {
-      const originalCount = data.features.length;
-      data.features = data.features.filter((feature: any) => {
-        const publishedDate = feature.properties?.published ? new Date(feature.properties.published) : null;
-        const lastUpdated = feature.properties?.last_updated ? new Date(feature.properties.last_updated) : null;
-        const eventDate = lastUpdated || publishedDate;
-        
-        if (eventDate && !isNaN(eventDate.getTime())) {
-          const daysSince = (Date.now() - eventDate.getTime()) / (1000 * 60 * 60 * 24);
-          return daysSince <= 7;
-        }
-        return true;
-      });
-      
-      const filteredCount = originalCount - data.features.length;
-      if (filteredCount > 0) {
-        console.log(`📊 Filtered out ${filteredCount} traffic events older than 7 days (${data.features.length} remaining)`);
-      }
-    }
-    
-    // Cache the data
-    setCacheEntry(cacheKey, data, {
-      etag: response.headers.get('etag') || undefined,
-      lastModified: response.headers.get('last-modified') || undefined
-    });
-    
-    updateCircuitBreaker(service, true);
-    
-    // Adaptive polling - reduce interval if we got new data
-    if (adaptive && data.features?.length > 0) {
-      nextInterval = POLLING_INTERVALS.active;
-    } else if (adaptive) {
-      nextInterval = POLLING_INTERVALS.quiet;
-    }
-    
-    console.log(`✅ ${service} ingestion successful: ${data.features?.length || 0} events cached`);
-    
-  } catch (error) {
-    console.error(`❌ ${service} ingestion failed:`, error instanceof Error ? error.message : 'Unknown error');
-    
-    // Handle rate limiting
-    if (error instanceof Error && error.message.includes('Rate limited')) {
-      const cacheEntry = getCacheEntry(cacheKey) || {
-        data: null,
-        lastFetch: 0,
-        lastSuccessfulFetch: 0,
-        lastAttempt: Date.now(),
-        retryAfterUntil: Date.now() + POLLING_INTERVALS.backoff,
-        consecutive429s: 0,
-        isStale: true
-      };
-      
-      cacheEntry.consecutive429s++;
-      cacheEntry.retryAfterUntil = Date.now() + POLLING_INTERVALS.backoff;
-      cacheEntry.lastAttempt = Date.now();
-      
-      setCacheEntry(cacheKey, cacheEntry.data, cacheEntry);
-      nextInterval = POLLING_INTERVALS.backoff;
-    } else {
-      // Other errors - use backoff interval
-      nextInterval = POLLING_INTERVALS.backoff;
-    }
-    
-    updateCircuitBreaker(service, false);
-  } finally {
-    // ALWAYS schedule next ingestion regardless of outcome
-    if (adaptive) {
-      scheduleNextIngestion(service, nextInterval);
-    }
-  }
-}
-
-// Schedule next ingestion with adaptive intervals
-function scheduleNextIngestion(service: string, interval: number) {
-  // Clear existing timer
-  const existingTimer = backgroundPollers.get(service);
-  if (existingTimer) {
-    clearTimeout(existingTimer);
-  }
-  
-  // Schedule next ingestion
-  const timer = setTimeout(() => {
-    if (service === 'traffic-events') {
-      ingestTrafficEvents();
-    }
-    // Add other services here
-  }, interval);
-  
-  backgroundPollers.set(service, timer);
-  console.log(`⏰ Next ${service} ingestion scheduled in ${(interval/60000).toFixed(1)} minutes`);
-}
-
-// Initialize background ingestion system
-function initializeBackgroundIngestion() {
-  console.log('🚀 Initializing background ingestion system...');
-  
-  // Start traffic events ingestion
-  scheduleNextIngestion('traffic-events', 5000); // Start after 5 seconds
-  
-  console.log('✅ Background ingestion system initialized');
-}
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Debug: log the path being used
@@ -756,154 +422,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get traffic events from cache-only (SWR pattern) - STRICT CACHE ONLY
+  // DEPRECATED: Get traffic events - redirects to unified API
   app.get("/api/traffic/events", (req, res) => {
-    const cacheEntry = getCacheEntry('traffic-events-unified');
-    
-    if (!cacheEntry || !cacheEntry.data) {
-      // Trigger background refresh but don't wait
-      setImmediate(() => ingestTrafficEvents(false));
-      return res.status(503).json({ 
-        error: 'Traffic data not available yet, please try again shortly' 
-      });
-    }
-
-    // Check ETag for 304
-    if (req.headers['if-none-match'] === cacheEntry.etag) {
-      return res.status(304).end();
-    }
-
-    // Set cache headers and return data immediately  
-    if (cacheEntry.etag) {
-      res.set('ETag', cacheEntry.etag);
-    }
-    res.set('Cache-Control', 'public, max-age=60');
-    
-    // Trigger background refresh if stale (but don't wait)
-    if (isCacheStale(cacheEntry)) {
-      setImmediate(() => ingestTrafficEvents(false));
-    }
-
-    // Return cache data immediately - NO processing
-    res.json(cacheEntry.data);
-  });
-
-
-  // Get cached events from local storage
-  app.get("/api/events", async (req, res) => {
-    try {
-      const events = await storage.getTrafficEvents();
-      res.json(events);
-    } catch (error) {
-      console.error("Error fetching cached events:", error);
-      res.status(500).json({ error: "Failed to fetch events" });
-    }
-  });
-
-
-  // Get cached incidents (fast endpoint with pagination)
-  app.get("/api/incidents", async (req, res) => {
-    try {
-      const { suburb, limit = '50' } = req.query;
-      const maxLimit = parseInt(limit as string, 10);
-      
-      // Get recent incidents from database with a reasonable limit
-      let recentIncidents = await storage.getRecentIncidents(maxLimit);
-      
-      // Apply regional filtering if suburb provided
-      if (suburb) {
-        const region = findRegionBySuburb(suburb as string);
-        
-        if (region) {
-          recentIncidents = recentIncidents.filter((incident: any) => {
-            // Create a feature-like object for the robust filtering function
-            const feature = {
-              geometry: incident.geometry,
-              properties: {
-                ...incident.properties,
-                location: incident.location,
-                suburb: incident.properties?.suburb,
-                locationDescription: incident.location,
-                // Add user-reported incident fields
-                ...(incident.agency === 'User Report' && {
-                  location: incident.location,
-                  suburb: incident.properties?.suburb || incident.location?.split(',').pop()?.trim() || ''
-                })
-              }
-            };
-            
-            // Use the robust region filtering function
-            return isFeatureInRegion(feature, region);
-          });
-        }
+    res.status(410).json({ 
+      error: 'This endpoint is deprecated. Please use /api/unified instead.',
+      migration: {
+        old: '/api/traffic/events',
+        new: '/api/unified',
+        note: 'The unified API provides all traffic and incident data in a single response'
       }
-      
-      // Transform incidents to GeoJSON format
-      let incidentFeatures = recentIncidents.map(incident => {
-        const props = incident.properties as any || {};
-        const isUserReported = incident.agency === 'User Report' || incident.incidentType === 'user_reported';
-        
-        return {
-          type: "Feature",
-          properties: {
-            id: incident.id,
-            ...(incident.properties || {}),
-            incidentType: incident.incidentType,
-            description: incident.description,
-            locationDescription: incident.location,
-            title: incident.title, // Include title for all incidents
-            status: incident.status, // Include the status field for marker coloring
-            createdAt: incident.lastUpdated,
-            userReported: isUserReported,
-            // Add proper user attribution for user-reported incidents
-            ...(isUserReported && {
-              reporterId: props.reporterId,
-              reporterName: props.reporterName || props.reportedBy?.split('@')[0] || "Anonymous User",
-              timeReported: props.timeReported || incident.lastUpdated,
-              photoUrl: incident.photoUrl || props.photoUrl, // Include incident photo from database
-              title: incident.title || props.title
-            })
-          },
-          geometry: (() => {
-            // Use the robust coordinate extraction function
-            const coords = extractCoordinatesFromGeometry(incident.geometry);
-            
-            if (coords) {
-              // Valid coordinates found, use them (convert back to [lng, lat] for GeoJSON)
-              const [lat, lng] = coords;
-              return {
-                type: "Point", 
-                coordinates: [lng, lat]
-              };
-            } else {
-              // No valid coordinates, use Brisbane default
-              return {
-                type: "Point",
-                coordinates: [153.0251, -27.4698] // Default to Brisbane
-              };
-            }
-          })()
-        };
-      });
-      
-      // Regional filtering already done above, no need for duplicate filtering
-      
-      const data = {
-        type: "FeatureCollection",
-        features: incidentFeatures,
-        lastUpdated: new Date().toISOString(),
-        total: incidentFeatures.length
-      };
-      
-      res.json(data);
-    } catch (error) {
-      console.error("Error fetching cached incidents:", error);
-      res.status(500).json({ 
-        error: "Failed to fetch incidents", 
-        message: error instanceof Error ? error.message : "Unknown error" 
-      });
-    }
+    });
   });
+
+
+  // REMOVED: Legacy /api/events endpoint - replaced by /api/unified
+
+
+  // REMOVED: Legacy /api/incidents endpoint - replaced by /api/unified
 
   // Location search endpoint using Nominatim (OpenStreetMap)
   app.get('/api/location/search', async (req, res) => {
@@ -3030,25 +2565,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Add status endpoint for monitoring data freshness
+  // DEPRECATED: Legacy traffic status endpoint
   app.get('/api/traffic/status', (req, res) => {
-    const trafficCache = getCacheEntry('traffic-events-unified');
-    const circuitBreaker = getCircuitBreaker('traffic-events');
-    
-    const status = {
-      isStale: trafficCache ? isCacheStale(trafficCache) : true,
-      isExpired: trafficCache ? isCacheExpired(trafficCache) : true,
-      lastSuccessfulFetch: trafficCache?.lastSuccessfulFetch || null,
-      lastAttempt: trafficCache?.lastAttempt || null,
-      retryAfterUntil: trafficCache?.retryAfterUntil || null,
-      consecutive429s: trafficCache?.consecutive429s || 0,
-      circuitOpen: circuitBreaker.isOpen,
-      circuitConsecutiveFailures: circuitBreaker.consecutiveFailures,
-      cacheAge: trafficCache ? Date.now() - trafficCache.lastSuccessfulFetch : null,
-      nextScheduledIngestion: null // Could track this if needed
-    };
-    
-    res.json(status);
+    res.status(410).json({ 
+      error: 'This endpoint is deprecated. Legacy background ingestion has been removed.',
+      migration: {
+        old: '/api/traffic/status',
+        new: '/api/unified',
+        note: 'Use the unified API endpoint for current data. Status monitoring is now handled by the unified pipeline.'
+      }
+    });
   });
 
   // ============================================================================
@@ -3161,10 +2687,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Initialize background ingestion system
-  console.log('🚀 Initializing background ingestion system...');
-  initializeBackgroundIngestion();
-  console.log('✅ Background ingestion system initialized');
+  // REMOVED: Legacy background ingestion - replaced by unified ingestion pipeline
 
   // Initialize unified ingestion pipeline for multi-source consolidation
   console.log('🚀 Initializing Unified Ingestion Pipeline...');
