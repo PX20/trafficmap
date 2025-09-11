@@ -39,98 +39,56 @@ const isQFESIncident = (incident: any) => {
 };
 
 export function useTrafficData(filters: FilterState): ProcessedTrafficData {
-  // Fetch ALL events for map display (big picture view) with client-side age filtering
-  const { data: allEventsData } = useQuery({
-    queryKey: ["/api/traffic/events"],
+  // UNIFIED DATA PIPELINE: Single API call for all incident data
+  const { data: unifiedData } = useQuery({
+    queryKey: ["/api/unified"],
     queryFn: async () => {
-      const response = await fetch('/api/traffic/events');
-      if (!response.ok) throw new Error('Failed to fetch traffic events');
+      const response = await fetch('/api/unified');
+      if (!response.ok) throw new Error('Failed to fetch unified incidents');
       return response.json();
     },
     select: (data: any) => {
-      const features = data?.features || [];
-      // Apply client-side age filtering for consistency with feed
-      const recentFeatures = features.filter((feature: any) => {
-        try {
-          const publishedDate = feature.properties?.published ? new Date(feature.properties.published) : null;
-          const lastUpdated = feature.properties?.last_updated ? new Date(feature.properties.last_updated) : null;
-          // PRIORITIZE last_updated over published for current relevance
-          const eventDate = lastUpdated || publishedDate;
-          
-          if (eventDate && !isNaN(eventDate.getTime())) {
-            const daysSince = (Date.now() - eventDate.getTime()) / (1000 * 60 * 60 * 24);
-            return daysSince <= 7;
-          }
-          
-          return false;
-        } catch (error) {
-          return false;
-        }
-      });
-      return Array.isArray(recentFeatures) ? recentFeatures : [];
+      console.log('🔄 UNIFIED PIPELINE: Events:', data?.features?.filter((f: any) => f.properties?.source === 'tmr')?.length || 0, 'Incidents:', data?.features?.length || 0);
+      return data || { type: 'FeatureCollection', features: [] };
     },
-    refetchInterval: filters.autoRefresh ? 30000 : 60 * 1000, // Auto-refresh every 1 minute to stay fresh
+    refetchInterval: filters.autoRefresh ? 30000 : 60 * 1000, // Auto-refresh every 1 minute
   });
 
-  // Fetch ALL incidents for map display (big picture view)
-  const { data: allIncidentsData } = useQuery({
-    queryKey: ["/api/incidents"],
-    queryFn: async () => {
-      const response = await fetch('/api/incidents?limit=200');
-      if (!response.ok) throw new Error('Failed to fetch incidents');
-      return response.json();
-    },
-    select: (data: any) => {
-      const features = data?.features || [];
-      return Array.isArray(features) ? features : [];
-    },
-    refetchInterval: filters.autoRefresh ? 60000 : 3 * 60 * 1000, // Auto-refresh every 3 minutes
+  // Extract and process all unified features
+  const allFeatures = unifiedData?.features || [];
+  
+  // Separate by source type for backward compatibility
+  const allEventsData = allFeatures.filter((feature: any) => {
+    const source = feature.properties?.source;
+    return source === 'tmr'; // Traffic events from TMR source
+  });
+  
+  const allIncidentsData = allFeatures.filter((feature: any) => {
+    const source = feature.properties?.source;
+    return source === 'emergency' || source === 'user'; // Emergency services + user reports
   });
 
-  // Fetch FILTERED data for feed and counts (user's region only)
-  const { data: regionalEventsData } = useQuery({
-    queryKey: ["/api/traffic/events", filters.homeLocation],
-    queryFn: async () => {
-      const suburb = filters.homeLocation?.split(' ')[0] || '';
-      
-      // If no location set, return empty instead of all QLD
-      if (!suburb) {
-        return { features: [] };
-      }
-      
-      const url = `/api/traffic/events?suburb=${encodeURIComponent(suburb)}`;
-      const response = await fetch(url);
-      if (!response.ok) throw new Error('Failed to fetch traffic events');
-      return response.json();
-    },
-    select: (data: any) => {
-      const features = data?.features || [];
-      return Array.isArray(features) ? features : [];
-    },
-    refetchInterval: filters.autoRefresh ? 30000 : false,
-  });
+  // CLIENT-SIDE REGIONAL FILTERING for feed data
+  const suburb = filters.homeLocation?.split(' ')[0]?.toLowerCase() || '';
+  const hasLocation = Boolean(suburb);
+  
+  // Regional filtering function
+  const isInRegion = (feature: any) => {
+    if (!hasLocation) return false;
+    
+    // Check location text fields for suburb match
+    const location = feature.properties?.location?.toLowerCase() || '';
+    const description = feature.properties?.description?.toLowerCase() || '';
+    const title = feature.properties?.title?.toLowerCase() || '';
+    
+    return location.includes(suburb) || 
+           description.includes(suburb) || 
+           title.includes(suburb);
+  };
 
-  const { data: regionalIncidentsData } = useQuery({
-    queryKey: ["/api/incidents", filters.homeLocation],
-    queryFn: async () => {
-      const suburb = filters.homeLocation?.split(' ')[0] || '';
-      
-      // If no location set, return empty instead of all QLD
-      if (!suburb) {
-        return { features: [] };
-      }
-      
-      const url = `/api/incidents?suburb=${encodeURIComponent(suburb)}&limit=200`;
-      const response = await fetch(url);
-      if (!response.ok) throw new Error('Failed to fetch incidents');
-      return response.json();
-    },
-    select: (data: any) => {
-      const features = data?.features || [];
-      return Array.isArray(features) ? features : [];
-    },
-    refetchInterval: filters.autoRefresh ? 60000 : false,
-  });
+  // Apply regional filtering for feed data
+  const regionalEventsData = hasLocation ? allEventsData.filter(isInRegion) : [];
+  const regionalIncidentsData = hasLocation ? allIncidentsData.filter(isInRegion) : [];
 
   // All data for map display (shows everything)
   const allEvents = Array.isArray(allEventsData) ? allEventsData : [];
