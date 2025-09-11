@@ -794,6 +794,78 @@ export const campaignAnalytics = pgTable("campaign_analytics", {
   campaignDateIdx: index("idx_campaign_analytics_date").on(table.campaignId, table.date),
 }));
 
+// ============================================================================
+// INCIDENT SOCIAL INTERACTION SCHEMA - Comments and Likes
+// ============================================================================
+
+export const incidentComments = pgTable("incident_comments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  incidentId: varchar("incident_id").notNull(), // References unified_incidents.id
+  userId: varchar("user_id").notNull(), // References users.id
+  username: varchar("username").notNull(), // Store for display (denormalized)
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  incidentIdx: index("idx_incident_comments_incident").on(table.incidentId),
+  userIdx: index("idx_incident_comments_user").on(table.userId),
+  createdAtIdx: index("idx_incident_comments_created").on(table.createdAt),
+}));
+
+export const incidentLikes = pgTable("incident_likes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  incidentId: varchar("incident_id").notNull(), // References unified_incidents.id
+  userId: varchar("user_id").notNull(), // References users.id
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  incidentIdx: index("idx_incident_likes_incident").on(table.incidentId),
+  userIdx: index("idx_incident_likes_user").on(table.userId),
+  // Unique constraint to prevent duplicate likes from same user
+  uniqueUserIncident: unique("unique_user_incident_like").on(table.userId, table.incidentId),
+}));
+
+// Relations
+export const incidentCommentsRelations = relations(incidentComments, ({ one }) => ({
+  incident: one(unifiedIncidents, {
+    fields: [incidentComments.incidentId],
+    references: [unifiedIncidents.id],
+  }),
+  user: one(users, {
+    fields: [incidentComments.userId],
+    references: [users.id],
+  }),
+}));
+
+export const incidentLikesRelations = relations(incidentLikes, ({ one }) => ({
+  incident: one(unifiedIncidents, {
+    fields: [incidentLikes.incidentId],
+    references: [unifiedIncidents.id],
+  }),
+  user: one(users, {
+    fields: [incidentLikes.userId],
+    references: [users.id],
+  }),
+}));
+
+// Zod schemas for validation
+export const insertIncidentCommentSchema = createInsertSchema(incidentComments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  content: z.string().min(1, "Comment cannot be empty").max(1000, "Comment too long"),
+});
+
+export const insertIncidentLikeSchema = createInsertSchema(incidentLikes).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type IncidentComment = typeof incidentComments.$inferSelect;
+export type InsertIncidentComment = z.infer<typeof insertIncidentCommentSchema>;
+export type IncidentLike = typeof incidentLikes.$inferSelect;
+export type InsertIncidentLike = z.infer<typeof insertIncidentLikeSchema>;
+
 export type AdCampaign = typeof adCampaigns.$inferSelect;
 export type InsertAdCampaign = typeof adCampaigns.$inferInsert;
 export type AdView = typeof adViews.$inferSelect;
