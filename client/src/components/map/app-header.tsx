@@ -81,7 +81,7 @@ export function AppHeader({ onMenuToggle, onFilterToggle, showFilterButton }: Ap
                   <Button
                     variant={location === "/map" ? "default" : "ghost"}
                     size="sm"
-                    className="h-8 px-2 text-xs"
+                    className="h-11 w-11 p-0 text-xs"
                     data-testid="button-map-view"
                   >
                     <Map className="w-4 h-4" />
@@ -91,7 +91,7 @@ export function AppHeader({ onMenuToggle, onFilterToggle, showFilterButton }: Ap
                   <Button
                     variant={location === "/feed" || location === "/" ? "default" : "ghost"}
                     size="sm"
-                    className="h-8 px-2 text-xs"
+                    className="h-11 w-11 p-0 text-xs"
                     data-testid="button-feed-view"
                   >
                     <List className="w-4 h-4" />
@@ -130,7 +130,7 @@ export function AppHeader({ onMenuToggle, onFilterToggle, showFilterButton }: Ap
                           : "ghost"
                       }
                       size="sm"
-                      className="h-8 px-2"
+                      className="h-11 w-11 p-0"
                       data-testid="button-business-menu"
                     >
                       <BarChart3 className="w-4 h-4" />
@@ -160,7 +160,7 @@ export function AppHeader({ onMenuToggle, onFilterToggle, showFilterButton }: Ap
                   <Button
                     onClick={() => setReportFormOpen(true)}
                     size="sm"
-                    className="h-8 w-8 p-0"
+                    className="h-11 w-11 p-0"
                     data-testid="button-report-mobile"
                   >
                     <Plus className="w-4 h-4" />
@@ -169,7 +169,7 @@ export function AppHeader({ onMenuToggle, onFilterToggle, showFilterButton }: Ap
                   {/* Profile Dropdown */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Avatar className="w-8 h-8 cursor-pointer hover:opacity-80 transition-opacity">
+                      <Avatar className="w-11 h-11 cursor-pointer hover:opacity-80 transition-opacity">
                         <AvatarImage src={user.profileImageUrl || undefined} alt={user.firstName || 'User'} />
                         <AvatarFallback className="text-xs">
                           {user.accountType === 'business' && user.businessName 
