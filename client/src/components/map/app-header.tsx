@@ -71,84 +71,91 @@ export function AppHeader({ onMenuToggle, onFilterToggle, showFilterButton }: Ap
           </svg>
         </div>
         
-        <div className="flex items-center space-x-3">
-          {/* Mobile Navigation - Clean and Simple */}
+        <div className="flex items-center gap-2">
+          {/* Mobile Navigation - Compact and Responsive */}
           {isMobile ? (
-            <div className="flex items-center space-x-3">
-              {/* View Toggle - Main Navigation */}
-              <div className="flex items-center bg-muted p-1.5 rounded-lg gap-1">
+            <div className="flex items-center gap-2">
+              {/* Core Navigation - Always visible */}
+              <div className="flex items-center bg-muted p-1 rounded-lg gap-1">
                 <Link href="/map">
                   <Button
                     variant={location === "/map" ? "default" : "ghost"}
                     size="sm"
-                    className="h-9 px-4 text-xs font-medium"
+                    className="h-8 px-2 text-xs"
                     data-testid="button-map-view"
                   >
-                    <Map className="w-4 h-4 mr-2" />
-                    Map
+                    <Map className="w-4 h-4" />
                   </Button>
                 </Link>
                 <Link href="/feed">
                   <Button
                     variant={location === "/feed" || location === "/" ? "default" : "ghost"}
                     size="sm"
-                    className="h-9 px-4 text-xs font-medium"
+                    className="h-8 px-2 text-xs"
                     data-testid="button-feed-view"
                   >
-                    <List className="w-4 h-4 mr-2" />
-                    Feed
+                    <List className="w-4 h-4" />
                   </Button>
                 </Link>
                 <Link href="/messages">
                   <Button
                     variant={location === "/messages" ? "default" : "ghost"}
                     size="sm"
-                    className="h-8 px-3 text-xs relative"
+                    className="h-8 px-2 text-xs relative"
                     data-testid="button-messages-view"
                   >
-                    <MessageCircle className="w-4 h-4 mr-2" />
-                    Messages
+                    <MessageCircle className="w-4 h-4" />
                     {unreadMessages > 0 && (
                       <Badge
                         variant="destructive"
-                        className="absolute -top-1 -right-1 h-4 w-4 p-0 text-xs flex items-center justify-center"
+                        className="absolute -top-1 -right-1 h-3 w-3 p-0 text-[10px] flex items-center justify-center"
                       >
                         {unreadMessages}
                       </Badge>
                     )}
                   </Button>
                 </Link>
-                {user?.accountType === 'business' && (
-                  <>
-                    <Link href="/business-dashboard">
-                      <Button
-                        variant={location === "/business-dashboard" ? "default" : "ghost"}
-                        size="sm"
-                        className="h-9 px-4 text-xs font-medium"
-                        data-testid="button-dashboard-view"
-                      >
+              </div>
+
+              {/* Business Navigation - Dropdown for space efficiency */}
+              {user?.accountType === 'business' && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant={
+                        location === "/business-dashboard" || 
+                        location === "/advertise" || 
+                        location === "/create-ad" 
+                          ? "default" 
+                          : "ghost"
+                      }
+                      size="sm"
+                      className="h-8 px-2"
+                      data-testid="button-business-menu"
+                    >
+                      <BarChart3 className="w-4 h-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-40">
+                    <DropdownMenuItem asChild>
+                      <Link href="/business-dashboard" className="w-full">
                         <BarChart3 className="w-4 h-4 mr-2" />
                         Dashboard
-                      </Button>
-                    </Link>
-                    <Link href="/advertise">
-                      <Button
-                        variant={location === "/advertise" || location === "/create-ad" ? "default" : "ghost"}
-                        size="sm"
-                        className="h-9 px-4 text-xs font-medium"
-                        data-testid="button-advertise-view"
-                      >
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/advertise" className="w-full">
                         <Megaphone className="w-4 h-4 mr-2" />
                         Advertise
-                      </Button>
-                    </Link>
-                  </>
-                )}
-              </div>
+                      </Link>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
 
               {/* User Menu - Only for authenticated users */}
               {isAuthenticated && user && (
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center gap-2">
                   {/* Report Button */}
                   <Button
                     onClick={() => setReportFormOpen(true)}
