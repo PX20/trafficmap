@@ -8,6 +8,7 @@ import { useLocation } from "wouter";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/useAuth";
 
 interface EventModalProps {
   eventId: string | null;
@@ -37,6 +38,7 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
   const [selectedPhotoModal, setSelectedPhotoModal] = useState<{url: string; alt: string} | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   
   // Use unified incidents API
   const { data: unifiedData } = useQuery({
@@ -455,7 +457,7 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
     
     return (
       <div key={comment.id} className={`${actualDepth > 0 ? 'ml-10 border-l border-muted/50 pl-3 mt-2' : ''}`}>
-        <div className="flex space-x-3 pb-2" data-testid={`comment-${comment.id}`}>
+        <div className="group flex space-x-3 pb-2" data-testid={`comment-${comment.id}`}>
           <Avatar className="w-10 h-10 flex-shrink-0">
             <AvatarFallback className="text-sm font-medium bg-gradient-to-br from-blue-500 to-purple-600 text-white">
               {comment.username?.charAt(0)?.toUpperCase() || 'U'}
@@ -466,16 +468,19 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
             <div className="bg-muted/40 rounded-2xl px-3 py-2.5 inline-block max-w-full">
               <div className="flex items-center space-x-2 mb-1">
                 <span className="text-sm font-semibold text-foreground">{comment.username || 'Anonymous'}</span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => deleteCommentMutation.mutate(comment.id)}
-                  className="text-xs h-5 px-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 ml-auto opacity-0 group-hover:opacity-100 transition-opacity"
-                  disabled={deleteCommentMutation.isPending}
-                  data-testid={`button-delete-comment-${comment.id}`}
-                >
-                  ×
-                </Button>
+                {/* Only show delete button for own comments */}
+                {user?.id === comment.userId && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => deleteCommentMutation.mutate(comment.id)}
+                    className="text-xs h-5 px-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 ml-auto opacity-0 group-hover:opacity-100 transition-opacity"
+                    disabled={deleteCommentMutation.isPending}
+                    data-testid={`button-delete-comment-${comment.id}`}
+                  >
+                    ×
+                  </Button>
+                )}
               </div>
               <p className="text-sm text-foreground leading-relaxed break-words">{comment.content}</p>
             </div>

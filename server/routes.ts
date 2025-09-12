@@ -1247,12 +1247,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete incident comment with ownership check
+  app.delete("/api/incidents/:incidentId/social/comments/:commentId", isAuthenticated, async (req: any, res) => {
+    try {
+      const { commentId } = req.params;
+      const userId = (req.user as any).claims.sub;
+
+      // Get the comment to verify ownership
+      const comment = await storage.getCommentById(commentId);
+      if (!comment) {
+        return res.status(404).json({ message: "Comment not found" });
+      }
+
+      // Check if the user owns the comment
+      if (comment.userId !== userId) {
+        return res.status(403).json({ message: "You can only delete your own comments" });
+      }
+
+      const success = await storage.deleteComment(commentId);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Comment not found" });
+      }
+      
+      res.json({ message: "Comment deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting comment:", error);
+      res.status(500).json({ message: "Failed to delete comment" });
+    }
+  });
+
+  // Legacy endpoint for backwards compatibility
   app.delete("/api/comments/:commentId", isAuthenticated, async (req: any, res) => {
     try {
       const { commentId } = req.params;
       const userId = (req.user as any).claims.sub;
 
-      // In production, add proper ownership check here
+      // Get the comment to verify ownership
+      const comment = await storage.getCommentById(commentId);
+      if (!comment) {
+        return res.status(404).json({ message: "Comment not found" });
+      }
+
+      // Check if the user owns the comment
+      if (comment.userId !== userId) {
+        return res.status(403).json({ message: "You can only delete your own comments" });
+      }
+
       const success = await storage.deleteComment(commentId);
       
       if (!success) {
