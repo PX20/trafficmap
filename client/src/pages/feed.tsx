@@ -294,8 +294,8 @@ export default function Feed() {
     // Only keep the most recent version if we have duplicates
     if (incidentMap.has(incidentId)) {
       const existing = incidentMap.get(incidentId);
-      const existingDate = new Date(existing.properties?.Response_Date || existing.properties?.last_updated || existing.properties?.createdAt || 0);
-      const currentDate = new Date(incident.properties?.Response_Date || incident.properties?.last_updated || incident.properties?.createdAt || 0);
+      const existingDate = new Date(existing.incidentTime || existing.lastUpdated || existing.publishedAt || 0);
+      const currentDate = new Date(incident.incidentTime || incident.lastUpdated || incident.publishedAt || 0);
       
       // Keep the more recent incident
       if (currentDate > existingDate) {
@@ -311,8 +311,8 @@ export default function Feed() {
   // Sort all deduplicated incidents by time (most recent first)
   const sortedIncidents = deduplicatedIncidents
     .sort((a, b) => {
-      const dateA = new Date(a.properties?.Response_Date || a.properties?.last_updated || a.properties?.createdAt || 0);
-      const dateB = new Date(b.properties?.Response_Date || b.properties?.last_updated || b.properties?.createdAt || 0);
+      const dateA = new Date(a.incidentTime || a.lastUpdated || a.publishedAt || 0);
+      const dateB = new Date(b.incidentTime || b.lastUpdated || b.publishedAt || 0);
       return dateB.getTime() - dateA.getTime();
     });
 
@@ -784,9 +784,9 @@ export default function Feed() {
                             
                             <div className="text-xs text-muted-foreground">
                               {getTimeAgo(
-                                incident.properties?.Response_Date || 
-                                incident.properties?.last_updated || 
-                                incident.properties?.createdAt
+                                incident.incidentTime || 
+                                incident.lastUpdated || 
+                                incident.publishedAt
                               )}
                             </div>
                           </div>
