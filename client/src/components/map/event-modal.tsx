@@ -1405,41 +1405,8 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
               {copySuccess ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
               <span className="text-xs">{copySuccess ? "Copied!" : "Share"}</span>
             </Button>
-            <Button 
-              size="sm" 
-              data-testid="button-view-details"
-              onClick={() => setShowDetails(!showDetails)}
-            >
-              {showDetails ? "Hide Details" : "View Details"}
-            </Button>
           </div>
 
-          {/* Expanded Details Section */}
-          {showDetails && (
-            <div className="border-t pt-3 space-y-3">
-              <div>
-                <h4 className="text-sm font-medium mb-2">Additional Information</h4>
-                <div className="text-xs space-y-1 text-muted-foreground">
-                  <p><strong>Source:</strong> {source === 'tmr' ? 'TMR Traffic' : source === 'emergency' ? 'Emergency Services' : 'User Report'}</p>
-                  <p><strong>ID:</strong> {eventId}</p>
-                  <p><strong>Category:</strong> {props.category}</p>
-                  {props.severity && <p><strong>Severity:</strong> {props.severity}</p>}
-                  {props.status && <p><strong>Status:</strong> {props.status}</p>}
-                  {props.incidentTime && <p><strong>Incident Time:</strong> {new Date(props.incidentTime).toLocaleString()}</p>}
-                  {props.lastUpdated && <p><strong>Last Updated:</strong> {new Date(props.lastUpdated).toLocaleString()}</p>}
-                </div>
-              </div>
-              
-              {/* Social engagement summary */}
-              <div>
-                <h4 className="text-sm font-medium mb-2">Community Engagement</h4>
-                <div className="text-xs space-y-1 text-muted-foreground">
-                  <p>{socialData?.commentCount || 0} comments • {socialData?.likeCount || 0} likes</p>
-                  <p className="text-xs italic">Social features require user authentication</p>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
           </>
         ) : (
