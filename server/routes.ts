@@ -5,16 +5,19 @@ import { setupAuth } from "./auth";
 import { isAuthenticated, setupAuth as setupReplitAuth } from "./replitAuth";
 import webpush from "web-push";
 import Stripe from "stripe";
-import { insertIncidentSchema, insertCommentSchema, insertConversationSchema, insertMessageSchema, insertNotificationSchema } from "@shared/schema";
+import { insertIncidentSchema, insertCommentSchema, insertConversationSchema, insertMessageSchema, insertNotificationSchema, insertIncidentCommentSchema } from "@shared/schema";
 import { z } from "zod";
 import {
   ObjectStorageService,
   ObjectNotFoundError,
+  objectStorageClient,
 } from "./objectStorage";
 import express from "express";
 import path from "path";
 import sharp from "sharp";
 import fs from "fs";
+import multer from "multer";
+import { randomUUID } from "crypto";
 import { 
   findRegionBySuburb, 
   getRegionFromCoordinates, 
@@ -97,7 +100,23 @@ function isSunshineCoastLocation(feature: any): boolean {
 
 // Legacy cache management functions removed - unified pipeline handles caching
 
-
+// Configure multer for handling multipart/form-data uploads
+const storage_multer = multer.memoryStorage();
+const upload = multer({
+  storage: storage_multer,
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB file size limit
+    files: 1, // Only allow 1 file per request
+  },
+  fileFilter: (req, file, cb) => {
+    // Only allow image files
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed'), false);
+    }
+  },
+});
 
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -1026,6 +1045,119 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json({ comment, count });
     } catch (error) {
       console.error("Error creating incident comment:", error);
+      res.status(500).json({ message: "Failed to create comment" });
+    }
+  });
+
+  // Add incident comment with photo upload (multipart form data)
+  app.post("/api/incidents/:incidentId/social/comments/with-photo", isAuthenticated, upload.single('photo'), async (req: any, res) => {
+    try {
+      const { incidentId } = req.params;
+      
+      if (!req.user || !req.user.id) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const userId = req.user.id;
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Validate comment data from form fields
+      const formData = {
+        content: req.body.content,
+        parentCommentId: req.body.parentCommentId || null,
+        photoAlt: req.body.photoAlt || null,
+      };
+
+      // Basic validation using the insertIncidentCommentSchema
+      const validatedCommentData = insertIncidentCommentSchema.parse({
+        incidentId,
+        userId,
+        username: user.displayName || user.firstName || `User${userId.slice(0,4)}`,
+        ...formData,
+      });
+
+      let photoUrl = null;
+      let photoSize = null;
+
+      // Handle photo upload if file is provided
+      if (req.file) {
+        try {
+          const objectStorageService = new ObjectStorageService();
+          
+          // Generate a unique filename with original extension
+          const fileExtension = path.extname(req.file.originalname);
+          const fileName = `comment-${randomUUID()}${fileExtension}`;
+          
+          // Get the private object directory and construct the full path
+          const privateObjectDir = objectStorageService.getPrivateObjectDir();
+          const fullPath = `${privateObjectDir}/comment-photos/${fileName}`;
+          
+          // Parse the object path to get bucket and object name
+          const parseObjectPath = (path: string) => {
+            if (!path.startsWith("/")) {
+              path = `/${path}`;
+            }
+            const pathParts = path.split("/");
+            if (pathParts.length < 3) {
+              throw new Error("Invalid path: must contain at least a bucket name");
+            }
+            const bucketName = pathParts[1];
+            const objectName = pathParts.slice(2).join("/");
+            return { bucketName, objectName };
+          };
+
+          const { bucketName, objectName } = parseObjectPath(fullPath);
+          
+          // Upload file to object storage using the imported client
+          const bucket = objectStorageClient.bucket(bucketName);
+          const file = bucket.file(objectName);
+          
+          // Upload the file buffer
+          await file.save(req.file.buffer, {
+            metadata: {
+              contentType: req.file.mimetype,
+            },
+            public: false, // Keep photos private initially
+          });
+          
+          // Generate the viewing URL
+          photoUrl = `/objects/comment-photos/${fileName}`;
+          photoSize = req.file.size;
+          
+          console.log(`Photo uploaded successfully: ${photoUrl}, size: ${photoSize} bytes`);
+        } catch (uploadError) {
+          console.error("Error uploading photo:", uploadError);
+          return res.status(500).json({ message: "Failed to upload photo" });
+        }
+      }
+
+      // Create comment with photo data
+      const commentData = {
+        ...validatedCommentData,
+        photoUrl,
+        photoSize,
+      };
+
+      const comment = await storage.createIncidentComment(commentData);
+      const count = await storage.getIncidentCommentsCount(incidentId);
+      
+      res.status(201).json({ 
+        comment, 
+        count,
+        message: req.file ? "Comment with photo created successfully" : "Comment created successfully"
+      });
+    } catch (error) {
+      console.error("Error creating incident comment with photo:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Invalid comment data", 
+          errors: error.errors 
+        });
+      }
       res.status(500).json({ message: "Failed to create comment" });
     }
   });
