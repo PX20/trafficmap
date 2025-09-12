@@ -18,6 +18,7 @@ import sharp from "sharp";
 import fs from "fs";
 import multer from "multer";
 import { randomUUID } from "crypto";
+import { fileTypeFromBuffer } from "file-type";
 import { 
   findRegionBySuburb, 
   getRegionFromCoordinates, 
@@ -100,23 +101,169 @@ function isSunshineCoastLocation(feature: any): boolean {
 
 // Legacy cache management functions removed - unified pipeline handles caching
 
-// Configure multer for handling multipart/form-data uploads
+// Rate limiting store for photo uploads
+const photoUploadRateLimit = new Map();
+
+// Security constants for image processing
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_IMAGE_DIMENSION = 1600; // pixels
+const UPLOADS_PER_HOUR = 10; // Max uploads per user per hour
+
+// Secure image validation middleware
+async function validateSecureImage(buffer: Buffer, filename: string): Promise<{ isValid: boolean; error?: string; detectedType?: string }> {
+  try {
+    // Magic-byte validation using file-type
+    const detectedType = await fileTypeFromBuffer(buffer);
+    
+    if (!detectedType) {
+      return { isValid: false, error: 'Unable to detect file type from content' };
+    }
+
+    // Reject SVG files completely (XSS risk)
+    if (detectedType.mime === 'image/svg+xml') {
+      return { isValid: false, error: 'SVG files are not allowed for security reasons' };
+    }
+
+    // Only allow specific image types
+    if (!ALLOWED_IMAGE_TYPES.includes(detectedType.mime)) {
+      return { isValid: false, error: `File type ${detectedType.mime} is not allowed. Only JPEG, PNG, and WebP are supported.` };
+    }
+
+    // Validate file extension matches detected type
+    const ext = filename.toLowerCase().split('.').pop();
+    const expectedExts = {
+      'image/jpeg': ['jpg', 'jpeg'],
+      'image/png': ['png'],
+      'image/webp': ['webp']
+    };
+
+    if (!expectedExts[detectedType.mime as keyof typeof expectedExts]?.includes(ext || '')) {
+      return { isValid: false, error: 'File extension does not match detected file type' };
+    }
+
+    return { isValid: true, detectedType: detectedType.mime };
+  } catch (error) {
+    return { isValid: false, error: 'File validation failed: ' + (error instanceof Error ? error.message : 'Unknown error') };
+  }
+}
+
+// Rate limiting check for photo uploads
+function checkPhotoUploadRateLimit(userId: string): { allowed: boolean; resetTime?: number } {
+  const now = Date.now();
+  const oneHour = 60 * 60 * 1000;
+  const userKey = `upload_${userId}`;
+  
+  if (!photoUploadRateLimit.has(userKey)) {
+    photoUploadRateLimit.set(userKey, { count: 1, resetTime: now + oneHour });
+    return { allowed: true };
+  }
+  
+  const userData = photoUploadRateLimit.get(userKey);
+  
+  // Reset if hour has passed
+  if (now >= userData.resetTime) {
+    photoUploadRateLimit.set(userKey, { count: 1, resetTime: now + oneHour });
+    return { allowed: true };
+  }
+  
+  // Check if limit exceeded
+  if (userData.count >= UPLOADS_PER_HOUR) {
+    return { allowed: false, resetTime: userData.resetTime };
+  }
+  
+  // Increment count
+  userData.count++;
+  photoUploadRateLimit.set(userKey, userData);
+  return { allowed: true };
+}
+
+// Secure image processing with Sharp
+async function processSecureImage(buffer: Buffer, options: { quality?: number; format?: 'jpeg' | 'webp' | 'png'; maxDimension?: number } = {}) {
+  const {
+    quality = 85,
+    format = 'jpeg',
+    maxDimension = MAX_IMAGE_DIMENSION
+  } = options;
+
+  try {
+    let processor = sharp(buffer)
+      .rotate() // Auto-rotate based on EXIF
+      .resize(maxDimension, maxDimension, { 
+        fit: 'inside', 
+        withoutEnlargement: true 
+      })
+      .strip(); // Remove all EXIF metadata for privacy
+
+    // Apply format-specific processing
+    if (format === 'jpeg') {
+      processor = processor.jpeg({ 
+        quality, 
+        progressive: true,
+        mozjpeg: true 
+      });
+    } else if (format === 'webp') {
+      processor = processor.webp({ 
+        quality,
+        effort: 4 
+      });
+    } else if (format === 'png') {
+      processor = processor.png({ 
+        quality,
+        compressionLevel: 6 
+      });
+    }
+
+    return await processor.toBuffer();
+  } catch (error) {
+    throw new Error(`Image processing failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+
+// Generate image variants (thumbnail, medium, full)
+async function generateImageVariants(buffer: Buffer, baseFilename: string) {
+  const variants = {
+    thumbnail: await processSecureImage(buffer, { maxDimension: 200, quality: 60 }),
+    medium: await processSecureImage(buffer, { maxDimension: 600, quality: 75 }),
+    full: await processSecureImage(buffer, { maxDimension: MAX_IMAGE_DIMENSION, quality: 85 })
+  };
+
+  const paths = {
+    thumbnail: `${baseFilename}_thumb.jpg`,
+    medium: `${baseFilename}_med.jpg`,
+    full: `${baseFilename}.jpg`
+  };
+
+  return { variants, paths };
+}
+
+// Configure secure multer for handling multipart/form-data uploads
 const storage_multer = multer.memoryStorage();
-const upload = multer({
+const secureUpload = multer({
   storage: storage_multer,
   limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB file size limit
+    fileSize: MAX_FILE_SIZE, // 5MB file size limit
     files: 1, // Only allow 1 file per request
+    fieldSize: 1024 * 1024, // 1MB field size limit
+    fields: 10, // Max 10 form fields
   },
   fileFilter: (req, file, cb) => {
-    // Only allow image files
-    if (file.mimetype.startsWith('image/')) {
-      cb(null, true);
-    } else {
-      cb(new Error('Only image files are allowed'), false);
+    // Basic MIME type check (will be validated more thoroughly later)
+    if (!file.mimetype.startsWith('image/')) {
+      return cb(new Error('Only image files are allowed'), false);
     }
+    
+    // Basic filename validation
+    if (!file.originalname || file.originalname.length > 255) {
+      return cb(new Error('Invalid filename'), false);
+    }
+    
+    cb(null, true);
   },
 });
+
+// Legacy upload configuration (kept for backward compatibility)
+const upload = secureUpload;
 
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -128,6 +275,137 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Serve static assets with compression for images
   app.use('/attached_assets', express.static(assetsPath));
   
+  // Secure photo upload endpoint with comprehensive validation and processing
+  app.post('/api/upload/photo', isAuthenticated, secureUpload.single('photo'), async (req: any, res) => {
+    try {
+      const userId = (req.user as any)?.claims?.sub || (req.user as any)?.id;
+      if (!userId) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+
+      // Check rate limiting
+      const rateLimitCheck = checkPhotoUploadRateLimit(userId);
+      if (!rateLimitCheck.allowed) {
+        const resetDate = new Date(rateLimitCheck.resetTime!);
+        return res.status(429).json({ 
+          error: 'Upload rate limit exceeded',
+          resetTime: resetDate.toISOString(),
+          message: `Maximum ${UPLOADS_PER_HOUR} uploads per hour. Try again after ${resetDate.toLocaleTimeString()}.`
+        });
+      }
+
+      if (!req.file) {
+        return res.status(400).json({ error: 'No photo file provided' });
+      }
+
+      // Validate file size
+      if (req.file.size > MAX_FILE_SIZE) {
+        return res.status(413).json({ 
+          error: `File too large. Maximum size is ${Math.round(MAX_FILE_SIZE / 1024 / 1024)}MB` 
+        });
+      }
+
+      // Secure validation using magic-byte detection
+      const validation = await validateSecureImage(req.file.buffer, req.file.originalname);
+      if (!validation.isValid) {
+        return res.status(400).json({ error: validation.error });
+      }
+
+      try {
+        // Generate secure filename
+        const fileId = randomUUID();
+        const baseFilename = `photo_${fileId}`;
+        
+        // Generate image variants
+        const { variants, paths } = await generateImageVariants(req.file.buffer, baseFilename);
+        
+        // Upload to object storage
+        const objectStorageService = new ObjectStorageService();
+        const privateObjectDir = objectStorageService.getPrivateObjectDir();
+        
+        if (!privateObjectDir) {
+          throw new Error('Object storage not configured');
+        }
+
+        const uploadPromises = Object.entries(variants).map(async ([size, buffer]) => {
+          const fullPath = `${privateObjectDir}/photos/${paths[size as keyof typeof paths]}`;
+          const { bucketName, objectName } = (() => {
+            if (!fullPath.startsWith("/")) {
+              const path = `/${fullPath}`;
+              const pathParts = path.split("/");
+              return {
+                bucketName: pathParts[1],
+                objectName: pathParts.slice(2).join("/")
+              };
+            }
+            const pathParts = fullPath.split("/");
+            return {
+              bucketName: pathParts[1],
+              objectName: pathParts.slice(2).join("/")
+            };
+          })();
+          
+          const bucket = objectStorageClient.bucket(bucketName);
+          const file = bucket.file(objectName);
+          
+          await file.save(buffer, {
+            metadata: {
+              contentType: 'image/jpeg',
+              metadata: {
+                uploadedBy: userId,
+                uploadedAt: new Date().toISOString(),
+                processed: 'true',
+                variant: size,
+                securityValidated: 'true'
+              }
+            }
+          });
+          
+          return {
+            size,
+            path: fullPath,
+            url: `/objects${fullPath}`
+          };
+        });
+
+        const uploadedVariants = await Promise.all(uploadPromises);
+        
+        // Return response with all variant URLs
+        const response = {
+          success: true,
+          fileId,
+          variants: uploadedVariants.reduce((acc, variant) => {
+            acc[variant.size] = {
+              url: variant.url,
+              path: variant.path
+            };
+            return acc;
+          }, {} as Record<string, { url: string; path: string }>),
+          originalFilename: req.file.originalname,
+          detectedType: validation.detectedType,
+          processed: true
+        };
+        
+        console.log(`Secure photo upload completed for user ${userId}: ${fileId}`);
+        res.json(response);
+        
+      } catch (processingError) {
+        console.error('Image processing error:', processingError);
+        res.status(500).json({ 
+          error: 'Image processing failed',
+          message: processingError instanceof Error ? processingError.message : 'Unknown processing error'
+        });
+      }
+      
+    } catch (error) {
+      console.error('Photo upload error:', error);
+      res.status(500).json({ 
+        error: 'Upload failed',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
   // Enhanced image compression endpoint with multiple sizes and WebP support
   app.get('/api/compress-image', async (req, res) => {
     const imagePath = req.query.path as string;
@@ -1049,8 +1327,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Add incident comment with photo upload (multipart form data)
-  app.post("/api/incidents/:incidentId/social/comments/with-photo", isAuthenticated, upload.single('photo'), async (req: any, res) => {
+  // Add incident comment with secure photo upload (multipart form data)
+  app.post("/api/incidents/:incidentId/social/comments/with-photo", isAuthenticated, secureUpload.single('photo'), async (req: any, res) => {
     try {
       const { incidentId } = req.params;
       
@@ -1063,6 +1341,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (!user) {
         return res.status(404).json({ message: "User not found" });
+      }
+
+      // Check rate limiting for photo uploads
+      if (req.file) {
+        const rateLimitCheck = checkPhotoUploadRateLimit(userId);
+        if (!rateLimitCheck.allowed) {
+          const resetDate = new Date(rateLimitCheck.resetTime!);
+          return res.status(429).json({ 
+            error: 'Upload rate limit exceeded',
+            resetTime: resetDate.toISOString(),
+            message: `Maximum ${UPLOADS_PER_HOUR} uploads per hour. Try again after ${resetDate.toLocaleTimeString()}.`
+          });
+        }
       }
 
       // Validate comment data from form fields
@@ -1082,19 +1373,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       let photoUrl = null;
       let photoSize = null;
+      let photoVariants = null;
 
-      // Handle photo upload if file is provided
+      // Handle secure photo upload if file is provided
       if (req.file) {
         try {
+          // Validate file size
+          if (req.file.size > MAX_FILE_SIZE) {
+            return res.status(413).json({ 
+              error: `File too large. Maximum size is ${Math.round(MAX_FILE_SIZE / 1024 / 1024)}MB` 
+            });
+          }
+
+          // Secure validation using magic-byte detection
+          const validation = await validateSecureImage(req.file.buffer, req.file.originalname);
+          if (!validation.isValid) {
+            return res.status(400).json({ error: validation.error });
+          }
+
           const objectStorageService = new ObjectStorageService();
-          
-          // Generate a unique filename with original extension
-          const fileExtension = path.extname(req.file.originalname);
-          const fileName = `comment-${randomUUID()}${fileExtension}`;
-          
-          // Get the private object directory and construct the full path
           const privateObjectDir = objectStorageService.getPrivateObjectDir();
-          const fullPath = `${privateObjectDir}/comment-photos/${fileName}`;
+          
+          if (!privateObjectDir) {
+            throw new Error('Object storage not configured');
+          }
+          
+          // Generate secure filename
+          const fileId = randomUUID();
+          const baseFilename = `comment-${fileId}`;
+          
+          // Generate image variants with secure processing
+          const { variants, paths } = await generateImageVariants(req.file.buffer, baseFilename);
           
           // Parse the object path to get bucket and object name
           const parseObjectPath = (path: string) => {
@@ -1110,28 +1419,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
             return { bucketName, objectName };
           };
 
-          const { bucketName, objectName } = parseObjectPath(fullPath);
-          
-          // Upload file to object storage using the imported client
-          const bucket = objectStorageClient.bucket(bucketName);
-          const file = bucket.file(objectName);
-          
-          // Upload the file buffer
-          await file.save(req.file.buffer, {
-            metadata: {
-              contentType: req.file.mimetype,
-            },
-            public: false, // Keep photos private initially
+          // Upload all variants to object storage
+          const uploadPromises = Object.entries(variants).map(async ([size, buffer]) => {
+            const fullPath = `${privateObjectDir}/comment-photos/${paths[size as keyof typeof paths]}`;
+            const { bucketName, objectName } = parseObjectPath(fullPath);
+            
+            const bucket = objectStorageClient.bucket(bucketName);
+            const file = bucket.file(objectName);
+            
+            await file.save(buffer, {
+              metadata: {
+                contentType: 'image/jpeg',
+                metadata: {
+                  uploadedBy: userId,
+                  uploadedAt: new Date().toISOString(),
+                  processed: 'true',
+                  variant: size,
+                  securityValidated: 'true',
+                  originalFilename: req.file.originalname,
+                  detectedType: validation.detectedType
+                }
+              },
+              public: false, // Keep photos private initially
+            });
+            
+            return {
+              size,
+              url: `/objects${fullPath}`,
+              path: fullPath
+            };
           });
+
+          const uploadedVariants = await Promise.all(uploadPromises);
           
-          // Generate the viewing URL
-          photoUrl = `/objects/comment-photos/${fileName}`;
-          photoSize = req.file.size;
+          // Use medium variant as the main photo URL
+          const mediumVariant = uploadedVariants.find(v => v.size === 'medium');
+          photoUrl = mediumVariant?.url || uploadedVariants[0]?.url;
+          photoSize = variants.medium.length;
           
-          console.log(`Photo uploaded successfully: ${photoUrl}, size: ${photoSize} bytes`);
+          // Store variant information for potential future use
+          photoVariants = uploadedVariants.reduce((acc, variant) => {
+            acc[variant.size] = {
+              url: variant.url,
+              path: variant.path
+            };
+            return acc;
+          }, {} as Record<string, { url: string; path: string }>);
+          
+          console.log(`Secure photo upload completed for comment: ${photoUrl}, size: ${photoSize} bytes, variants: ${Object.keys(photoVariants).join(', ')}`);
         } catch (uploadError) {
           console.error("Error uploading photo:", uploadError);
-          return res.status(500).json({ message: "Failed to upload photo" });
+          return res.status(500).json({ 
+            message: "Failed to upload photo",
+            error: uploadError instanceof Error ? uploadError.message : 'Unknown error'
+          });
         }
       }
 
@@ -1148,7 +1489,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json({ 
         comment, 
         count,
-        message: req.file ? "Comment with photo created successfully" : "Comment created successfully"
+        photoVariants, // Include variant information in response
+        message: req.file ? "Comment with secure photo created successfully" : "Comment created successfully"
       });
     } catch (error) {
       console.error("Error creating incident comment with photo:", error);
