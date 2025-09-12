@@ -80,17 +80,12 @@ export function useTrafficData(filters: FilterState): ProcessedTrafficData {
     // Use pre-computed regionIds for accurate filtering
     const regionIds = feature.properties?.regionIds || feature.regionIds || [];
     if (Array.isArray(regionIds) && regionIds.includes(targetRegionId)) {
-      console.debug('🎯 REGION MATCH (regionIds):', { targetRegionId, featureRegionIds: regionIds });
       return true;
     }
     
     // Fallback to text-based matching for any features missing regionIds
     const text = `${feature.properties?.location ?? ''} ${feature.properties?.description ?? ''} ${feature.properties?.title ?? ''}`.toLowerCase();
     const textMatch = (targetRegion?.suburbs || []).some(suburb => text.includes(suburb.toLowerCase()));
-    
-    if (textMatch) {
-      console.debug('🎯 REGION MATCH (text fallback):', { targetRegionId, text: text.substring(0, 50) });
-    }
     
     return textMatch;
   };
