@@ -21,6 +21,8 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
   const [commentsView, setCommentsView] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
   const [newComment, setNewComment] = useState("");
+  const [replyingTo, setReplyingTo] = useState<string | null>(null); // Track which comment we're replying to
+  const [replyContent, setReplyContent] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
@@ -75,13 +77,15 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
 
   // Comment mutation
   const commentMutation = useMutation({
-    mutationFn: async (content: string) => {
+    mutationFn: async ({ content, parentCommentId }: { content: string; parentCommentId?: string }) => {
       if (!eventId) throw new Error("No event ID");
-      return apiRequest("POST", `/api/incidents/${eventId}/social/comments`, { content });
+      return apiRequest("POST", `/api/incidents/${eventId}/social/comments`, { content, parentCommentId });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/incidents", eventId, "social"] });
       setNewComment("");
+      setReplyContent("");
+      setReplyingTo(null);
       toast({
         title: "Comment added",
         description: "Your comment has been posted successfully",
@@ -162,6 +166,112 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
         });
       }
     }
+  };
+
+  // Recursive comment rendering function for nested comments
+  const renderComment = (comment: any, depth: number = 0): JSX.Element => {
+    const maxDepth = 3; // Limit nesting depth to prevent excessive indentation
+    const actualDepth = Math.min(depth, maxDepth);
+    
+    return (
+      <div key={comment.id} className={`${actualDepth > 0 ? 'ml-6 border-l-2 border-muted pl-4' : ''}`}>
+        <div className="flex space-x-3 pb-3" data-testid={`comment-${comment.id}`}>
+          <Avatar className="w-8 h-8 flex-shrink-0">
+            <AvatarFallback className="text-xs">
+              {comment.username?.charAt(0)?.toUpperCase() || 'U'}
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex-1 space-y-1">
+            <div className="flex items-center space-x-2">
+              <span className="text-sm font-medium">{comment.username || 'Anonymous'}</span>
+              <span className="text-xs text-muted-foreground">
+                {new Date(comment.createdAt).toLocaleString()}
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => deleteCommentMutation.mutate(comment.id)}
+                className="text-xs h-6 px-2 text-red-600 hover:text-red-800 ml-auto"
+                disabled={deleteCommentMutation.isPending}
+                data-testid={`button-delete-comment-${comment.id}`}
+              >
+                Delete
+              </Button>
+            </div>
+            <div className="bg-muted/50 rounded-lg px-3 py-2">
+              <p className="text-sm">{comment.content}</p>
+            </div>
+            
+            {/* Reply button and form */}
+            <div className="flex items-center space-x-2 mt-2">
+              {replyingTo === comment.id ? (
+                <div className="flex-1 space-y-2">
+                  <div className="flex space-x-2">
+                    <input
+                      type="text"
+                      placeholder="Write a reply..."
+                      value={replyContent}
+                      onChange={(e) => setReplyContent(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && replyContent.trim()) {
+                          commentMutation.mutate({ content: replyContent.trim(), parentCommentId: comment.id });
+                        }
+                        if (e.key === 'Escape') {
+                          setReplyingTo(null);
+                          setReplyContent("");
+                        }
+                      }}
+                      className="flex-1 px-2 py-1 text-xs border rounded bg-background"
+                      disabled={commentMutation.isPending}
+                      data-testid={`input-reply-${comment.id}`}
+                      autoFocus
+                    />
+                    <Button
+                      size="sm"
+                      onClick={() => replyContent.trim() && commentMutation.mutate({ content: replyContent.trim(), parentCommentId: comment.id })}
+                      disabled={!replyContent.trim() || commentMutation.isPending}
+                      className="h-7 px-2 text-xs"
+                      data-testid={`button-post-reply-${comment.id}`}
+                    >
+                      {commentMutation.isPending ? "..." : "Reply"}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setReplyingTo(null);
+                        setReplyContent("");
+                      }}
+                      className="h-7 px-2 text-xs"
+                      data-testid={`button-cancel-reply-${comment.id}`}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setReplyingTo(comment.id)}
+                  className="text-xs h-6 px-2 text-muted-foreground hover:text-foreground"
+                  data-testid={`button-reply-${comment.id}`}
+                >
+                  Reply
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+        
+        {/* Render replies recursively */}
+        {comment.replies && comment.replies.length > 0 && (
+          <div className="space-y-2">
+            {comment.replies.map((reply: any) => renderComment(reply, depth + 1))}
+          </div>
+        )}
+      </div>
+    );
   };
 
   if (!event) return null;
@@ -1015,7 +1125,7 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
                     onChange={(e) => setNewComment(e.target.value)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' && newComment.trim()) {
-                        commentMutation.mutate(newComment.trim());
+                        commentMutation.mutate({ content: newComment.trim() });
                       }
                     }}
                     className="flex-1 px-3 py-2 text-sm border rounded-md bg-background"
@@ -1024,7 +1134,7 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
                   />
                   <Button
                     size="sm"
-                    onClick={() => newComment.trim() && commentMutation.mutate(newComment.trim())}
+                    onClick={() => newComment.trim() && commentMutation.mutate({ content: newComment.trim() })}
                     disabled={!newComment.trim() || commentMutation.isPending}
                     data-testid="button-post-comment"
                   >
@@ -1045,36 +1155,7 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
                     <p className="text-xs text-muted-foreground">Be the first to comment!</p>
                   </div>
                 ) : (
-                  socialData?.comments?.map((comment: any) => (
-                    <div key={comment.id} className="flex space-x-3 pb-3" data-testid={`comment-${comment.id}`}>
-                      <Avatar className="w-8 h-8 flex-shrink-0">
-                        <AvatarFallback className="text-xs">
-                          {comment.username?.charAt(0)?.toUpperCase() || 'U'}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 space-y-1">
-                        <div className="flex items-center space-x-2">
-                          <span className="text-sm font-medium">{comment.username || 'Anonymous'}</span>
-                          <span className="text-xs text-muted-foreground">
-                            {new Date(comment.createdAt).toLocaleString()}
-                          </span>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => deleteCommentMutation.mutate(comment.id)}
-                            className="text-xs h-6 px-2 text-red-600 hover:text-red-800 ml-auto"
-                            disabled={deleteCommentMutation.isPending}
-                            data-testid={`button-delete-comment-${comment.id}`}
-                          >
-                            Delete
-                          </Button>
-                        </div>
-                        <div className="bg-muted/50 rounded-lg px-3 py-2">
-                          <p className="text-sm">{comment.content}</p>
-                        </div>
-                      </div>
-                    </div>
-                  ))
+                  socialData?.comments?.map((comment: any) => renderComment(comment, 0))
                 )}
               </div>
 

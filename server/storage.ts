@@ -1615,7 +1615,46 @@ export class DatabaseStorage implements IStorage {
       .from(incidentComments)
       .where(eq(incidentComments.incidentId, incidentId))
       .orderBy(desc(incidentComments.createdAt));
-    return result;
+    
+    // Organize comments into nested structure
+    const comments = result as IncidentComment[];
+    const commentMap = new Map<string, IncidentComment & { replies?: IncidentComment[] }>();
+    const topLevelComments: (IncidentComment & { replies?: IncidentComment[] })[] = [];
+    
+    // First, create a map of all comments
+    comments.forEach(comment => {
+      commentMap.set(comment.id, { ...comment, replies: [] });
+    });
+    
+    // Then, organize into tree structure
+    comments.forEach(comment => {
+      const commentWithReplies = commentMap.get(comment.id)!;
+      
+      if (comment.parentCommentId) {
+        // This is a reply - add it to parent's replies
+        const parent = commentMap.get(comment.parentCommentId);
+        if (parent) {
+          parent.replies!.push(commentWithReplies);
+        }
+      } else {
+        // This is a top-level comment
+        topLevelComments.push(commentWithReplies);
+      }
+    });
+    
+    // Sort replies by creation time (oldest first for replies)
+    const sortReplies = (comments: (IncidentComment & { replies?: IncidentComment[] })[]) => {
+      comments.forEach(comment => {
+        if (comment.replies && comment.replies.length > 0) {
+          comment.replies.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+          sortReplies(comment.replies);
+        }
+      });
+    };
+    
+    sortReplies(topLevelComments);
+    
+    return topLevelComments as IncidentComment[];
   }
 
   async getIncidentCommentsCount(incidentId: string): Promise<number> {

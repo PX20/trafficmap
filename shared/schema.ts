@@ -802,6 +802,7 @@ export const incidentComments = pgTable("incident_comments", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   incidentId: varchar("incident_id").notNull(), // References unified_incidents.id
   userId: varchar("user_id").notNull(), // References users.id
+  parentCommentId: varchar("parent_comment_id"), // References incident_comments.id for nested replies
   username: varchar("username").notNull(), // Store for display (denormalized)
   content: text("content").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -809,6 +810,7 @@ export const incidentComments = pgTable("incident_comments", {
 }, (table) => ({
   incidentIdx: index("idx_incident_comments_incident").on(table.incidentId),
   userIdx: index("idx_incident_comments_user").on(table.userId),
+  parentIdx: index("idx_incident_comments_parent").on(table.parentCommentId),
   createdAtIdx: index("idx_incident_comments_created").on(table.createdAt),
 }));
 
@@ -825,7 +827,7 @@ export const incidentLikes = pgTable("incident_likes", {
 }));
 
 // Relations
-export const incidentCommentsRelations = relations(incidentComments, ({ one }) => ({
+export const incidentCommentsRelations = relations(incidentComments, ({ one, many }) => ({
   incident: one(unifiedIncidents, {
     fields: [incidentComments.incidentId],
     references: [unifiedIncidents.id],
@@ -834,6 +836,11 @@ export const incidentCommentsRelations = relations(incidentComments, ({ one }) =
     fields: [incidentComments.userId],
     references: [users.id],
   }),
+  parentComment: one(incidentComments, {
+    fields: [incidentComments.parentCommentId],
+    references: [incidentComments.id],
+  }),
+  replies: many(incidentComments),
 }));
 
 export const incidentLikesRelations = relations(incidentLikes, ({ one }) => ({
@@ -854,6 +861,7 @@ export const insertIncidentCommentSchema = createInsertSchema(incidentComments).
   updatedAt: true,
 }).extend({
   content: z.string().min(1, "Comment cannot be empty").max(1000, "Comment too long"),
+  parentCommentId: z.string().optional().nullable(), // Allow replies to other comments
 });
 
 export const insertIncidentLikeSchema = createInsertSchema(incidentLikes).omit({
@@ -863,6 +871,11 @@ export const insertIncidentLikeSchema = createInsertSchema(incidentLikes).omit({
 
 export type IncidentComment = typeof incidentComments.$inferSelect;
 export type InsertIncidentComment = z.infer<typeof insertIncidentCommentSchema>;
+
+// Type for nested comments with replies
+export type NestedIncidentComment = IncidentComment & {
+  replies?: NestedIncidentComment[];
+};
 export type IncidentLike = typeof incidentLikes.$inferSelect;
 export type InsertIncidentLike = z.infer<typeof insertIncidentLikeSchema>;
 

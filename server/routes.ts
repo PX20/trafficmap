@@ -1006,6 +1006,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validatedData = {
         incidentId,
         userId,
+        parentCommentId: req.body.parentCommentId || null, // Support nested replies
         username: user.displayName || user.firstName || `User${userId.slice(0,4)}`,
         content: req.body.content
       };
