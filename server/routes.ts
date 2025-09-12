@@ -1260,13 +1260,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Authentication required" });
       }
 
-      // Debug logging to see what user ID we're getting vs comment owner
-      console.log("🔍 DELETE COMMENT DEBUG:", {
-        requestUserId: userId,
-        commentId: commentId,
-        userObject: req.user
-      });
-
       // Get the comment to verify ownership
       const comment = await storage.getIncidentCommentById(commentId);
       if (!comment) {
@@ -1274,12 +1267,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Check if the user owns the comment
-      console.log("🔍 OWNERSHIP CHECK:", {
-        commentUserId: comment.userId,
-        requestUserId: userId,
-        matches: comment.userId === userId
-      });
-      
       if (comment.userId !== userId) {
         return res.status(403).json({ message: "You can only delete your own comments" });
       }
