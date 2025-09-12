@@ -881,20 +881,26 @@ export default function Feed() {
                               {getIncidentIcon(incident)}
                             </div>
                             <div className="flex-1">
-                              <h3 className="font-bold text-foreground text-base leading-tight mb-1">
-                                {(() => {
-                                  const title = getIncidentTitle(incident);
-                                  // Keep titles concise for social media
-                                  return title.length > 50 ? title.substring(0, 47) + '...' : title;
-                                })()}
+                              <h3 className="font-bold text-foreground text-base leading-tight mb-1 break-words hyphens-auto" style={{
+                                display: '-webkit-box',
+                                WebkitLineClamp: 2,
+                                WebkitBoxOrient: 'vertical' as const,
+                                overflow: 'hidden',
+                                wordBreak: 'break-word',
+                                overflowWrap: 'break-word'
+                              }}>
+                                {getIncidentTitle(incident)}
                               </h3>
                               
-                              <p className="text-muted-foreground text-sm leading-relaxed mb-2">
-                                {(() => {
-                                  const description = getIncidentDescription(incident);
-                                  // Keep descriptions short and sweet
-                                  return description.length > 100 ? description.substring(0, 97) + '...' : description;
-                                })()}
+                              <p className="text-muted-foreground text-sm leading-relaxed mb-2 break-words" style={{
+                                display: '-webkit-box',
+                                WebkitLineClamp: 3,
+                                WebkitBoxOrient: 'vertical' as const,
+                                overflow: 'hidden',
+                                wordBreak: 'break-word',
+                                overflowWrap: 'break-word'
+                              }}>
+                                {getIncidentDescription(incident)}
                               </p>
                               
                               <div className="flex items-center gap-2 text-xs md:text-sm text-muted-foreground">
