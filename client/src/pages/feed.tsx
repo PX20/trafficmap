@@ -347,8 +347,11 @@ export default function Feed() {
 
   // Helper functions
   const getTimeAgo = (incident: any) => {
-    // Check for timestamp data at the top level of the incident (unified structure)
-    const timestamp = incident.incidentTime || incident.lastUpdated || incident.publishedAt;
+    // Skip for ads
+    if (incident.type === 'ad') return 'Unknown time';
+    
+    // Check for timestamp data in properties (unified structure)
+    const timestamp = incident.properties?.incidentTime || incident.properties?.lastUpdated || incident.properties?.publishedAt;
     
     if (!timestamp) return 'Unknown time';
     
@@ -384,27 +387,47 @@ export default function Feed() {
   };
 
   const getIncidentTitle = (incident: any) => {
-    if (incident.type === 'traffic') {
-      // Social media style traffic posts with emojis and location
-      const eventType = incident.properties?.event_type || incident.properties?.Event_Type || '';
-      const eventSubtype = incident.properties?.event_subtype || incident.properties?.Event_Subtype || '';
-      const description = incident.properties?.description || '';
+    // Skip for ads
+    if (incident.type === 'ad') return '';
+    
+    // Use unified structure title first, then build from other data
+    if (incident.properties?.title) {
+      const title = incident.properties.title;
       const location = getIncidentLocation(incident);
-      const shortLocation = location.split(',')[0]; // Just the road name
+      const shortLocation = location.split(',')[0];
       
-      // Add traffic emoji and make more engaging with location
-      if (eventType?.toLowerCase().includes('accident') || description?.toLowerCase().includes('accident')) {
+      // Make titles more social media friendly with emojis and location context
+      if (title.toLowerCase().includes('accident')) {
         return `🚗💥 Accident on ${shortLocation}`;
-      } else if (eventType?.toLowerCase().includes('congestion') || description?.toLowerCase().includes('congestion')) {
+      } else if (title.toLowerCase().includes('congestion')) {
         return `🚦 Heavy Traffic - ${shortLocation}`;
-      } else if (eventType?.toLowerCase().includes('roadwork') || description?.toLowerCase().includes('roadwork')) {
+      } else if (title.toLowerCase().includes('roadwork')) {
         return `🚧 Roadwork on ${shortLocation}`;
-      } else if (eventType?.toLowerCase().includes('incident') || description?.toLowerCase().includes('incident')) {
-        return `⚠️ Incident on ${shortLocation}`;
-      } else if (eventType?.toLowerCase().includes('closure') || description?.toLowerCase().includes('closure')) {
+      } else if (title.toLowerCase().includes('hazard')) {
+        return `⚠️ Hazard on ${shortLocation}`;
+      } else if (title.toLowerCase().includes('closure')) {
         return `🚫 ${shortLocation} Closed`;
+      } else if (title.toLowerCase().includes('fire')) {
+        return `🔥 Fire Emergency - ${shortLocation}`;
+      } else if (title.toLowerCase().includes('medical')) {
+        return `🚑 Medical Emergency - ${shortLocation}`;
+      } else if (title.toLowerCase().includes('police')) {
+        return `🚔 Police Incident - ${shortLocation}`;
       }
       
+      // Default: add appropriate emoji and location
+      if (incident.properties?.category === 'traffic') {
+        return `🚙 ${title} - ${shortLocation}`;
+      } else {
+        return `🚨 ${title} - ${shortLocation}`;
+      }
+    }
+    
+    if (incident.type === 'traffic') {
+      // Fallback for traffic without title
+      const description = incident.properties?.description || '';
+      const location = getIncidentLocation(incident);
+      const shortLocation = location.split(',')[0];
       return `🚙 Traffic Alert - ${shortLocation}`;
     }
     
@@ -412,40 +435,19 @@ export default function Feed() {
       return incident.properties?.title || '📢 Community Report';
     }
     
-    // Emergency incidents - make them more descriptive with actual incident type and location
-    const eventType = incident.properties?.Event_Type || incident.properties?.GroupedType || '';
-    const incidentType = incident.properties?.Incident_Type || '';
-    const locality = incident.properties?.Locality || incident.properties?.Location || '';
-    
-    // Create more specific titles based on actual incident details
-    if (eventType?.toLowerCase().includes('fire') || incidentType?.toLowerCase().includes('fire')) {
-      if (eventType?.toLowerCase().includes('structure')) {
-        return `🔥 Structure Fire${locality ? ' in ' + locality : ''}`;
-      } else if (eventType?.toLowerCase().includes('vegetation') || eventType?.toLowerCase().includes('grass')) {
-        return `🔥 Bushfire Alert${locality ? ' - ' + locality : ''}`;
-      }
-      return `🔥 Fire Emergency${locality ? ' - ' + locality : ''}`;
-    } else if (eventType?.toLowerCase().includes('medical') || incidentType?.toLowerCase().includes('medical')) {
-      return `🚑 Medical Emergency${locality ? ' in ' + locality : ''}`;
-    } else if (eventType?.toLowerCase().includes('police') || incidentType?.toLowerCase().includes('police')) {
-      return `🚔 Police Incident${locality ? ' in ' + locality : ''}`;
-    } else if (eventType?.toLowerCase().includes('rescue') || incidentType?.toLowerCase().includes('rescue')) {
-      return `🚁 Emergency Rescue${locality ? ' - ' + locality : ''}`;
-    }
-    
-    // Use actual incident type if available, otherwise generic
-    if (eventType) {
-      return `🚨 ${eventType}${locality ? ' - ' + locality : ''}`;
-    }
-    
     return '🚨 Emergency Update';
   };
 
   const getIncidentDescription = (incident: any) => {
-    if (incident.type === 'traffic') {
+    // Skip for ads
+    if (incident.type === 'ad') return '';
+    
+    // Use unified structure description with social media style formatting
+    const description = incident.properties?.description || '';
+    
+    if (incident.properties?.category === 'traffic') {
       // Social media style traffic descriptions
-      const description = incident.properties?.description || '';
-      const advice = incident.properties?.advice || '';
+      const advice = incident.properties?.originalProperties?.advice || '';
       
       // Make traffic descriptions more engaging and concise
       if (description.toLowerCase().includes('proceed with caution')) {
@@ -458,42 +460,36 @@ export default function Feed() {
         return 'Heavy traffic in the area - consider alternate routes 🚦';
       }
       
+      // Use the advice field if it's more descriptive
+      const bestDesc = (advice && advice.length > description.length) ? advice : description;
+      
       // Truncate long descriptions and make them friendly
-      const shortDesc = description.substring(0, 80);
-      return shortDesc.length < description.length ? shortDesc + '...' : (shortDesc || 'Traffic disruption reported');
+      const shortDesc = bestDesc.substring(0, 80);
+      return shortDesc.length < bestDesc.length ? shortDesc + '...' : (shortDesc || 'Traffic disruption reported');
     }
     
     if (incident.properties?.userReported) {
       return incident.properties?.description || 'Community safety report 📢';
     }
     
-    // Emergency incidents - make descriptions more social media friendly
-    const originalDesc = incident.properties?.description || '';
-    const locality = incident.properties?.Locality || '';
-    const eventType = incident.properties?.Event_Type || incident.properties?.GroupedType || '';
-    
-    // Remove technical codes and make more human-friendly
-    if (originalDesc.includes('Status:') && originalDesc.includes('Vehicles:')) {
-      // Simplify emergency service descriptions
-      if (eventType.toLowerCase().includes('fire')) {
-        return `Emergency crews responding to fire incident${locality ? ' in ' + locality : ''} 🚒`;
-      } else if (eventType.toLowerCase().includes('medical')) {
-        return `Medical emergency response in progress${locality ? ' in ' + locality : ''} 🚑`;
-      } else if (eventType.toLowerCase().includes('police')) {
-        return `Police responding to incident${locality ? ' in ' + locality : ''} 🚔`;
-      }
-      return `Emergency services responding${locality ? ' in ' + locality : ''} 🚨`;
+    // Emergency incidents - keep them simple and social media friendly
+    if (description) {
+      // Remove technical formatting and keep it simple
+      const cleanDesc = description.replace(/Status:.*$/i, '').trim();
+      const shortDesc = cleanDesc.substring(0, 100);
+      return shortDesc.length < cleanDesc.length ? shortDesc + '...' : (shortDesc || 'Emergency response in progress');
     }
     
-    // Truncate and clean up
-    const cleanDesc = originalDesc.replace(/Status:.*$/i, '').trim();
-    return cleanDesc.substring(0, 100) + (cleanDesc.length > 100 ? '...' : '') || 'Emergency response in progress';
+    return 'Emergency response in progress';
   };
 
   const getIncidentLocation = (incident: any) => {
-    // First check unified structure top-level location
-    if (incident.location) {
-      return incident.location;
+    // Skip for ads
+    if (incident.type === 'ad') return 'Location not specified';
+    
+    // First check unified structure location in properties
+    if (incident.properties?.location) {
+      return incident.properties.location;
     }
     
     if (incident.type === 'traffic') {
