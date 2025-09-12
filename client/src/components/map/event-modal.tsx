@@ -56,7 +56,7 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
   const likeMutation = useMutation({
     mutationFn: async () => {
       if (!eventId) throw new Error("No event ID");
-      return apiRequest(`/api/incidents/${eventId}/social/likes/toggle`, "POST");
+      return apiRequest("POST", `/api/incidents/${eventId}/social/likes/toggle`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/incidents", eventId, "social"] });
