@@ -1260,6 +1260,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Authentication required" });
       }
 
+      // Debug logging to see what user ID we're getting vs comment owner
+      console.log("🔍 DELETE COMMENT DEBUG:", {
+        requestUserId: userId,
+        commentId: commentId,
+        userObject: req.user
+      });
+
       // Get the comment to verify ownership
       const comment = await storage.getIncidentCommentById(commentId);
       if (!comment) {
@@ -1267,6 +1274,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Check if the user owns the comment
+      console.log("🔍 OWNERSHIP CHECK:", {
+        commentUserId: comment.userId,
+        requestUserId: userId,
+        matches: comment.userId === userId
+      });
+      
       if (comment.userId !== userId) {
         return res.status(403).json({ message: "You can only delete your own comments" });
       }
@@ -1281,14 +1294,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // If comment had a photo, try to delete it from object storage (but don't fail if photo doesn't exist)
       if (comment.photoUrl) {
         try {
-          // Extract the object path from the photo URL and delete it
-          const { ObjectStorageService } = await import('./objectStorage');
-          const objectStorageService = new ObjectStorageService();
-          const objectPath = objectStorageService.normalizeObjectEntityPath(comment.photoUrl);
-          await objectStorageService.deleteObject(objectPath);
+          // Note: Photo deletion from object storage is not implemented yet
+          // For now, just log that we would delete the photo
+          console.log("Note: Comment had photo, but photo deletion not implemented yet:", comment.photoUrl);
         } catch (photoError: any) {
           // Log but don't fail the comment deletion if photo deletion fails
-          console.log("Note: Could not delete associated photo (may have already been deleted):", photoError.message);
+          console.log("Note: Could not delete associated photo:", photoError.message);
         }
       }
       
