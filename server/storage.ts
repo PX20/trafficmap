@@ -1605,6 +1605,95 @@ export class DatabaseStorage implements IStorage {
     return spatialLookup.getCacheStats();
   }
 
+  // ============================================================================
+  // INCIDENT SOCIAL INTERACTION METHODS - Comments and Likes
+  // ============================================================================
+
+  async getIncidentComments(incidentId: string): Promise<IncidentComment[]> {
+    const result = await db
+      .select()
+      .from(incidentComments)
+      .where(eq(incidentComments.incidentId, incidentId))
+      .orderBy(desc(incidentComments.createdAt));
+    return result;
+  }
+
+  async getIncidentCommentsCount(incidentId: string): Promise<number> {
+    const result = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(incidentComments)
+      .where(eq(incidentComments.incidentId, incidentId));
+    return result[0]?.count || 0;
+  }
+
+  async createIncidentComment(comment: InsertIncidentComment): Promise<IncidentComment> {
+    const [newComment] = await db
+      .insert(incidentComments)
+      .values(comment)
+      .returning();
+    return newComment;
+  }
+
+  async deleteIncidentComment(id: string, userId: string): Promise<boolean> {
+    // Only allow users to delete their own comments
+    const result = await db
+      .delete(incidentComments)
+      .where(and(eq(incidentComments.id, id), eq(incidentComments.userId, userId)));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  async getIncidentLikes(incidentId: string): Promise<IncidentLike[]> {
+    const result = await db
+      .select()
+      .from(incidentLikes)
+      .where(eq(incidentLikes.incidentId, incidentId))
+      .orderBy(desc(incidentLikes.createdAt));
+    return result;
+  }
+
+  async getIncidentLikesCount(incidentId: string): Promise<number> {
+    const result = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(incidentLikes)
+      .where(eq(incidentLikes.incidentId, incidentId));
+    return result[0]?.count || 0;
+  }
+
+  async toggleIncidentLike(incidentId: string, userId: string): Promise<{ liked: boolean; count: number }> {
+    // Check if user already liked this incident
+    const [existingLike] = await db
+      .select()
+      .from(incidentLikes)
+      .where(and(eq(incidentLikes.incidentId, incidentId), eq(incidentLikes.userId, userId)));
+
+    if (existingLike) {
+      // Remove the like
+      await db
+        .delete(incidentLikes)
+        .where(and(eq(incidentLikes.incidentId, incidentId), eq(incidentLikes.userId, userId)));
+      
+      const count = await this.getIncidentLikesCount(incidentId);
+      return { liked: false, count };
+    } else {
+      // Add the like
+      await db
+        .insert(incidentLikes)
+        .values({ incidentId, userId });
+      
+      const count = await this.getIncidentLikesCount(incidentId);
+      return { liked: true, count };
+    }
+  }
+
+  async isIncidentLikedByUser(incidentId: string, userId: string): Promise<boolean> {
+    const [existingLike] = await db
+      .select()
+      .from(incidentLikes)
+      .where(and(eq(incidentLikes.incidentId, incidentId), eq(incidentLikes.userId, userId)));
+    
+    return !!existingLike;
+  }
+
 }
 
 export const storage = new DatabaseStorage();
