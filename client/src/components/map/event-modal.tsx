@@ -18,6 +18,7 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
   const [, setLocation] = useLocation();
   const [showDetails, setShowDetails] = useState(false);
   const [showComments, setShowComments] = useState(false);
+  const [commentsView, setCommentsView] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
   const [newComment, setNewComment] = useState("");
   const { toast } = useToast();
@@ -609,41 +610,44 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
   return (
     <Dialog open={!!eventId} onOpenChange={onClose}>
       <DialogContent className="max-w-md" data-testid="modal-event-details">
-        <DialogHeader className="pb-3">
-          {/* Reporter Info Header */}
-          <div className="flex items-center space-x-3">
-            <Avatar 
-              className={`w-10 h-10 ${isUserReported && props.reporterId ? 'cursor-pointer hover:ring-2 hover:ring-primary/40 transition-all' : ''}`}
-              onClick={isUserReported && props.reporterId ? () => {
-                setLocation(`/users/${props.reporterId}`);
-              } : undefined}
-            >
-              <AvatarFallback className={`text-sm font-medium ${getAgencyColor(reporterInfo.agency)}`}>
-                {reporterInfo.initials}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1">
-              <p 
-                className={`text-sm font-medium text-foreground ${isUserReported && props.reporterId ? 'cursor-pointer hover:text-primary transition-colors' : ''}`}
-                onClick={isUserReported && props.reporterId ? () => {
-                  setLocation(`/users/${props.reporterId}`);
-                } : undefined}
-                data-testid="link-reporter-profile"
-              >
-                {reporterInfo.name}
-              </p>
-              <div className="flex items-center space-x-2 text-xs text-muted-foreground">
-                <Clock className="w-3 h-3" />
-                <span data-testid="text-event-time">
-                  {formatDate(getTimestamp())}
-                </span>
+        {!commentsView ? (
+          // Main Incident View
+          <>
+            <DialogHeader className="pb-3">
+              {/* Reporter Info Header */}
+              <div className="flex items-center space-x-3">
+                <Avatar 
+                  className={`w-10 h-10 ${isUserReported && props.reporterId ? 'cursor-pointer hover:ring-2 hover:ring-primary/40 transition-all' : ''}`}
+                  onClick={isUserReported && props.reporterId ? () => {
+                    setLocation(`/users/${props.reporterId}`);
+                  } : undefined}
+                >
+                  <AvatarFallback className={`text-sm font-medium ${getAgencyColor(reporterInfo.agency)}`}>
+                    {reporterInfo.initials}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1">
+                  <p 
+                    className={`text-sm font-medium text-foreground ${isUserReported && props.reporterId ? 'cursor-pointer hover:text-primary transition-colors' : ''}`}
+                    onClick={isUserReported && props.reporterId ? () => {
+                      setLocation(`/users/${props.reporterId}`);
+                    } : undefined}
+                    data-testid="link-reporter-profile"
+                  >
+                    {reporterInfo.name}
+                  </p>
+                  <div className="flex items-center space-x-2 text-xs text-muted-foreground">
+                    <Clock className="w-3 h-3" />
+                    <span data-testid="text-event-time">
+                      {formatDate(getTimestamp())}
+                    </span>
+                  </div>
+                </div>
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-muted`}>
+                  {getIncidentIcon()}
+                </div>
               </div>
-            </div>
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-muted`}>
-              {getIncidentIcon()}
-            </div>
-          </div>
-        </DialogHeader>
+            </DialogHeader>
         
         <div className="space-y-3">
           {/* Title and Summary */}
@@ -899,7 +903,7 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
               size="sm" 
               className="flex items-center space-x-1 text-muted-foreground hover:text-foreground"
               data-testid="button-comments"
-              onClick={() => setShowComments(!showComments)}
+              onClick={() => setCommentsView(true)}
             >
               <MessageCircle className="w-4 h-4" />
               <span className="text-xs">{socialData?.commentCount || 0}</span>
@@ -960,20 +964,45 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
               </div>
             </div>
           )}
-
-          {/* Comments Section */}
-          {showComments && (
-            <div className="border-t pt-3 space-y-3">
-              <div className="flex items-center justify-between">
-                <h4 className="text-sm font-medium">Comments ({socialData?.commentCount || 0})</h4>
+        </div>
+          </>
+        ) : (
+          // Social Media-Style Comments View
+          <>
+            <DialogHeader className="pb-3">
+              <div className="flex items-center space-x-3">
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => setShowComments(false)}
-                  className="text-xs"
+                  onClick={() => setCommentsView(false)}
+                  className="flex items-center space-x-2"
+                  data-testid="button-back-to-incident"
                 >
-                  Close
+                  <ArrowLeft className="w-4 h-4" />
+                  <span>Back</span>
                 </Button>
+                <div className="flex-1 flex items-center justify-center">
+                  <h2 className="text-sm font-semibold">Comments</h2>
+                </div>
+                <div className="w-12"></div> {/* Spacer for centering */}
+              </div>
+            </DialogHeader>
+
+            <div className="space-y-4 flex-1 min-h-0">
+              {/* Incident Summary */}
+              <div className="bg-muted/30 rounded-lg p-3 border">
+                <div className="flex items-start space-x-3">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-muted`}>
+                    {getIncidentIcon()}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-sm font-medium line-clamp-1">{getTitle()}</h3>
+                    <div className="flex items-center space-x-1 text-xs text-muted-foreground mt-1">
+                      <MapPin className="w-3 h-3 flex-shrink-0" />
+                      <span className="line-clamp-1">{getLocation()}</span>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* Add Comment Form */}
@@ -989,7 +1018,7 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
                         commentMutation.mutate(newComment.trim());
                       }
                     }}
-                    className="flex-1 px-3 py-2 text-xs border rounded-md bg-background"
+                    className="flex-1 px-3 py-2 text-sm border rounded-md bg-background"
                     disabled={commentMutation.isPending}
                     data-testid="input-comment"
                   />
@@ -1008,22 +1037,24 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
               </div>
 
               {/* Comments List */}
-              <div className="space-y-3 max-h-60 overflow-y-auto">
+              <div className="flex-1 space-y-4 min-h-0 overflow-y-auto max-h-80">
                 {socialData?.comments?.length === 0 ? (
-                  <p className="text-xs text-muted-foreground italic text-center py-4">
-                    No comments yet. Be the first to comment!
-                  </p>
+                  <div className="text-center py-8">
+                    <MessageCircle className="w-12 h-12 text-muted-foreground/50 mx-auto mb-3" />
+                    <p className="text-sm text-muted-foreground">No comments yet</p>
+                    <p className="text-xs text-muted-foreground">Be the first to comment!</p>
+                  </div>
                 ) : (
                   socialData?.comments?.map((comment: any) => (
-                    <div key={comment.id} className="flex space-x-2" data-testid={`comment-${comment.id}`}>
-                      <Avatar className="w-6 h-6">
+                    <div key={comment.id} className="flex space-x-3 pb-3" data-testid={`comment-${comment.id}`}>
+                      <Avatar className="w-8 h-8 flex-shrink-0">
                         <AvatarFallback className="text-xs">
                           {comment.username?.charAt(0)?.toUpperCase() || 'U'}
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex-1 space-y-1">
                         <div className="flex items-center space-x-2">
-                          <span className="text-xs font-medium">{comment.username || 'Anonymous'}</span>
+                          <span className="text-sm font-medium">{comment.username || 'Anonymous'}</span>
                           <span className="text-xs text-muted-foreground">
                             {new Date(comment.createdAt).toLocaleString()}
                           </span>
@@ -1031,22 +1062,30 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
                             variant="ghost"
                             size="sm"
                             onClick={() => deleteCommentMutation.mutate(comment.id)}
-                            className="text-xs h-6 px-2 text-red-600 hover:text-red-800"
+                            className="text-xs h-6 px-2 text-red-600 hover:text-red-800 ml-auto"
                             disabled={deleteCommentMutation.isPending}
                             data-testid={`button-delete-comment-${comment.id}`}
                           >
                             Delete
                           </Button>
                         </div>
-                        <p className="text-xs">{comment.content}</p>
+                        <div className="bg-muted/50 rounded-lg px-3 py-2">
+                          <p className="text-sm">{comment.content}</p>
+                        </div>
                       </div>
                     </div>
                   ))
                 )}
               </div>
+
+              {/* Social Stats Footer */}
+              <div className="border-t pt-3 flex items-center justify-between text-xs text-muted-foreground">
+                <span>{socialData?.commentCount || 0} comments</span>
+                <span>{socialData?.likeCount || 0} likes</span>
+              </div>
             </div>
-          )}
-        </div>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   );
