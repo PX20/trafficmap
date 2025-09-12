@@ -49,7 +49,6 @@ export default function Feed() {
   const [showRegionalUpdates, setShowRegionalUpdates] = useState(true);
   const [reportFormOpen, setReportFormOpen] = useState(false);
   const [likedIncidents, setLikedIncidents] = useState<Set<string>>(new Set());
-  const [commentsModal, setCommentsModal] = useState<{isOpen: boolean, incident: any}>({isOpen: false, incident: null});
   
   // Initialize filter state with same defaults as map
   const [filters, setFilters] = useState<FilterState>({
@@ -545,44 +544,71 @@ export default function Feed() {
     setSelectedIncident(null);
   };
 
-  // Button functionality
+  // Like mutation using existing API
+  const likeMutation = useMutation({
+    mutationFn: async (incidentId: string) => {
+      return apiRequest('POST', `/api/incidents/${incidentId}/social/likes/toggle`);
+    },
+    onSuccess: (data, incidentId) => {
+      const isLiked = data.liked;
+      setLikedIncidents(prev => {
+        const newSet = new Set(prev);
+        if (isLiked) {
+          newSet.add(incidentId);
+        } else {
+          newSet.delete(incidentId);
+        }
+        return newSet;
+      });
+      toast({
+        title: isLiked ? "Liked incident" : "Removed like",
+        description: isLiked ? "You've liked this incident." : "You've removed your like from this incident.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to toggle like",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleLikeClick = (incidentId: string) => {
-    setLikedIncidents(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(incidentId)) {
-        newSet.delete(incidentId);
-        toast({
-          title: "Removed like",
-          description: "You've removed your like from this incident.",
-        });
-      } else {
-        newSet.add(incidentId);
-        toast({
-          title: "Liked incident",
-          description: "You've liked this incident.",
-        });
-      }
-      return newSet;
-    });
+    if (!user) {
+      toast({
+        title: "Please log in",
+        description: "You need to log in to like incidents",
+        variant: "destructive",
+      });
+      return;
+    }
+    likeMutation.mutate(incidentId);
   };
 
   const handleCommentsClick = (incident: any) => {
-    setCommentsModal({isOpen: true, incident});
+    // Open the existing detail modal which has full comments functionality
+    setSelectedIncident(incident);
+    setIsModalOpen(true);
   };
 
   const handleShareClick = async (incident: any) => {
-    const shareUrl = `${window.location.origin}/feed?incident=${incident.id}`;
-    
+    const incidentId = incident.id || incident.properties?.id;
+    const shareUrl = `${window.location.origin}?incident=${encodeURIComponent(incidentId)}`;
+    const shareTitle = getIncidentTitle(incident);
+    const shareText = `${shareTitle} - ${getIncidentLocation(incident)}`;
+
+    // Try native Web Share API first (mobile devices)
     if (navigator.share) {
       try {
         await navigator.share({
-          title: getIncidentTitle(incident),
-          text: getIncidentDescription(incident),
+          title: shareTitle,
+          text: shareText,
           url: shareUrl,
         });
         toast({
           title: "Shared successfully",
-          description: "Incident has been shared.",
+          description: "Incident details have been shared",
         });
       } catch (error) {
         if ((error as Error).name !== 'AbortError') {
@@ -594,14 +620,14 @@ export default function Feed() {
       try {
         await navigator.clipboard.writeText(shareUrl);
         toast({
-          title: "Link copied",
-          description: "Incident link copied to clipboard.",
+          title: "Link copied to clipboard",
+          description: "You can now paste the incident link anywhere",
         });
       } catch (error) {
         console.error('Error copying to clipboard:', error);
         toast({
-          title: "Share failed",
-          description: "Unable to share this incident.",
+          title: "Unable to copy link",
+          description: "Please share this page manually",
           variant: "destructive",
         });
       }
@@ -950,31 +976,6 @@ export default function Feed() {
         )}
       </div>
 
-      {/* Comments Modal */}
-      {commentsModal.isOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-background rounded-lg w-full max-w-2xl max-h-[80vh] overflow-hidden">
-            <div className="p-4 border-b border-border flex items-center justify-between">
-              <h2 className="text-lg font-semibold">Comments</h2>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setCommentsModal({isOpen: false, incident: null})}
-                className="h-8 w-8 p-0"
-              >
-                ×
-              </Button>
-            </div>
-            <div className="p-6 text-center text-muted-foreground">
-              <MessageCircle className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p className="text-lg">Comments coming soon!</p>
-              <p className="text-sm mt-2">
-                This feature is currently being developed. You'll be able to discuss incidents with other users soon.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Incident Detail Modal */}
       {selectedIncident && (
