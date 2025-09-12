@@ -1277,6 +1277,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Comment likes toggle endpoint
+  app.post("/api/incidents/:incidentId/social/comments/:commentId/likes/toggle", isAuthenticated, async (req: any, res) => {
+    try {
+      const { commentId } = req.params;
+      const userId = (req.user as any).claims.sub;
+
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const result = await storage.toggleCommentLike(commentId, userId);
+      res.json(result);
+    } catch (error) {
+      console.error("Error toggling comment like:", error);
+      res.status(500).json({ message: "Failed to toggle comment like" });
+    }
+  });
+
   // Legacy endpoint for backwards compatibility
   app.delete("/api/comments/:commentId", isAuthenticated, async (req: any, res) => {
     try {
@@ -1312,10 +1330,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ============================================================================
 
   // Get incident comments
-  app.get("/api/incidents/:incidentId/social/comments", async (req, res) => {
+  app.get("/api/incidents/:incidentId/social/comments", async (req: any, res) => {
     try {
       const { incidentId } = req.params;
-      const comments = await storage.getIncidentComments(incidentId);
+      // Get userId if user is authenticated for like information
+      const userId = req.user?.claims?.sub;
+      const comments = await storage.getIncidentComments(incidentId, userId);
       const count = await storage.getIncidentCommentsCount(incidentId);
       res.json({ comments, count });
     } catch (error) {

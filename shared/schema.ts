@@ -829,6 +829,19 @@ export const incidentLikes = pgTable("incident_likes", {
   uniqueUserIncident: unique("unique_user_incident_like").on(table.userId, table.incidentId),
 }));
 
+// Comment likes table for social interactions
+export const commentLikes = pgTable("comment_likes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  commentId: varchar("comment_id").notNull(), // References comments.id
+  userId: varchar("user_id").notNull(), // References users.id
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  commentIdx: index("idx_comment_likes_comment").on(table.commentId),
+  userIdx: index("idx_comment_likes_user").on(table.userId),
+  // Unique constraint to prevent duplicate likes from same user
+  uniqueUserComment: unique("unique_user_comment_like").on(table.userId, table.commentId),
+}));
+
 // Relations
 export const incidentCommentsRelations = relations(incidentComments, ({ one, many }) => ({
   incident: one(unifiedIncidents, {
@@ -857,6 +870,17 @@ export const incidentLikesRelations = relations(incidentLikes, ({ one }) => ({
   }),
 }));
 
+export const commentLikesRelations = relations(commentLikes, ({ one }) => ({
+  comment: one(incidentComments, {
+    fields: [commentLikes.commentId],
+    references: [incidentComments.id],
+  }),
+  user: one(users, {
+    fields: [commentLikes.userId],
+    references: [users.id],
+  }),
+}));
+
 // Zod schemas for validation
 export const insertIncidentCommentSchema = createInsertSchema(incidentComments).omit({
   id: true,
@@ -875,8 +899,15 @@ export const insertIncidentLikeSchema = createInsertSchema(incidentLikes).omit({
   createdAt: true,
 });
 
+export const insertCommentLikeSchema = createInsertSchema(commentLikes).omit({
+  id: true,
+  createdAt: true,
+});
+
 export type IncidentComment = typeof incidentComments.$inferSelect;
 export type InsertIncidentComment = z.infer<typeof insertIncidentCommentSchema>;
+export type CommentLike = typeof commentLikes.$inferSelect;
+export type InsertCommentLike = z.infer<typeof insertCommentLikeSchema>;
 
 // Type for nested comments with replies
 export type NestedIncidentComment = IncidentComment & {
