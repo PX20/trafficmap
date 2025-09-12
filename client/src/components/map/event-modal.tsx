@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MessageCircle, Heart, Share2, MapPin, Clock, AlertTriangle, Car, Shield, Eye, Zap, Info, Timer, Route, Construction, Copy, Check, ArrowLeft, Camera, ImageIcon, X } from "lucide-react";
+import { MessageCircle, Heart, Share2, MapPin, Clock, AlertTriangle, Car, Shield, Eye, Zap, Info, Timer, Route, Construction, Copy, Check, ArrowLeft, Camera, ImageIcon, X, Loader2, ExternalLink } from "lucide-react";
 import { useLocation } from "wouter";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -32,6 +32,9 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
   const [photoAltText, setPhotoAltText] = useState("");
   const [replyPhotoAltText, setReplyPhotoAltText] = useState("");
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  
+  // Photo modal state
+  const [selectedPhotoModal, setSelectedPhotoModal] = useState<{url: string; alt: string} | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
@@ -220,7 +223,7 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
     }
   };
   
-  // Photo preview component
+  // Photo preview component for uploads
   const PhotoPreview = ({ preview, altText, setAltText, onRemove, isReply = false }: {
     preview: string;
     altText: string;
@@ -255,6 +258,102 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
       />
     </div>
   );
+
+  // Comment photo component for displaying posted photos
+  const CommentPhoto = ({ photoUrl, photoAlt, commentId }: {
+    photoUrl: string;
+    photoAlt?: string;
+    commentId: string;
+  }) => {
+    const [isLoading, setIsLoading] = useState(true);
+    const [hasError, setHasError] = useState(false);
+
+    const handlePhotoClick = () => {
+      setSelectedPhotoModal({ url: photoUrl, alt: photoAlt || 'Comment photo' });
+    };
+
+    const handlePhotoLoad = () => {
+      setIsLoading(false);
+      setHasError(false);
+    };
+
+    const handlePhotoError = () => {
+      setIsLoading(false);
+      setHasError(true);
+    };
+
+    return (
+      <div className="mt-2" data-testid={`comment-photo-${commentId}`}>
+        {isLoading && (
+          <div className="flex items-center justify-center w-48 h-32 bg-muted/50 rounded-lg border">
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+          </div>
+        )}
+        {hasError && (
+          <div className="flex items-center justify-center w-48 h-32 bg-muted/50 rounded-lg border">
+            <div className="text-center space-y-1">
+              <ImageIcon className="w-6 h-6 text-muted-foreground mx-auto" />
+              <p className="text-xs text-muted-foreground">Failed to load image</p>
+            </div>
+          </div>
+        )}
+        {!hasError && (
+          <div className="relative inline-block">
+            <img
+              src={photoUrl}
+              alt={photoAlt || 'Comment photo'}
+              onLoad={handlePhotoLoad}
+              onError={handlePhotoError}
+              onClick={handlePhotoClick}
+              className={`max-w-48 max-h-32 sm:max-w-64 sm:max-h-40 rounded-lg object-cover cursor-pointer border transition-all hover:shadow-md hover:scale-[1.02] ${
+                isLoading ? 'opacity-0' : 'opacity-100'
+              }`}
+              data-testid={`img-comment-photo-${commentId}`}
+            />
+            <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors rounded-lg flex items-center justify-center opacity-0 hover:opacity-100">
+              <ExternalLink className="w-4 h-4 text-white drop-shadow-lg" />
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // Photo modal component
+  const PhotoModal = () => {
+    if (!selectedPhotoModal) return null;
+
+    return (
+      <Dialog open={!!selectedPhotoModal} onOpenChange={() => setSelectedPhotoModal(null)}>
+        <DialogContent className="max-w-4xl w-full h-[90vh] p-0 bg-black/90 border-none" data-testid="photo-modal">
+          <div className="relative w-full h-full flex items-center justify-center">
+            <img
+              src={selectedPhotoModal.url}
+              alt={selectedPhotoModal.alt}
+              className="max-w-full max-h-full object-contain"
+              data-testid="img-modal-photo"
+            />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setSelectedPhotoModal(null)}
+              className="absolute top-4 right-4 w-8 h-8 p-0 bg-black/50 hover:bg-black/70 text-white border-none"
+              data-testid="button-close-photo-modal"
+            >
+              <X className="w-4 h-4" />
+            </Button>
+            {selectedPhotoModal.alt && (
+              <div className="absolute bottom-4 left-4 right-4 text-center">
+                <p className="text-sm text-white/80 bg-black/50 px-3 py-1 rounded-full inline-block max-w-full">
+                  {selectedPhotoModal.alt}
+                </p>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  };
   
   // Share functionality
   const handleShare = async () => {
@@ -335,6 +434,15 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
             <div className="bg-muted/50 rounded-lg px-3 py-2">
               <p className="text-sm">{comment.content}</p>
             </div>
+            
+            {/* Display photo if exists */}
+            {comment.photoUrl && (
+              <CommentPhoto 
+                photoUrl={comment.photoUrl} 
+                photoAlt={comment.photoAlt} 
+                commentId={comment.id}
+              />
+            )}
             
             {/* Reply button and form */}
             <div className="flex items-center space-x-2 mt-2">
@@ -1410,6 +1518,7 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
           </>
         )}
       </DialogContent>
+      <PhotoModal />
     </Dialog>
   );
 }
