@@ -970,6 +970,140 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ============================================================================
+  // INCIDENT SOCIAL INTERACTION ROUTES - Comments and Likes for Unified Incidents
+  // ============================================================================
+
+  // Get incident comments
+  app.get("/api/incidents/:incidentId/social/comments", async (req, res) => {
+    try {
+      const { incidentId } = req.params;
+      const comments = await storage.getIncidentComments(incidentId);
+      const count = await storage.getIncidentCommentsCount(incidentId);
+      res.json({ comments, count });
+    } catch (error) {
+      console.error("Error fetching incident comments:", error);
+      res.status(500).json({ message: "Failed to fetch comments" });
+    }
+  });
+
+  // Add incident comment
+  app.post("/api/incidents/:incidentId/social/comments", isAuthenticated, async (req: any, res) => {
+    try {
+      const { incidentId } = req.params;
+      
+      if (!req.user || !req.user.id) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const userId = req.user.id;
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const validatedData = {
+        incidentId,
+        userId,
+        username: user.displayName || user.firstName || `User${userId.slice(0,4)}`,
+        content: req.body.content
+      };
+
+      // Basic validation
+      if (!validatedData.content || validatedData.content.trim().length === 0) {
+        return res.status(400).json({ message: "Comment content is required" });
+      }
+
+      if (validatedData.content.length > 1000) {
+        return res.status(400).json({ message: "Comment too long" });
+      }
+
+      const comment = await storage.createIncidentComment(validatedData);
+      const count = await storage.getIncidentCommentsCount(incidentId);
+      
+      res.status(201).json({ comment, count });
+    } catch (error) {
+      console.error("Error creating incident comment:", error);
+      res.status(500).json({ message: "Failed to create comment" });
+    }
+  });
+
+  // Delete incident comment (only by comment owner)
+  app.delete("/api/incidents/:incidentId/social/comments/:commentId", isAuthenticated, async (req: any, res) => {
+    try {
+      const { incidentId, commentId } = req.params;
+      
+      if (!req.user || !req.user.id) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const userId = req.user.id;
+      const success = await storage.deleteIncidentComment(commentId, userId);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Comment not found or not authorized" });
+      }
+      
+      const count = await storage.getIncidentCommentsCount(incidentId);
+      res.json({ message: "Comment deleted", count });
+    } catch (error) {
+      console.error("Error deleting incident comment:", error);
+      res.status(500).json({ message: "Failed to delete comment" });
+    }
+  });
+
+  // Get incident likes
+  app.get("/api/incidents/:incidentId/social/likes", async (req, res) => {
+    try {
+      const { incidentId } = req.params;
+      const count = await storage.getIncidentLikesCount(incidentId);
+      res.json({ count });
+    } catch (error) {
+      console.error("Error fetching incident likes:", error);
+      res.status(500).json({ message: "Failed to fetch likes" });
+    }
+  });
+
+  // Toggle incident like
+  app.post("/api/incidents/:incidentId/social/likes/toggle", isAuthenticated, async (req: any, res) => {
+    try {
+      const { incidentId } = req.params;
+      
+      if (!req.user || !req.user.id) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const userId = req.user.id;
+      const result = await storage.toggleIncidentLike(incidentId, userId);
+      
+      res.json(result);
+    } catch (error) {
+      console.error("Error toggling incident like:", error);
+      res.status(500).json({ message: "Failed to toggle like" });
+    }
+  });
+
+  // Check if user liked incident
+  app.get("/api/incidents/:incidentId/social/likes/status", isAuthenticated, async (req: any, res) => {
+    try {
+      const { incidentId } = req.params;
+      
+      if (!req.user || !req.user.id) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const userId = req.user.id;
+      const liked = await storage.isIncidentLikedByUser(incidentId, userId);
+      const count = await storage.getIncidentLikesCount(incidentId);
+      
+      res.json({ liked, count });
+    } catch (error) {
+      console.error("Error checking like status:", error);
+      res.status(500).json({ message: "Failed to check like status" });
+    }
+  });
+
   // User Profile Routes
   app.get('/api/users/:userId', async (req: any, res) => {
     try {
