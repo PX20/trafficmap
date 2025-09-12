@@ -880,8 +880,8 @@ export default function Feed() {
                             <div className="p-2 rounded-full bg-gradient-to-br from-primary/10 to-primary/5 group-hover:from-primary/20 group-hover:to-primary/10 transition-all duration-300">
                               {getIncidentIcon(incident)}
                             </div>
-                            <div className="flex-1">
-                              <h3 className="font-bold text-foreground text-base leading-tight mb-1 break-words hyphens-auto" style={{
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-bold text-foreground text-base leading-tight mb-1 break-words hyphens-auto w-full" style={{
                                 display: '-webkit-box',
                                 WebkitLineClamp: 2,
                                 WebkitBoxOrient: 'vertical' as const,
@@ -892,7 +892,7 @@ export default function Feed() {
                                 {getIncidentTitle(incident)}
                               </h3>
                               
-                              <p className="text-muted-foreground text-sm leading-relaxed mb-2 break-words" style={{
+                              <p className="text-muted-foreground text-sm leading-relaxed mb-2 break-words w-full" style={{
                                 display: '-webkit-box',
                                 WebkitLineClamp: 3,
                                 WebkitBoxOrient: 'vertical' as const,
@@ -903,9 +903,16 @@ export default function Feed() {
                                 {getIncidentDescription(incident)}
                               </p>
                               
-                              <div className="flex items-center gap-2 text-xs md:text-sm text-muted-foreground">
-                                <MapPin className="w-3 h-3 md:w-4 md:h-4 flex-shrink-0" />
-                                <span className="truncate">{getIncidentLocation(incident)}</span>
+                              <div className="flex items-start gap-2 text-xs md:text-sm text-muted-foreground">
+                                <MapPin className="w-3 h-3 md:w-4 md:h-4 flex-shrink-0 mt-0.5" />
+                                <span className="break-words hyphens-auto leading-relaxed" style={{
+                                  display: '-webkit-box',
+                                  WebkitLineClamp: 2,
+                                  WebkitBoxOrient: 'vertical' as const,
+                                  overflow: 'hidden',
+                                  wordBreak: 'break-word',
+                                  overflowWrap: 'break-word'
+                                }}>{getIncidentLocation(incident)}</span>
                               </div>
                             </div>
                           </div>
