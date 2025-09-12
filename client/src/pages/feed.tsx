@@ -897,8 +897,8 @@ export default function Feed() {
                                 })()}
                               </p>
                               
-                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                <MapPin className="w-3 h-3" />
+                              <div className="flex items-center gap-2 text-xs md:text-sm text-muted-foreground">
+                                <MapPin className="w-3 h-3 md:w-4 md:h-4 flex-shrink-0" />
                                 <span className="truncate">{getIncidentLocation(incident)}</span>
                               </div>
                             </div>
@@ -910,11 +910,11 @@ export default function Feed() {
                         {/* Action Bar - Compact Social Media Style */}
                         <div className="px-4 py-2 border-t border-border/50">
                           <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-2 md:gap-4">
                               <Button 
                                 variant="ghost" 
                                 size="sm" 
-                                className={`flex items-center gap-1 transition-colors p-1 h-auto text-xs ${
+                                className={`flex items-center gap-1 transition-colors px-3 py-2 h-auto text-xs md:text-sm min-h-[44px] ${
                                   expandedComments.has(incident.id || incident.properties?.id) 
                                     ? 'text-blue-500 hover:text-blue-600' 
                                     : 'hover:text-blue-500'
@@ -926,14 +926,14 @@ export default function Feed() {
                                 data-testid={`button-comments-${incident.id || incident.properties?.id}`}
                               >
                                 <MessageCircle className="w-4 h-4" />
-                                <span>Comments</span>
+                                <span className="hidden sm:inline">Comments</span>
                                 <span className="text-muted-foreground">(0)</span>
                               </Button>
                               
                               <Button 
                                 variant="ghost" 
                                 size="sm" 
-                                className={`flex items-center gap-1 transition-colors p-1 h-auto text-xs ${
+                                className={`flex items-center gap-1 transition-colors px-3 py-2 h-auto text-xs md:text-sm min-h-[44px] ${
                                   likedIncidents.has(incident.id || incident.properties?.id) 
                                     ? 'text-red-500 hover:text-red-600' 
                                     : 'hover:text-red-500'
@@ -954,30 +954,31 @@ export default function Feed() {
                               <Button 
                                 variant="ghost" 
                                 size="sm" 
-                                className="flex items-center gap-1 hover:text-green-500 transition-colors p-1 h-auto text-xs"
+                                className="flex items-center gap-1 hover:text-green-500 transition-colors px-3 py-2 h-auto text-xs md:text-sm min-h-[44px]"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleShareClick(incident);
                                 }}
                               >
                                 <Share className="w-4 h-4" />
+                                <span className="hidden sm:inline">Share</span>
                               </Button>
                               
                               <Button 
                                 variant="ghost" 
                                 size="sm" 
-                                className="flex items-center gap-1 hover:text-purple-500 transition-colors p-1 h-auto text-xs"
+                                className="flex items-center gap-1 hover:text-purple-500 transition-colors px-3 py-2 h-auto text-xs md:text-sm min-h-[44px]"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleIncidentClick(incident);
                                 }}
                               >
                                 <Info className="w-4 h-4" />
-                                <span>Details</span>
+                                <span className="hidden sm:inline">Details</span>
                               </Button>
                             </div>
                             
-                            <div className="text-xs text-muted-foreground">
+                            <div className="text-xs md:text-sm text-muted-foreground">
                               {getTimeAgo(incident)}
                             </div>
                           </div>
@@ -1023,14 +1024,14 @@ export default function Feed() {
         onClose={() => setReportFormOpen(false)}
       />
       
-      {/* Floating Report Button - Desktop Only */}
-      <div className="hidden md:block fixed bottom-6 right-6 z-30">
+      {/* Floating Report Button - Mobile Friendly */}
+      <div className="fixed bottom-6 right-4 md:right-6 z-30">
         <Button
           onClick={() => setReportFormOpen(true)}
-          className="shadow-xl h-14 w-14 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground"
+          className="shadow-xl h-12 w-12 md:h-14 md:w-14 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground transition-all"
           data-testid="button-report-incident"
         >
-          <Plus className="w-6 h-6" />
+          <Plus className="w-5 h-5 md:w-6 md:h-6" />
         </Button>
       </div>
 
