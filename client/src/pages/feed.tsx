@@ -34,7 +34,8 @@ import {
   User,
   Users,
   TrendingUp,
-  Plus
+  Plus,
+  Info
 } from "lucide-react";
 
 export default function Feed() {
@@ -814,19 +815,35 @@ export default function Feed() {
                                 className="flex items-center gap-1 hover:text-blue-500 transition-colors p-1 h-auto text-xs"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  handleIncidentClick(incident);
+                                  // TODO: Open comments modal/panel
+                                  console.log('Open comments for incident:', incident.id);
                                 }}
                               >
                                 <MessageCircle className="w-4 h-4" />
-                                <span>Details</span>
+                                <span>Comments</span>
+                                <span className="text-muted-foreground">(0)</span>
                               </Button>
                               
                               <Button variant="ghost" size="sm" className="flex items-center gap-1 hover:text-red-500 transition-colors p-1 h-auto text-xs">
                                 <Heart className="w-4 h-4" />
+                                <span className="text-muted-foreground">(0)</span>
                               </Button>
                               
                               <Button variant="ghost" size="sm" className="flex items-center gap-1 hover:text-green-500 transition-colors p-1 h-auto text-xs">
                                 <Share className="w-4 h-4" />
+                              </Button>
+                              
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="flex items-center gap-1 hover:text-purple-500 transition-colors p-1 h-auto text-xs"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleIncidentClick(incident);
+                                }}
+                              >
+                                <Info className="w-4 h-4" />
+                                <span>Details</span>
                               </Button>
                             </div>
                             
