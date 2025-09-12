@@ -1,10 +1,13 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MessageCircle, Heart, Share2, MapPin, Clock, AlertTriangle, Car, Shield, Eye, Zap, Info, Timer, Route, Construction } from "lucide-react";
+import { MessageCircle, Heart, Share2, MapPin, Clock, AlertTriangle, Car, Shield, Eye, Zap, Info, Timer, Route, Construction, Copy, Check } from "lucide-react";
 import { useLocation } from "wouter";
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 
 interface EventModalProps {
   eventId: string | null;
@@ -13,6 +16,10 @@ interface EventModalProps {
 
 export function EventModal({ eventId, onClose }: EventModalProps) {
   const [, setLocation] = useLocation();
+  const [showDetails, setShowDetails] = useState(false);
+  const [copySuccess, setCopySuccess] = useState(false);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   
   // Use unified incidents API
   const { data: unifiedData } = useQuery({
@@ -24,6 +31,94 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
     f.properties.id?.toString() === eventId ||
     f.id?.toString() === eventId
   );
+
+  // Get social data for the incident
+  const { data: socialData } = useQuery({
+    queryKey: ["/api/incidents", eventId, "social"],
+    queryFn: async () => {
+      if (!eventId) return null;
+      
+      const [commentsRes, likesRes] = await Promise.all([
+        fetch(`/api/incidents/${eventId}/social/comments`).then(r => r.json()),
+        fetch(`/api/incidents/${eventId}/social/likes`).then(r => r.json())
+      ]);
+
+      return {
+        comments: commentsRes.comments || [],
+        commentCount: commentsRes.count || 0,
+        likeCount: likesRes.count || 0
+      };
+    },
+    enabled: !!eventId
+  });
+
+  // Like toggle mutation
+  const likeMutation = useMutation({
+    mutationFn: async () => {
+      if (!eventId) throw new Error("No event ID");
+      return apiRequest(`/api/incidents/${eventId}/social/likes/toggle`, "POST");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/incidents", eventId, "social"] });
+      toast({
+        title: "Success",
+        description: "Like updated successfully",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update like. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Share functionality
+  const handleShare = async () => {
+    const shareData = {
+      title: event?.properties?.title || 'QLD Safety Incident',
+      text: event?.properties?.description || 'View this safety incident on QLD Safety Monitor',
+      url: window.location.href
+    };
+
+    try {
+      if (navigator.share && navigator.canShare(shareData)) {
+        await navigator.share(shareData);
+        toast({
+          title: "Shared successfully",
+          description: "Incident shared using device share function",
+        });
+      } else {
+        // Fallback to clipboard
+        await navigator.clipboard.writeText(window.location.href);
+        setCopySuccess(true);
+        setTimeout(() => setCopySuccess(false), 2000);
+        toast({
+          title: "Link copied",
+          description: "Incident link copied to clipboard",
+        });
+      }
+    } catch (error) {
+      console.error('Share failed:', error);
+      // Fallback to clipboard
+      try {
+        await navigator.clipboard.writeText(window.location.href);
+        setCopySuccess(true);
+        setTimeout(() => setCopySuccess(false), 2000);
+        toast({
+          title: "Link copied",
+          description: "Incident link copied to clipboard",
+        });
+      } catch (clipboardError) {
+        toast({
+          title: "Error",
+          description: "Failed to share or copy link",
+          variant: "destructive",
+        });
+      }
+    }
+  };
 
   if (!event) return null;
 
@@ -756,22 +851,72 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
 
           {/* Social Interaction Bar */}
           <div className="flex items-center justify-between py-2 border-t">
-            <Button variant="ghost" size="sm" className="flex items-center space-x-1 text-muted-foreground hover:text-foreground">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="flex items-center space-x-1 text-muted-foreground hover:text-foreground"
+              data-testid="button-comments"
+              onClick={() => toast({ title: "Comments", description: "Comment functionality will open in future version" })}
+            >
               <MessageCircle className="w-4 h-4" />
-              <span className="text-xs">12</span>
+              <span className="text-xs">{socialData?.commentCount || 0}</span>
             </Button>
-            <Button variant="ghost" size="sm" className="flex items-center space-x-1 text-muted-foreground hover:text-foreground">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="flex items-center space-x-1 text-muted-foreground hover:text-foreground"
+              data-testid="button-like"
+              onClick={() => likeMutation.mutate()}
+              disabled={likeMutation.isPending}
+            >
               <Heart className="w-4 h-4" />
-              <span className="text-xs">24</span>
+              <span className="text-xs">{socialData?.likeCount || 0}</span>
             </Button>
-            <Button variant="ghost" size="sm" className="flex items-center space-x-1 text-muted-foreground hover:text-foreground">
-              <Share2 className="w-4 h-4" />
-              <span className="text-xs">Share</span>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="flex items-center space-x-1 text-muted-foreground hover:text-foreground"
+              data-testid="button-share"
+              onClick={handleShare}
+            >
+              {copySuccess ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
+              <span className="text-xs">{copySuccess ? "Copied!" : "Share"}</span>
             </Button>
-            <Button size="sm" data-testid="button-view-details">
-              View Details
+            <Button 
+              size="sm" 
+              data-testid="button-view-details"
+              onClick={() => setShowDetails(!showDetails)}
+            >
+              {showDetails ? "Hide Details" : "View Details"}
             </Button>
           </div>
+
+          {/* Expanded Details Section */}
+          {showDetails && (
+            <div className="border-t pt-3 space-y-3">
+              <div>
+                <h4 className="text-sm font-medium mb-2">Additional Information</h4>
+                <div className="text-xs space-y-1 text-muted-foreground">
+                  <p><strong>Source:</strong> {source === 'tmr' ? 'TMR Traffic' : source === 'emergency' ? 'Emergency Services' : 'User Report'}</p>
+                  <p><strong>ID:</strong> {eventId}</p>
+                  <p><strong>Category:</strong> {props.category}</p>
+                  {props.severity && <p><strong>Severity:</strong> {props.severity}</p>}
+                  {props.status && <p><strong>Status:</strong> {props.status}</p>}
+                  {props.incidentTime && <p><strong>Incident Time:</strong> {new Date(props.incidentTime).toLocaleString()}</p>}
+                  {props.lastUpdated && <p><strong>Last Updated:</strong> {new Date(props.lastUpdated).toLocaleString()}</p>}
+                </div>
+              </div>
+              
+              {/* Social engagement summary */}
+              <div>
+                <h4 className="text-sm font-medium mb-2">Community Engagement</h4>
+                <div className="text-xs space-y-1 text-muted-foreground">
+                  <p>{socialData?.commentCount || 0} comments • {socialData?.likeCount || 0} likes</p>
+                  <p className="text-xs italic">Social features require user authentication</p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>
