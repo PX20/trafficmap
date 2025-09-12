@@ -107,7 +107,18 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
       minZoom: 10, // Tighter restriction - roughly Queensland region level
       maxZoom: 16, // Allow more detail for local areas
       maxBounds: queenslandBounds, // Restrict panning to Queensland
-      maxBoundsViscosity: 1.0 // Firm boundary - no bouncing past limits
+      maxBoundsViscosity: 1.0, // Firm boundary - no bouncing past limits
+      // Improved touch handling
+      tap: false, // Prevents ghost clicks on iOS
+      tapTolerance: 15,
+      touchZoom: true,
+      doubleClickZoom: true,
+      scrollWheelZoom: true,
+      dragging: true,
+      zoomControl: true,
+      // Better mobile interaction
+      boxZoom: false,
+      keyboard: false
     }).setView(centerCoords, zoomLevel);
     
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
