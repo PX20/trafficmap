@@ -1261,7 +1261,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Get the comment to verify ownership
-      const comment = await storage.getCommentById(commentId);
+      const comment = await storage.getIncidentCommentById(commentId);
       if (!comment) {
         return res.status(404).json({ message: "Comment not found" });
       }
@@ -1271,10 +1271,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "You can only delete your own comments" });
       }
 
-      const success = await storage.deleteComment(commentId);
+      // Delete the comment from database
+      const success = await storage.deleteIncidentComment(commentId, userId);
       
       if (!success) {
-        return res.status(404).json({ message: "Comment not found" });
+        return res.status(404).json({ message: "Comment not found or not authorized" });
+      }
+      
+      // If comment had a photo, try to delete it from object storage (but don't fail if photo doesn't exist)
+      if (comment.photoUrl) {
+        try {
+          // Extract the object path from the photo URL and delete it
+          const { ObjectStorageService } = await import('./objectStorage');
+          const objectStorageService = new ObjectStorageService();
+          const objectPath = objectStorageService.normalizeObjectEntityPath(comment.photoUrl);
+          await objectStorageService.deleteObject(objectPath);
+        } catch (photoError: any) {
+          // Log but don't fail the comment deletion if photo deletion fails
+          console.log("Note: Could not delete associated photo (may have already been deleted):", photoError.message);
+        }
       }
       
       res.json({ message: "Comment deleted successfully" });

@@ -1682,6 +1682,14 @@ export class DatabaseStorage implements IStorage {
     return result[0]?.count || 0;
   }
 
+  async getIncidentCommentById(id: string): Promise<IncidentComment | undefined> {
+    const [comment] = await db
+      .select()
+      .from(incidentComments)
+      .where(eq(incidentComments.id, id));
+    return comment;
+  }
+
   async createIncidentComment(comment: InsertIncidentComment): Promise<IncidentComment> {
     const [newComment] = await db
       .insert(incidentComments)
