@@ -805,6 +805,9 @@ export const incidentComments = pgTable("incident_comments", {
   parentCommentId: varchar("parent_comment_id"), // References incident_comments.id for nested replies
   username: varchar("username").notNull(), // Store for display (denormalized)
   content: text("content").notNull(),
+  photoUrl: varchar("photo_url"), // URL to uploaded photo in object storage
+  photoAlt: varchar("photo_alt"), // Alt text for accessibility
+  photoSize: integer("photo_size"), // File size in bytes
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }, (table) => ({
@@ -862,6 +865,9 @@ export const insertIncidentCommentSchema = createInsertSchema(incidentComments).
 }).extend({
   content: z.string().min(1, "Comment cannot be empty").max(1000, "Comment too long"),
   parentCommentId: z.string().optional().nullable(), // Allow replies to other comments
+  photoUrl: z.string().optional().nullable(), // Optional photo URL
+  photoAlt: z.string().optional().nullable(), // Optional alt text for accessibility
+  photoSize: z.number().optional().nullable(), // Optional file size in bytes
 });
 
 export const insertIncidentLikeSchema = createInsertSchema(incidentLikes).omit({
