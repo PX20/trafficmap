@@ -192,8 +192,7 @@ async function processSecureImage(buffer: Buffer, options: { quality?: number; f
       .resize(maxDimension, maxDimension, { 
         fit: 'inside', 
         withoutEnlargement: true 
-      })
-      .withMetadata({}); // Remove all EXIF metadata for privacy
+      }); // Remove metadata through format conversion
 
     // Apply format-specific processing
     if (format === 'jpeg') {
