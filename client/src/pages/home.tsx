@@ -216,7 +216,7 @@ export default function Home() {
   };
 
   return (
-    <div className="relative h-screen overflow-hidden bg-background">
+    <div className="relative h-dvh overflow-hidden bg-background">
       <AppHeader 
         onMenuToggle={toggleSidebar}
         onFilterToggle={toggleSidebar}
@@ -232,7 +232,7 @@ export default function Home() {
       
       <main className={`absolute top-16 right-0 bottom-0 left-0 transition-all duration-300 ${
         sidebarOpen && !isMobile ? 'left-80' : 'left-0'
-      } ${isMobile ? 'h-[calc(100vh-4rem)]' : ''}`}>
+      } ${isMobile ? 'h-[calc(100dvh-4rem)]' : ''}`}>
         <TrafficMap 
           filters={filters}
           onEventSelect={setSelectedIncident}
