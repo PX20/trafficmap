@@ -48,6 +48,8 @@ export default function Feed() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showRegionalUpdates, setShowRegionalUpdates] = useState(true);
   const [reportFormOpen, setReportFormOpen] = useState(false);
+  const [likedIncidents, setLikedIncidents] = useState<Set<string>>(new Set());
+  const [commentsModal, setCommentsModal] = useState<{isOpen: boolean, incident: any}>({isOpen: false, incident: null});
   
   // Initialize filter state with same defaults as map
   const [filters, setFilters] = useState<FilterState>({
@@ -543,6 +545,69 @@ export default function Feed() {
     setSelectedIncident(null);
   };
 
+  // Button functionality
+  const handleLikeClick = (incidentId: string) => {
+    setLikedIncidents(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(incidentId)) {
+        newSet.delete(incidentId);
+        toast({
+          title: "Removed like",
+          description: "You've removed your like from this incident.",
+        });
+      } else {
+        newSet.add(incidentId);
+        toast({
+          title: "Liked incident",
+          description: "You've liked this incident.",
+        });
+      }
+      return newSet;
+    });
+  };
+
+  const handleCommentsClick = (incident: any) => {
+    setCommentsModal({isOpen: true, incident});
+  };
+
+  const handleShareClick = async (incident: any) => {
+    const shareUrl = `${window.location.origin}/feed?incident=${incident.id}`;
+    
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: getIncidentTitle(incident),
+          text: getIncidentDescription(incident),
+          url: shareUrl,
+        });
+        toast({
+          title: "Shared successfully",
+          description: "Incident has been shared.",
+        });
+      } catch (error) {
+        if ((error as Error).name !== 'AbortError') {
+          console.error('Error sharing:', error);
+        }
+      }
+    } else {
+      // Fallback to clipboard
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        toast({
+          title: "Link copied",
+          description: "Incident link copied to clipboard.",
+        });
+      } catch (error) {
+        console.error('Error copying to clipboard:', error);
+        toast({
+          title: "Share failed",
+          description: "Unable to share this incident.",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background pb-20">
       <AppHeader onMenuToggle={() => {}} />
@@ -815,8 +880,7 @@ export default function Feed() {
                                 className="flex items-center gap-1 hover:text-blue-500 transition-colors p-1 h-auto text-xs"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  // TODO: Open comments modal/panel
-                                  console.log('Open comments for incident:', incident.id);
+                                  handleCommentsClick(incident);
                                 }}
                               >
                                 <MessageCircle className="w-4 h-4" />
@@ -824,12 +888,36 @@ export default function Feed() {
                                 <span className="text-muted-foreground">(0)</span>
                               </Button>
                               
-                              <Button variant="ghost" size="sm" className="flex items-center gap-1 hover:text-red-500 transition-colors p-1 h-auto text-xs">
-                                <Heart className="w-4 h-4" />
-                                <span className="text-muted-foreground">(0)</span>
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className={`flex items-center gap-1 transition-colors p-1 h-auto text-xs ${
+                                  likedIncidents.has(incident.id || incident.properties?.id) 
+                                    ? 'text-red-500 hover:text-red-600' 
+                                    : 'hover:text-red-500'
+                                }`}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleLikeClick(incident.id || incident.properties?.id);
+                                }}
+                              >
+                                <Heart className={`w-4 h-4 ${
+                                  likedIncidents.has(incident.id || incident.properties?.id) ? 'fill-current' : ''
+                                }`} />
+                                <span className="text-muted-foreground">
+                                  ({likedIncidents.has(incident.id || incident.properties?.id) ? '1' : '0'})
+                                </span>
                               </Button>
                               
-                              <Button variant="ghost" size="sm" className="flex items-center gap-1 hover:text-green-500 transition-colors p-1 h-auto text-xs">
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="flex items-center gap-1 hover:text-green-500 transition-colors p-1 h-auto text-xs"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleShareClick(incident);
+                                }}
+                              >
                                 <Share className="w-4 h-4" />
                               </Button>
                               
@@ -861,6 +949,32 @@ export default function Feed() {
           </div>
         )}
       </div>
+
+      {/* Comments Modal */}
+      {commentsModal.isOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-background rounded-lg w-full max-w-2xl max-h-[80vh] overflow-hidden">
+            <div className="p-4 border-b border-border flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Comments</h2>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setCommentsModal({isOpen: false, incident: null})}
+                className="h-8 w-8 p-0"
+              >
+                ×
+              </Button>
+            </div>
+            <div className="p-6 text-center text-muted-foreground">
+              <MessageCircle className="w-12 h-12 mx-auto mb-4 opacity-50" />
+              <p className="text-lg">Comments coming soon!</p>
+              <p className="text-sm mt-2">
+                This feature is currently being developed. You'll be able to discuss incidents with other users soon.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Incident Detail Modal */}
       {selectedIncident && (
