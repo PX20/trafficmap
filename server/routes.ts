@@ -1442,9 +1442,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
               public: false, // Keep photos private initially
             });
             
+            // Build URL with just the relative path within private directory
+            const relativePath = `comment-photos/${paths[size as keyof typeof paths]}`;
+            
             return {
               size,
-              url: `/objects${fullPath}`,
+              url: `/objects/${relativePath}`,
               path: fullPath
             };
           });
