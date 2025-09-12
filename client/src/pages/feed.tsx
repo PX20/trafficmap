@@ -381,58 +381,95 @@ export default function Feed() {
 
   const getIncidentTitle = (incident: any) => {
     if (incident.type === 'traffic') {
-      // Show the specific event type for TMR posts
-      const eventType = incident.properties?.event_type || 
-                       incident.properties?.Event_Type || 
-                       incident.properties?.eventType || '';
-      const eventSubtype = incident.properties?.event_subtype || 
-                          incident.properties?.Event_Subtype || 
-                          incident.properties?.eventSubtype || '';
+      // Social media style traffic posts with emojis
+      const eventType = incident.properties?.event_type || incident.properties?.Event_Type || '';
+      const eventSubtype = incident.properties?.event_subtype || incident.properties?.Event_Subtype || '';
+      const description = incident.properties?.description || '';
       
-      if (eventType && eventSubtype && eventType !== eventSubtype && eventSubtype !== 'N/A') {
-        return `${eventType} - ${eventSubtype}`;
-      } else if (eventType) {
-        return eventType;
-      } else if (eventSubtype && eventSubtype !== 'N/A') {
-        return eventSubtype;
+      // Add traffic emoji and make more engaging
+      if (eventType?.toLowerCase().includes('accident') || description?.toLowerCase().includes('accident')) {
+        return '🚗💥 Traffic Accident';
+      } else if (eventType?.toLowerCase().includes('congestion') || description?.toLowerCase().includes('congestion')) {
+        return '🚦 Heavy Traffic';
+      } else if (eventType?.toLowerCase().includes('roadwork') || description?.toLowerCase().includes('roadwork')) {
+        return '🚧 Roadwork Ahead';
+      } else if (eventType?.toLowerCase().includes('incident') || description?.toLowerCase().includes('incident')) {
+        return '⚠️ Traffic Incident';
+      } else if (eventType?.toLowerCase().includes('closure') || description?.toLowerCase().includes('closure')) {
+        return '🚫 Road Closure';
       }
       
-      return incident.properties?.description || 'Traffic Event';
+      return '🚙 Traffic Update';
     }
+    
     if (incident.properties?.userReported) {
-      return incident.properties?.title || 'Community Report';
+      return incident.properties?.title || '📢 Community Report';
     }
     
-    // For ESQ incidents - check properties.title
-    if (incident.properties?.title) {
-      return incident.properties.title;
+    // Emergency incidents - make them more social media friendly
+    const eventType = incident.properties?.Event_Type || incident.properties?.GroupedType || '';
+    const incidentType = incident.properties?.Incident_Type || '';
+    
+    if (eventType?.toLowerCase().includes('fire') || incidentType?.toLowerCase().includes('fire')) {
+      return '🔥 Emergency Response';
+    } else if (eventType?.toLowerCase().includes('medical') || incidentType?.toLowerCase().includes('medical')) {
+      return '🚑 Medical Emergency';
+    } else if (eventType?.toLowerCase().includes('police') || incidentType?.toLowerCase().includes('police')) {
+      return '🚔 Police Response';
+    } else if (eventType?.toLowerCase().includes('rescue') || incidentType?.toLowerCase().includes('rescue')) {
+      return '🚁 Emergency Rescue';
     }
     
-    // For emergency incidents, create a meaningful title
-    const groupedType = incident.properties?.GroupedType || '';
-    const locality = incident.properties?.Locality || '';
-    
-    if (groupedType && locality) {
-      return `${groupedType} - ${locality}`;
-    }
-    return groupedType || incident.properties?.Event_Type || incident.properties?.description || 'Emergency Incident';
+    return '🚨 Emergency Update';
   };
 
   const getIncidentDescription = (incident: any) => {
     if (incident.type === 'traffic') {
-      // For TMR posts, show the actual description rather than just road info
-      return incident.properties?.description || 'Traffic disruption reported';
+      // Social media style traffic descriptions
+      const description = incident.properties?.description || '';
+      const advice = incident.properties?.advice || '';
+      
+      // Make traffic descriptions more engaging and concise
+      if (description.toLowerCase().includes('proceed with caution')) {
+        return 'Exercise caution when driving through this area 🚗';
+      } else if (description.toLowerCase().includes('delays')) {
+        return 'Expect delays - plan extra travel time ⏰';
+      } else if (description.toLowerCase().includes('closed')) {
+        return 'Road closure affecting traffic flow 🚫';
+      } else if (description.toLowerCase().includes('congestion')) {
+        return 'Heavy traffic in the area - consider alternate routes 🚦';
+      }
+      
+      // Truncate long descriptions and make them friendly
+      const shortDesc = description.substring(0, 80);
+      return shortDesc.length < description.length ? shortDesc + '...' : (shortDesc || 'Traffic disruption reported');
     }
+    
     if (incident.properties?.userReported) {
-      return incident.properties?.description || 'Community safety report';
+      return incident.properties?.description || 'Community safety report 📢';
     }
     
-    // For ESQ incidents - check properties.description
-    if (incident.properties?.description) {
-      return incident.properties.description;
+    // Emergency incidents - make descriptions more social media friendly
+    const originalDesc = incident.properties?.description || '';
+    const locality = incident.properties?.Locality || '';
+    const eventType = incident.properties?.Event_Type || incident.properties?.GroupedType || '';
+    
+    // Remove technical codes and make more human-friendly
+    if (originalDesc.includes('Status:') && originalDesc.includes('Vehicles:')) {
+      // Simplify emergency service descriptions
+      if (eventType.toLowerCase().includes('fire')) {
+        return `Emergency crews responding to fire incident${locality ? ' in ' + locality : ''} 🚒`;
+      } else if (eventType.toLowerCase().includes('medical')) {
+        return `Medical emergency response in progress${locality ? ' in ' + locality : ''} 🚑`;
+      } else if (eventType.toLowerCase().includes('police')) {
+        return `Police responding to incident${locality ? ' in ' + locality : ''} 🚔`;
+      }
+      return `Emergency services responding${locality ? ' in ' + locality : ''} 🚨`;
     }
     
-    return incident.properties?.description || incident.properties?.Location || 'Emergency incident in progress';
+    // Truncate and clean up
+    const cleanDesc = originalDesc.replace(/Status:.*$/i, '').trim();
+    return cleanDesc.substring(0, 100) + (cleanDesc.length > 100 ? '...' : '') || 'Emergency response in progress';
   };
 
   const getIncidentLocation = (incident: any) => {
@@ -705,9 +742,9 @@ export default function Feed() {
                                 </div>
                                 <p className="text-xs text-muted-foreground">
                                   {getTimeAgo(
-                                    incident.properties?.Response_Date || 
-                                    incident.properties?.last_updated || 
-                                    incident.properties?.createdAt
+                                    incident.incidentTime || 
+                                    incident.lastUpdated || 
+                                    incident.publishedAt
                                   )}
                                 </p>
                               </div>
@@ -718,32 +755,32 @@ export default function Feed() {
                           </div>
                         </div>
 
-                        {/* Post Content */}
-                        <div className="px-4 pb-3">
-                          <div className="flex items-start gap-3 mb-3">
-                            <div className="p-2 rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 group-hover:from-primary/20 group-hover:to-primary/10 transition-all duration-300">
+                        {/* Post Content - Social Media Style */}
+                        <div className="px-4 pb-2">
+                          <div className="flex items-start gap-3">
+                            <div className="p-2 rounded-full bg-gradient-to-br from-primary/10 to-primary/5 group-hover:from-primary/20 group-hover:to-primary/10 transition-all duration-300">
                               {getIncidentIcon(incident)}
                             </div>
                             <div className="flex-1">
-                              <h3 className="font-bold text-foreground text-lg leading-tight mb-2">
+                              <h3 className="font-bold text-foreground text-base leading-tight mb-1">
                                 {(() => {
                                   const title = getIncidentTitle(incident);
-                                  // Truncate long titles to make them more social media friendly
-                                  return title.length > 60 ? title.substring(0, 57) + '...' : title;
+                                  // Keep titles concise for social media
+                                  return title.length > 50 ? title.substring(0, 47) + '...' : title;
                                 })()}
                               </h3>
                               
-                              <p className="text-muted-foreground text-sm leading-relaxed mb-3">
+                              <p className="text-muted-foreground text-sm leading-relaxed mb-2">
                                 {(() => {
                                   const description = getIncidentDescription(incident);
-                                  // Truncate long descriptions to keep it social media style
-                                  return description.length > 120 ? description.substring(0, 117) + '...' : description;
+                                  // Keep descriptions short and sweet
+                                  return description.length > 100 ? description.substring(0, 97) + '...' : description;
                                 })()}
                               </p>
                               
                               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                 <MapPin className="w-3 h-3" />
-                                <span>{getIncidentLocation(incident)}</span>
+                                <span className="truncate">{getIncidentLocation(incident)}</span>
                               </div>
                             </div>
                           </div>
@@ -751,34 +788,29 @@ export default function Feed() {
 
                         <Separator className="opacity-50" />
 
-                        {/* Action Bar - Social Media Style */}
-                        <div className="px-4 py-3">
+                        {/* Action Bar - Compact Social Media Style */}
+                        <div className="px-4 py-2 border-t border-border/50">
                           <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-6">
+                            <div className="flex items-center gap-4">
                               <Button 
                                 variant="ghost" 
                                 size="sm" 
-                                className="flex items-center gap-2 hover:text-blue-500 transition-colors p-2 h-auto"
+                                className="flex items-center gap-1 hover:text-blue-500 transition-colors p-1 h-auto text-xs"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleIncidentClick(incident);
                                 }}
                               >
-                                <MessageCircle className="w-5 h-5" />
-                                <span className="text-sm font-medium">
-                                  {/* No comment count shown - functionality not implemented */}
-                                </span>
+                                <MessageCircle className="w-4 h-4" />
+                                <span>Details</span>
                               </Button>
                               
-                              <Button variant="ghost" size="sm" className="flex items-center gap-2 hover:text-red-500 transition-colors p-2 h-auto">
-                                <Heart className="w-5 h-5" />
-                                <span className="text-sm font-medium">
-                                  {/* No like count shown - functionality not implemented */}
-                                </span>
+                              <Button variant="ghost" size="sm" className="flex items-center gap-1 hover:text-red-500 transition-colors p-1 h-auto text-xs">
+                                <Heart className="w-4 h-4" />
                               </Button>
                               
-                              <Button variant="ghost" size="sm" className="flex items-center gap-2 hover:text-green-500 transition-colors p-2 h-auto">
-                                <Share className="w-5 h-5" />
+                              <Button variant="ghost" size="sm" className="flex items-center gap-1 hover:text-green-500 transition-colors p-1 h-auto text-xs">
+                                <Share className="w-4 h-4" />
                               </Button>
                             </div>
                             
