@@ -1251,7 +1251,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/incidents/:incidentId/social/comments/:commentId", isAuthenticated, async (req: any, res) => {
     try {
       const { commentId } = req.params;
-      const userId = (req.user as any).claims.sub;
+      
+      // Safe extraction of user ID with proper null checks
+      const userId = req.user?.claims?.sub || req.user?.id;
+      
+      if (!userId) {
+        console.error("Delete comment: No user ID found in request", req.user);
+        return res.status(401).json({ message: "Authentication required" });
+      }
 
       // Get the comment to verify ownership
       const comment = await storage.getCommentById(commentId);
@@ -1281,9 +1288,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/incidents/:incidentId/social/comments/:commentId/likes/toggle", isAuthenticated, async (req: any, res) => {
     try {
       const { commentId } = req.params;
-      const userId = (req.user as any).claims.sub;
+      
+      // Safe extraction of user ID with proper null checks
+      const userId = req.user?.claims?.sub || req.user?.id;
 
       if (!userId) {
+        console.error("Toggle comment like: No user ID found in request", req.user);
         return res.status(401).json({ message: "Authentication required" });
       }
 
