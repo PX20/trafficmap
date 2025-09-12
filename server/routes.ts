@@ -1838,7 +1838,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Notification Routes
   app.get('/api/notifications', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = (req.user as any).claims.sub;
+      const userId = (req.user as any)?.claims?.sub || (req.user as any)?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "User authentication failed" });
+      }
       const limit = parseInt(req.query.limit as string) || 50;
       const notifications = await storage.getNotifications(userId, limit);
       res.json(notifications);

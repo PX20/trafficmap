@@ -17,6 +17,7 @@ import { findRegionBySuburb, getRegionalSuburbs } from "@/lib/regions";
 import { FilterState } from "@/pages/home";
 import { useTrafficData } from "@/hooks/use-traffic-data";
 import { SponsoredPost } from "@/components/sponsored-post";
+import { InlineComments } from "@/components/inline-comments";
 import { 
   MapPin, 
   Clock, 
@@ -49,6 +50,7 @@ export default function Feed() {
   const [showRegionalUpdates, setShowRegionalUpdates] = useState(true);
   const [reportFormOpen, setReportFormOpen] = useState(false);
   const [likedIncidents, setLikedIncidents] = useState<Set<string>>(new Set());
+  const [expandedComments, setExpandedComments] = useState<Set<string>>(new Set());
   
   // Initialize filter state with same defaults as map
   const [filters, setFilters] = useState<FilterState>({
@@ -549,8 +551,8 @@ export default function Feed() {
     mutationFn: async (incidentId: string) => {
       return apiRequest('POST', `/api/incidents/${incidentId}/social/likes/toggle`);
     },
-    onSuccess: (data, incidentId) => {
-      const isLiked = data.liked;
+    onSuccess: (data: any, incidentId) => {
+      const isLiked = data?.liked || false;
       setLikedIncidents(prev => {
         const newSet = new Set(prev);
         if (isLiked) {
@@ -587,9 +589,18 @@ export default function Feed() {
   };
 
   const handleCommentsClick = (incident: any) => {
-    // Open the existing detail modal which has full comments functionality
-    setSelectedIncident(incident);
-    setIsModalOpen(true);
+    const incidentId = incident.id || incident.properties?.id;
+    if (!incidentId) return;
+
+    setExpandedComments(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(incidentId)) {
+        newSet.delete(incidentId);
+      } else {
+        newSet.add(incidentId);
+      }
+      return newSet;
+    });
   };
 
   const handleShareClick = async (incident: any) => {
@@ -903,11 +914,16 @@ export default function Feed() {
                               <Button 
                                 variant="ghost" 
                                 size="sm" 
-                                className="flex items-center gap-1 hover:text-blue-500 transition-colors p-1 h-auto text-xs"
+                                className={`flex items-center gap-1 transition-colors p-1 h-auto text-xs ${
+                                  expandedComments.has(incident.id || incident.properties?.id) 
+                                    ? 'text-blue-500 hover:text-blue-600' 
+                                    : 'hover:text-blue-500'
+                                }`}
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleCommentsClick(incident);
                                 }}
+                                data-testid={`button-comments-${incident.id || incident.properties?.id}`}
                               >
                                 <MessageCircle className="w-4 h-4" />
                                 <span>Comments</span>
@@ -966,6 +982,21 @@ export default function Feed() {
                             </div>
                           </div>
                         </div>
+
+                        {/* Inline Comments Section */}
+                        {expandedComments.has(incident.id || incident.properties?.id) && (
+                          <InlineComments 
+                            incident={incident} 
+                            onClose={() => {
+                              const incidentId = incident.id || incident.properties?.id;
+                              setExpandedComments(prev => {
+                                const newSet = new Set(prev);
+                                newSet.delete(incidentId);
+                                return newSet;
+                              });
+                            }}
+                          />
+                        )}
                       </CardContent>
                     </Card>
                   );
