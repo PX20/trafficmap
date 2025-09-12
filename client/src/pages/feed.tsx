@@ -294,8 +294,8 @@ export default function Feed() {
     // Only keep the most recent version if we have duplicates
     if (incidentMap.has(incidentId)) {
       const existing = incidentMap.get(incidentId);
-      const existingDate = new Date(existing.incidentTime || existing.lastUpdated || existing.publishedAt || 0);
-      const currentDate = new Date(incident.incidentTime || incident.lastUpdated || incident.publishedAt || 0);
+      const existingDate = new Date(existing.properties?.incidentTime || existing.properties?.lastUpdated || existing.properties?.publishedAt || 0);
+      const currentDate = new Date(incident.properties?.incidentTime || incident.properties?.lastUpdated || incident.properties?.publishedAt || 0);
       
       // Keep the more recent incident
       if (currentDate > existingDate) {
@@ -311,9 +311,10 @@ export default function Feed() {
   // Sort all deduplicated incidents by time (most recent first)
   const sortedIncidents = deduplicatedIncidents
     .sort((a, b) => {
-      const dateA = new Date(a.incidentTime || a.lastUpdated || a.publishedAt || 0);
-      const dateB = new Date(b.incidentTime || b.lastUpdated || b.publishedAt || 0);
-      return dateB.getTime() - dateA.getTime();
+      // Get timestamps from properties (unified structure)
+      const dateA = new Date(a.properties?.incidentTime || a.properties?.lastUpdated || a.properties?.publishedAt || 0);
+      const dateB = new Date(b.properties?.incidentTime || b.properties?.lastUpdated || b.properties?.publishedAt || 0);
+      return dateB.getTime() - dateA.getTime(); // Newest first (descending order)
     });
 
   // Integrate ads into the feed every 5-7 posts
