@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import type { FilterState } from "@/pages/home";
+import { findRegionBySuburb } from '@/lib/regions';
 
 export interface ProcessedTrafficData {
   events: any[]; // All Queensland data for map
@@ -68,27 +69,35 @@ export function useTrafficData(filters: FilterState): ProcessedTrafficData {
     return source === 'emergency' || source === 'user'; // Emergency services + user reports
   });
 
-  // CLIENT-SIDE REGIONAL FILTERING for feed data
-  const suburb = filters.homeLocation?.split(' ')[0]?.toLowerCase().replace(/[,\.]/g, '') || '';
-  const hasLocation = Boolean(suburb);
+  // CLIENT-SIDE REGIONAL FILTERING for feed data using pre-computed regionIds
+  const targetRegion = findRegionBySuburb(filters.homeLocation || '');
+  const targetRegionId = targetRegion?.id;
   
-  // Regional filtering function
+  // Regional filtering function using regionIds with text fallback
   const isInRegion = (feature: any) => {
-    if (!hasLocation) return false;
+    if (!targetRegionId) return false;
     
-    // Check location text fields for suburb match
-    const location = feature.properties?.location?.toLowerCase() || '';
-    const description = feature.properties?.description?.toLowerCase() || '';
-    const title = feature.properties?.title?.toLowerCase() || '';
+    // Use pre-computed regionIds for accurate filtering
+    const regionIds = feature.properties?.regionIds || feature.regionIds || [];
+    if (Array.isArray(regionIds) && regionIds.includes(targetRegionId)) {
+      console.debug('🎯 REGION MATCH (regionIds):', { targetRegionId, featureRegionIds: regionIds });
+      return true;
+    }
     
-    return location.includes(suburb) || 
-           description.includes(suburb) || 
-           title.includes(suburb);
+    // Fallback to text-based matching for any features missing regionIds
+    const text = `${feature.properties?.location ?? ''} ${feature.properties?.description ?? ''} ${feature.properties?.title ?? ''}`.toLowerCase();
+    const textMatch = (targetRegion?.suburbs || []).some(suburb => text.includes(suburb.toLowerCase()));
+    
+    if (textMatch) {
+      console.debug('🎯 REGION MATCH (text fallback):', { targetRegionId, text: text.substring(0, 50) });
+    }
+    
+    return textMatch;
   };
 
   // Apply regional filtering for feed data
-  const regionalEventsData = hasLocation ? allEventsData.filter(isInRegion) : [];
-  const regionalIncidentsData = hasLocation ? allIncidentsData.filter(isInRegion) : [];
+  const regionalEventsData = targetRegionId ? allEventsData.filter(isInRegion) : [];
+  const regionalIncidentsData = targetRegionId ? allIncidentsData.filter(isInRegion) : [];
 
   // All data for map display (shows everything)
   const allEvents = Array.isArray(allEventsData) ? allEventsData : [];
