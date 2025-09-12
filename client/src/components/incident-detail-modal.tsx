@@ -731,12 +731,16 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
         onClose();
       }
     }}>
-      <DialogContent className="w-[95vw] max-w-lg max-h-[90vh] sm:max-h-[85vh] flex flex-col p-0 bg-gradient-to-br from-white via-gray-50 to-white border-0 shadow-2xl overflow-hidden" data-testid="modal-incident-details">
+      <DialogContent 
+        className="w-[calc(100vw-1rem)] sm:w-[95vw] max-w-sm sm:max-w-lg max-h-[95vh] sm:max-h-[85vh] flex flex-col p-0 bg-gradient-to-br from-white via-gray-50 to-white border-0 shadow-2xl overflow-hidden" 
+        data-testid="modal-incident-details"
+        aria-describedby="modal-description"
+      >
         {/* Decorative Background Elements */}
         <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-200/30 to-purple-200/30 rounded-full blur-2xl"></div>
         <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-br from-orange-200/20 to-pink-200/20 rounded-full blur-lg"></div>
         
-        <DialogHeader className="relative p-4 sm:p-6 pb-3 sm:pb-4 flex-shrink-0 bg-gradient-to-r from-gray-50/80 to-white/80 backdrop-blur-sm">
+        <DialogHeader className="relative p-3 sm:p-6 pb-2 sm:pb-4 flex-shrink-0 bg-gradient-to-r from-gray-50/80 to-white/80 backdrop-blur-sm">
           {/* Enhanced Header */}
           <div className="flex items-center gap-4">
             {/* Clickable User Avatar/Name for user-reported incidents only */}
@@ -758,7 +762,7 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start gap-2 mb-1 flex-wrap">
-                    <h4 className="font-bold text-gray-900 text-base sm:text-lg leading-tight hover:text-blue-600 transition-colors break-words flex-1 min-w-0">
+                    <h4 className="font-bold text-gray-900 text-sm sm:text-lg leading-tight hover:text-blue-600 transition-colors break-words flex-1 min-w-0 hyphens-auto" style={{wordBreak: 'break-word', overflowWrap: 'break-word'}}>
                       {getSourceInfo(incident).name}
                     </h4>
                     <Badge variant="secondary" className="px-2 sm:px-3 py-1 bg-gradient-to-r from-blue-100 to-purple-100 text-blue-700 border-blue-200 font-medium text-xs sm:text-sm flex-shrink-0">
@@ -822,7 +826,7 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
         {/* Enhanced Scrollable Content Container */}
         <div className="relative flex-1 overflow-y-auto">
           {/* Main Incident Card */}
-          <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+          <div className="p-3 sm:p-6 space-y-3 sm:space-y-6" id="modal-description">
             <div className="relative p-6 rounded-2xl bg-gradient-to-br from-white via-gray-50 to-white border border-gray-100 shadow-lg overflow-hidden">
               {/* Content decorative elements */}
               <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-blue-200/20 to-purple-200/20 rounded-full blur-lg"></div>
