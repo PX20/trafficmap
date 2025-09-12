@@ -69,7 +69,7 @@ export function useTrafficData(filters: FilterState): ProcessedTrafficData {
   });
 
   // CLIENT-SIDE REGIONAL FILTERING for feed data
-  const suburb = filters.homeLocation?.split(' ')[0]?.toLowerCase() || '';
+  const suburb = filters.homeLocation?.split(' ')[0]?.toLowerCase().replace(/[,\.]/g, '') || '';
   const hasLocation = Boolean(suburb);
   
   // Regional filtering function
