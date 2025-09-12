@@ -193,7 +193,7 @@ async function processSecureImage(buffer: Buffer, options: { quality?: number; f
         fit: 'inside', 
         withoutEnlargement: true 
       })
-      .strip(); // Remove all EXIF metadata for privacy
+      .withMetadata({}); // Remove all EXIF metadata for privacy
 
     // Apply format-specific processing
     if (format === 'jpeg') {
