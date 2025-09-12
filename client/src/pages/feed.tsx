@@ -346,9 +346,13 @@ export default function Feed() {
   }, []);
 
   // Helper functions
-  const getTimeAgo = (dateString: string) => {
-    if (!dateString) return 'Unknown time';
-    const date = new Date(dateString);
+  const getTimeAgo = (incident: any) => {
+    // Check for timestamp data at the top level of the incident (unified structure)
+    const timestamp = incident.incidentTime || incident.lastUpdated || incident.publishedAt;
+    
+    if (!timestamp) return 'Unknown time';
+    
+    const date = new Date(timestamp);
     const now = new Date();
     const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
     
@@ -381,43 +385,57 @@ export default function Feed() {
 
   const getIncidentTitle = (incident: any) => {
     if (incident.type === 'traffic') {
-      // Social media style traffic posts with emojis
+      // Social media style traffic posts with emojis and location
       const eventType = incident.properties?.event_type || incident.properties?.Event_Type || '';
       const eventSubtype = incident.properties?.event_subtype || incident.properties?.Event_Subtype || '';
       const description = incident.properties?.description || '';
+      const location = getIncidentLocation(incident);
+      const shortLocation = location.split(',')[0]; // Just the road name
       
-      // Add traffic emoji and make more engaging
+      // Add traffic emoji and make more engaging with location
       if (eventType?.toLowerCase().includes('accident') || description?.toLowerCase().includes('accident')) {
-        return '🚗💥 Traffic Accident';
+        return `🚗💥 Accident on ${shortLocation}`;
       } else if (eventType?.toLowerCase().includes('congestion') || description?.toLowerCase().includes('congestion')) {
-        return '🚦 Heavy Traffic';
+        return `🚦 Heavy Traffic - ${shortLocation}`;
       } else if (eventType?.toLowerCase().includes('roadwork') || description?.toLowerCase().includes('roadwork')) {
-        return '🚧 Roadwork Ahead';
+        return `🚧 Roadwork on ${shortLocation}`;
       } else if (eventType?.toLowerCase().includes('incident') || description?.toLowerCase().includes('incident')) {
-        return '⚠️ Traffic Incident';
+        return `⚠️ Incident on ${shortLocation}`;
       } else if (eventType?.toLowerCase().includes('closure') || description?.toLowerCase().includes('closure')) {
-        return '🚫 Road Closure';
+        return `🚫 ${shortLocation} Closed`;
       }
       
-      return '🚙 Traffic Update';
+      return `🚙 Traffic Alert - ${shortLocation}`;
     }
     
     if (incident.properties?.userReported) {
       return incident.properties?.title || '📢 Community Report';
     }
     
-    // Emergency incidents - make them more social media friendly
+    // Emergency incidents - make them more descriptive with actual incident type and location
     const eventType = incident.properties?.Event_Type || incident.properties?.GroupedType || '';
     const incidentType = incident.properties?.Incident_Type || '';
+    const locality = incident.properties?.Locality || incident.properties?.Location || '';
     
+    // Create more specific titles based on actual incident details
     if (eventType?.toLowerCase().includes('fire') || incidentType?.toLowerCase().includes('fire')) {
-      return '🔥 Emergency Response';
+      if (eventType?.toLowerCase().includes('structure')) {
+        return `🔥 Structure Fire${locality ? ' in ' + locality : ''}`;
+      } else if (eventType?.toLowerCase().includes('vegetation') || eventType?.toLowerCase().includes('grass')) {
+        return `🔥 Bushfire Alert${locality ? ' - ' + locality : ''}`;
+      }
+      return `🔥 Fire Emergency${locality ? ' - ' + locality : ''}`;
     } else if (eventType?.toLowerCase().includes('medical') || incidentType?.toLowerCase().includes('medical')) {
-      return '🚑 Medical Emergency';
+      return `🚑 Medical Emergency${locality ? ' in ' + locality : ''}`;
     } else if (eventType?.toLowerCase().includes('police') || incidentType?.toLowerCase().includes('police')) {
-      return '🚔 Police Response';
+      return `🚔 Police Incident${locality ? ' in ' + locality : ''}`;
     } else if (eventType?.toLowerCase().includes('rescue') || incidentType?.toLowerCase().includes('rescue')) {
-      return '🚁 Emergency Rescue';
+      return `🚁 Emergency Rescue${locality ? ' - ' + locality : ''}`;
+    }
+    
+    // Use actual incident type if available, otherwise generic
+    if (eventType) {
+      return `🚨 ${eventType}${locality ? ' - ' + locality : ''}`;
     }
     
     return '🚨 Emergency Update';
@@ -473,6 +491,11 @@ export default function Feed() {
   };
 
   const getIncidentLocation = (incident: any) => {
+    // First check unified structure top-level location
+    if (incident.location) {
+      return incident.location;
+    }
+    
     if (incident.type === 'traffic') {
       const roadInfo = incident.properties?.road_summary;
       const roadName = roadInfo?.road_name || '';
@@ -741,11 +764,7 @@ export default function Feed() {
                                   </Badge>
                                 </div>
                                 <p className="text-xs text-muted-foreground">
-                                  {getTimeAgo(
-                                    incident.incidentTime || 
-                                    incident.lastUpdated || 
-                                    incident.publishedAt
-                                  )}
+                                  {getTimeAgo(incident)}
                                 </p>
                               </div>
                             </div>
@@ -815,11 +834,7 @@ export default function Feed() {
                             </div>
                             
                             <div className="text-xs text-muted-foreground">
-                              {getTimeAgo(
-                                incident.incidentTime || 
-                                incident.lastUpdated || 
-                                incident.publishedAt
-                              )}
+                              {getTimeAgo(incident)}
                             </div>
                           </div>
                         </div>
