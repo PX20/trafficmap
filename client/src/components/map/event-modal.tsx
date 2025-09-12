@@ -171,6 +171,24 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
     }
   });
 
+  // Comment like mutation
+  const commentLikeMutation = useMutation({
+    mutationFn: async (commentId: string) => {
+      if (!eventId) throw new Error("No event ID");
+      return apiRequest("POST", `/api/incidents/${eventId}/social/comments/${commentId}/likes/toggle`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/incidents", eventId, "social"] });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update like. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
   // Photo handling functions
   const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>, isReply: boolean = false) => {
     const file = e.target.files?.[0];
@@ -479,10 +497,15 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
                 {getRelativeTime(comment.createdAt)}
               </span>
               <button 
-                className="text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                onClick={() => commentLikeMutation.mutate(comment.id)}
+                disabled={commentLikeMutation.isPending}
+                className={`text-xs font-semibold transition-colors cursor-pointer ${
+                  comment.isLiked ? 'text-blue-600 hover:text-blue-700' : 'text-muted-foreground hover:text-foreground'
+                }`}
                 data-testid={`button-like-comment-${comment.id}`}
               >
-                Like
+                {comment.isLiked ? '👍 Liked' : 'Like'}
+                {(comment.likeCount > 0) && ` (${comment.likeCount})`}
               </button>
               <button 
                 onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
