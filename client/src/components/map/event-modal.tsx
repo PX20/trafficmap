@@ -259,7 +259,7 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
     </div>
   );
 
-  // Comment photo component for displaying posted photos
+  // Facebook-style comment photo component  
   const CommentPhoto = ({ photoUrl, photoAlt, commentId }: {
     photoUrl: string;
     photoAlt?: string;
@@ -283,14 +283,14 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
     };
 
     return (
-      <div className="mt-2" data-testid={`comment-photo-${commentId}`}>
+      <div className="mt-2 max-w-sm" data-testid={`comment-photo-${commentId}`}>
         {isLoading && (
-          <div className="flex items-center justify-center w-48 h-32 bg-muted/50 rounded-lg border">
+          <div className="flex items-center justify-center w-full h-48 bg-muted/30 rounded-xl border border-muted/50">
             <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
           </div>
         )}
         {hasError && (
-          <div className="flex items-center justify-center w-48 h-32 bg-muted/50 rounded-lg border">
+          <div className="flex items-center justify-center w-full h-48 bg-muted/30 rounded-xl border border-muted/50">
             <div className="text-center space-y-1">
               <ImageIcon className="w-6 h-6 text-muted-foreground mx-auto" />
               <p className="text-xs text-muted-foreground">Failed to load image</p>
@@ -298,21 +298,29 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
           </div>
         )}
         {!hasError && (
-          <div className="relative inline-block">
+          <div className="relative overflow-hidden rounded-xl border border-muted/50 bg-muted/20">
             <img
               src={photoUrl}
               alt={photoAlt || 'Comment photo'}
               onLoad={handlePhotoLoad}
               onError={handlePhotoError}
               onClick={handlePhotoClick}
-              className={`max-w-48 max-h-32 sm:max-w-64 sm:max-h-40 rounded-lg object-cover cursor-pointer border transition-all hover:shadow-md hover:scale-[1.02] ${
+              className={`w-full h-auto max-h-80 object-cover cursor-pointer transition-all hover:scale-[1.02] ${
                 isLoading ? 'opacity-0' : 'opacity-100'
               }`}
+              style={{ minHeight: '120px' }}
               data-testid={`img-comment-photo-${commentId}`}
             />
-            <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors rounded-lg flex items-center justify-center opacity-0 hover:opacity-100">
-              <ExternalLink className="w-4 h-4 text-white drop-shadow-lg" />
+            <div className="absolute inset-0 bg-black/0 hover:bg-black/5 transition-colors flex items-center justify-center opacity-0 hover:opacity-100">
+              <div className="bg-black/20 rounded-full p-2">
+                <ExternalLink className="w-4 h-4 text-white drop-shadow-lg" />
+              </div>
             </div>
+            {photoAlt && (
+              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
+                <p className="text-xs text-white text-center">{photoAlt}</p>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -401,118 +409,167 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
     }
   };
 
-  // Recursive comment rendering function for nested comments
+  // Helper function for relative timestamps (Facebook-style)
+  const getRelativeTime = (dateString: string): string => {
+    const now = new Date();
+    const date = new Date(dateString);
+    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+    
+    if (diffInMinutes < 1) return 'now';
+    if (diffInMinutes < 60) return `${diffInMinutes}m`;
+    
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) return `${diffInHours}h`;
+    
+    const diffInDays = Math.floor(diffInHours / 24);
+    if (diffInDays < 7) return `${diffInDays}d`;
+    
+    const diffInWeeks = Math.floor(diffInDays / 7);
+    if (diffInWeeks < 4) return `${diffInWeeks}w`;
+    
+    return date.toLocaleDateString();
+  };
+
+  // Recursive comment rendering function for nested comments (Facebook-style)
   const renderComment = (comment: any, depth: number = 0): JSX.Element => {
     const maxDepth = 3; // Limit nesting depth to prevent excessive indentation
     const actualDepth = Math.min(depth, maxDepth);
     
     return (
-      <div key={comment.id} className={`${actualDepth > 0 ? 'ml-6 border-l-2 border-muted pl-4' : ''}`}>
-        <div className="flex space-x-3 pb-3" data-testid={`comment-${comment.id}`}>
-          <Avatar className="w-8 h-8 flex-shrink-0">
-            <AvatarFallback className="text-xs">
+      <div key={comment.id} className={`${actualDepth > 0 ? 'ml-10 border-l border-muted/50 pl-3 mt-2' : ''}`}>
+        <div className="flex space-x-3 pb-2" data-testid={`comment-${comment.id}`}>
+          <Avatar className="w-10 h-10 flex-shrink-0">
+            <AvatarFallback className="text-sm font-medium bg-gradient-to-br from-blue-500 to-purple-600 text-white">
               {comment.username?.charAt(0)?.toUpperCase() || 'U'}
             </AvatarFallback>
           </Avatar>
-          <div className="flex-1 space-y-1">
-            <div className="flex items-center space-x-2">
-              <span className="text-sm font-medium">{comment.username || 'Anonymous'}</span>
-              <span className="text-xs text-muted-foreground">
-                {new Date(comment.createdAt).toLocaleString()}
-              </span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => deleteCommentMutation.mutate(comment.id)}
-                className="text-xs h-6 px-2 text-red-600 hover:text-red-800 ml-auto"
-                disabled={deleteCommentMutation.isPending}
-                data-testid={`button-delete-comment-${comment.id}`}
-              >
-                Delete
-              </Button>
-            </div>
-            <div className="bg-muted/50 rounded-lg px-3 py-2">
-              <p className="text-sm">{comment.content}</p>
+          <div className="flex-1 min-w-0">
+            {/* Content Container - Facebook style */}
+            <div className="bg-muted/40 rounded-2xl px-3 py-2.5 inline-block max-w-full">
+              <div className="flex items-center space-x-2 mb-1">
+                <span className="text-sm font-semibold text-foreground">{comment.username || 'Anonymous'}</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => deleteCommentMutation.mutate(comment.id)}
+                  className="text-xs h-5 px-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 ml-auto opacity-0 group-hover:opacity-100 transition-opacity"
+                  disabled={deleteCommentMutation.isPending}
+                  data-testid={`button-delete-comment-${comment.id}`}
+                >
+                  ×
+                </Button>
+              </div>
+              <p className="text-sm text-foreground leading-relaxed break-words">{comment.content}</p>
             </div>
             
-            {/* Display photo if exists */}
+            {/* Display photo if exists - positioned below text like Facebook */}
             {comment.photoUrl && (
-              <CommentPhoto 
-                photoUrl={comment.photoUrl} 
-                photoAlt={comment.photoAlt} 
-                commentId={comment.id}
-              />
+              <div className="mt-1">
+                <CommentPhoto 
+                  photoUrl={comment.photoUrl} 
+                  photoAlt={comment.photoAlt} 
+                  commentId={comment.id}
+                />
+              </div>
             )}
             
-            {/* Reply button and form */}
-            <div className="flex items-center space-x-2 mt-2">
-              {replyingTo === comment.id ? (
+            {/* Action buttons - Facebook style */}
+            <div className="flex items-center space-x-4 mt-1 mb-2 px-1">
+              <span className="text-xs text-muted-foreground font-medium">
+                {getRelativeTime(comment.createdAt)}
+              </span>
+              <button 
+                className="text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                data-testid={`button-like-comment-${comment.id}`}
+              >
+                Like
+              </button>
+              <button 
+                onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
+                className="text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                data-testid={`button-reply-${comment.id}`}
+              >
+                Reply
+              </button>
+            </div>
+            
+            {/* Facebook-style Reply Form */}
+            {replyingTo === comment.id && (
+              <div className="flex space-x-3 mt-3">
+                <Avatar className="w-8 h-8 flex-shrink-0">
+                  <AvatarFallback className="text-xs bg-gradient-to-br from-green-500 to-blue-600 text-white">
+                    {'U'}
+                  </AvatarFallback>
+                </Avatar>
                 <div className="flex-1 space-y-2">
-                  <div className="flex space-x-2">
-                    <div className="flex-1 space-y-2">
+                  <div className="bg-muted/40 rounded-2xl px-3 py-2 border border-muted">
+                    <input
+                      type="text"
+                      placeholder="Write a reply..."
+                      value={replyContent}
+                      onChange={(e) => setReplyContent(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && replyContent.trim()) {
+                          commentMutation.mutate({ 
+                            content: replyContent.trim(), 
+                            parentCommentId: comment.id,
+                            photo: selectedReplyPhoto || undefined,
+                            altText: replyPhotoAltText || undefined
+                          });
+                        }
+                        if (e.key === 'Escape') {
+                          setReplyingTo(null);
+                          setReplyContent("");
+                          removePhoto(true);
+                        }
+                      }}
+                      className="w-full bg-transparent text-sm placeholder:text-muted-foreground border-none outline-none resize-none"
+                      disabled={commentMutation.isPending || isUploadingPhoto}
+                      data-testid={`input-reply-${comment.id}`}
+                      autoFocus
+                    />
+                  </div>
+                  
+                  {/* Photo Upload Input for Reply */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
                       <input
-                        type="text"
-                        placeholder="Write a reply..."
-                        value={replyContent}
-                        onChange={(e) => setReplyContent(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' && replyContent.trim()) {
-                            commentMutation.mutate({ 
-                              content: replyContent.trim(), 
-                              parentCommentId: comment.id,
-                              photo: selectedReplyPhoto || undefined,
-                              altText: replyPhotoAltText || undefined
-                            });
-                          }
-                          if (e.key === 'Escape') {
-                            setReplyingTo(null);
-                            setReplyContent("");
-                            removePhoto(true);
-                          }
-                        }}
-                        className="w-full px-2 py-1 text-xs border rounded bg-background"
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handlePhotoSelect(e, true)}
+                        className="hidden"
+                        id={`reply-photo-upload-${comment.id}`}
                         disabled={commentMutation.isPending || isUploadingPhoto}
-                        data-testid={`input-reply-${comment.id}`}
-                        autoFocus
+                        data-testid={`input-reply-photo-${comment.id}`}
                       />
-                      
-                      {/* Photo Upload Input for Reply */}
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={(e) => handlePhotoSelect(e, true)}
-                          className="hidden"
-                          id={`reply-photo-upload-${comment.id}`}
-                          disabled={commentMutation.isPending || isUploadingPhoto}
-                          data-testid={`input-reply-photo-${comment.id}`}
-                        />
-                        <label 
-                          htmlFor={`reply-photo-upload-${comment.id}`}
-                          className="flex items-center space-x-1 px-1 py-0.5 text-xs border rounded cursor-pointer hover:bg-muted/50 transition-colors"
-                        >
-                          <Camera className="w-2.5 h-2.5" />
-                          <span>Photo</span>
-                        </label>
-                        {selectedReplyPhoto && (
-                          <span className="text-xs text-muted-foreground">
-                            📸 {selectedReplyPhoto.name}
-                          </span>
-                        )}
-                      </div>
-                      
-                      {/* Photo Preview for Reply */}
-                      {replyPhotoPreview && (
-                        <PhotoPreview 
-                          preview={replyPhotoPreview}
-                          altText={replyPhotoAltText}
-                          setAltText={setReplyPhotoAltText}
-                          onRemove={() => removePhoto(true)}
-                          isReply={true}
-                        />
+                      <label 
+                        htmlFor={`reply-photo-upload-${comment.id}`}
+                        className="flex items-center space-x-1 px-2 py-1 text-xs rounded-full bg-muted/50 hover:bg-muted transition-colors cursor-pointer"
+                      >
+                        <Camera className="w-3 h-3" />
+                        <span>Photo</span>
+                      </label>
+                      {selectedReplyPhoto && (
+                        <span className="text-xs text-muted-foreground">
+                          📸 {selectedReplyPhoto.name}
+                        </span>
                       )}
                     </div>
-                    <div className="flex flex-col space-y-1">
+                    
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setReplyingTo(null);
+                          setReplyContent("");
+                          removePhoto(true);
+                        }}
+                        className="h-7 px-3 text-xs text-muted-foreground hover:text-foreground"
+                        data-testid={`button-cancel-reply-${comment.id}`}
+                      >
+                        Cancel
+                      </Button>
                       <Button
                         size="sm"
                         onClick={() => {
@@ -526,39 +583,27 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
                           }
                         }}
                         disabled={!replyContent.trim() || commentMutation.isPending || isUploadingPhoto}
-                        className="h-7 px-2 text-xs"
+                        className="h-7 px-3 text-xs bg-primary text-primary-foreground hover:bg-primary/90"
                         data-testid={`button-post-reply-${comment.id}`}
                       >
                         {commentMutation.isPending || isUploadingPhoto ? "..." : "Reply"}
                       </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setReplyingTo(null);
-                          setReplyContent("");
-                          removePhoto(true);
-                        }}
-                        className="h-7 px-2 text-xs"
-                        data-testid={`button-cancel-reply-${comment.id}`}
-                      >
-                        Cancel
-                      </Button>
                     </div>
                   </div>
+                  
+                  {/* Photo Preview for Reply */}
+                  {replyPhotoPreview && (
+                    <PhotoPreview 
+                      preview={replyPhotoPreview}
+                      altText={replyPhotoAltText}
+                      setAltText={setReplyPhotoAltText}
+                      onRemove={() => removePhoto(true)}
+                      isReply={true}
+                    />
+                  )}
                 </div>
-              ) : (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setReplyingTo(comment.id)}
-                  className="text-xs h-6 px-2 text-muted-foreground hover:text-foreground"
-                  data-testid={`button-reply-${comment.id}`}
-                >
-                  Reply
-                </Button>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
         
@@ -1413,53 +1458,34 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
                 </div>
               </div>
 
-              {/* Add Comment Form */}
-              <div className="space-y-2">
-                <div className="flex space-x-2">
+              {/* Facebook-style Add Comment Form */}
+              <div className="space-y-3 border-b pb-4">
+                <div className="flex space-x-3">
+                  <Avatar className="w-10 h-10 flex-shrink-0">
+                    <AvatarFallback className="text-sm font-medium bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+                      {'U'}
+                    </AvatarFallback>
+                  </Avatar>
                   <div className="flex-1 space-y-2">
-                    <input
-                      type="text"
-                      placeholder="Add a comment..."
-                      value={newComment}
-                      onChange={(e) => setNewComment(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && newComment.trim()) {
-                          commentMutation.mutate({ 
-                            content: newComment.trim(),
-                            photo: selectedPhoto || undefined,
-                            altText: photoAltText || undefined
-                          });
-                        }
-                      }}
-                      className="w-full px-3 py-2 text-sm border rounded-md bg-background"
-                      disabled={commentMutation.isPending || isUploadingPhoto}
-                      data-testid="input-comment"
-                    />
-                    
-                    {/* Photo Upload Input */}
-                    <div className="flex items-center space-x-2">
+                    <div className="bg-muted/40 rounded-2xl px-4 py-3 border border-muted">
                       <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => handlePhotoSelect(e, false)}
-                        className="hidden"
-                        id="comment-photo-upload"
+                        type="text"
+                        placeholder="Write a comment..."
+                        value={newComment}
+                        onChange={(e) => setNewComment(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && newComment.trim()) {
+                            commentMutation.mutate({ 
+                              content: newComment.trim(),
+                              photo: selectedPhoto || undefined,
+                              altText: photoAltText || undefined
+                            });
+                          }
+                        }}
+                        className="w-full bg-transparent text-sm placeholder:text-muted-foreground border-none outline-none resize-none"
                         disabled={commentMutation.isPending || isUploadingPhoto}
-                        data-testid="input-photo-upload"
+                        data-testid="input-comment"
                       />
-                      <label 
-                        htmlFor="comment-photo-upload"
-                        className="flex items-center space-x-1 px-2 py-1 text-xs border rounded cursor-pointer hover:bg-muted/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        data-testid="button-add-photo"
-                      >
-                        <Camera className="w-3 h-3" />
-                        <span>Add Photo</span>
-                      </label>
-                      {selectedPhoto && (
-                        <span className="text-xs text-muted-foreground">
-                          📸 {selectedPhoto.name}
-                        </span>
-                      )}
                     </div>
                     
                     {/* Photo Preview */}
@@ -1472,26 +1498,55 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
                         isReply={false}
                       />
                     )}
+                    
+                    {/* Action Bar */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => handlePhotoSelect(e, false)}
+                          className="hidden"
+                          id="comment-photo-upload"
+                          disabled={commentMutation.isPending || isUploadingPhoto}
+                          data-testid="input-photo-upload"
+                        />
+                        <label 
+                          htmlFor="comment-photo-upload"
+                          className="flex items-center space-x-1 px-3 py-1.5 text-xs rounded-full bg-muted/50 hover:bg-muted transition-colors cursor-pointer"
+                          data-testid="button-add-photo"
+                        >
+                          <Camera className="w-3 h-3" />
+                          <span>Photo</span>
+                        </label>
+                        {selectedPhoto && (
+                          <span className="text-xs text-muted-foreground">
+                            📸 {selectedPhoto.name}
+                          </span>
+                        )}
+                      </div>
+                      
+                      <Button
+                        size="sm"
+                        onClick={() => {
+                          if (newComment.trim()) {
+                            commentMutation.mutate({ 
+                              content: newComment.trim(),
+                              photo: selectedPhoto || undefined,
+                              altText: photoAltText || undefined
+                            });
+                          }
+                        }}
+                        disabled={!newComment.trim() || commentMutation.isPending || isUploadingPhoto}
+                        data-testid="button-post-comment"
+                        className="h-8 px-4 text-xs bg-primary text-primary-foreground hover:bg-primary/90 rounded-full"
+                      >
+                        {commentMutation.isPending || isUploadingPhoto ? "..." : "Post"}
+                      </Button>
+                    </div>
                   </div>
-                  <Button
-                    size="sm"
-                    onClick={() => {
-                      if (newComment.trim()) {
-                        commentMutation.mutate({ 
-                          content: newComment.trim(),
-                          photo: selectedPhoto || undefined,
-                          altText: photoAltText || undefined
-                        });
-                      }
-                    }}
-                    disabled={!newComment.trim() || commentMutation.isPending || isUploadingPhoto}
-                    data-testid="button-post-comment"
-                    className="self-start"
-                  >
-                    {commentMutation.isPending || isUploadingPhoto ? "..." : "Post"}
-                  </Button>
                 </div>
-                <p className="text-xs text-muted-foreground italic">
+                <p className="text-xs text-muted-foreground italic text-center">
                   Please log in to post comments
                 </p>
               </div>
