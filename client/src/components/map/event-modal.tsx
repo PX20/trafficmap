@@ -1090,7 +1090,7 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
 
   return (
     <Dialog open={!!eventId} onOpenChange={onClose}>
-      <DialogContent className="max-w-md" data-testid="modal-event-details">
+      <DialogContent className="max-w-md max-h-[90vh] flex flex-col" data-testid="modal-event-details">
         {!commentsView ? (
           // Main Incident View
           <>
@@ -1130,7 +1130,7 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
               </div>
             </DialogHeader>
         
-        <div className="space-y-3">
+        <div className="flex-1 overflow-y-auto space-y-3 pr-2">
           {/* Title and Summary */}
           <div>
             <DialogTitle className="text-base font-semibold text-foreground mb-1 line-clamp-2">
@@ -1436,7 +1436,7 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
               </div>
             </DialogHeader>
 
-            <div className="space-y-4 flex-1 min-h-0">
+            <div className="flex-1 overflow-y-auto space-y-4 pr-2">
               {/* Incident Summary */}
               <div className="bg-muted/30 rounded-lg p-3 border">
                 <div className="flex items-start space-x-3">
@@ -1547,7 +1547,7 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
               </div>
 
               {/* Comments List */}
-              <div className="flex-1 space-y-4 min-h-0 overflow-y-auto max-h-80">
+              <div className="flex-1 space-y-4 overflow-y-auto max-h-64">
                 {socialData?.comments?.length === 0 ? (
                   <div className="text-center py-8">
                     <MessageCircle className="w-12 h-12 text-muted-foreground/50 mx-auto mb-3" />
