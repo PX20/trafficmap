@@ -60,10 +60,6 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/incidents", eventId, "social"] });
-      toast({
-        title: "Success",
-        description: "Like updated successfully",
-      });
     },
     onError: () => {
       toast({
