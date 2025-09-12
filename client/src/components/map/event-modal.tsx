@@ -17,7 +17,9 @@ interface EventModalProps {
 export function EventModal({ eventId, onClose }: EventModalProps) {
   const [, setLocation] = useLocation();
   const [showDetails, setShowDetails] = useState(false);
+  const [showComments, setShowComments] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
+  const [newComment, setNewComment] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
@@ -65,6 +67,51 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
       toast({
         title: "Error",
         description: "Failed to update like. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Comment mutation
+  const commentMutation = useMutation({
+    mutationFn: async (content: string) => {
+      if (!eventId) throw new Error("No event ID");
+      return apiRequest("POST", `/api/incidents/${eventId}/social/comments`, { content });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/incidents", eventId, "social"] });
+      setNewComment("");
+      toast({
+        title: "Comment added",
+        description: "Your comment has been posted successfully",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to post comment. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Delete comment mutation  
+  const deleteCommentMutation = useMutation({
+    mutationFn: async (commentId: string) => {
+      if (!eventId) throw new Error("No event ID");
+      return apiRequest("DELETE", `/api/incidents/${eventId}/social/comments/${commentId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/incidents", eventId, "social"] });
+      toast({
+        title: "Comment deleted",
+        description: "Your comment has been removed",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error", 
+        description: "Failed to delete comment. Please try again.",
         variant: "destructive",
       });
     }
@@ -852,7 +899,7 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
               size="sm" 
               className="flex items-center space-x-1 text-muted-foreground hover:text-foreground"
               data-testid="button-comments"
-              onClick={() => toast({ title: "Comments", description: "Comment functionality will open in future version" })}
+              onClick={() => setShowComments(!showComments)}
             >
               <MessageCircle className="w-4 h-4" />
               <span className="text-xs">{socialData?.commentCount || 0}</span>
@@ -910,6 +957,92 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
                   <p>{socialData?.commentCount || 0} comments • {socialData?.likeCount || 0} likes</p>
                   <p className="text-xs italic">Social features require user authentication</p>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* Comments Section */}
+          {showComments && (
+            <div className="border-t pt-3 space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-medium">Comments ({socialData?.commentCount || 0})</h4>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowComments(false)}
+                  className="text-xs"
+                >
+                  Close
+                </Button>
+              </div>
+
+              {/* Add Comment Form */}
+              <div className="space-y-2">
+                <div className="flex space-x-2">
+                  <input
+                    type="text"
+                    placeholder="Add a comment..."
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && newComment.trim()) {
+                        commentMutation.mutate(newComment.trim());
+                      }
+                    }}
+                    className="flex-1 px-3 py-2 text-xs border rounded-md bg-background"
+                    disabled={commentMutation.isPending}
+                    data-testid="input-comment"
+                  />
+                  <Button
+                    size="sm"
+                    onClick={() => newComment.trim() && commentMutation.mutate(newComment.trim())}
+                    disabled={!newComment.trim() || commentMutation.isPending}
+                    data-testid="button-post-comment"
+                  >
+                    {commentMutation.isPending ? "..." : "Post"}
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground italic">
+                  Please log in to post comments
+                </p>
+              </div>
+
+              {/* Comments List */}
+              <div className="space-y-3 max-h-60 overflow-y-auto">
+                {socialData?.comments?.length === 0 ? (
+                  <p className="text-xs text-muted-foreground italic text-center py-4">
+                    No comments yet. Be the first to comment!
+                  </p>
+                ) : (
+                  socialData?.comments?.map((comment: any) => (
+                    <div key={comment.id} className="flex space-x-2" data-testid={`comment-${comment.id}`}>
+                      <Avatar className="w-6 h-6">
+                        <AvatarFallback className="text-xs">
+                          {comment.username?.charAt(0)?.toUpperCase() || 'U'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 space-y-1">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-xs font-medium">{comment.username || 'Anonymous'}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {new Date(comment.createdAt).toLocaleString()}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => deleteCommentMutation.mutate(comment.id)}
+                            className="text-xs h-6 px-2 text-red-600 hover:text-red-800"
+                            disabled={deleteCommentMutation.isPending}
+                            data-testid={`button-delete-comment-${comment.id}`}
+                          >
+                            Delete
+                          </Button>
+                        </div>
+                        <p className="text-xs">{comment.content}</p>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           )}
