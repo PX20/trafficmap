@@ -346,6 +346,18 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
             showExpiredIncidents: filters.showExpiredIncidents
           });
           
+          // Debug logging for incident aging
+          console.log(`Incident aging debug:`, {
+            id: properties?.id,
+            category: incidentCategory,
+            markerType,
+            referenceTime,
+            agePercentage: (agingData.agePercentage * 100).toFixed(1) + '%',
+            opacity: agingData.opacity.toFixed(2),
+            timeRemaining: agingData.timeRemaining + 'm',
+            isVisible: agingData.isVisible
+          });
+          
           // Skip incidents that should be hidden due to aging
           if (!agingData.isVisible) {
             return;
