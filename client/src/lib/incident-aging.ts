@@ -37,21 +37,6 @@ export function chooseTier(incident: {
   return 'standard';
 }
 
-// Severity multipliers
-export const SEVERITY_MULTIPLIERS = {
-  'critical': 2.0,
-  'high': 1.5,
-  'medium': 1.0,
-  'low': 0.7
-};
-
-// Status adjustments
-export const STATUS_ADJUSTMENTS = {
-  'active': 1.0,
-  'monitoring': 0.8,
-  'resolved': 0.3,
-  'closed': 0.1
-};
 
 export interface IncidentAgingData {
   agePercentage: number;
