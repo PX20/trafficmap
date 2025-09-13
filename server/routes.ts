@@ -75,6 +75,141 @@ try {
   console.log('Web push configuration skipped:', error instanceof Error ? error.message : 'Unknown error');
 }
 
+/**
+ * Automatically seed categories and subcategories if they don't exist
+ * This ensures production deployments have the necessary category data
+ */
+async function seedCategoriesIfNeeded() {
+  try {
+    console.log("🌱 Checking if categories need seeding...");
+    
+    // Check if categories already exist
+    const existingCategories = await storage.getCategories();
+    if (existingCategories.length > 0) {
+      console.log(`✅ Categories already exist (${existingCategories.length} found), skipping seeding`);
+      return { success: true, message: "Categories already seeded", count: existingCategories.length };
+    }
+    
+    console.log("🌱 Seeding hierarchical categories...");
+    
+    // Main categories with hierarchy
+    const categoryData = [
+      {
+        name: "Safety & Crime",
+        description: "Crime, violence, theft, and public safety concerns",
+        icon: "shield",
+        color: "#7c3aed", // purple
+        order: 1,
+        subcategories: [
+          { name: "Violence & Threats", description: "Physical violence, threats, intimidation", order: 1 },
+          { name: "Theft & Property Crime", description: "Theft, burglary, property damage", order: 2 },
+          { name: "Suspicious Activity", description: "Unusual behavior or activities", order: 3 },
+          { name: "Public Disturbances", description: "Noise, disruptions, antisocial behavior", order: 4 }
+        ]
+      },
+      {
+        name: "Infrastructure & Hazards",
+        description: "Road hazards, utilities, and structural problems",
+        icon: "construction",
+        color: "#ea580c", // orange
+        order: 2,
+        subcategories: [
+          { name: "Road Hazards", description: "Fallen trees, debris, potholes, dangerous conditions", order: 1 },
+          { name: "Utility Issues", description: "Power lines, water leaks, gas problems", order: 2 },
+          { name: "Building Problems", description: "Structural damage, unsafe buildings", order: 3 },
+          { name: "Environmental Hazards", description: "Chemical spills, pollution, toxic materials", order: 4 }
+        ]
+      },
+      {
+        name: "Emergency Situations",
+        description: "Active emergencies requiring immediate attention",
+        icon: "siren",
+        color: "#dc2626", // red
+        order: 3,
+        subcategories: [
+          { name: "Fire & Smoke", description: "Fires, smoke, burning structures or vegetation", order: 1 },
+          { name: "Medical Emergencies", description: "Medical incidents in public spaces", order: 2 },
+          { name: "Natural Disasters", description: "Floods, storms, weather emergencies", order: 3 },
+          { name: "Chemical/Hazmat", description: "Chemical spills, gas leaks, hazardous materials", order: 4 }
+        ]
+      },
+      {
+        name: "Wildlife & Nature",
+        description: "Animal-related incidents and environmental concerns",
+        icon: "leaf",
+        color: "#16a34a", // green
+        order: 4,
+        subcategories: [
+          { name: "Dangerous Animals", description: "Snakes, aggressive animals, pest control", order: 1 },
+          { name: "Animal Welfare", description: "Injured or distressed animals", order: 2 },
+          { name: "Environmental Issues", description: "Pollution, illegal dumping, habitat damage", order: 3 },
+          { name: "Pest Problems", description: "Insect infestations, rodent problems", order: 4 }
+        ]
+      },
+      {
+        name: "Community Issues",
+        description: "Local community concerns and quality of life issues",
+        icon: "users",
+        color: "#2563eb", // blue
+        order: 5,
+        subcategories: [
+          { name: "Noise Complaints", description: "Excessive noise, loud parties, construction", order: 1 },
+          { name: "Traffic Issues", description: "Dangerous driving, parking problems", order: 2 },
+          { name: "Public Space Problems", description: "Park issues, playground damage", order: 3 },
+          { name: "Events & Gatherings", description: "Large gatherings, street events", order: 4 }
+        ]
+      },
+      {
+        name: "Lost & Found",
+        description: "Lost and found items, missing and found pets",
+        icon: "search",
+        color: "#f59e0b", // amber
+        order: 6,
+        subcategories: [
+          { name: "Lost Items", description: "Lost keys, phones, wallets, jewelry, documents", order: 1 },
+          { name: "Found Items", description: "Found personal belongings that need to be returned", order: 2 },
+          { name: "Missing Pets", description: "Lost or missing cats, dogs, and other pets", order: 3 },
+          { name: "Found Pets", description: "Found animals looking for their owners", order: 4 }
+        ]
+      }
+    ];
+    
+    let categoryCount = 0;
+    let subcategoryCount = 0;
+    
+    // Create categories and subcategories
+    for (const catData of categoryData) {
+      const { subcategories, ...categoryInfo } = catData;
+      const category = await storage.createCategory(categoryInfo);
+      categoryCount++;
+      
+      // Create subcategories for this category
+      for (const subData of subcategories) {
+        await storage.createSubcategory({
+          ...subData,
+          categoryId: category.id
+        });
+        subcategoryCount++;
+      }
+    }
+    
+    console.log(`✅ Successfully seeded ${categoryCount} categories and ${subcategoryCount} subcategories`);
+    return { 
+      success: true, 
+      message: `Successfully seeded ${categoryCount} categories and ${subcategoryCount} subcategories`,
+      categories: categoryCount,
+      subcategories: subcategoryCount
+    };
+  } catch (error) {
+    console.error("❌ Error seeding categories:", error);
+    return { 
+      success: false,
+      error: "Failed to seed categories", 
+      message: error instanceof Error ? error.message : "Unknown error" 
+    };
+  }
+}
+
 // Sunshine Coast suburbs for filtering
 const SUNSHINE_COAST_SUBURBS = [
   'caloundra', 'mooloolaba', 'noosa', 'maroochydore', 'nambour', 'cooroy', 
