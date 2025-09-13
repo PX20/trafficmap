@@ -184,8 +184,11 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
       (filteredEventsData as any).features.forEach((feature: any) => {
         const eventType = getSafeString(feature.properties, 'event_type');
         
-        // Calculate aging for traffic events - use real timestamps, never fall back to 'now'
-        const referenceTime = feature.properties?.duration?.start || 
+        // Calculate aging for traffic events - use normalized timestamps from database
+        const referenceTime = feature.properties?.incidentTime || 
+                             feature.properties?.lastUpdated || 
+                             feature.properties?.publishedAt ||
+                             feature.properties?.duration?.start || 
                              feature.properties?.published || 
                              feature.properties?.last_updated || 
                              feature.properties?.firstSeenAt;
@@ -209,9 +212,14 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
         });
         
         // Debug logging for aging (temporary)
-        if (agingData.agePercentage > 0.1) {
-          console.log(`Traffic aging: ${(agingData.agePercentage * 100).toFixed(1)}% aged, opacity: ${agingData.opacity.toFixed(2)}, time remaining: ${agingData.timeRemaining}m`);
-        }
+        console.log(`Traffic aging debug:`, {
+          id: feature.properties?.id,
+          referenceTime,
+          agePercentage: (agingData.agePercentage * 100).toFixed(1) + '%',
+          opacity: agingData.opacity.toFixed(2),
+          timeRemaining: agingData.timeRemaining + 'm',
+          isVisible: agingData.isVisible
+        });
         
         // Skip events that should be hidden due to aging
         if (!agingData.isVisible) {
