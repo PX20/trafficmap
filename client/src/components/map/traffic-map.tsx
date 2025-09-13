@@ -63,14 +63,14 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
   const markersRef = useRef<L.Marker[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // 🎯 UNIFIED PIPELINE: MAP shows ALL Queensland data for big picture view
-  const { events, incidents } = useTrafficData(filters);
+  // 🎯 UNIFIED PIPELINE: MAP shows filtered data based on user preferences
+  const { filteredEvents, filteredIncidents } = useTrafficData(filters);
   
   // Convert to expected format for backward compatibility  
-  const eventsData = { features: events || [] };
-  const incidentsData = { features: incidents || [] };
+  const eventsData = { features: filteredEvents || [] };
+  const incidentsData = { features: filteredIncidents || [] };
   
-  console.log('🗺️ MAP: Rendering', events?.length || 0, 'events,', incidents?.length || 0, 'incidents');
+  console.log('🗺️ MAP: Rendering', filteredEvents?.length || 0, 'events,', filteredIncidents?.length || 0, 'incidents');
   const eventsLoading = false;
   const incidentsLoading = false;
 
