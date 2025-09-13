@@ -158,16 +158,25 @@ async function seedCategoriesIfNeeded() {
         ]
       },
       {
-        name: "Lost & Found",
-        description: "Lost and found items, missing and found pets",
-        icon: "search",
-        color: "#f59e0b", // amber
+        name: "Pets",
+        description: "Pet-related incidents and concerns",
+        icon: "heart",
+        color: "#ec4899", // pink
         order: 6,
         subcategories: [
+          { name: "Missing Pets", description: "Lost or missing cats, dogs, and other pets", order: 1 },
+          { name: "Found Pets", description: "Found animals looking for their owners", order: 2 }
+        ]
+      },
+      {
+        name: "Lost & Found",
+        description: "Lost and found personal items and belongings",
+        icon: "search",
+        color: "#f59e0b", // amber
+        order: 7,
+        subcategories: [
           { name: "Lost Items", description: "Lost keys, phones, wallets, jewelry, documents", order: 1 },
-          { name: "Found Items", description: "Found personal belongings that need to be returned", order: 2 },
-          { name: "Missing Pets", description: "Lost or missing cats, dogs, and other pets", order: 3 },
-          { name: "Found Pets", description: "Found animals looking for their owners", order: 4 }
+          { name: "Found Items", description: "Found personal belongings that need to be returned", order: 2 }
         ]
       }
     ];
