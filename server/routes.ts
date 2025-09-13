@@ -17,7 +17,8 @@ import path from "path";
 import sharp from "sharp";
 import fs from "fs";
 import multer from "multer";
-import { randomUUID } from "crypto";
+import { randomUUID } from "node:crypto";
+import { secureLogger, createSafeRequestInfo } from "./secure-logger";
 import { fileTypeFromBuffer } from "file-type";
 import { 
   findRegionBySuburb, 
@@ -410,12 +411,12 @@ const secureUpload = multer({
   fileFilter: (req, file, cb) => {
     // Basic MIME type check (will be validated more thoroughly later)
     if (!file.mimetype.startsWith('image/')) {
-      return cb(new Error('Only image files are allowed'), false);
+      return cb(new Error('Only image files are allowed') as any, false);
     }
     
     // Basic filename validation
     if (!file.originalname || file.originalname.length > 255) {
-      return cb(new Error('Invalid filename'), false);
+      return cb(new Error('Invalid filename') as any, false);
     }
     
     cb(null, true);
@@ -438,9 +439,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Secure photo upload endpoint with comprehensive validation and processing
   app.post('/api/upload/photo', isAuthenticated, secureUpload.single('photo'), async (req: any, res) => {
     try {
+      secureLogger.authDebug('Photo upload started', {
+        requestInfo: createSafeRequestInfo(req),
+        hasFile: !!req.file,
+        fileInfo: req.file ? {
+          filename: req.file.originalname,
+          size: req.file.size,
+          mimetype: req.file.mimetype
+        } : null,
+        user: req.user
+      });
+      
       const userId = (req.user as any)?.claims?.sub || (req.user as any)?.id;
+      secureLogger.authDebug('User ID extracted', { userId: userId ? '[USER_ID]' : 'none' });
+      
       if (!userId) {
-        return res.status(401).json({ error: 'Authentication required' });
+        secureLogger.authError('No userId found in photo upload', { user: req.user });
+        return res.status(401).json({ 
+          error: 'Authentication required',
+          code: 'AUTH_REQUIRED',
+          loginUrl: '/api/login',
+          message: 'Please log in to upload photos. Click here to login.',
+          debug: process.env.NODE_ENV === 'development' ? {
+            userExists: !!req.user,
+            isAuthenticated: req.isAuthenticated(),
+            hasSession: !!req.session
+          } : undefined
+        });
       }
 
       // Check rate limiting
@@ -480,10 +505,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const { variants, paths } = await generateImageVariants(req.file.buffer, baseFilename);
         
         // Upload to object storage
+        console.log('Initializing object storage service...');
         const objectStorageService = new ObjectStorageService();
+        console.log('Getting private object directory...');
         const privateObjectDir = objectStorageService.getPrivateObjectDir();
+        console.log('Private object dir:', privateObjectDir);
         
         if (!privateObjectDir) {
+          console.error('Object storage not configured - privateObjectDir is null/undefined');
           throw new Error('Object storage not configured');
         }
 
@@ -546,22 +575,76 @@ export async function registerRoutes(app: Express): Promise<Server> {
           processed: true
         };
         
-        console.log(`Secure photo upload completed for user ${userId}: ${fileId}`);
+        secureLogger.authDebug('Photo upload completed successfully', {
+          fileId,
+          variantCount: Object.keys(response.variants).length,
+          originalFilename: req.file.originalname
+        });
         res.json(response);
         
-      } catch (processingError) {
-        console.error('Image processing error:', processingError);
+      } catch (processingError: unknown) {
+        console.error('=== IMAGE PROCESSING ERROR ===');
+        console.error('Error type:', processingError instanceof Error ? processingError.constructor.name : 'Unknown');
+        console.error('Error message:', processingError instanceof Error ? processingError.message : 'Unknown processing error');
+        console.error('Error stack:', processingError instanceof Error ? processingError.stack : 'No stack trace');
+        console.error('=== END PROCESSING ERROR ===');
         res.status(500).json({ 
           error: 'Image processing failed',
           message: processingError instanceof Error ? processingError.message : 'Unknown processing error'
         });
       }
       
-    } catch (error) {
-      console.error('Photo upload error:', error);
-      res.status(500).json({ 
-        error: 'Upload failed',
-        message: error instanceof Error ? error.message : 'Unknown error'
+    } catch (error: unknown) {
+      console.error('=== PHOTO UPLOAD ERROR ===');
+      console.error('Error type:', error instanceof Error ? error.constructor.name : 'Unknown');
+      console.error('Error message:', error instanceof Error ? error.message : 'Unknown error');
+      console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+      console.error('File info:', req.file ? { 
+        filename: req.file.originalname, 
+        size: req.file.size, 
+        mimetype: req.file.mimetype 
+      } : 'No file');
+      secureLogger.authError('Photo upload failed', {
+        user: req.user,
+        error,
+        fileInfo: req.file
+      });
+      console.error('=== END PHOTO UPLOAD ERROR ===');
+      
+      // Provide specific error codes and user-friendly messages
+      let statusCode = 500;
+      let errorCode = 'UPLOAD_FAILED';
+      let userMessage = 'Photo upload failed';
+      
+      if (error instanceof Error && error.message.includes('Object storage not configured')) {
+        statusCode = 503;
+        errorCode = 'STORAGE_UNAVAILABLE';
+        userMessage = 'File storage temporarily unavailable. Please try again later.';
+      } else if (error instanceof Error && error.message.includes('rate limit')) {
+        statusCode = 429;
+        errorCode = 'RATE_LIMITED';
+        userMessage = 'Too many uploads. Please wait before uploading again.';
+      } else if (error instanceof Error && error.message.includes('file too large')) {
+        statusCode = 413;
+        errorCode = 'FILE_TOO_LARGE';
+        userMessage = 'File is too large. Please choose a smaller image.';
+      } else if (error instanceof Error && error.message.includes('Invalid filename')) {
+        statusCode = 400;
+        errorCode = 'INVALID_FILE';
+        userMessage = 'Invalid file type. Please upload a valid image file.';
+      }
+      
+      res.status(statusCode).json({ 
+        error: userMessage,
+        code: errorCode,
+        message: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString(),
+        debug: process.env.NODE_ENV === 'development' ? { 
+          stack: error instanceof Error ? error.stack : undefined,
+          errorType: error instanceof Error ? error.constructor.name : 'Unknown',
+          hasFile: !!req.file,
+          hasUser: !!req.user
+        } : undefined
       });
     }
   });
@@ -1196,9 +1279,91 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Authentication status endpoint for frontend
+  app.get('/api/auth/status', async (req: any, res) => {
+    try {
+      const isAuth = req.isAuthenticated();
+      const user = req.user;
+      
+      res.json({
+        isAuthenticated: isAuth,
+        user: user ? {
+          id: user.claims?.sub || user.id,
+          email: user.claims?.email || user.email,
+          name: user.claims?.first_name || user.firstName
+        } : null,
+        loginUrl: '/api/login',
+        message: isAuth ? 'Authenticated' : 'Please log in to upload photos and submit reports'
+      });
+    } catch (error) {
+      console.error('Auth status check error:', error);
+      res.status(500).json({ error: 'Failed to check authentication status' });
+    }
+  });
+
+  // Development mode: Create test user session (ONLY in development)
+  if (process.env.NODE_ENV === 'development') {
+    app.post('/api/auth/dev-login', async (req, res) => {
+      try {
+        console.log('Development login requested');
+        
+        // Create a test user in the database
+        const testUser = await storage.upsertUser({
+          id: 'dev-test-user-123',
+          email: 'test@example.com',
+          firstName: 'Test',
+          lastName: 'User',
+          password: null
+        });
+        
+        // Create a fake OAuth-style user object for session
+        const sessionUser = {
+          claims: {
+            sub: testUser.id,
+            email: testUser.email,
+            first_name: testUser.firstName,
+            last_name: testUser.lastName
+          },
+          access_token: 'dev-token',
+          expires_at: Math.floor(Date.now() / 1000) + 3600 // 1 hour from now
+        };
+        
+        // Manually log in the user
+        req.login(sessionUser as any, (err: any) => {
+          if (err) {
+            console.error('Dev login error:', err);
+            return res.status(500).json({ error: 'Failed to create dev session' });
+          }
+          
+          secureLogger.authDebug('Development user session created successfully');
+          res.json({ 
+            success: true, 
+            message: 'Development user logged in',
+            user: {
+              id: testUser.id,
+              email: testUser.email,
+              name: testUser.firstName
+            }
+          });
+        });
+        
+      } catch (error) {
+        console.error('Dev login setup error:', error);
+        res.status(500).json({ error: 'Failed to setup dev login' });
+      }
+    });
+  }
+
   // Report new incident (authenticated users only)
   app.post("/api/incidents/report", isAuthenticated, async (req: any, res) => {
     try {
+      secureLogger.authDebug('Incident submission started', {
+        requestInfo: createSafeRequestInfo(req),
+        hasBody: !!req.body,
+        bodyKeys: req.body ? Object.keys(req.body) : [],
+        user: req.user
+      });
+      
       const reportData = z.object({
         categoryId: z.string().min(1, "Category is required"),
         subcategoryId: z.string().min(1, "Subcategory is required"),
@@ -1208,9 +1373,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
         policeNotified: z.enum(["yes", "no", "not_needed", "unsure"]).optional(),
         photoUrl: z.string().optional(),
       }).parse(req.body);
+      
+      secureLogger.authDebug('Report data parsed successfully', {
+        hasTitle: !!reportData.title,
+        hasLocation: !!reportData.location,
+        hasCategoryId: !!reportData.categoryId,
+        hasPhoto: !!reportData.photoUrl
+      });
 
-      const userId = (req.user as any).claims.sub;
+      // Handle different auth formats - check both claims.sub and direct id
+      const userId = (req.user as any)?.claims?.sub || (req.user as any)?.id;
+      secureLogger.authDebug('User ID extracted for incident', { hasUserId: !!userId });
+      
+      if (!userId) {
+        secureLogger.authError('No userId found in incident submission', { user: req.user });
+        return res.status(401).json({ 
+          error: 'Authentication required - no user ID found',
+          code: 'AUTH_REQUIRED',
+          loginUrl: '/api/login',
+          message: 'Please log in to submit incident reports. Click here to login.',
+          debug: process.env.NODE_ENV === 'development' ? {
+            userExists: !!req.user,
+            isAuthenticated: req.isAuthenticated(),
+            sessionId: req.sessionID
+          } : undefined
+        });
+      }
+      
       const user = await storage.getUser(userId);
+      secureLogger.authDebug('User retrieved for incident', { hasUser: !!user });
       
       // Increment subcategory report count for analytics
       if (reportData.subcategoryId) {
@@ -1274,13 +1465,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
       };
       
+      console.log('Creating incident with data:', JSON.stringify(incident, null, 2));
       const newIncident = await storage.createIncident(incident);
+      console.log('Successfully created incident:', newIncident.id);
+      console.log('=== INCIDENT SUBMISSION DEBUG END ===');
       res.json(newIncident);
-    } catch (error) {
-      console.error("Error creating incident report:", error);
-      res.status(500).json({ 
-        error: "Failed to submit incident report", 
-        message: error instanceof Error ? error.message : "Unknown error" 
+    } catch (error: unknown) {
+      console.error('=== INCIDENT SUBMISSION ERROR ===');
+      console.error('Error type:', error instanceof Error ? error.constructor.name : 'Unknown');
+      console.error('Error message:', error instanceof Error ? error.message : 'Unknown error');
+      console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+      console.error('Request body that caused error:', JSON.stringify(req.body, null, 2));
+      secureLogger.authError('Incident submission error', { user: req.user, error });
+      console.error('=== END ERROR DEBUG ===');
+      
+      // Provide specific error codes and user-friendly messages
+      let statusCode = 500;
+      let errorCode = 'INCIDENT_SUBMISSION_FAILED';
+      let userMessage = 'Failed to submit incident report';
+      
+      if (error instanceof z.ZodError) {
+        statusCode = 400;
+        errorCode = 'VALIDATION_ERROR';
+        userMessage = 'Please check your form data and try again';
+      } else if (error instanceof Error && error.message.includes('geocod')) {
+        statusCode = 503;
+        errorCode = 'GEOCODING_FAILED';
+        userMessage = 'Unable to process location. Your report was saved but may not appear on the map.';
+      } else if (error instanceof Error && error.message.includes('database')) {
+        statusCode = 503;
+        errorCode = 'DATABASE_ERROR';
+        userMessage = 'Database temporarily unavailable. Please try again in a moment.';
+      }
+      
+      res.status(statusCode).json({ 
+        error: userMessage,
+        code: errorCode,
+        message: error instanceof Error ? error.message : "Unknown error",
+        timestamp: new Date().toISOString(),
+        debug: process.env.NODE_ENV === 'development' ? { 
+          stack: error instanceof Error ? error.stack : undefined,
+          errorType: error instanceof Error ? error.constructor.name : 'Unknown',
+          requestBody: req.body,
+          userId: (req.user as any)?.claims?.sub || (req.user as any)?.id
+        } : undefined
       });
     }
   });
@@ -1336,7 +1564,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Check if user object exists and has expected structure
       if (!req.user || !req.user.id) {
-        console.error("User object missing or malformed:", req.user);
+        secureLogger.authError('User object missing or malformed for comment', { user: req.user });
         return res.status(401).json({ message: "User authentication failed" });
       }
       
@@ -1417,7 +1645,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user?.claims?.sub || req.user?.id;
       
       if (!userId) {
-        console.error("Delete comment: No user ID found in request", req.user);
+        secureLogger.authError('Delete comment: No user ID found', { user: req.user });
         return res.status(401).json({ message: "Authentication required" });
       }
 
@@ -1467,7 +1695,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user?.claims?.sub || req.user?.id;
 
       if (!userId) {
-        console.error("Toggle comment like: No user ID found in request", req.user);
+        secureLogger.authError('Toggle comment like: No user ID found', { user: req.user });
         return res.status(401).json({ message: "Authentication required" });
       }
 
@@ -2179,12 +2407,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/ads/my-campaigns', isAuthenticated, async (req, res) => {
     try {
       const userId = (req.user as any)?.claims?.sub || (req.user as any)?.id;
-      console.log('Debug my-campaigns - userId:', userId, 'user object:', req.user);
+      secureLogger.authDebug('Campaigns request', {
+        hasUserId: !!userId,
+        user: req.user
+      });
       const user = await storage.getUser(userId);
-      console.log('Debug my-campaigns - found user:', user?.id, 'accountType:', user?.accountType);
+      secureLogger.authDebug('Campaign user lookup', {
+        hasUser: !!user,
+        hasBusinessAccount: user?.accountType === 'business'
+      });
       
       if (!user || user.accountType !== 'business') {
-        console.log('Debug my-campaigns - Business account check failed. User exists:', !!user, 'Account type:', user?.accountType);
+        secureLogger.authDebug('Business account check failed', {
+          hasUser: !!user,
+          accountType: user?.accountType
+        });
         return res.status(403).json({ message: "Business account required" });
       }
 
@@ -2837,7 +3074,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Save subscription to storage (you may want to add a subscriptions table)
       // For now, we'll store in user preferences or a simple in-memory store
-      console.log('Push subscription registered for user:', userId, subscription);
+      secureLogger.authDebug('Push subscription registered', {
+        hasUserId: !!userId,
+        hasSubscription: !!subscription
+      });
       
       res.json({ success: true });
     } catch (error) {
@@ -2856,7 +3096,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Remove subscription from storage
-      console.log('Push subscription removed for user:', userId, endpoint);
+      secureLogger.authDebug('Push subscription removed', {
+        hasUserId: !!userId,
+        hasEndpoint: !!endpoint
+      });
       
       res.json({ success: true });
     } catch (error) {
@@ -2899,7 +3142,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // In a real implementation, you'd fetch user's subscription from database
       // For demo purposes, we'll return success without sending actual notification
-      console.log('Test push notification requested for user:', userId);
+      secureLogger.authDebug('Test push notification requested', {
+        hasUserId: !!userId
+      });
       
       res.json({ 
         success: true, 
@@ -3455,9 +3700,5 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   const httpServer = createServer(app);
   return httpServer;
-}
-
-function randomUUID() {
-  return crypto.randomUUID();
 }
 

@@ -7,6 +7,7 @@ import type { Express, RequestHandler } from "express";
 import memoize from "memoizee";
 import connectPg from "connect-pg-simple";
 import { storage } from "./storage";
+import { secureLogger, createSafeRequestInfo } from "./secure-logger";
 
 if (!process.env.REPLIT_DOMAINS) {
   throw new Error("Environment variable REPLIT_DOMAINS not provided");
@@ -84,11 +85,10 @@ export async function setupAuth(app: Express) {
     await upsertUser(tokens.claims());
     
     // Ensure the user object maintains OAuth structure for session
-    console.log("OAuth user created with claims:", { 
-      hasUser: !!user, 
+    secureLogger.authDebug('OAuth user created with claims', {
+      hasUser: !!user,
       hasClaims: !!(user as any).claims,
-      hasSub: !!((user as any).claims && (user as any).claims.sub),
-      userKeys: Object.keys(user)
+      hasValidStructure: !!((user as any).claims && (user as any).claims.sub)
     });
     
     verified(null, user as any);
@@ -114,21 +114,19 @@ export async function setupAuth(app: Express) {
 
   passport.serializeUser((user: Express.User, cb) => {
     // For OAuth users, serialize the entire user object to preserve claims structure
-    console.log("Serializing OAuth user:", { 
-      hasUser: !!user, 
+    secureLogger.authDebug('Serializing OAuth user', {
+      hasUser: !!user,
       hasClaims: !!(user as any).claims,
-      hasSub: !!((user as any).claims && (user as any).claims.sub),
-      userKeys: user ? Object.keys(user) : []
+      hasValidStructure: !!((user as any).claims && (user as any).claims.sub)
     });
     cb(null, user);
   });
   passport.deserializeUser((user: Express.User, cb) => {
     // For OAuth users, the user object already contains all necessary data
-    console.log("Deserializing OAuth user:", { 
-      hasUser: !!user, 
+    secureLogger.authDebug('Deserializing OAuth user', {
+      hasUser: !!user,
       hasClaims: !!(user as any).claims,
-      hasSub: !!((user as any).claims && (user as any).claims.sub),
-      userKeys: user ? Object.keys(user) : []
+      hasValidStructure: !!((user as any).claims && (user as any).claims.sub)
     });
     cb(null, user);
   });
@@ -141,15 +139,18 @@ export async function setupAuth(app: Express) {
   });
 
   app.get("/api/callback", (req, res, next) => {
-    console.log("OAuth callback received for hostname:", req.hostname);
-    console.log("Query params:", req.query);
+    secureLogger.authDebug('OAuth callback received', {
+      hostname: req.hostname,
+      hasQuery: !!req.query,
+      queryKeys: req.query ? Object.keys(req.query) : []
+    });
     
     passport.authenticate(`replitauth:${req.hostname}`, {
       successReturnToOrRedirect: "/",
       failureRedirect: "/api/login",
     })(req, res, (err: any) => {
       if (err) {
-        console.error("OAuth callback error:", err);
+        secureLogger.authError('OAuth callback error', { error: err });
         return res.redirect("/api/login");
       }
       next();
@@ -170,9 +171,31 @@ export async function setupAuth(app: Express) {
 
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
   const user = req.user as any;
-
-  // Check basic authentication
-  if (!req.isAuthenticated() || !user) {
+  
+  secureLogger.authDebug('Authentication check started', {
+    requestInfo: createSafeRequestInfo(req),
+    hasAuthFunction: typeof req.isAuthenticated === 'function',
+    isAuthenticated: typeof req.isAuthenticated === 'function' ? req.isAuthenticated() : !!user,
+    hasUser: !!user,
+    userStructure: user ? {
+      hasId: !!user.id,
+      hasClaims: !!user.claims,
+      hasValidOAuth: !!(user.claims && user.claims.sub),
+      hasEmail: !!(user.claims && user.claims.email),
+      hasExpiry: !!user.expires_at,
+      isExpired: user.expires_at ? Math.floor(Date.now() / 1000) > user.expires_at : false
+    } : null,
+    hasSession: !!req.session
+  });
+  
+  // Check basic authentication - handle cases where passport functions aren't available
+  const isAuth = typeof req.isAuthenticated === 'function' ? req.isAuthenticated() : !!user;
+  if (!isAuth || !user) {
+    secureLogger.authError('Basic authentication failed', {
+      hasUser: !!user,
+      hasAuthFunction: typeof req.isAuthenticated === 'function',
+      isAuthenticated: isAuth
+    });
     return res.status(401).json({ message: "Unauthorized" });
   }
 
@@ -212,12 +235,12 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
   }
 
   // Neither authentication method worked
-  console.error("Authentication failed: Invalid user structure", { 
-    hasUser: !!user, 
+  secureLogger.authError('Authentication failed: Invalid user structure', {
+    hasUser: !!user,
     hasClaims: !!(user && user.claims),
-    hasSub: !!(user && user.claims && user.claims.sub),
-    hasId: !!(user && user.id),
-    userKeys: user ? Object.keys(user) : []
+    hasValidOAuth: !!(user && user.claims && user.claims.sub),
+    hasLocalId: !!(user && user.id),
+    userType: user ? (user.claims ? 'oauth' : user.id ? 'local' : 'unknown') : 'none'
   });
   
   return res.status(401).json({ message: "Unauthorized - Invalid session" });
