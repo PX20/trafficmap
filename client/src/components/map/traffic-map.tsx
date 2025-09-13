@@ -42,7 +42,7 @@ const isQFESIncident = (incident: any) => {
 import type { FilterState } from "@/pages/home";
 import { findRegionBySuburb } from "@/lib/regions";
 import { extractCoordinatesFromGeometry } from "@/lib/location-utils";
-import { calculateIncidentAging, type IncidentAgingData } from "@/lib/incident-aging";
+import { calculateIncidentAging, getAgedColor, type IncidentAgingData } from "@/lib/incident-aging";
 
 // Fix Leaflet default marker icons
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -250,8 +250,12 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
           }
           
           if (coords) {
+            // Calculate aged color for traffic events
+            const originalColor = getMarkerColor(eventType, feature.properties);
+            const agedColor = getAgedColor(originalColor, agingData.agePercentage);
+            
             const marker = L.marker(coords, {
-              icon: createCustomMarker(eventType, getMarkerColor(eventType, feature.properties), agingData.opacity)
+              icon: createCustomMarker(eventType, agedColor, 1.0)
             });
 
             // Use enhanced EventModal instead of Leaflet popup
@@ -380,8 +384,12 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
           }
           
           if (coords) {
+            // Calculate aged color for incidents  
+            const originalColor = getMarkerColor(markerType, feature.properties);
+            const agedColor = getAgedColor(originalColor, agingData.agePercentage);
+            
             const marker = L.marker(coords, {
-              icon: createCustomMarker(markerType, getMarkerColor(markerType, feature.properties), agingData.opacity)
+              icon: createCustomMarker(markerType, agedColor, 1.0)
             });
 
             // Use enhanced EventModal instead of Leaflet popup
