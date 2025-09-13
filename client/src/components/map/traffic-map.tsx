@@ -184,18 +184,34 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
       (filteredEventsData as any).features.forEach((feature: any) => {
         const eventType = getSafeString(feature.properties, 'event_type');
         
-        // Calculate aging for traffic events
+        // Calculate aging for traffic events - use real timestamps, never fall back to 'now'
+        const referenceTime = feature.properties?.duration?.start || 
+                             feature.properties?.published || 
+                             feature.properties?.last_updated || 
+                             feature.properties?.firstSeenAt;
+        
+        // Skip if no valid timestamp available
+        if (!referenceTime) {
+          console.warn('Traffic event missing timestamp data, skipping aging calculation:', feature.properties?.id);
+          return;
+        }
+        
         const agingData = calculateIncidentAging({
           category: 'traffic',
           severity: feature.properties?.priority || feature.properties?.impact_type || 'medium',
           status: feature.properties?.status || 'active',
-          lastUpdated: feature.properties?.last_updated || feature.properties?.published || new Date().toISOString(),
-          incidentTime: feature.properties?.duration?.start || feature.properties?.published,
+          lastUpdated: feature.properties?.last_updated || feature.properties?.published || referenceTime,
+          incidentTime: referenceTime,
           properties: feature.properties
         }, {
           agingSensitivity: filters.agingSensitivity,
           showExpiredIncidents: filters.showExpiredIncidents
         });
+        
+        // Debug logging for aging (temporary)
+        if (agingData.agePercentage > 0.1) {
+          console.log(`Traffic aging: ${(agingData.agePercentage * 100).toFixed(1)}% aged, opacity: ${agingData.opacity.toFixed(2)}, time remaining: ${agingData.timeRemaining}m`);
+        }
         
         // Skip events that should be hidden due to aging
         if (!agingData.isVisible) {
@@ -295,13 +311,27 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
             }
           }
           
-          // Calculate aging for incidents
+          // Calculate aging for incidents - use real timestamps, never fall back to 'now'
+          const referenceTime = properties?.incidentTime || 
+                               properties?.Response_Date || 
+                               properties?.created_at || 
+                               properties?.lastUpdated || 
+                               properties?.LastUpdate || 
+                               properties?.updated_at || 
+                               properties?.firstSeenAt;
+          
+          // Skip if no valid timestamp available
+          if (!referenceTime) {
+            console.warn('Incident missing timestamp data, skipping aging calculation:', properties?.id);
+            return;
+          }
+          
           const agingData = calculateIncidentAging({
             category: incidentCategory,
             severity: properties?.severity || properties?.priority || 'medium',
             status: properties?.status || properties?.CurrentStatus || 'active',
-            lastUpdated: properties?.lastUpdated || properties?.LastUpdate || properties?.updated_at || new Date().toISOString(),
-            incidentTime: properties?.incidentTime || properties?.Response_Date || properties?.created_at,
+            lastUpdated: properties?.lastUpdated || properties?.LastUpdate || properties?.updated_at || referenceTime,
+            incidentTime: referenceTime,
             properties: properties
           }, {
             agingSensitivity: filters.agingSensitivity,

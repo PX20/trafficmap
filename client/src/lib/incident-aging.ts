@@ -40,8 +40,8 @@ export const AGING_CONFIGS: Record<string, AgingConfig> = {
     minOpacity: 0.15
   },
   'traffic': {
-    baseDurationHours: 8,
-    severityMultiplier: 1.8,
+    baseDurationHours: 4,
+    severityMultiplier: 1.2,
     maxOpacity: 1.0,
     minOpacity: 0.15
   },

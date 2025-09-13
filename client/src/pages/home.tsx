@@ -73,8 +73,8 @@ export default function Home() {
     autoRefresh: true,
     distanceFilter: 'all',
     locationFilter: true,
-    // Aging controls
-    showExpiredIncidents: false, // Hide expired incidents by default
+    // Aging controls - temporarily show expired incidents for testing greying effect
+    showExpiredIncidents: true, // Show expired incidents to see greying effect
     agingSensitivity: 'normal', // Use normal aging sensitivity
     // Dynamic category filters will be added automatically when users interact with them
   });
