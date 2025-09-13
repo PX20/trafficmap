@@ -188,20 +188,36 @@ class UnifiedIngestionEngine {
   }
 
   private async fetchUserReports(): Promise<any> {
-    // Fetch recent user-reported incidents from database
-    const incidents = await storage.getIncidents();
+    // Fetch recent user-reported incidents from unified incidents table
+    const unifiedIncidents = await storage.getAllUnifiedIncidents();
+    
+    // Filter for user reports only
+    const userReports = unifiedIncidents.filter(incident => incident.source === 'user');
     
     // Return in GeoJSON-like format for consistent processing
     return {
       type: 'FeatureCollection',
-      features: incidents.map(incident => ({
+      features: userReports.map(incident => ({
         type: 'Feature',
         id: incident.id,
-        geometry: incident.location,
+        geometry: incident.geometry,
         properties: {
-          ...incident,
+          ...(incident.properties || {}),
+          id: incident.id,
+          title: incident.title,
+          description: incident.description,
+          location: incident.location,
+          category: incident.category,
+          subcategory: incident.subcategory,
+          severity: incident.severity,
+          status: incident.status,
+          userId: incident.userId,
+          photoUrl: incident.photoUrl,
+          verificationStatus: incident.verificationStatus,
           source: 'user',
-          reportedAt: incident.publishedDate
+          reportedAt: incident.incidentTime || incident.createdAt,
+          createdAt: incident.createdAt,
+          updatedAt: incident.updatedAt
         }
       }))
     };

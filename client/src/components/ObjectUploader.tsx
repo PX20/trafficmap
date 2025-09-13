@@ -14,6 +14,7 @@ interface ObjectUploaderProps {
     method: "PUT";
     url: string;
   }>;
+  onStart?: () => void;
   onComplete?: (
     result: UploadResult<Record<string, unknown>, Record<string, unknown>>
   ) => void;
@@ -53,6 +54,7 @@ export function ObjectUploader({
   maxNumberOfFiles = 1,
   maxFileSize = 10485760, // 10MB default
   onGetUploadParameters,
+  onStart,
   onComplete,
   buttonClassName,
   children,
@@ -77,6 +79,8 @@ export function ObjectUploader({
         if (progressDiv) {
           progressDiv.style.display = 'block';
         }
+        // Trigger start callback since autoProceed is true
+        onStart?.();
       })
       .on("complete", (result: any) => {
         onComplete?.(result);

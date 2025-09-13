@@ -41,6 +41,7 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [uploadedPhotoUrl, setUploadedPhotoUrl] = useState<string>("");
+  const [isPhotoUploading, setIsPhotoUploading] = useState(false);
   
   // Simple state for categories and subcategories
   const [categories, setCategories] = useState<any[]>([]);
@@ -114,7 +115,12 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
     };
   };
 
+  const handlePhotoUploadStart = () => {
+    setIsPhotoUploading(true);
+  };
+
   const handlePhotoUploadComplete = (result: any) => {
+    setIsPhotoUploading(false);
     if (result.successful && result.successful.length > 0) {
       const uploadedUrl = result.successful[0].uploadURL;
       setUploadedPhotoUrl(uploadedUrl);
@@ -122,6 +128,12 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
       toast({
         title: "Photo Uploaded",
         description: "Your photo has been uploaded successfully.",
+      });
+    } else {
+      toast({
+        title: "Upload Failed",
+        description: "Failed to upload photo. Please try again.",
+        variant: "destructive",
       });
     }
   };
@@ -513,6 +525,7 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
                             maxNumberOfFiles={1}
                             maxFileSize={5242880}
                             onGetUploadParameters={handleGetUploadParameters}
+                            onStart={handlePhotoUploadStart}
                             onComplete={handlePhotoUploadComplete}
                             buttonClassName="w-full py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium rounded-xl shadow-md hover:shadow-lg transition-all duration-200"
                           >
@@ -542,7 +555,7 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
               </Button>
               <Button
                 type="submit"
-                disabled={reportIncidentMutation.isPending}
+                disabled={reportIncidentMutation.isPending || isPhotoUploading}
                 className="flex-1 px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 data-testid="button-submit-report"
               >
@@ -550,6 +563,11 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
                   <div className="flex items-center gap-2">
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     Submitting Report...
+                  </div>
+                ) : isPhotoUploading ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Uploading Photo...
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">
