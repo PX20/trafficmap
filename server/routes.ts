@@ -81,16 +81,13 @@ try {
  */
 async function seedCategoriesIfNeeded() {
   try {
-    console.log("🌱 Checking if categories need seeding...");
+    console.log("🌱 Checking categories and subcategories...");
     
-    // Check if categories already exist
+    // Get existing categories and subcategories for comparison
     const existingCategories = await storage.getCategories();
-    if (existingCategories.length > 0) {
-      console.log(`✅ Categories already exist (${existingCategories.length} found), skipping seeding`);
-      return { success: true, message: "Categories already seeded", count: existingCategories.length };
-    }
+    const existingSubcategories = await storage.getSubcategories();
     
-    console.log("🌱 Seeding hierarchical categories...");
+    console.log(`📊 Found ${existingCategories.length} categories and ${existingSubcategories.length} subcategories`);
     
     // Main categories with hierarchy
     const categoryData = [
@@ -174,31 +171,60 @@ async function seedCategoriesIfNeeded() {
       }
     ];
     
-    let categoryCount = 0;
-    let subcategoryCount = 0;
+    let createdCategories = 0;
+    let createdSubcategories = 0;
+    let skippedCategories = 0;
+    let skippedSubcategories = 0;
     
-    // Create categories and subcategories
+    // Idempotent seeding: check and create each category/subcategory individually
     for (const catData of categoryData) {
       const { subcategories, ...categoryInfo } = catData;
-      const category = await storage.createCategory(categoryInfo);
-      categoryCount++;
       
-      // Create subcategories for this category
+      // Check if category already exists by name
+      const existingCategory = existingCategories.find(cat => cat.name === categoryInfo.name);
+      let categoryToUse;
+      
+      if (existingCategory) {
+        categoryToUse = existingCategory;
+        skippedCategories++;
+        console.log(`✓ Category "${categoryInfo.name}" already exists`);
+      } else {
+        categoryToUse = await storage.createCategory(categoryInfo);
+        createdCategories++;
+        console.log(`+ Created category "${categoryInfo.name}"`);
+      }
+      
+      // Check and create subcategories for this category
       for (const subData of subcategories) {
-        await storage.createSubcategory({
-          ...subData,
-          categoryId: category.id
-        });
-        subcategoryCount++;
+        const existingSubcategory = existingSubcategories.find(sub => 
+          sub.categoryId === categoryToUse.id && sub.name === subData.name
+        );
+        
+        if (existingSubcategory) {
+          skippedSubcategories++;
+          console.log(`✓ Subcategory "${subData.name}" already exists under "${categoryInfo.name}"`);
+        } else {
+          await storage.createSubcategory({
+            ...subData,
+            categoryId: categoryToUse.id
+          });
+          createdSubcategories++;
+          console.log(`+ Created subcategory "${subData.name}" under "${categoryInfo.name}"`);
+        }
       }
     }
     
-    console.log(`✅ Successfully seeded ${categoryCount} categories and ${subcategoryCount} subcategories`);
+    const totalCategories = createdCategories + skippedCategories;
+    const totalSubcategories = createdSubcategories + skippedSubcategories;
+    
+    console.log(`✅ Seeding complete: ${createdCategories} new categories, ${createdSubcategories} new subcategories (${skippedCategories} categories and ${skippedSubcategories} subcategories already existed)`);
+    
     return { 
       success: true, 
-      message: `Successfully seeded ${categoryCount} categories and ${subcategoryCount} subcategories`,
-      categories: categoryCount,
-      subcategories: subcategoryCount
+      message: `Seeding complete: ${createdCategories} new categories, ${createdSubcategories} new subcategories created`,
+      created: { categories: createdCategories, subcategories: createdSubcategories },
+      skipped: { categories: skippedCategories, subcategories: skippedSubcategories },
+      total: { categories: totalCategories, subcategories: totalSubcategories }
     };
   } catch (error) {
     console.error("❌ Error seeding categories:", error);
