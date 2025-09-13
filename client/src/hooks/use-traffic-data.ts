@@ -73,12 +73,31 @@ export function useTrafficData(filters: FilterState): ProcessedTrafficData {
   const targetRegion = findRegionBySuburb(filters.homeLocation || '');
   const targetRegionId = targetRegion?.id;
   
+  // Debug regional filtering
+  console.log('🏠 HOME LOCATION:', filters.homeLocation, 'TARGET REGION:', targetRegionId);
+  
   // Regional filtering function using regionIds with text fallback
   const isInRegion = (feature: any) => {
     if (!targetRegionId) return false;
     
-    // Use pre-computed regionIds for accurate filtering
+    // Derive userReported status and debug first
+    const isUser = feature.properties?.source === 'user';
+    const userReported = feature.properties?.userReported ?? isUser;
     const regionIds = feature.properties?.regionIds || feature.regionIds || [];
+    
+    // Debug ALL user incidents before any returns
+    if (isUser) {
+      console.log('👤 USER INCIDENT:', {
+        id: feature.id,
+        title: feature.properties?.title,
+        location: feature.properties?.location,
+        regionIds: regionIds,
+        userReported: userReported,
+        targetRegionId: targetRegionId
+      });
+    }
+    
+    // Use pre-computed regionIds for accurate filtering
     if (Array.isArray(regionIds) && regionIds.includes(targetRegionId)) {
       return true;
     }
