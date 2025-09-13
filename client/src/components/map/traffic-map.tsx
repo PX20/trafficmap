@@ -42,6 +42,7 @@ const isQFESIncident = (incident: any) => {
 import type { FilterState } from "@/pages/home";
 import { findRegionBySuburb } from "@/lib/regions";
 import { extractCoordinatesFromGeometry } from "@/lib/location-utils";
+import { calculateIncidentAging, type IncidentAgingData } from "@/lib/incident-aging";
 
 // Fix Leaflet default marker icons
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -109,7 +110,6 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
       maxBounds: queenslandBounds, // Restrict panning to Queensland
       maxBoundsViscosity: 1.0, // Firm boundary - no bouncing past limits
       // Improved touch handling
-      tap: false, // Prevents ghost clicks on iOS
       tapTolerance: 15,
       touchZoom: true,
       doubleClickZoom: true,
@@ -120,6 +120,9 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
       boxZoom: false,
       keyboard: false
     }).setView(centerCoords, zoomLevel);
+    
+    // Apply tap: false after initialization to prevent ghost clicks on iOS
+    (map as any).tap = false;
     
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
       attribution: '© OpenStreetMap contributors, © CARTO',
@@ -180,6 +183,21 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
     if ((filteredEventsData as any)?.features) {
       (filteredEventsData as any).features.forEach((feature: any) => {
         const eventType = getSafeString(feature.properties, 'event_type');
+        
+        // Calculate aging for traffic events
+        const agingData = calculateIncidentAging({
+          category: 'traffic',
+          severity: feature.properties?.priority || feature.properties?.impact_type || 'medium',
+          status: feature.properties?.status || 'active',
+          lastUpdated: feature.properties?.last_updated || feature.properties?.published || new Date().toISOString(),
+          incidentTime: feature.properties?.duration?.start || feature.properties?.published,
+          properties: feature.properties
+        });
+        
+        // Skip events that should be hidden due to aging
+        if (!agingData.isVisible) {
+          return;
+        }
 
         if (feature.geometry) {
           let coords: [number, number] | null = null;
@@ -213,7 +231,7 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
           
           if (coords) {
             const marker = L.marker(coords, {
-              icon: createCustomMarker(eventType, getMarkerColor(eventType, feature.properties))
+              icon: createCustomMarker(eventType, getMarkerColor(eventType, feature.properties), agingData.opacity)
             });
 
             // Use enhanced EventModal instead of Leaflet popup
@@ -235,8 +253,9 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
         if (feature.geometry?.coordinates) {
           let coords: [number, number] | null = null;
           let markerType = 'incident';
+          let incidentCategory = 'emergency'; // Default category for aging
           
-          // Determine incident category for marker styling
+          // Determine incident category for marker styling and aging
           const properties = feature.properties;
           const isUserReported = properties?.userReported;
           
@@ -246,24 +265,46 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
             
             if (incidentType === 'traffic') {
               markerType = 'traffic';
+              incidentCategory = 'traffic';
             } else if (incidentType === 'crime' || incidentType === 'suspicious_activity') {
               markerType = 'crime';
+              incidentCategory = 'crime';
             } else if (incidentType === 'emergency') {
               markerType = 'emergency';
+              incidentCategory = 'emergency';
             } else if (incidentType === 'wildlife') {
               markerType = 'wildlife';
+              incidentCategory = 'wildlife';
             } else {
               // Infrastructure, generic user reports, and other types fall into community category
               // This includes "USER_REPORT", "User Report", and other community issues
               markerType = 'community';
+              incidentCategory = 'community';
             }
           } else {
             // Official emergency incidents - distinguish QFES from ESQ
             if (isQFESIncident(feature)) {
               markerType = 'qfes';
+              incidentCategory = 'fire';
             } else {
               markerType = 'emergency';
+              incidentCategory = 'emergency';
             }
+          }
+          
+          // Calculate aging for incidents
+          const agingData = calculateIncidentAging({
+            category: incidentCategory,
+            severity: properties?.severity || properties?.priority || 'medium',
+            status: properties?.status || properties?.CurrentStatus || 'active',
+            lastUpdated: properties?.lastUpdated || properties?.LastUpdate || properties?.updated_at || new Date().toISOString(),
+            incidentTime: properties?.incidentTime || properties?.Response_Date || properties?.created_at,
+            properties: properties
+          });
+          
+          // Skip incidents that should be hidden due to aging
+          if (!agingData.isVisible) {
+            return;
           }
           
           // Handle different geometry types for incidents (data already filtered)
@@ -276,7 +317,7 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
           
           if (coords) {
             const marker = L.marker(coords, {
-              icon: createCustomMarker(markerType, getMarkerColor(markerType, feature.properties))
+              icon: createCustomMarker(markerType, getMarkerColor(markerType, feature.properties), agingData.opacity)
             });
 
             // Use enhanced EventModal instead of Leaflet popup
@@ -394,53 +435,14 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
   };
 
   const getMarkerColor = (markerType: string, properties?: any) => {
-    // Check if incident is completed/closed - show grey for historical context
+    // Only grey out explicitly completed/closed incidents
+    // Time-based aging is now handled by the new aging system via opacity
     if (properties) {
       const status = getSafeString(properties, 'status') || getSafeString(properties, 'CurrentStatus');
       
       // Check for explicitly completed statuses (user-reported incidents)
       if (status === 'completed' || status === 'closed' || status === 'resolved' || status === 'cleared' || status === 'patrolled') {
         return '#9ca3af'; // Grey for completed incidents
-      }
-      
-      // Time-based auto-greying for ALL incident types (TMR, ESQ, QFES)
-      // Check multiple timestamp fields used by different services
-      const timestamp = getProperty(properties, 'lastUpdated') || 
-                       getProperty(properties, 'last_updated') || 
-                       getProperty(properties, 'Response_Date') || 
-                       getProperty(properties, 'published') || 
-                       getProperty(properties, 'createdAt') || 
-                       getProperty(properties, 'timeReported');
-      
-      if (timestamp) {
-        const incidentTime = new Date(timestamp);
-        const hoursSinceIncident = (Date.now() - incidentTime.getTime()) / (1000 * 60 * 60);
-        
-        // Auto-grey incidents based on type and age:
-        // - TMR traffic incidents: 24 hours
-        // - ESQ emergency incidents: 12 hours (faster resolution expected)  
-        // - QFES fire/rescue incidents: 8 hours (fastest emergency response)
-        // - User reports: 48 hours (may take longer to verify/resolve)
-        
-        const isQFES = isQFESIncident({ properties });
-        const isTrafficEvent = getProperty(properties, 'eventType') || markerType === 'traffic' || markerType === 'crash' || markerType === 'hazard';
-        const isUserReport = getProperty(properties, 'userId') || getProperty(properties, 'reportedBy');
-        
-        let greyingHours = 24; // Default TMR/ESQ incidents
-        
-        if (isQFES) {
-          greyingHours = 8; // QFES incidents grey out after 8 hours
-        } else if (getSafeString(properties, 'incidentType').includes('emergency') || markerType === 'emergency') {
-          greyingHours = 12; // ESQ emergency incidents grey out after 12 hours  
-        } else if (isUserReport) {
-          greyingHours = 48; // User reports grey out after 48 hours
-        } else if (isTrafficEvent) {
-          greyingHours = 24; // TMR traffic events grey out after 24 hours
-        }
-        
-        if (hoursSinceIncident > greyingHours) {
-          return '#9ca3af'; // Grey for likely resolved/old incidents
-        }
       }
     }
     
@@ -478,7 +480,7 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
     }
   };
 
-  const createCustomMarker = (markerType: string, color: string) => {
+  const createCustomMarker = (markerType: string, color: string, opacity: number = 1.0) => {
     const getIconSvg = (type: string) => {
       switch(type.toLowerCase()) {
         // Traffic events - all get car/traffic icon
@@ -515,7 +517,7 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
 
     return L.divIcon({
       className: 'custom-marker',
-      html: `<div style="background-color: white; width: 24px; height: 24px; border-radius: 50%; border: 2px solid ${color}; box-shadow: 0 2px 4px rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center;">${getIconSvg(markerType)}</div>`,
+      html: `<div style="background-color: rgba(255, 255, 255, ${opacity}); width: 24px; height: 24px; border-radius: 50%; border: 2px solid ${color}; box-shadow: 0 2px 4px rgba(0,0,0,${0.2 * opacity}); display: flex; align-items: center; justify-content: center; opacity: ${opacity};">${getIconSvg(markerType)}</div>`,
       iconSize: [28, 28],
       iconAnchor: [14, 14]
     });
