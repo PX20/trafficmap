@@ -3,97 +3,39 @@
  * and their opacity based on category, severity, and time elapsed
  */
 
-export interface AgingConfig {
-  baseDurationHours: number;
-  severityMultiplier: number;
-  maxOpacity: number;
-  minOpacity: number;
-}
-
-// Define aging configurations for different incident types
-export const AGING_CONFIGS: Record<string, AgingConfig> = {
-  // Critical Priority - Stay visible longest (24+ hours)
-  'fire': {
-    baseDurationHours: 24,
-    severityMultiplier: 2.0,
-    maxOpacity: 1.0,
-    minOpacity: 0.15
-  },
-  'medical': {
-    baseDurationHours: 24,
-    severityMultiplier: 2.0,
-    maxOpacity: 1.0,
-    minOpacity: 0.15
-  },
-  'rescue': {
-    baseDurationHours: 24,
-    severityMultiplier: 2.0,
-    maxOpacity: 1.0,
-    minOpacity: 0.15
-  },
-  
-  // High Priority - Medium aging (8-12 hours)
-  'crime': {
-    baseDurationHours: 12,
-    severityMultiplier: 1.5,
-    maxOpacity: 1.0,
-    minOpacity: 0.15
-  },
-  'traffic': {
-    baseDurationHours: 4,
-    severityMultiplier: 1.2,
-    maxOpacity: 1.0,
-    minOpacity: 0.15
-  },
-  'emergency': {
-    baseDurationHours: 12,
-    severityMultiplier: 1.5,
-    maxOpacity: 1.0,
-    minOpacity: 0.15
-  },
-  
-  // Standard Priority - Normal aging (3-6 hours)
-  'wildlife': {
-    baseDurationHours: 6,
-    severityMultiplier: 1.2,
-    maxOpacity: 0.9,
-    minOpacity: 0.1
-  },
-  'community': {
-    baseDurationHours: 4,
-    severityMultiplier: 1.1,
-    maxOpacity: 0.8,
-    minOpacity: 0.1
-  },
-  'safety': {
-    baseDurationHours: 6,
-    severityMultiplier: 1.3,
-    maxOpacity: 0.9,
-    minOpacity: 0.1
-  },
-  
-  // Low Priority - Quick aging (1-3 hours)
-  'pets': {
-    baseDurationHours: 3,
-    severityMultiplier: 1.0,
-    maxOpacity: 0.7,
-    minOpacity: 0.05
-  },
-  'lost-found': {
-    baseDurationHours: 2,
-    severityMultiplier: 1.0,
-    maxOpacity: 0.6,
-    minOpacity: 0.05
-  },
-  
-  // Default for unknown categories
-  'default': {
-    baseDurationHours: 4,
-    severityMultiplier: 1.2,
-    maxOpacity: 0.8,
-    minOpacity: 0.1
-  }
+// Standardized two-tier aging system
+export const AGING_TIERS = {
+  standard: 12, // 12 hours for most incidents
+  major: 24     // 24 hours for significant incidents
 };
+
+/**
+ * Choose aging tier based on incident significance
+ */
+export function chooseTier(incident: {
+  category: string;
+  severity?: string;
+  status?: string;
+  source?: string;
+  properties?: any;
+}): 'standard' | 'major' {
+  // Major tier for clearly significant incidents
+  if (
+    // Emergency services with active status
+    (incident.source === 'emergency' || incident.source === 'qfes') && incident.status === 'active' ||
+    // Multiple vehicles on scene
+    incident.properties?.VehiclesOnScene >= 3 ||
+    // High impact traffic events
+    incident.properties?.impact_type === 'major' ||
+    // High/critical severity
+    incident.severity === 'high' || incident.severity === 'critical'
+  ) {
+    return 'major';
+  }
+  
+  // Everything else uses standard tier
+  return 'standard';
+}
 
 // Severity multipliers
 export const SEVERITY_MULTIPLIERS = {
@@ -112,9 +54,8 @@ export const STATUS_ADJUSTMENTS = {
 };
 
 export interface IncidentAgingData {
-  opacity: number;
-  isVisible: boolean;
   agePercentage: number;
+  isVisible: boolean;
   timeRemaining: number; // minutes
   shouldAutoHide: boolean;
 }
@@ -126,6 +67,7 @@ export function calculateIncidentAging(incident: {
   category: string;
   severity?: string;
   status?: string;
+  source?: string;
   lastUpdated: string;
   incidentTime?: string;
   properties?: any;
@@ -137,41 +79,19 @@ export function calculateIncidentAging(incident: {
   const agingSensitivity = options?.agingSensitivity || 'normal';
   const showExpiredIncidents = options?.showExpiredIncidents || false;
   
-  // If aging is disabled, always show at full opacity
+  // If aging is disabled, always show indefinitely
   if (agingSensitivity === 'disabled') {
     return {
-      opacity: 1.0,
-      isVisible: true,
       agePercentage: 0,
+      isVisible: true,
       timeRemaining: Infinity,
       shouldAutoHide: false
     };
   }
   
-  // Get aging configuration for this category
-  const config = AGING_CONFIGS[incident.category] || AGING_CONFIGS.default;
-  
-  // Calculate base duration with severity multiplier
-  const severityMultiplier = SEVERITY_MULTIPLIERS[incident.severity as keyof typeof SEVERITY_MULTIPLIERS] || 1.0;
-  const statusAdjustment = STATUS_ADJUSTMENTS[incident.status as keyof typeof STATUS_ADJUSTMENTS] || 1.0;
-  
-  // Check for special conditions that extend visibility
-  let extendedMultiplier = 1.0;
-  
-  // Emergency services with multiple vehicles get extended time
-  if (incident.properties?.VehiclesOnScene >= 3 || incident.properties?.VehiclesOnRoute >= 3) {
-    extendedMultiplier *= 1.5;
-  }
-  
-  // High-impact traffic events get extended time
-  if (incident.category === 'traffic' && incident.properties?.impact_type === 'major') {
-    extendedMultiplier *= 1.3;
-  }
-  
-  // Community-verified reports get longer visibility
-  if (incident.properties?.verificationStatus === 'community_verified') {
-    extendedMultiplier *= 1.2;
-  }
+  // Choose tier and get base TTL hours
+  const tier = chooseTier(incident);
+  const ttlHours = AGING_TIERS[tier];
   
   // Apply aging sensitivity multiplier
   let sensitivityMultiplier = 1.0;
@@ -180,13 +100,7 @@ export function calculateIncidentAging(incident: {
   }
   
   // Calculate total duration in milliseconds
-  const totalDurationHours = config.baseDurationHours * 
-                            config.severityMultiplier * 
-                            severityMultiplier * 
-                            statusAdjustment * 
-                            extendedMultiplier * 
-                            sensitivityMultiplier;
-  
+  const totalDurationHours = ttlHours * sensitivityMultiplier;
   const totalDurationMs = totalDurationHours * 60 * 60 * 1000;
   
   // Calculate time elapsed since incident
@@ -194,44 +108,19 @@ export function calculateIncidentAging(incident: {
   const timeElapsed = Date.now() - new Date(referenceTime).getTime();
   
   // Calculate age percentage
-  const agePercentage = Math.min(timeElapsed / totalDurationMs, 1.0);
-  
-  // Calculate opacity based on age with proper 5-stage scaling
-  let opacity = config.maxOpacity;
-  
-  if (agePercentage > 0.9) {
-    // 90-100%: Very low opacity (15% stage)
-    opacity = config.maxOpacity * 0.15;
-  } else if (agePercentage > 0.75) {
-    // 75-90%: Low opacity (35% stage)
-    opacity = config.maxOpacity * 0.35;
-  } else if (agePercentage > 0.5) {
-    // 50-75%: Medium opacity (60% stage)
-    opacity = config.maxOpacity * 0.6;
-  } else if (agePercentage > 0.25) {
-    // 25-50%: High opacity (85% stage)
-    opacity = config.maxOpacity * 0.85;
-  }
-  // 0-25%: Full opacity (100% stage)
-  
-  // Apply minimum opacity floor only for the 15% stage
-  opacity = Math.max(opacity, config.minOpacity);
+  const agePercentage = Math.max(0, Math.min(timeElapsed / totalDurationMs, 1.0));
   
   // Calculate time remaining
   const timeRemainingMs = Math.max(0, totalDurationMs - timeElapsed);
   const timeRemainingMinutes = Math.floor(timeRemainingMs / (60 * 1000));
   
-  // Clamp age percentage to valid range
-  const clampedAgePercentage = Math.max(0, Math.min(agePercentage, 1.0));
-  
-  // Determine if incident should be hidden - auto-hide all incidents past aging duration
-  const shouldAutoHide = clampedAgePercentage >= 1.0 && !showExpiredIncidents;
-  const isVisible = !shouldAutoHide && opacity > 0.05;
+  // Determine visibility - auto-hide all incidents past aging duration
+  const shouldAutoHide = agePercentage >= 1.0 && !showExpiredIncidents;
+  const isVisible = !shouldAutoHide;
   
   return {
-    opacity,
+    agePercentage,
     isVisible,
-    agePercentage: clampedAgePercentage,
     timeRemaining: timeRemainingMinutes,
     shouldAutoHide
   };
