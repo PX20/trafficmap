@@ -19,16 +19,20 @@ export function chooseTier(incident: {
   source?: string;
   properties?: any;
 }): 'standard' | 'major' {
+  // Normalize status for case-insensitive comparison
+  const normalizedStatus = incident.status?.toLowerCase();
+  const normalizedSeverity = incident.severity?.toLowerCase();
+  
   // Major tier for clearly significant incidents
   if (
     // Emergency services with active status
-    (incident.source === 'emergency' || incident.source === 'qfes') && incident.status === 'active' ||
+    (incident.source === 'emergency' || incident.source === 'qfes') && normalizedStatus === 'active' ||
     // Multiple vehicles on scene
     incident.properties?.VehiclesOnScene >= 3 ||
     // High impact traffic events
     incident.properties?.impact_type === 'major' ||
     // High/critical severity
-    incident.severity === 'high' || incident.severity === 'critical'
+    normalizedSeverity === 'high' || normalizedSeverity === 'critical'
   ) {
     return 'major';
   }

@@ -203,6 +203,7 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
         
         const agingData = calculateIncidentAging({
           category: 'traffic',
+          source: 'traffic',
           severity: feature.properties?.priority || feature.properties?.impact_type || 'medium',
           status: feature.properties?.status || 'active',
           lastUpdated: feature.properties?.last_updated || feature.properties?.published || referenceTime,
@@ -359,6 +360,7 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
           
           const agingData = calculateIncidentAging({
             category: agingCategory,
+            source: isUserReported ? 'user' : (isQFESIncident(feature) ? 'qfes' : 'emergency'),
             severity: properties?.severity || properties?.priority || 'medium',
             status: properties?.status || properties?.CurrentStatus || 'active',
             lastUpdated: properties?.lastUpdated || properties?.LastUpdate || properties?.updated_at || referenceTime,
