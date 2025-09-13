@@ -273,3 +273,56 @@ export function shouldRefreshIncident(incident: {
   // Refresh other incidents less frequently
   return hoursSinceUpdate > 2; // 2 hours
 }
+
+/**
+ * Color interpolation utilities for aging system
+ */
+
+// Convert hex color to RGB values
+export function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result ? {
+    r: parseInt(result[1], 16),
+    g: parseInt(result[2], 16),
+    b: parseInt(result[3], 16)
+  } : null;
+}
+
+// Convert RGB values to hex color
+export function rgbToHex(r: number, g: number, b: number): string {
+  const toHex = (value: number) => {
+    const hex = Math.round(value).toString(16);
+    return hex.length === 1 ? '0' + hex : hex;
+  };
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+}
+
+// Interpolate between two colors based on percentage (0-1)
+export function interpolateColors(color1: string, color2: string, percentage: number): string {
+  const rgb1 = hexToRgb(color1);
+  const rgb2 = hexToRgb(color2);
+  
+  if (!rgb1 || !rgb2) {
+    return color1; // fallback to original color if parsing fails
+  }
+  
+  // Clamp percentage to 0-1 range
+  const t = Math.max(0, Math.min(1, percentage));
+  
+  // Linear interpolation for each color component
+  const r = rgb1.r + (rgb2.r - rgb1.r) * t;
+  const g = rgb1.g + (rgb2.g - rgb1.g) * t;
+  const b = rgb1.b + (rgb2.b - rgb1.b) * t;
+  
+  return rgbToHex(r, g, b);
+}
+
+// Get aged color that gradually shifts from original to grey
+export function getAgedColor(originalColor: string, agePercentage: number): string {
+  const greyColor = '#6b7280'; // Standard grey color for aged incidents
+  
+  // Use a smoother curve for color aging - slower at first, faster later
+  const colorAgePercentage = Math.pow(agePercentage, 1.5);
+  
+  return interpolateColors(originalColor, greyColor, colorAgePercentage);
+}
