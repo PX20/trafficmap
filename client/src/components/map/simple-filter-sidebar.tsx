@@ -6,7 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { ChevronDown, ChevronRight, Car, Shield, Users, MapPin, Flame, Zap, Trees, AlertTriangle, RefreshCw, Target, Heart } from "lucide-react";
+import { ChevronDown, ChevronRight, Car, Shield, Users, MapPin, Flame, Zap, Trees, AlertTriangle, RefreshCw, Target, Heart, Clock, Eye } from "lucide-react";
 import type { FilterState } from "@/pages/home";
 import { LocationAutocomplete } from "@/components/location-autocomplete";
 import { useTrafficData } from "@/hooks/use-traffic-data";
@@ -234,6 +234,88 @@ export function SimpleFilterSidebar({ isOpen, filters, onFilterChange, onClose }
                 </div>
               </div>
             )}
+          </div>
+
+          {/* Aging Options Section */}
+          <div className="pt-4 border-t border-border">
+            <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+              <Clock className="w-5 h-5 text-amber-500" />
+              Aging Options
+            </h2>
+            
+            <div className="space-y-4">
+              <div className="flex items-center space-x-3">
+                <Checkbox 
+                  id="filter-show-expired"
+                  checked={filters.showExpiredIncidents === true}
+                  onCheckedChange={(checked: boolean) => onFilterChange('showExpiredIncidents', !!checked)}
+                  data-testid="checkbox-filter-show-expired"
+                />
+                <Eye className="w-4 h-4 text-gray-500" />
+                <Label htmlFor="filter-show-expired" className="text-sm text-foreground flex-1">
+                  Show Expired Incidents
+                </Label>
+              </div>
+              
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground">Aging Sensitivity:</Label>
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-3">
+                    <input
+                      type="radio"
+                      id="aging-normal"
+                      name="agingSensitivity"
+                      value="normal"
+                      checked={filters.agingSensitivity === 'normal'}
+                      onChange={() => onFilterChange('agingSensitivity', 'normal')}
+                      className="text-blue-500"
+                      data-testid="radio-aging-normal"
+                    />
+                    <Label htmlFor="aging-normal" className="text-sm text-foreground">
+                      Normal (standard timing)
+                    </Label>
+                  </div>
+                  
+                  <div className="flex items-center space-x-3">
+                    <input
+                      type="radio"
+                      id="aging-extended"
+                      name="agingSensitivity"
+                      value="extended"
+                      checked={filters.agingSensitivity === 'extended'}
+                      onChange={() => onFilterChange('agingSensitivity', 'extended')}
+                      className="text-blue-500"
+                      data-testid="radio-aging-extended"
+                    />
+                    <Label htmlFor="aging-extended" className="text-sm text-foreground">
+                      Extended (50% longer visibility)
+                    </Label>
+                  </div>
+                  
+                  <div className="flex items-center space-x-3">
+                    <input
+                      type="radio"
+                      id="aging-disabled"
+                      name="agingSensitivity"
+                      value="disabled"
+                      checked={filters.agingSensitivity === 'disabled'}
+                      onChange={() => onFilterChange('agingSensitivity', 'disabled')}
+                      className="text-blue-500"
+                      data-testid="radio-aging-disabled"
+                    />
+                    <Label htmlFor="aging-disabled" className="text-sm text-foreground">
+                      Disabled (no aging)
+                    </Label>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-muted/50 p-3 rounded-md">
+                <div className="text-xs text-muted-foreground">
+                  <strong>Aging System:</strong> Critical incidents (fire, medical, rescue) remain visible longer than routine reports. Incidents gradually fade as they age.
+                </div>
+              </div>
+            </div>
           </div>
           
           {/* Location Setting Section */}

@@ -192,6 +192,9 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
           lastUpdated: feature.properties?.last_updated || feature.properties?.published || new Date().toISOString(),
           incidentTime: feature.properties?.duration?.start || feature.properties?.published,
           properties: feature.properties
+        }, {
+          agingSensitivity: filters.agingSensitivity,
+          showExpiredIncidents: filters.showExpiredIncidents
         });
         
         // Skip events that should be hidden due to aging
@@ -300,6 +303,9 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
             lastUpdated: properties?.lastUpdated || properties?.LastUpdate || properties?.updated_at || new Date().toISOString(),
             incidentTime: properties?.incidentTime || properties?.Response_Date || properties?.created_at,
             properties: properties
+          }, {
+            agingSensitivity: filters.agingSensitivity,
+            showExpiredIncidents: filters.showExpiredIncidents
           });
           
           // Skip incidents that should be hidden due to aging

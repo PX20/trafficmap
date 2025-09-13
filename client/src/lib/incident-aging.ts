@@ -129,7 +129,25 @@ export function calculateIncidentAging(incident: {
   lastUpdated: string;
   incidentTime?: string;
   properties?: any;
+}, options?: {
+  agingSensitivity?: 'normal' | 'extended' | 'disabled';
+  showExpiredIncidents?: boolean;
 }): IncidentAgingData {
+  // Handle aging sensitivity options
+  const agingSensitivity = options?.agingSensitivity || 'normal';
+  const showExpiredIncidents = options?.showExpiredIncidents || false;
+  
+  // If aging is disabled, always show at full opacity
+  if (agingSensitivity === 'disabled') {
+    return {
+      opacity: 1.0,
+      isVisible: true,
+      agePercentage: 0,
+      timeRemaining: Infinity,
+      shouldAutoHide: false
+    };
+  }
+  
   // Get aging configuration for this category
   const config = AGING_CONFIGS[incident.category] || AGING_CONFIGS.default;
   
@@ -155,12 +173,19 @@ export function calculateIncidentAging(incident: {
     extendedMultiplier *= 1.2;
   }
   
+  // Apply aging sensitivity multiplier
+  let sensitivityMultiplier = 1.0;
+  if (agingSensitivity === 'extended') {
+    sensitivityMultiplier = 1.5; // 50% longer visibility
+  }
+  
   // Calculate total duration in milliseconds
   const totalDurationHours = config.baseDurationHours * 
                             config.severityMultiplier * 
                             severityMultiplier * 
                             statusAdjustment * 
-                            extendedMultiplier;
+                            extendedMultiplier * 
+                            sensitivityMultiplier;
   
   const totalDurationMs = totalDurationHours * 60 * 60 * 1000;
   
@@ -200,7 +225,7 @@ export function calculateIncidentAging(incident: {
   const clampedAgePercentage = Math.max(0, Math.min(agePercentage, 1.0));
   
   // Determine if incident should be hidden - auto-hide all incidents past aging duration
-  const shouldAutoHide = clampedAgePercentage >= 1.0;
+  const shouldAutoHide = clampedAgePercentage >= 1.0 && !showExpiredIncidents;
   const isVisible = !shouldAutoHide && opacity > 0.05;
   
   return {

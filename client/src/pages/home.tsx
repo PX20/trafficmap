@@ -38,6 +38,9 @@ export interface FilterState {
   homeLocation?: string;
   homeCoordinates?: { lat: number; lon: number };
   homeBoundingBox?: [number, number, number, number];
+  // Aging controls
+  showExpiredIncidents: boolean;
+  agingSensitivity: 'normal' | 'extended' | 'disabled';
   // Dynamic category filters - any string key for category IDs
   [key: string]: boolean | string | { lat: number; lon: number } | [number, number, number, number] | undefined;
 }
@@ -70,6 +73,9 @@ export default function Home() {
     autoRefresh: true,
     distanceFilter: 'all',
     locationFilter: true,
+    // Aging controls
+    showExpiredIncidents: false, // Hide expired incidents by default
+    agingSensitivity: 'normal', // Use normal aging sensitivity
     // Dynamic category filters will be added automatically when users interact with them
   });
   
