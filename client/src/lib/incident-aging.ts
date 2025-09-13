@@ -319,7 +319,7 @@ export function interpolateColors(color1: string, color2: string, percentage: nu
 
 // Get aged color that gradually shifts from original to grey
 export function getAgedColor(originalColor: string, agePercentage: number): string {
-  const greyColor = '#6b7280'; // Standard grey color for aged incidents
+  const greyColor = '#e5e7eb'; // Light grey color for aged incidents - much more subtle
   
   // Use a smoother curve for color aging - slower at first, faster later
   const colorAgePercentage = Math.pow(agePercentage, 1.5);
