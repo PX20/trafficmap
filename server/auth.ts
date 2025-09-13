@@ -38,8 +38,8 @@ export function setupAuth(app: Express) {
     const PgSession = connectPgSimple(session);
     store = new PgSession({
       conString: process.env.DATABASE_URL,
-      tableName: 'session', // Table will be created automatically
-      createTableIfMissing: true,
+      tableName: 'sessions', // Use existing table name (plural)
+      createTableIfMissing: false, // Don't try to create - table already exists
       pruneSessionInterval: 60 * 15, // Cleanup every 15 minutes
       errorLog: (error: any) => {
         console.error('Session store error:', error);
