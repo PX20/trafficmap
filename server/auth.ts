@@ -5,6 +5,7 @@ import session from "express-session";
 import { storage } from "./storage";
 import { User as SelectUser } from "@shared/schema";
 import MemoryStore from "memorystore";
+import connectPgSimple from "connect-pg-simple";
 import bcrypt from "bcryptjs";
 
 declare global {
@@ -22,26 +23,72 @@ async function comparePasswords(supplied: string, stored: string) {
 }
 
 export function setupAuth(app: Express) {
-  const memoryStore = MemoryStore(session);
+  // Use PostgreSQL session store in production, memory store in development
+  let store;
+  const isProduction = process.env.NODE_ENV === 'production';
+  
+  if (isProduction) {
+    // Production: Require PostgreSQL session store for persistence
+    if (!process.env.DATABASE_URL) {
+      console.error('❌ CRITICAL: DATABASE_URL environment variable must be set in production!');
+      console.error('   PostgreSQL session store required for production session persistence');
+      process.exit(1);
+    }
+    
+    const PgSession = connectPgSimple(session);
+    store = new PgSession({
+      conString: process.env.DATABASE_URL,
+      tableName: 'session', // Table will be created automatically
+      createTableIfMissing: true,
+      pruneSessionInterval: 60 * 15, // Cleanup every 15 minutes
+      errorLog: (error: any) => {
+        console.error('Session store error:', error);
+      }
+    });
+    console.log('✅ Using PostgreSQL session store for production');
+  } else {
+    // Development: Use memory store
+    const memoryStore = MemoryStore(session);
+    store = new memoryStore({
+      checkPeriod: 86400000, // prune expired entries every 24h
+    });
+    console.log('🔧 Using memory session store for development');
+  }
+  
+  // Ensure session secret is set in production
+  const sessionSecret = process.env.SESSION_SECRET;
+  if (isProduction && (!sessionSecret || sessionSecret === 'dev-secret-key-replace-in-prod')) {
+    console.error('❌ CRITICAL: SESSION_SECRET environment variable must be set in production!');
+    console.error('   Generate a secure secret and set SESSION_SECRET in your production environment');
+    process.exit(1);
+  }
   
   const sessionSettings: session.SessionOptions = {
-    secret: process.env.SESSION_SECRET || "dev-secret-key-replace-in-prod",
+    secret: sessionSecret || "dev-secret-key-replace-in-prod",
     resave: false,
     saveUninitialized: false,
-    store: new memoryStore({
-      checkPeriod: 86400000, // prune expired entries every 24h
-    }),
+    store: store,
     cookie: {
       httpOnly: true,
-      secure: false, // Set to true in production with HTTPS
+      secure: isProduction, // true in production for HTTPS, false in development
       maxAge: 7 * 24 * 60 * 60 * 1000, // 1 week
+      sameSite: 'lax' // Compatible with OAuth flows while maintaining security
     }
   };
+  
+  console.log(`🔐 Session configuration: secure=${sessionSettings.cookie!.secure}, sameSite=${sessionSettings.cookie!.sameSite}`);
 
+  // Trust proxy for production deployments (needed for secure cookies behind reverse proxy)
   app.set("trust proxy", 1);
   app.use(session(sessionSettings));
   app.use(passport.initialize());
   app.use(passport.session());
+  
+  // Alias /api/auth/user to match client expectations (must be AFTER session middleware)
+  app.get("/api/auth/user", (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).json({ message: "Unauthorized" });
+    res.json(req.user);
+  });
 
   passport.use(
     new LocalStrategy({
