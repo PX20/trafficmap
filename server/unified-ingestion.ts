@@ -363,7 +363,11 @@ class UnifiedIngestionEngine {
           incidentTime: props.createdAt ? new Date(props.createdAt) : new Date(),
           lastUpdated: props.updatedAt ? new Date(props.updatedAt) : new Date(),
           publishedAt: new Date(),
-          properties: props,
+          properties: {
+            ...props,
+            userReported: true,
+            categoryId: this.getCategoryId(props.category),
+          },
           userId: props.userId,
           photoUrl: props.photoUrl,
           verificationStatus: props.verificationStatus || 'unverified'
@@ -372,6 +376,21 @@ class UnifiedIngestionEngine {
         return prepareUnifiedIncidentForInsert(incident);
       })
       .filter((incident: InsertUnifiedIncident | null): incident is InsertUnifiedIncident => incident !== null);
+  }
+
+  // Helper method to map category names to UUIDs for frontend filtering
+  private getCategoryId(categoryName: string): string {
+    const categoryMap: Record<string, string> = {
+      'Safety & Crime': '792759f4-1b98-4665-b14c-44a54e9969e9',
+      'Infrastructure & Hazards': '9b1d58d9-cfd1-4c31-93e9-754276a5f265',
+      'Emergency Situations': 'deaca906-3561-4f80-b79f-ed99561c3b04',
+      'Wildlife & Nature': 'd03f47a9-10fb-4656-ae73-92e959d7566a',
+      'Community Issues': 'deaca906-3561-4f80-b79f-ed99561c3b04',
+      'Pets': '4ea3a6f0-c49e-4baf-9ca5-f074ca2811b0',
+      'Lost & Found': 'd1dfcd4e-48e9-4e58-9476-4782a2a132f3'
+    };
+    
+    return categoryMap[categoryName] || 'deaca906-3561-4f80-b79f-ed99561c3b04'; // Default to Community Issues
   }
 
   // ============================================================================
