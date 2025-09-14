@@ -25,7 +25,7 @@ export const QLD_REGIONS: Region[] = [
       [152.7, -26.9],   // North-west (inland near Cooroy)
       [153.1, -26.4],   // North-east (Noosa Heads coastal)
       [153.15, -26.65], // East (Coolum Beach area)
-      [153.13, -26.8],  // South-east (Caloundra coastal)
+      [153.16, -26.8],  // South-east (Caloundra coastal - extended to include coastline)
       [152.9, -26.85],  // South-west (inland Caloundra)
       [152.75, -26.82], // West (Nambour-Maleny area)
       [152.7, -26.9]    // Close polygon

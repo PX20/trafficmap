@@ -590,8 +590,29 @@ class UnifiedIngestionEngine {
   private computeRegionIds(lat: number, lng: number, props: any): string[] {
     const regionIds: string[] = [];
     
-    // Use existing region detection logic
-    const region = getRegionFromCoordinates(lat, lng, props.location || props.Locality);
+    // Stage 1: Try coordinate-based match
+    let region = getRegionFromCoordinates(lat, lng);
+    
+    // Stage 2: If coordinate fails, try with text fallback
+    if (!region) {
+      const textFallback = props.location || props.suburb || props.Locality || props.Location || props.road_summary?.locality;
+      if (textFallback) {
+        region = getRegionFromCoordinates(lat, lng, textFallback);
+      }
+    }
+    
+    // Stage 3: If still null and targetRegionId is valid, use it as fallback
+    if (!region && props.targetRegionId) {
+      // Import regions to validate targetRegionId
+      const { QLD_REGIONS } = require('./region-utils');
+      const validRegion = QLD_REGIONS.find((r: any) => r.id === props.targetRegionId);
+      if (validRegion) {
+        regionIds.push(props.targetRegionId);
+        return regionIds;
+      }
+    }
+    
+    // Return found region or empty array
     if (region) {
       regionIds.push(region.id);
     }
