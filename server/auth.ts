@@ -114,12 +114,57 @@ export function setupAuth(app: Express) {
     }),
   );
 
+  // User cache to prevent redundant database calls during session deserialization
+  const userCache = new Map<string, { user: any; timestamp: number }>();
+  const CACHE_TTL = 5 * 60 * 1000; // 5 minutes cache TTL
+  const MAX_CACHE_SIZE = 1000; // Prevent memory leaks
+  
+  // Cache cleanup function
+  const cleanupCache = () => {
+    const now = Date.now();
+    for (const [key, value] of userCache.entries()) {
+      if (now - value.timestamp > CACHE_TTL) {
+        userCache.delete(key);
+      }
+    }
+    
+    // Enforce max cache size by removing oldest entries
+    if (userCache.size > MAX_CACHE_SIZE) {
+      const entries = Array.from(userCache.entries());
+      entries.sort((a, b) => a[1].timestamp - b[1].timestamp);
+      const toDelete = entries.slice(0, entries.length - MAX_CACHE_SIZE);
+      toDelete.forEach(([key]) => userCache.delete(key));
+    }
+  };
+  
+  // Run cache cleanup every 10 minutes
+  setInterval(cleanupCache, 10 * 60 * 1000);
+
   passport.serializeUser((user, done) => done(null, user.id));
   passport.deserializeUser(async (id: string, done) => {
     try {
+      // Check cache first to avoid database call
+      const cachedEntry = userCache.get(id);
+      const now = Date.now();
+      
+      if (cachedEntry && (now - cachedEntry.timestamp) < CACHE_TTL) {
+        console.log(`🔄 Using cached user data for ${id}`);
+        return done(null, cachedEntry.user);
+      }
+      
+      // Cache miss or expired, fetch from database
+      console.log(`📡 Fetching user ${id} from database`);
       const user = await storage.getUser(id);
+      
+      if (user) {
+        // Cache the user data
+        userCache.set(id, { user, timestamp: now });
+        console.log(`✅ Cached user ${id} (cache size: ${userCache.size})`);
+      }
+      
       done(null, user);
     } catch (error) {
+      console.error(`❌ Error deserializing user ${id}:`, error);
       done(error);
     }
   });
