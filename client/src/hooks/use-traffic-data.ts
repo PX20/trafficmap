@@ -44,9 +44,22 @@ export function useTrafficData(filters: FilterState): ProcessedTrafficData {
   const { data: unifiedData } = useQuery({
     queryKey: ["/api/unified"],
     queryFn: async () => {
-      const response = await fetch('/api/unified');
-      if (!response.ok) throw new Error('Failed to fetch unified incidents');
-      return response.json();
+      // Use fetch with extended timeout for large datasets
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 120000); // 2 minute timeout
+      
+      try {
+        const response = await fetch('/api/unified', {
+          credentials: 'include',
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+        if (!response.ok) throw new Error('Failed to fetch unified incidents');
+        return response.json();
+      } catch (error) {
+        clearTimeout(timeoutId);
+        throw error;
+      }
     },
     select: (data: any) => {
       console.log('🔄 UNIFIED PIPELINE: Events:', data?.features?.filter((f: any) => f.properties?.source === 'tmr')?.length || 0, 'Incidents:', data?.features?.length || 0);
