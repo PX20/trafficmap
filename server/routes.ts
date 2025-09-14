@@ -758,7 +758,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Support both OAuth and local authentication
       const userId = (req.user as any).claims?.sub || (req.user as any).id;
       const user = await storage.getUser(userId);
-      res.json(user);
+      
+      // Return user without sensitive fields
+      if (user && user.password) {
+        const { password, ...userWithoutPassword } = user;
+        res.json(userWithoutPassword);
+      } else {
+        res.json(user);
+      }
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });

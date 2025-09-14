@@ -87,7 +87,14 @@ export function setupAuth(app: Express) {
   // Alias /api/auth/user to match client expectations (must be AFTER session middleware)
   app.get("/api/auth/user", (req, res) => {
     if (!req.isAuthenticated()) return res.status(401).json({ message: "Unauthorized" });
-    res.json(req.user);
+    // Return user without sensitive fields
+    const user = req.user as any;
+    if (user && user.password) {
+      const { password, ...userWithoutPassword } = user;
+      res.json(userWithoutPassword);
+    } else {
+      res.json(user);
+    }
   });
 
   passport.use(
@@ -163,7 +170,9 @@ export function setupAuth(app: Express) {
 
       req.login(user, (err) => {
         if (err) return next(err);
-        res.status(201).json(user);
+        // Return user without sensitive fields
+        const { password, ...userWithoutPassword } = user;
+        res.status(201).json(userWithoutPassword);
       });
     } catch (error) {
       console.error("Registration error:", error);
@@ -185,7 +194,9 @@ export function setupAuth(app: Express) {
           console.error("Login session error:", err);
           return res.status(500).json({ error: "Session error" });
         }
-        res.status(200).json(user);
+        // Return user without sensitive fields
+        const { password, ...userWithoutPassword } = user;
+        res.status(200).json(userWithoutPassword);
       });
     })(req, res, next);
   });
@@ -199,7 +210,14 @@ export function setupAuth(app: Express) {
 
   app.get("/api/user", (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    res.json(req.user);
+    // Return user without sensitive fields
+    const user = req.user as any;
+    if (user && user.password) {
+      const { password, ...userWithoutPassword } = user;
+      res.json(userWithoutPassword);
+    } else {
+      res.json(user);
+    }
   });
 }
 

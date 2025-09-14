@@ -131,9 +131,6 @@ class UnifiedIngestionEngine {
 
     console.log('🚀 Initializing Unified Ingestion Pipeline...');
 
-    // Load existing unified incidents into spatial lookup
-    await this.refreshSpatialIndex();
-
     // Start polling for each source with staggered timing
     this.scheduleSourceIngestion('tmr-traffic', 5000);        // Start immediately
     this.scheduleSourceIngestion('emergency-incidents', 15000); // 15 seconds later
@@ -141,6 +138,11 @@ class UnifiedIngestionEngine {
 
     this.isInitialized = true;
     console.log('✅ Unified Ingestion Pipeline initialized');
+    
+    // Refresh spatial index in background (non-blocking)
+    this.refreshSpatialIndex().catch(error => {
+      console.error('Background spatial index refresh failed:', error);
+    });
   }
 
   // ============================================================================
@@ -194,8 +196,16 @@ class UnifiedIngestionEngine {
     // Filter for user reports only
     const userReports = unifiedIncidents.filter(incident => incident.source === 'user');
     
-    // ALSO fetch legacy incidents from the old incidents table
-    const legacyIncidents = await storage.getIncidents();
+    // ALSO fetch RECENT legacy incidents from the old incidents table (last 7 days only)
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    
+    const allLegacyIncidents = await storage.getIncidents();
+    const legacyIncidents = allLegacyIncidents.filter(incident => {
+      if (!incident.publishedDate) return false; // Skip incidents without dates
+      const incidentDate = new Date(incident.publishedDate);
+      return incidentDate >= sevenDaysAgo; // Only include recent incidents
+    });
     
     // Combine both unified and legacy incidents
     const allFeatures = [
@@ -205,7 +215,7 @@ class UnifiedIngestionEngine {
         type: 'Feature',
         geometry: incident.geometry,
         properties: {
-          ...incident.properties,
+          ...(incident.properties || {}),
           id: incident.sourceId,
           title: incident.title,
           description: incident.description,
@@ -233,14 +243,14 @@ class UnifiedIngestionEngine {
             title: incident.title,
             description: incident.description || '',
             location: incident.location,
-            category: incident.category || 'Community Issues',
-            subcategory: incident.subcategory || '',
-            severity: incident.severity || 'medium',
+            category: incident.categoryId || 'Community Issues',
+            subcategory: incident.subcategoryId || '',
+            severity: 'medium', // Legacy incidents don't have severity
             status: incident.status === 'Reported' ? 'active' : incident.status || 'active',
             createdAt: incident.publishedDate || new Date(),
             updatedAt: incident.publishedDate || new Date(),
-            userId: incident.userId,
-            photoUrl: incident.imageUrl,
+            userId: null, // Legacy incidents don't have userId field
+            photoUrl: incident.photoUrl || null,
             verificationStatus: 'unverified',
             source: 'legacy',
             userReported: true
@@ -711,12 +721,24 @@ class UnifiedIngestionEngine {
     return 'medium';
   }
 
+  private indexRebuildInProgress = false;
+
   private async refreshSpatialIndex(): Promise<void> {
+    // Reentrancy guard to prevent overlapping rebuilds
+    if (this.indexRebuildInProgress) {
+      console.log('🗺️ Spatial index rebuild already in progress, skipping');
+      return;
+    }
+
+    this.indexRebuildInProgress = true;
     try {
+      console.log('🗺️ Spatial index rebuild started');
       await storage.refreshSpatialIndex();
       console.log('🗺️ Spatial index refreshed');
     } catch (error) {
       console.error('Failed to refresh spatial index:', error);
+    } finally {
+      this.indexRebuildInProgress = false;
     }
   }
 
