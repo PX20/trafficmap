@@ -194,16 +194,19 @@ class UnifiedIngestionEngine {
     // Filter for user reports only
     const userReports = unifiedIncidents.filter(incident => incident.source === 'user');
     
-    // Return in GeoJSON-like format for consistent processing
-    return {
-      type: 'FeatureCollection',
-      features: userReports.map(incident => ({
+    // ALSO fetch legacy incidents from the old incidents table
+    const legacyIncidents = await storage.getIncidents();
+    
+    // Combine both unified and legacy incidents
+    const allFeatures = [
+      // Existing unified incidents
+      ...userReports.map(incident => ({
+        id: incident.sourceId,
         type: 'Feature',
-        id: incident.id,
         geometry: incident.geometry,
         properties: {
-          ...(incident.properties || {}),
-          id: incident.id,
+          ...incident.properties,
+          id: incident.sourceId,
           title: incident.title,
           description: incident.description,
           location: incident.location,
@@ -211,15 +214,46 @@ class UnifiedIngestionEngine {
           subcategory: incident.subcategory,
           severity: incident.severity,
           status: incident.status,
+          createdAt: incident.incidentTime,
+          updatedAt: incident.lastUpdated,
           userId: incident.userId,
           photoUrl: incident.photoUrl,
-          verificationStatus: incident.verificationStatus,
-          source: 'user',
-          reportedAt: incident.incidentTime || incident.createdAt,
-          createdAt: incident.createdAt,
-          updatedAt: incident.updatedAt
+          verificationStatus: incident.verificationStatus
         }
-      }))
+      })),
+      // Legacy incidents converted to features
+      ...legacyIncidents
+        .filter(incident => incident.geometry) // Only include incidents with geometry
+        .map(incident => ({
+          id: incident.id,
+          type: 'Feature',
+          geometry: incident.geometry,
+          properties: {
+            id: incident.id,
+            title: incident.title,
+            description: incident.description || '',
+            location: incident.location,
+            category: incident.category || 'Community Issues',
+            subcategory: incident.subcategory || '',
+            severity: incident.severity || 'medium',
+            status: incident.status === 'Reported' ? 'active' : incident.status || 'active',
+            createdAt: incident.publishedDate || new Date(),
+            updatedAt: incident.publishedDate || new Date(),
+            userId: incident.userId,
+            photoUrl: incident.imageUrl,
+            verificationStatus: 'unverified',
+            source: 'legacy',
+            userReported: true
+          }
+        }))
+    ];
+    
+    console.log(`📊 User Reports Fetch: ${userReports.length} unified + ${legacyIncidents.filter(i => i.geometry).length} legacy = ${allFeatures.length} total user incidents`);
+    
+    // Return in GeoJSON-like format for consistent processing
+    return {
+      type: 'FeatureCollection',
+      features: allFeatures
     };
   }
 
