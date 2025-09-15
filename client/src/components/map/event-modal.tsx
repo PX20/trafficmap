@@ -1051,17 +1051,21 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
     }
     
     if (isUserReported) {
-      // For user reports, check multiple sources for the description
+      // For user reports, check all possible sources for the description
       const description = valueFrom([
         'description', 'details', 'information', 'message', 'summary',
-        'notes', 'comments', 'report'
+        'notes', 'comments', 'report', 'content', 'text'
       ]);
       
-      // Also check the originalProperties for the description
+      // Also check originalProperties and direct props
       const originalDescription = props.originalProperties?.description;
+      const directDescription = props.description;
       
-      // Return the first valid description found
-      return description || originalDescription || 'Community reported incident';
+      // Check the incident data directly (from unified ingestion)
+      const incidentDescription = event?.description;
+      
+      // Return the first valid description found, prioritizing user content
+      return directDescription || incidentDescription || description || originalDescription || 'Community reported incident';
     }
     
     // Fallback for any other source types
@@ -1179,37 +1183,23 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
             </div>
           )}
 
-          {/* Prominent Description Section */}
-          <div className="bg-muted/30 rounded-lg p-3 border-l-4 border-primary/40" data-testid="section-description">
-            <div className="flex items-start space-x-2">
-              <Info className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-              <div className="flex-1">
-                <h4 className="text-sm font-medium text-foreground mb-1">Description</h4>
-                <p className="text-sm text-muted-foreground leading-relaxed" data-testid="text-incident-description">
-                  {getDescription()}
-                </p>
+          {/* Natural Content Flow - Social Media Style */}
+          <div className="" data-testid="section-description">
+            <p className="text-sm text-foreground leading-relaxed" data-testid="text-incident-description">
+              {getDescription()}
+            </p>
+            {isUserReported && (props.category || props.incidentType) && (
+              <div className="inline-flex items-center space-x-1 text-xs text-muted-foreground mt-3">
+                <span className="bg-muted/50 px-2 py-1 rounded-full">
+                  {getSubcategoryName(props.subcategory || props.category || props.incidentType)}
+                </span>
               </div>
-            </div>
+            )}
           </div>
 
-          {/* Enhanced Status Info - Source Specific */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-xs">
-              <Badge variant="secondary" className="text-xs" data-testid="badge-incident-status">
-                {isTrafficEvent && (props.originalProperties?.event_type || props.category) || 
-                 isEmergencyEvent && (props.originalProperties?.CurrentStatus || props.status) || 
-                 isUserReported && (props.status || props.category) || 
-                 'Active'}
-              </Badge>
-              <Badge variant="outline" className={`text-xs ${
-                props.severity === 'critical' ? 'border-red-500 text-red-600' :
-                props.severity === 'high' ? 'border-orange-500 text-orange-600' :
-                props.severity === 'medium' ? 'border-yellow-500 text-yellow-600' :
-                'border-green-500 text-green-600'
-              }`} data-testid="badge-priority">
-                {props.severity || 'Low'} Priority
-              </Badge>
-            </div>
+          {/* Minimal Status for Social Media */}
+          <div className="">
+            {/* Remove priority badges - not needed for social media style */}
 
             {/* TMR Traffic Comprehensive Information */}
             {isTrafficEvent && props.originalProperties && (
@@ -1350,41 +1340,16 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
               </div>
             )}
 
-            {/* User Report Comprehensive Details */}
-            {isUserReported && (
-              <div className="space-y-3" data-testid="user-report-details">
-
-                {/* Community Impact */}
-                {(props.category || props.incidentType) && (
-                  <div className="bg-indigo-50 dark:bg-indigo-950/20 rounded-lg p-3 border border-indigo-200 dark:border-indigo-800">
-                    <div className="flex items-start space-x-2">
-                      <Zap className="w-4 h-4 text-indigo-600 mt-0.5 flex-shrink-0" />
-                      <div className="flex-1">
-                        <h5 className="text-xs font-medium text-indigo-800 dark:text-indigo-200 mb-1">Incident Type</h5>
-                        <p className="text-xs text-indigo-700 dark:text-indigo-300" data-testid="incident-category">
-                          {getSubcategoryName(props.subcategory || props.category || props.incidentType)}
-                        </p>
-                        {props.urgency && (
-                          <p className="text-xs text-indigo-600 dark:text-indigo-400 mt-1">Urgency: {props.urgency}</p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
+            {/* Social Media Style User Details - Minimal */}
+            {isUserReported && (props.details || props.locationDescription) && (
+              <div className="text-sm space-y-2" data-testid="user-report-details">
+                {props.details && (
+                  <p className="text-muted-foreground" data-testid="user-report-details-text">{props.details}</p>
                 )}
-
-                {/* Additional Details */}
-                {(props.details || props.locationDescription) && (
-                  <div className="text-xs space-y-1">
-                    <h5 className="font-medium text-foreground">Additional Details</h5>
-                    {props.details && (
-                      <p className="text-muted-foreground" data-testid="user-report-details-text">{props.details}</p>
-                    )}
-                    {props.locationDescription && props.locationDescription !== getLocation() && (
-                      <p className="text-muted-foreground" data-testid="location-description">
-                        <strong>Location:</strong> {props.locationDescription}
-                      </p>
-                    )}
-                  </div>
+                {props.locationDescription && props.locationDescription !== getLocation() && (
+                  <p className="text-muted-foreground text-xs" data-testid="location-description">
+                    📍 {props.locationDescription}
+                  </p>
                 )}
               </div>
             )}
