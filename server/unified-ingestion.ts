@@ -209,7 +209,7 @@ class UnifiedIngestionEngine {
     
     // Combine both unified and legacy incidents
     const allFeatures = [
-      // Existing unified incidents
+      // Existing unified incidents - ENSURE userReported flag is set
       ...userReports.map(incident => ({
         id: incident.sourceId,
         type: 'Feature',
@@ -228,7 +228,10 @@ class UnifiedIngestionEngine {
           updatedAt: incident.lastUpdated,
           userId: incident.userId,
           photoUrl: incident.photoUrl,
-          verificationStatus: incident.verificationStatus
+          verificationStatus: incident.verificationStatus,
+          // CRITICAL: Ensure proper classification flags
+          source: 'user',
+          userReported: true
         }
       })),
       // Legacy incidents converted to features
@@ -378,48 +381,91 @@ class UnifiedIngestionEngine {
   private normalizeUserReports(data: any): InsertUnifiedIncident[] {
     if (!data.features || !Array.isArray(data.features)) return [];
 
-    return data.features
+    let total = 0;
+    let filtered = 0;
+    let processed = 0;
+    let failed = 0;
+
+    const results = data.features
       .filter(this.filterRecentEvents)
       .map((feature: any) => {
+        total++;
+        
         const props = feature.properties || {};
         const geometry = feature.geometry;
         
-        const centroid = this.computeCentroid(geometry);
-        if (!centroid) return null;
+        // Resilient sourceId generation
+        const sourceId = props.id?.toString() || feature.id?.toString() || `user-${Date.now()}-${Math.random()}`;
+        if (!sourceId) {
+          filtered++;
+          return null;
+        }
+        
+        // Resilient centroid computation with fallbacks
+        let centroid = this.computeCentroid(geometry);
+        
+        // Fallback: try to use lat/lng from properties if geometry is missing
+        if (!centroid && (props.lat || props.latitude) && (props.lng || props.longitude)) {
+          centroid = {
+            lat: props.lat || props.latitude,
+            lng: props.lng || props.longitude
+          };
+        }
+        
+        // Skip if we can't determine location
+        if (!centroid) {
+          filtered++;
+          return null;
+        }
 
-        const regionIds = this.computeRegionIds(centroid.lat, centroid.lng, props);
+        try {
+          const regionIds = this.computeRegionIds(centroid.lat, centroid.lng, props);
 
-        const incident: InsertUnifiedIncident = {
-          source: 'user',
-          sourceId: props.id?.toString() || `user-${Date.now()}`,
-          title: props.title || 'Community Report',
-          description: props.description || '',
-          location: props.location || '',
-          category: props.category || 'other',
-          subcategory: props.subcategory || '',
-          severity: props.severity || 'medium',
-          status: props.status || 'active',
-          geometry,
-          centroidLat: centroid.lat,
-          centroidLng: centroid.lng,
-          regionIds,
-          geocell: computeGeocellForIncident({ centroidLat: centroid.lat, centroidLng: centroid.lng }),
-          incidentTime: props.createdAt ? new Date(props.createdAt) : new Date(),
-          lastUpdated: props.updatedAt ? new Date(props.updatedAt) : new Date(),
-          publishedAt: new Date(),
-          properties: {
-            ...props,
-            userReported: true,
-            categoryId: this.getCategoryId(props.category),
-          },
-          userId: props.userId,
-          photoUrl: props.photoUrl,
-          verificationStatus: props.verificationStatus || 'unverified'
-        };
+          const incident: InsertUnifiedIncident = {
+            source: 'user', // ALWAYS set to user
+            sourceId,
+            title: props.title || 'Community Report',
+            description: props.description || '',
+            location: props.location || '',
+            category: props.category || 'other',
+            subcategory: props.subcategory || '',
+            severity: props.severity || 'medium',
+            status: props.status || 'active',
+            geometry,
+            centroidLat: centroid.lat,
+            centroidLng: centroid.lng,
+            regionIds,
+            geocell: computeGeocellForIncident({ centroidLat: centroid.lat, centroidLng: centroid.lng }),
+            incidentTime: props.createdAt ? new Date(props.createdAt) : new Date(),
+            lastUpdated: props.updatedAt ? new Date(props.updatedAt) : new Date(),
+            publishedAt: new Date(),
+            properties: {
+              ...props,
+              // CRITICAL: Always ensure proper classification
+              source: 'user',
+              userReported: true,
+              categoryId: this.getCategoryId(props.category),
+            },
+            userId: props.userId,
+            photoUrl: props.photoUrl,
+            verificationStatus: props.verificationStatus || 'unverified'
+          };
 
-        return prepareUnifiedIncidentForInsert(incident);
+          const preparedIncident = prepareUnifiedIncidentForInsert(incident);
+          processed++;
+          return preparedIncident;
+        } catch (error) {
+          console.error(`❌ Failed to normalize user report ${sourceId}:`, error);
+          failed++;
+          return null;
+        }
       })
       .filter((incident: InsertUnifiedIncident | null): incident is InsertUnifiedIncident => incident !== null);
+
+    // Improved logging with breakdown
+    console.log(`📊 User Reports Processing: ${total} total, ${processed} processed, ${filtered} filtered (no geometry/ID), ${failed} failed`);
+    
+    return results;
   }
 
   // Helper method to map category names to UUIDs for frontend filtering
