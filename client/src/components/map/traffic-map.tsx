@@ -181,9 +181,44 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
     let filteredIncidentsData = incidentsData;
 
 
+    // Unified timestamp helper to ensure consistent ordering with aging logic
+    const getTimestamp = (properties: any) => {
+      const candidates = [
+        properties?.incidentTime,
+        properties?.updatedAt,
+        properties?.lastUpdated,
+        properties?.LastUpdate,
+        properties?.publishedAt,
+        properties?.firstSeenAt,
+        properties?.datetime,
+        properties?.occurredAt,
+        properties?.Response_Date,
+        properties?.duration?.start,
+        properties?.published,
+        properties?.last_updated,
+        properties?.updated_at,
+        properties?.createdAt,
+        properties?.created_at,
+      ];
+      
+      for (const candidate of candidates) {
+        if (candidate) {
+          const timestamp = new Date(candidate).getTime();
+          if (!isNaN(timestamp)) return timestamp;
+        }
+      }
+      
+      return new Date('1970-01-01T00:00:00Z').getTime(); // Fallback for invalid dates
+    };
+
     // Add event markers (already filtered by shared hook)
+    // Sort events by timestamp (oldest first, newest last) so newer markers appear on top
     if ((filteredEventsData as any)?.features) {
-      (filteredEventsData as any).features.forEach((feature: any) => {
+      const sortedEvents = [...(filteredEventsData as any).features].sort((a: any, b: any) => {
+        return getTimestamp(a.properties) - getTimestamp(b.properties);
+      });
+      
+      sortedEvents.forEach((feature: any) => {
         const eventType = getSafeString(feature.properties, 'event_type');
         
         // Calculate aging for traffic events - use normalized timestamps from database
@@ -255,8 +290,13 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
             const originalColor = getMarkerColor(eventType, feature.properties);
             const agedColor = getAgedColor(originalColor, agingData.agePercentage);
             
+            // Set z-index based on timestamp to ensure newest events appear on top
+            const timestamp = getTimestamp(feature.properties);
+            const zIndexOffset = Math.floor(timestamp / 1000); // Convert to reasonable z-index value
+            
             const marker = L.marker(coords, {
-              icon: createCustomMarker(eventType, agedColor, 1.0)
+              icon: createCustomMarker(eventType, agedColor, 1.0),
+              zIndexOffset: zIndexOffset
             });
 
             // Use enhanced EventModal instead of Leaflet popup
@@ -273,8 +313,13 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
 
 
     // Add incident markers (already filtered by shared hook)
+    // Sort incidents by timestamp (oldest first, newest last) so newer markers appear on top
     if ((filteredIncidentsData as any)?.features) {
-      (filteredIncidentsData as any).features.forEach((feature: any) => {
+      const sortedIncidents = [...(filteredIncidentsData as any).features].sort((a: any, b: any) => {
+        return getTimestamp(a.properties) - getTimestamp(b.properties);
+      });
+      
+      sortedIncidents.forEach((feature: any) => {
         if (feature.geometry?.coordinates) {
           let coords: [number, number] | null = null;
           let markerType = 'incident';
@@ -390,8 +435,13 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
             const originalColor = getMarkerColor(markerType, feature.properties);
             const agedColor = getAgedColor(originalColor, agingData.agePercentage);
             
+            // Set z-index based on timestamp to ensure newest incidents appear on top
+            const timestamp = getTimestamp(feature.properties);
+            const zIndexOffset = Math.floor(timestamp / 1000); // Convert to reasonable z-index value
+            
             const marker = L.marker(coords, {
-              icon: createCustomMarker(markerType, agedColor, 1.0)
+              icon: createCustomMarker(markerType, agedColor, 1.0),
+              zIndexOffset: zIndexOffset
             });
 
             // Use enhanced EventModal instead of Leaflet popup
