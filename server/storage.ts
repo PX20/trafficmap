@@ -590,28 +590,39 @@ export class DatabaseStorage implements IStorage {
 
   async upsertUnifiedIncident(source: 'tmr' | 'emergency' | 'user', sourceId: string, incident: InsertUnifiedIncident): Promise<SelectUnifiedIncident> {
     const id = generateUnifiedIncidentId(source, sourceId);
-    const [upserted] = await db
-      .insert(unifiedIncidents)
-      .values({
-        ...incident,
-        id,
-        source,
-        sourceId,
-        lastUpdated: new Date(),
-        publishedAt: new Date(),
-        updatedAt: new Date(),
-      })
-      .onConflictDoUpdate({
-        target: [unifiedIncidents.source, unifiedIncidents.sourceId],
-        set: {
+    try {
+      const [upserted] = await db
+        .insert(unifiedIncidents)
+        .values({
           ...incident,
+          id,
+          source,
+          sourceId,
           lastUpdated: new Date(),
+          publishedAt: new Date(),
           updatedAt: new Date(),
-          version: sql`${unifiedIncidents.version} + 1`,
-        },
-      })
-      .returning();
-    return upserted;
+        })
+        .onConflictDoUpdate({
+          target: unifiedIncidents.id, // Use primary key instead of (source, sourceId)
+          set: {
+            ...incident,
+            lastUpdated: new Date(),
+            updatedAt: new Date(),
+            version: sql`${unifiedIncidents.version} + 1`,
+          },
+        })
+        .returning();
+      return upserted;
+    } catch (error: any) {
+      console.error(`❌ Failed to upsert unified incident [${source}:${sourceId}] with id [${id}]:`, {
+        error: error.message,
+        code: error.code,
+        detail: error.detail,
+        sourceId,
+        id
+      });
+      throw error;
+    }
   }
 
   async deleteUnifiedIncident(id: string): Promise<boolean> {
