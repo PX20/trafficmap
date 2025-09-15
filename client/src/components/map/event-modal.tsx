@@ -45,6 +45,11 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
     queryKey: ["/api/unified"],
   });
 
+  // Fetch all subcategories to resolve UUIDs to names
+  const { data: subcategories = [] } = useQuery({
+    queryKey: ["/api/subcategories"],
+  });
+
   // Find event in unified incidents data
   const event = (unifiedData as any)?.features?.find((f: any) => 
     f.properties.id?.toString() === eventId ||
@@ -1039,16 +1044,29 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
     }
     
     if (isUserReported) {
-      // Prioritized description keys for user reports
+      // For user reports, check multiple sources for the description
       const description = valueFrom([
         'description', 'details', 'information', 'message', 'summary',
         'notes', 'comments', 'report'
       ]);
-      return description || 'Community reported incident';
+      
+      // Also check the originalProperties for the description
+      const originalDescription = props.originalProperties?.description;
+      
+      // Return the first valid description found
+      return description || originalDescription || 'Community reported incident';
     }
     
     // Fallback for any other source types
     return valueFrom(['description', 'information', 'details', 'message'], 'No description available');
+  };
+
+  // Helper function to resolve subcategory UUID to display name
+  const getSubcategoryName = (subcategoryId: string): string => {
+    if (!subcategoryId || !Array.isArray(subcategories)) return subcategoryId;
+    
+    const subcategory = subcategories.find((sub: any) => sub.id === subcategoryId);
+    return subcategory?.name || subcategoryId;
   };
 
   const getDuration = () => {
@@ -1350,7 +1368,9 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
                       <Zap className="w-4 h-4 text-indigo-600 mt-0.5 flex-shrink-0" />
                       <div className="flex-1">
                         <h5 className="text-xs font-medium text-indigo-800 dark:text-indigo-200 mb-1">Incident Type</h5>
-                        <p className="text-xs text-indigo-700 dark:text-indigo-300" data-testid="incident-category">{props.category || props.incidentType}</p>
+                        <p className="text-xs text-indigo-700 dark:text-indigo-300" data-testid="incident-category">
+                          {getSubcategoryName(props.subcategory || props.category || props.incidentType)}
+                        </p>
                         {props.urgency && (
                           <p className="text-xs text-indigo-600 dark:text-indigo-400 mt-1">Urgency: {props.urgency}</p>
                         )}
