@@ -751,7 +751,7 @@ export default function Feed() {
                         photoUrl: null
                       };
                     }
-                    if (incident.properties?.userReported) {
+                    if (incident.properties?.userReported || incident.properties?.source === 'user') {
                       // Extract user data from properties
                       const reporterName = incident.properties?.reporterName || incident.properties?.reportedBy?.split('@')[0] || 'Anonymous User';
                       const photoUrl = incident.properties?.photoUrl;
