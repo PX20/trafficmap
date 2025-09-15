@@ -332,6 +332,7 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
           if (isUserReported) {
             // User-reported incidents - determine marker type based on incident type
             const incidentType = properties?.incidentType;
+            const category = properties?.category?.toLowerCase();
             
             if (incidentType === 'traffic') {
               markerType = 'traffic';
@@ -345,6 +346,9 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
             } else if (incidentType === 'wildlife') {
               markerType = 'wildlife';
               incidentCategory = 'wildlife';
+            } else if (category === 'pets') {
+              markerType = 'pets';
+              incidentCategory = 'community';
             } else {
               // Infrastructure, generic user reports, and other types fall into community category
               // This includes "USER_REPORT", "User Report", and other community issues
@@ -586,6 +590,9 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
       case 'crime':
       case 'suspicious':
         return '#9333ea'; // Purple - matches safety filter icon
+      // Pets - pink/rose
+      case 'pets':
+        return '#e11d48'; // Pink/Rose - matches modal heart icon color
       // Emergency - blue for ESQ
       case 'emergency':
         return '#4f46e5'; // Blue - matches emergency filter icon
@@ -626,6 +633,8 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
           return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg>`;
         case 'suspicious':
           return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>`;
+        case 'pets':
+          return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`;
         case 'emergency':
           return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`;
         case 'qfes':

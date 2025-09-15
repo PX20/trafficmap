@@ -792,6 +792,13 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
     
     if (isUserReported) {
       const incidentType = props.category || props.incidentType;
+      const subcategory = getSubcategoryName(props.subcategory);
+      
+      // Handle pets-related incidents
+      if (incidentType?.toLowerCase() === 'pets' || subcategory?.toLowerCase().includes('pet')) {
+        return <Heart className="w-5 h-5 text-pink-600" />;
+      }
+      
       if (['crime', 'theft', 'violence', 'vandalism'].includes(incidentType?.toLowerCase())) {
         return <Shield className="w-5 h-5 text-purple-600" />;
       }
@@ -1346,20 +1353,6 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
             {/* User Report Comprehensive Details */}
             {isUserReported && (
               <div className="space-y-3" data-testid="user-report-details">
-                {/* Verification Status */}
-                {props.verificationStatus && (
-                  <div className="bg-purple-50 dark:bg-purple-950/20 rounded-lg p-3 border border-purple-200 dark:border-purple-800">
-                    <div className="flex items-start space-x-2">
-                      <Eye className="w-4 h-4 text-purple-600 mt-0.5 flex-shrink-0" />
-                      <div className="flex-1">
-                        <h5 className="text-xs font-medium text-purple-800 dark:text-purple-200 mb-1">Verification Status</h5>
-                        <Badge variant={props.verificationStatus === 'official_verified' ? 'default' : 'outline'} className="text-xs" data-testid="verification-status">
-                          {props.verificationStatus.replace('_', ' ')}
-                        </Badge>
-                      </div>
-                    </div>
-                  </div>
-                )}
 
                 {/* Community Impact */}
                 {(props.category || props.incidentType) && (
