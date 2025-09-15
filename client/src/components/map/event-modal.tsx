@@ -822,10 +822,16 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
   
   const getReporterInfo = () => {
     if (isUserReported) {
+      // Always prioritize the actual author's information over current viewer
+      const displayName = props.reporterName || 
+        (user && user.id === props.reporterId ? (user.displayName || user.firstName || user.email?.split('@')[0]) : undefined) || 
+        'Community Member';
+      
       return {
-        name: props.reporterName || 'Anonymous',
+        name: displayName,
         agency: 'Community',
-        initials: (props.reporterName || 'A').slice(0, 2).toUpperCase()
+        initials: displayName.slice(0, 2).toUpperCase(),
+        avatar: props.reporterAvatar || (user?.id === props.reporterId ? user?.profileImageUrl : undefined)
       };
     }
     
@@ -1123,53 +1129,57 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
         {!commentsView ? (
           // Main Incident View
           <>
-            <DialogHeader className="pb-3">
-              {/* Reporter Info Header */}
-              <div className="flex items-center space-x-3">
-                <Avatar 
-                  className={`w-10 h-10 ${isUserReported && props.reporterId ? 'cursor-pointer hover:ring-2 hover:ring-primary/40 transition-all' : ''}`}
-                  onClick={isUserReported && props.reporterId ? () => {
-                    setLocation(`/users/${props.reporterId}`);
-                  } : undefined}
-                >
-                  <AvatarFallback className={`text-sm font-medium ${getAgencyColor(reporterInfo.agency)}`}>
-                    {reporterInfo.initials}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1">
-                  <p 
-                    className={`text-sm font-medium text-foreground ${isUserReported && props.reporterId ? 'cursor-pointer hover:text-primary transition-colors' : ''}`}
+            <DialogHeader className="pb-4 bg-gradient-to-r from-pink-50 to-purple-50 dark:from-pink-950/20 dark:to-purple-950/20 -m-6 mb-4 p-6 rounded-t-lg">
+              {/* Vibrant Social Media Style Header */}
+              <div className="space-y-4">
+                {/* Title First - Social Media Style */}
+                <div className="flex items-center justify-between">
+                  <h1 className="text-xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent leading-tight" data-testid="social-title">
+                    {getTitle()}
+                  </h1>
+                  <div className="w-12 h-12 rounded-full flex items-center justify-center bg-gradient-to-br from-pink-500 to-purple-500 shadow-lg">
+                    {getIncidentIcon()}
+                  </div>
+                </div>
+                
+                {/* User Profile - Clickable */}
+                <div className="flex items-center space-x-3">
+                  <Avatar 
+                    className={`w-12 h-12 ring-2 ring-white shadow-lg ${isUserReported && props.reporterId ? 'cursor-pointer hover:ring-4 hover:ring-pink-200 transition-all transform hover:scale-105' : ''}`}
                     onClick={isUserReported && props.reporterId ? () => {
                       setLocation(`/users/${props.reporterId}`);
                     } : undefined}
-                    data-testid="link-reporter-profile"
                   >
-                    {reporterInfo.name}
-                  </p>
-                  <div className="flex items-center space-x-2 text-xs text-muted-foreground">
-                    <Clock className="w-3 h-3" />
-                    <span data-testid="text-event-time">
-                      {formatDate(getTimestamp())}
-                    </span>
+                    <AvatarImage src={reporterInfo.avatar} alt={reporterInfo.name} />
+                    <AvatarFallback className="text-white font-bold bg-gradient-to-br from-pink-500 to-purple-500">
+                      {reporterInfo.initials}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                    <p 
+                      className={`text-base font-semibold text-gray-800 dark:text-gray-200 ${isUserReported && props.reporterId ? 'cursor-pointer hover:text-pink-600 transition-colors' : ''}`}
+                      onClick={isUserReported && props.reporterId ? () => {
+                        setLocation(`/users/${props.reporterId}`);
+                      } : undefined}
+                      data-testid="link-reporter-profile"
+                    >
+                      {reporterInfo.name}
+                    </p>
+                    <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
+                      <Clock className="w-4 h-4" />
+                      <span data-testid="text-event-time">
+                        {formatDate(getTimestamp())}
+                      </span>
+                      <span className="text-pink-500">•</span>
+                      <MapPin className="w-4 h-4" />
+                      <span className="line-clamp-1 text-gray-600 dark:text-gray-400">{getLocation()}</span>
+                    </div>
                   </div>
-                </div>
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-muted`}>
-                  {getIncidentIcon()}
                 </div>
               </div>
             </DialogHeader>
         
-        <div className="flex-1 overflow-y-auto space-y-3 pr-2">
-          {/* Title and Summary */}
-          <div>
-            <DialogTitle className="text-base font-semibold text-foreground mb-1 line-clamp-2">
-              {getTitle()}
-            </DialogTitle>
-            <div className="flex items-center space-x-1 text-sm text-muted-foreground">
-              <MapPin className="w-3 h-3" />
-              <span className="line-clamp-1">{getLocation()}</span>
-            </div>
-          </div>
+        <div className="flex-1 overflow-y-auto space-y-4 pr-2">
 
           {/* Image Thumbnail */}
           {thumbnail && (
@@ -1183,14 +1193,15 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
             </div>
           )}
 
-          {/* Natural Content Flow - Social Media Style */}
-          <div className="" data-testid="section-description">
-            <p className="text-sm text-foreground leading-relaxed" data-testid="text-incident-description">
+          {/* Vibrant Social Media Content */}
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700" data-testid="section-description">
+            <p className="text-base text-gray-800 dark:text-gray-200 leading-relaxed font-medium" data-testid="text-incident-description">
               {getDescription()}
             </p>
             {isUserReported && (props.category || props.incidentType) && (
-              <div className="inline-flex items-center space-x-1 text-xs text-muted-foreground mt-3">
-                <span className="bg-muted/50 px-2 py-1 rounded-full">
+              <div className="flex items-center space-x-2 mt-4">
+                <span className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-gradient-to-r from-pink-100 to-purple-100 text-pink-700 dark:from-pink-900/20 dark:to-purple-900/20 dark:text-pink-300 border border-pink-200 dark:border-pink-800">
+                  <Heart className="w-4 h-4 mr-1" />
                   {getSubcategoryName(props.subcategory || props.category || props.incidentType)}
                 </span>
               </div>
