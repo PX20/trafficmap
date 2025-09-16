@@ -3,10 +3,10 @@
  * and their opacity based on category, severity, and time elapsed
  */
 
-// Standardized two-tier aging system
+// Standardized two-tier aging system - reduced durations for faster incident cleanup
 export const AGING_TIERS = {
-  standard: 12, // 12 hours for most incidents
-  major: 24     // 24 hours for significant incidents
+  standard: 4, // 4 hours for most incidents (was 12)
+  major: 8     // 8 hours for significant incidents (was 24)
 };
 
 /**
