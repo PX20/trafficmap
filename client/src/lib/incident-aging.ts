@@ -3,10 +3,10 @@
  * and their opacity based on category, severity, and time elapsed
  */
 
-// Standardized two-tier aging system - reduced durations for faster incident cleanup
+// Unified 12-hour aging system with gradual visual stages
 export const AGING_TIERS = {
-  standard: 4, // 4 hours for most incidents (was 12)
-  major: 8     // 8 hours for significant incidents (was 24)
+  standard: 12, // 12 hours for all incidents with gradual fading
+  major: 12     // 12 hours for all incidents (unified timeline)
 };
 
 /**
