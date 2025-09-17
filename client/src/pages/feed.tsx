@@ -75,6 +75,9 @@ export default function Feed() {
     autoRefresh: true,
     distanceFilter: 'all',
     locationFilter: true,
+    // Aging controls
+    showExpiredIncidents: false,
+    agingSensitivity: 'normal',
   });
 
   // Fetch categories and subcategories to initialize filters (same as map)
@@ -226,9 +229,11 @@ export default function Feed() {
   const filteredFeedEvents = feedEvents.filter(() => filters.showTrafficEvents === true);
   
   const filteredFeedIncidents = feedIncidents.filter((incident: any) => {
-    const isUserReported = incident.properties?.userReported;
+    // Use the unified schema's source field for consistent identification
+    const source = incident.source || incident.properties?.source;
     
-    if (isUserReported) {
+    if (source === 'user') {
+      // Community Posts - User-reported incidents
       const categoryId = incident.properties?.categoryId;
       
       if (categoryId === '792759f4-1b98-4665-b14c-44a54e9969e9') { // Safety & Crime
@@ -247,15 +252,54 @@ export default function Feed() {
         // Fallback for unknown categories - show with community issues
         return filters.showUserCommunity === true;
       }
-    } else {
-      // Official incidents - check if it's QFES or ESQ
-      const isQFES = incident.properties?.incidentType?.toLowerCase()?.includes('fire') ||
-                     incident.properties?.GroupedType?.toLowerCase()?.includes('fire') ||
-                     incident.properties?.description?.toLowerCase()?.includes('fire');
+    } else if (source === 'tmr') {
+      // Government API Feed - Transport and Main Roads traffic events
+      return filters.showTrafficEvents === true;
+    } else if (source === 'emergency') {
+      // Government API Feed - Emergency Services
+      // Determine if it's QFES (fire) or general emergency (ESQ)
+      const eventType = incident.properties?.Event_Type?.toLowerCase() || '';
+      const description = incident.properties?.description?.toLowerCase() || '';
+      
+      const isQFES = eventType.includes('fire') || eventType.includes('burn') || eventType.includes('hazmat') || description.includes('fire');
       if (isQFES) {
         return filters.showQFES === true;
       } else {
         return filters.showIncidents === true;
+      }
+    } else {
+      // Fallback for incidents without clear source (legacy data)
+      // Try to determine from incident structure
+      const isUserReported = incident.properties?.userReported;
+      
+      if (isUserReported) {
+        // Apply user report filtering
+        const categoryId = incident.properties?.categoryId;
+        if (categoryId === '792759f4-1b98-4665-b14c-44a54e9969e9') { // Safety & Crime
+          return filters.showUserSafetyCrime === true;
+        } else if (categoryId === 'd03f47a9-10fb-4656-ae73-92e959d7566a') { // Wildlife & Nature
+          return filters.showUserWildlife === true;
+        } else if (categoryId === '9b1d58d9-cfd1-4c31-93e9-754276a5f265') { // Infrastructure & Hazards (Traffic)
+          return filters.showUserTraffic === true;
+        } else if (categoryId === 'deaca906-3561-4f80-b79f-ed99561c3b04') { // Community Issues
+          return filters.showUserCommunity === true;
+        } else if (categoryId === 'd1dfcd4e-48e9-4e58-9476-4782a2a132f3') { // Lost & Found
+          return filters.showUserLostFound === true;
+        } else if (categoryId === '4ea3a6f0-c49e-4baf-9ca5-f074ca2811b0') { // Pets
+          return filters.showUserPets === true;
+        } else {
+          return filters.showUserCommunity === true;
+        }
+      } else {
+        // Legacy official incidents
+        const isQFES = incident.properties?.incidentType?.toLowerCase()?.includes('fire') ||
+                       incident.properties?.GroupedType?.toLowerCase()?.includes('fire') ||
+                       incident.properties?.description?.toLowerCase()?.includes('fire');
+        if (isQFES) {
+          return filters.showQFES === true;
+        } else {
+          return filters.showIncidents === true;
+        }
       }
     }
   });
@@ -371,23 +415,46 @@ export default function Feed() {
   };
 
   const getIncidentIcon = (incident: any) => {
-    if (incident.type === 'traffic') {
+    // Use the unified schema's source field for consistent identification
+    const source = incident.source || incident.properties?.source;
+    
+    if (source === 'tmr') {
+      // Government API Feed - Transport and Main Roads
       return <Car className="w-5 h-5 text-orange-600" />;
     }
+    
+    if (source === 'user') {
+      // Community Posts - User-reported incidents  
+      return <Users className="w-5 h-5 text-purple-600" />;
+    }
+    
+    if (source === 'emergency') {
+      // Government API Feed - Emergency Services
+      // Determine specific icon based on incident type
+      const eventType = incident.properties?.Event_Type?.toLowerCase() || '';
+      const description = incident.properties?.description?.toLowerCase() || '';
+      
+      if (eventType.includes('fire') || description.includes('fire')) {
+        return <Zap className="w-5 h-5 text-red-600" />;
+      } else if (eventType.includes('medical') || description.includes('medical')) {
+        return <Heart className="w-5 h-5 text-green-600" />;
+      } else if (eventType.includes('police') || description.includes('police')) {
+        return <Shield className="w-5 h-5 text-blue-600" />;
+      }
+      return <AlertTriangle className="w-5 h-5 text-red-600" />;
+    }
+    
+    // Fallback for incidents without clear source (legacy data)
+    // Try to determine from incident structure
+    if (incident.type === 'traffic' || incident.properties?.category === 'traffic') {
+      return <Car className="w-5 h-5 text-orange-600" />;
+    }
+    
     if (incident.properties?.userReported) {
       return <Users className="w-5 h-5 text-purple-600" />;
     }
     
-    const eventType = incident.properties?.Event_Type?.toLowerCase() || '';
-    const description = incident.properties?.description?.toLowerCase() || '';
-    
-    if (eventType.includes('fire') || description.includes('fire')) {
-      return <Zap className="w-5 h-5 text-red-600" />;
-    } else if (eventType.includes('medical') || description.includes('medical')) {
-      return <Heart className="w-5 h-5 text-green-600" />;
-    } else if (eventType.includes('police') || description.includes('police')) {
-      return <Shield className="w-5 h-5 text-blue-600" />;
-    }
+    // Default emergency icon for unknown sources
     return <AlertTriangle className="w-5 h-5 text-red-600" />;
   };
 
@@ -742,7 +809,11 @@ export default function Feed() {
                   };
 
                   const getSourceInfo = (incident: any) => {
-                    if (incident.type === 'traffic') {
+                    // Use the unified schema's source field for consistent identification
+                    const source = incident.source || incident.properties?.source;
+                    
+                    if (source === 'tmr') {
+                      // Government API Feed - Transport and Main Roads
                       return { 
                         name: 'Transport and Main Roads', 
                         type: 'TMR Official', 
@@ -751,8 +822,9 @@ export default function Feed() {
                         photoUrl: null
                       };
                     }
-                    if (incident.properties?.userReported || incident.properties?.source === 'user') {
-                      // Extract user data from properties
+                    
+                    if (source === 'user') {
+                      // Community Posts - User-reported incidents
                       const reporterName = incident.properties?.reporterName || incident.properties?.reportedBy?.split('@')[0] || 'Anonymous User';
                       const photoUrl = incident.properties?.photoUrl;
                       
@@ -769,44 +841,86 @@ export default function Feed() {
                         photoUrl: photoUrl
                       };
                     }
-                    // Determine specific emergency service based on incident data
-                    const eventType = incident.properties?.Event_Type?.toLowerCase() || '';
-                    const description = incident.properties?.description?.toLowerCase() || '';
                     
-                    if (eventType.includes('fire') || eventType.includes('burn') || eventType.includes('hazmat') || description.includes('fire')) {
+                    if (source === 'emergency') {
+                      // Government API Feed - Emergency Services
+                      // Determine specific emergency service based on incident data
+                      const eventType = incident.properties?.Event_Type?.toLowerCase() || '';
+                      const description = incident.properties?.description?.toLowerCase() || '';
+                      
+                      if (eventType.includes('fire') || eventType.includes('burn') || eventType.includes('hazmat') || description.includes('fire')) {
+                        return { 
+                          name: 'Queensland Fire & Emergency', 
+                          type: 'QFES Official', 
+                          avatar: 'QFE', 
+                          color: 'bg-gradient-to-br from-red-500 to-red-600',
+                          photoUrl: null
+                        };
+                      } else if (eventType.includes('police') || eventType.includes('crime') || eventType.includes('traffic enforcement') || description.includes('police')) {
+                        return { 
+                          name: 'Queensland Police Service', 
+                          type: 'QPS Official', 
+                          avatar: 'QPS', 
+                          color: 'bg-gradient-to-br from-blue-700 to-blue-800',
+                          photoUrl: null
+                        };
+                      } else if (eventType.includes('medical') || eventType.includes('ambulance') || eventType.includes('cardiac') || description.includes('medical') || description.includes('ambulance')) {
+                        return { 
+                          name: 'Queensland Ambulance Service', 
+                          type: 'QAS Official', 
+                          avatar: 'QAS', 
+                          color: 'bg-gradient-to-br from-green-600 to-green-700',
+                          photoUrl: null
+                        };
+                      } else {
+                        // Default to general emergency services
+                        return { 
+                          name: 'Emergency Services Queensland', 
+                          type: 'ESQ Official', 
+                          avatar: 'ESQ', 
+                          color: 'bg-gradient-to-br from-red-500 to-red-600',
+                          photoUrl: null
+                        };
+                      }
+                    }
+                    
+                    // Fallback for incidents without clear source (legacy data)
+                    // Try to determine from incident structure
+                    if (incident.type === 'traffic' || incident.properties?.category === 'traffic') {
                       return { 
-                        name: 'Queensland Fire & Emergency', 
-                        type: 'QFES Official', 
-                        avatar: 'QFE', 
-                        color: 'bg-gradient-to-br from-red-500 to-red-600',
-                        photoUrl: null
-                      };
-                    } else if (eventType.includes('police') || eventType.includes('crime') || eventType.includes('traffic enforcement') || description.includes('police')) {
-                      return { 
-                        name: 'Queensland Police Service', 
-                        type: 'QPS Official', 
-                        avatar: 'QPS', 
-                        color: 'bg-gradient-to-br from-blue-700 to-blue-800',
-                        photoUrl: null
-                      };
-                    } else if (eventType.includes('medical') || eventType.includes('ambulance') || eventType.includes('cardiac') || description.includes('medical') || description.includes('ambulance')) {
-                      return { 
-                        name: 'Queensland Ambulance Service', 
-                        type: 'QAS Official', 
-                        avatar: 'QAS', 
-                        color: 'bg-gradient-to-br from-green-600 to-green-700',
-                        photoUrl: null
-                      };
-                    } else {
-                      // Default to general emergency services
-                      return { 
-                        name: 'Emergency Services Queensland', 
-                        type: 'ESQ Official', 
-                        avatar: 'ESQ', 
-                        color: 'bg-gradient-to-br from-red-500 to-red-600',
+                        name: 'Transport and Main Roads', 
+                        type: 'TMR Official', 
+                        avatar: 'TMR', 
+                        color: 'bg-gradient-to-br from-orange-500 to-orange-600',
                         photoUrl: null
                       };
                     }
+                    
+                    if (incident.properties?.userReported) {
+                      const reporterName = incident.properties?.reporterName || 'Anonymous User';
+                      const photoUrl = incident.properties?.photoUrl;
+                      
+                      const getInitials = (name: string) => {
+                        return name.split(' ').map(word => word.charAt(0).toUpperCase()).join('').slice(0, 2);
+                      };
+                      
+                      return { 
+                        name: reporterName, 
+                        type: 'Community Report', 
+                        avatar: getInitials(reporterName), 
+                        color: 'bg-gradient-to-br from-purple-500 to-purple-600',
+                        photoUrl: photoUrl
+                      };
+                    }
+                    
+                    // Default fallback for unknown sources
+                    return { 
+                      name: 'Emergency Services Queensland', 
+                      type: 'ESQ Official', 
+                      avatar: 'ESQ', 
+                      color: 'bg-gradient-to-br from-red-500 to-red-600',
+                      photoUrl: null
+                    };
                   };
 
                   const sourceInfo = getSourceInfo(incident);

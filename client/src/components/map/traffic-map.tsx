@@ -327,10 +327,11 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
           
           // Determine incident category for marker styling and aging
           const properties = feature.properties;
-          const isUserReported = properties?.userReported;
+          // Use the unified schema's source field for consistent identification
+          const source = feature.source || properties?.source;
           
-          if (isUserReported) {
-            // User-reported incidents - determine marker type based on incident type
+          if (source === 'user') {
+            // Community Posts - User-reported incidents
             const incidentType = properties?.incidentType;
             const category = properties?.category?.toLowerCase();
             
@@ -355,14 +356,56 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
               markerType = 'community';
               incidentCategory = 'community';
             }
-          } else {
-            // Official emergency incidents - distinguish QFES from ESQ
+          } else if (source === 'tmr') {
+            // Government API Feed - Transport and Main Roads traffic events
+            markerType = 'traffic';
+            incidentCategory = 'traffic';
+          } else if (source === 'emergency') {
+            // Government API Feed - Emergency Services
             if (isQFESIncident(feature)) {
               markerType = 'qfes';
               incidentCategory = 'fire';
             } else {
               markerType = 'emergency';
               incidentCategory = 'emergency';
+            }
+          } else {
+            // Fallback for incidents without clear source (legacy data)
+            const isUserReported = properties?.userReported;
+            
+            if (isUserReported) {
+              // Legacy user-reported incidents
+              const incidentType = properties?.incidentType;
+              const category = properties?.category?.toLowerCase();
+              
+              if (incidentType === 'traffic') {
+                markerType = 'traffic';
+                incidentCategory = 'traffic';
+              } else if (incidentType === 'crime' || incidentType === 'suspicious_activity') {
+                markerType = 'crime';
+                incidentCategory = 'crime';
+              } else if (incidentType === 'emergency') {
+                markerType = 'emergency';
+                incidentCategory = 'emergency';
+              } else if (incidentType === 'wildlife') {
+                markerType = 'wildlife';
+                incidentCategory = 'wildlife';
+              } else if (category === 'pets') {
+                markerType = 'pets';
+                incidentCategory = 'community';
+              } else {
+                markerType = 'community';
+                incidentCategory = 'community';
+              }
+            } else {
+              // Legacy official emergency incidents
+              if (isQFESIncident(feature)) {
+                markerType = 'qfes';
+                incidentCategory = 'fire';
+              } else {
+                markerType = 'emergency';
+                incidentCategory = 'emergency';
+              }
             }
           }
           
@@ -387,7 +430,7 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
           
           // Map category for aging calculation
           let agingCategory = 'community'; // default fallback
-          if (isUserReported) {
+          if (source === 'user') {
             const categoryId = properties?.categoryId;
             if (categoryId === '792759f4-1b98-4665-b14c-44a54e9969e9') {
               agingCategory = 'safety';
@@ -402,14 +445,51 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
             } else if (categoryId === '4ea3a6f0-c49e-4baf-9ca5-f074ca2811b0') {
               agingCategory = 'pets';
             }
-          } else {
-            // Official incidents - QFES vs other emergency
+          } else if (source === 'tmr') {
+            agingCategory = 'traffic';
+          } else if (source === 'emergency') {
+            // Official emergency incidents - QFES vs other emergency
             agingCategory = isQFESIncident(feature) ? 'fire' : 'emergency';
+          } else {
+            // Fallback for legacy data
+            const isUserReported = properties?.userReported;
+            if (isUserReported) {
+              const categoryId = properties?.categoryId;
+              if (categoryId === '792759f4-1b98-4665-b14c-44a54e9969e9') {
+                agingCategory = 'safety';
+              } else if (categoryId === 'd03f47a9-10fb-4656-ae73-92e959d7566a') {
+                agingCategory = 'wildlife';
+              } else if (categoryId === '9b1d58d9-cfd1-4c31-93e9-754276a5f265') {
+                agingCategory = 'traffic';
+              } else if (categoryId === 'deaca906-3561-4f80-b79f-ed99561c3b04') {
+                agingCategory = 'community';
+              } else if (categoryId === 'd1dfcd4e-48e9-4e58-9476-4782a2a132f3') {
+                agingCategory = 'lost-found';
+              } else if (categoryId === '4ea3a6f0-c49e-4baf-9ca5-f074ca2811b0') {
+                agingCategory = 'pets';
+              }
+            } else {
+              agingCategory = isQFESIncident(feature) ? 'fire' : 'emergency';
+            }
+          }
+          
+          // Determine source for aging calculation
+          let agingSource = 'emergency'; // default fallback
+          if (source === 'user') {
+            agingSource = 'user';
+          } else if (source === 'tmr') {
+            agingSource = 'tmr';
+          } else if (source === 'emergency') {
+            agingSource = isQFESIncident(feature) ? 'qfes' : 'emergency';
+          } else {
+            // Fallback for legacy data
+            const isUserReported = properties?.userReported;
+            agingSource = isUserReported ? 'user' : (isQFESIncident(feature) ? 'qfes' : 'emergency');
           }
           
           const agingData = calculateIncidentAging({
             category: agingCategory,
-            source: isUserReported ? 'user' : (isQFESIncident(feature) ? 'qfes' : 'emergency'),
+            source: agingSource,
             severity: properties?.severity || properties?.priority || 'medium',
             status: properties?.status || properties?.CurrentStatus || 'active',
             lastUpdated: properties?.lastUpdated || properties?.LastUpdate || properties?.updated_at || referenceTime,
