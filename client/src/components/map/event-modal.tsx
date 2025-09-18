@@ -4,8 +4,15 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MessageCircle, Heart, Share2, MapPin, Clock, AlertTriangle, Car, Shield, Eye, Zap, Info, Timer, Route, Construction, Copy, Check, ArrowLeft, Camera, ImageIcon, X, Loader2, ExternalLink, Edit, Trash, MoreHorizontal } from "lucide-react";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { useLocation } from "wouter";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/useAuth";
@@ -36,6 +43,48 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
   
   // Photo modal state
   const [selectedPhotoModal, setSelectedPhotoModal] = useState<{url: string; alt: string} | null>(null);
+  
+  // Edit modal state
+  const [showEditModal, setShowEditModal] = useState(false);
+  
+  // Edit form schema
+  const editIncidentSchema = z.object({
+    title: z.string().min(1, "Title is required"),
+    description: z.string().optional(),
+    location: z.string().min(1, "Location is required"),
+    category: z.string().optional(),
+    subcategory: z.string().optional(),
+    severity: z.enum(["low", "medium", "high", "critical"]).optional(),
+  });
+
+  // Edit form setup
+  const editForm = useForm<z.infer<typeof editIncidentSchema>>({
+    resolver: zodResolver(editIncidentSchema),
+    defaultValues: {
+      title: "",
+      description: "",
+      location: "",
+      category: "",
+      subcategory: "",
+      severity: "medium",
+    },
+  });
+
+  // Populate edit form when modal opens
+  useEffect(() => {
+    if (showEditModal && event) {
+      const props = event.properties;
+      editForm.reset({
+        title: props.title || "",
+        description: props.description || "",
+        location: props.location || "",
+        category: props.category || "",
+        subcategory: props.subcategory || "",
+        severity: props.severity || "medium",
+      });
+    }
+  }, [showEditModal, event, editForm]);
+  
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -89,6 +138,29 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
       toast({
         title: "Error",
         description: "Failed to update like. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Edit incident mutation
+  const editIncidentMutation = useMutation({
+    mutationFn: async (data: any) => {
+      if (!eventId) throw new Error("No event ID");
+      return apiRequest("PUT", `/api/unified-incidents/${eventId}`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/unified"] });
+      toast({
+        title: "Incident updated",
+        description: "Your incident report has been updated successfully",
+      });
+      setShowEditModal(false);
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update incident. Please try again.",
         variant: "destructive",
       });
     }
@@ -1401,12 +1473,7 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => {
-                          toast({
-                            title: "Edit functionality",
-                            description: "Edit functionality coming soon!",
-                          });
-                        }}
+                        onClick={() => setShowEditModal(true)}
                         className="flex items-center space-x-2 text-muted-foreground hover:text-foreground"
                         data-testid="button-edit-incident"
                       >
@@ -1551,6 +1618,126 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
           </>
         )}
       </DialogContent>
+
+      {/* Edit Incident Modal */}
+      <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
+        <DialogContent className="max-w-md w-full max-h-[90vh] overflow-y-auto" data-testid="edit-incident-modal">
+          <DialogHeader>
+            <DialogTitle>Edit Incident Report</DialogTitle>
+          </DialogHeader>
+          
+          <Form {...editForm}>
+            <form onSubmit={editForm.handleSubmit((data) => editIncidentMutation.mutate(data))} className="space-y-4">
+              <FormField
+                control={editForm.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Title</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Brief description"
+                        {...field}
+                        data-testid="input-edit-title"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={editForm.control}
+                name="location"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Location</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Enter location"
+                        {...field}
+                        data-testid="input-edit-location"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={editForm.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Additional details..."
+                        rows={3}
+                        {...field}
+                        data-testid="textarea-edit-description"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={editForm.control}
+                name="severity"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Severity</FormLabel>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <FormControl>
+                        <SelectTrigger data-testid="select-edit-severity">
+                          <SelectValue placeholder="Select severity" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="low">Low</SelectItem>
+                        <SelectItem value="medium">Medium</SelectItem>
+                        <SelectItem value="high">High</SelectItem>
+                        <SelectItem value="critical">Critical</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="flex space-x-2 pt-4">
+                <Button
+                  type="submit"
+                  disabled={editIncidentMutation.isPending}
+                  className="flex-1"
+                  data-testid="button-save-changes"
+                >
+                  {editIncidentMutation.isPending ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    "Save Changes"
+                  )}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowEditModal(false)}
+                  disabled={editIncidentMutation.isPending}
+                  className="flex-1"
+                  data-testid="button-cancel-edit"
+                >
+                  Cancel
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
 
       {/* Photo Modal for full-size viewing */}
       <Dialog open={!!selectedPhotoModal} onOpenChange={() => setSelectedPhotoModal(null)}>

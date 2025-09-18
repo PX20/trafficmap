@@ -3744,6 +3744,118 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update unified incident (authenticated users only, own incidents)
+  app.put('/api/unified-incidents/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const userId = req.user?.id;
+
+      if (!userId) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+
+      // Get the incident to check ownership
+      const incident = await storage.getUnifiedIncident(id);
+      if (!incident) {
+        return res.status(404).json({ error: 'Incident not found' });
+      }
+
+      // Check if user owns this incident (only for user-reported incidents)
+      if (incident.source !== 'user') {
+        return res.status(403).json({ error: 'Cannot edit official incidents' });
+      }
+
+      if (incident.userId !== userId) {
+        return res.status(403).json({ error: 'You can only edit your own incidents' });
+      }
+
+      // Validate request body using Zod schema
+      const updateIncidentSchema = z.object({
+        title: z.string().min(1, "Title is required").optional(),
+        description: z.string().optional(),
+        location: z.string().min(1, "Location is required").optional(),
+        category: z.string().optional(),
+        subcategory: z.string().optional(),
+        severity: z.enum(["low", "medium", "high", "critical"]).optional(),
+      });
+
+      let cleanedData;
+      try {
+        const validatedData = updateIncidentSchema.parse(req.body);
+        
+        // Remove undefined values
+        cleanedData = Object.fromEntries(
+          Object.entries(validatedData).filter(([_, value]) => value !== undefined)
+        );
+
+        if (Object.keys(cleanedData).length === 0) {
+          return res.status(400).json({ error: 'No valid fields to update' });
+        }
+      } catch (validationError) {
+        return res.status(400).json({ 
+          error: 'Invalid request data', 
+          details: validationError instanceof z.ZodError ? validationError.errors : 'Validation failed'
+        });
+      }
+
+      // Update the incident
+      const updatedIncident = await storage.updateUnifiedIncident(id, cleanedData);
+      if (!updatedIncident) {
+        return res.status(500).json({ error: 'Failed to update incident' });
+      }
+
+      res.json({ 
+        success: true, 
+        message: 'Incident updated successfully',
+        incident: updatedIncident
+      });
+    } catch (error) {
+      console.error('Error updating unified incident:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // Delete unified incident (authenticated users only, own incidents)
+  app.delete('/api/unified-incidents/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const userId = req.user?.id;
+
+      if (!userId) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+
+      // Get the incident to check ownership
+      const incident = await storage.getUnifiedIncident(id);
+      if (!incident) {
+        return res.status(404).json({ error: 'Incident not found' });
+      }
+
+      // Check if user owns this incident (only for user-reported incidents)
+      if (incident.source !== 'user') {
+        return res.status(403).json({ error: 'Cannot delete official incidents' });
+      }
+
+      if (incident.userId !== userId) {
+        return res.status(403).json({ error: 'You can only delete your own incidents' });
+      }
+
+      // Delete the incident
+      const deleteResult = await storage.deleteUnifiedIncident(id);
+      if (!deleteResult) {
+        return res.status(500).json({ error: 'Failed to delete incident' });
+      }
+
+      res.json({ 
+        success: true, 
+        message: 'Incident deleted successfully'
+      });
+    } catch (error) {
+      console.error('Error deleting unified incident:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
   // REMOVED: Legacy background ingestion - replaced by unified ingestion pipeline
 
   // Initialize unified ingestion pipeline for multi-source consolidation
