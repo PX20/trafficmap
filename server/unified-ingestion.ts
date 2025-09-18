@@ -111,7 +111,7 @@ class UnifiedIngestionEngine {
       name: 'User Reports',
       type: 'user',
       fetcher: this.fetchUserReports.bind(this),
-      normalizer: this.normalizeUserReports.bind(this),
+      normalizer: this.passThrough.bind(this), // User reports are already normalized, don't re-process
       lastFetch: 0,
       lastSuccess: 0,
       errorCount: 0,
@@ -208,9 +208,9 @@ class UnifiedIngestionEngine {
         title.includes('rescue') ||
         title.includes('ambulance') ||
         title.includes('medical emergency') ||
-        props.Jurisdiction ||
-        props.Master_Incident_Number ||
-        props.OBJECTID;
+        (props as any)?.Jurisdiction ||
+        (props as any)?.Master_Incident_Number ||
+        (props as any)?.OBJECTID;
         
       return !isEmergencyIncident;
     });
@@ -226,66 +226,53 @@ class UnifiedIngestionEngine {
       return incidentDate >= sevenDaysAgo; // Only include recent incidents
     });
     
-    // Combine both unified and legacy incidents
-    const allFeatures = [
-      // Existing unified incidents - ENSURE userReported flag is set
-      ...userReports.map(incident => ({
-        id: incident.sourceId,
-        type: 'Feature',
-        geometry: incident.geometry,
-        properties: {
-          ...(incident.properties || {}),
-          id: incident.sourceId,
-          title: incident.title,
-          description: incident.description,
-          location: incident.location,
-          category: incident.category,
-          subcategory: incident.subcategory,
-          severity: incident.severity,
-          status: incident.status,
-          createdAt: incident.incidentTime,
-          updatedAt: incident.lastUpdated,
-          userId: incident.userId,
-          photoUrl: incident.photoUrl,
-          verificationStatus: incident.verificationStatus,
-          // CRITICAL: Ensure proper classification flags
+    // Prepare legacy incidents for normalization (convert to UnifiedIncident format)
+    const legacyIncidentsForNormalization = legacyIncidents
+      .filter(incident => incident.geometry) // Only include incidents with geometry
+      .map(incident => {
+        const props = incident.properties || {};
+        return {
           source: 'user',
-          userReported: true
-        }
-      })),
-      // Legacy incidents converted to features
-      ...legacyIncidents
-        .filter(incident => incident.geometry) // Only include incidents with geometry
-        .map(incident => ({
-          id: incident.id,
-          type: 'Feature',
+          sourceId: incident.id,
+          title: incident.title,
+          description: incident.description || '',
+          location: incident.location,
+          category: incident.categoryId || 'Community Issues',
+          subcategory: incident.subcategoryId || '',
+          severity: 'medium',
+          status: incident.status === 'Reported' ? 'active' : incident.status || 'active',
           geometry: incident.geometry,
+          centroidLat: incident.geometry?.coordinates?.[1] || 0,
+          centroidLng: incident.geometry?.coordinates?.[0] || 0,
+          regionIds: [],
+          geocell: '',
+          incidentTime: incident.publishedDate || new Date(),
+          lastUpdated: incident.publishedDate || new Date(),
+          publishedAt: new Date(),
           properties: {
+            ...props,
             id: incident.id,
             title: incident.title,
             description: incident.description || '',
             location: incident.location,
             category: incident.categoryId || 'Community Issues',
-            subcategory: incident.subcategoryId || '',
-            severity: 'medium', // Legacy incidents don't have severity
-            status: incident.status === 'Reported' ? 'active' : incident.status || 'active',
-            createdAt: incident.publishedDate || new Date(),
-            updatedAt: incident.publishedDate || new Date(),
-            userId: null, // Legacy incidents don't have userId field
-            photoUrl: incident.photoUrl || null,
-            verificationStatus: 'unverified',
-            source: 'legacy',
-            userReported: true
-          }
-        }))
-    ];
+            source: 'user',
+            userReported: true,
+            reporterId: null // Legacy incidents don't have reporter info
+          },
+          userId: null,
+          photoUrl: incident.photoUrl || null,
+          verificationStatus: 'unverified'
+        } as InsertUnifiedIncident;
+      });
+
+    const allAlreadyNormalized = [...userReports, ...legacyIncidentsForNormalization];
+
+    console.log(`📊 User Reports Fetch: ${userReports.length} unified + ${legacyIncidentsForNormalization.length} legacy = ${allAlreadyNormalized.length} total user incidents (emergency incidents excluded from user pipeline)`);
     
-    console.log(`📊 User Reports Fetch: ${userReports.length} unified + ${legacyIncidents.filter(i => i.geometry).length} legacy = ${allFeatures.length} total user incidents (emergency incidents excluded from user pipeline)`);
-    
-    // Return in GeoJSON-like format for consistent processing
+    // Return in pass-through format for the passThrough normalizer
     return {
-      type: 'FeatureCollection',
-      features: allFeatures
+      alreadyNormalized: allAlreadyNormalized
     };
   }
 
@@ -402,6 +389,13 @@ class UnifiedIngestionEngine {
       .filter((incident: InsertUnifiedIncident | null): incident is InsertUnifiedIncident => incident !== null);
   }
 
+  // Pass-through normalizer for already-processed user reports
+  private passThrough(data: any): InsertUnifiedIncident[] {
+    if (!data.alreadyNormalized || !Array.isArray(data.alreadyNormalized)) return [];
+    console.log(`📊 User Reports Pass-through: ${data.alreadyNormalized.length} already normalized incidents`);
+    return data.alreadyNormalized;
+  }
+
   private normalizeUserReports(data: any): InsertUnifiedIncident[] {
     if (!data.features || !Array.isArray(data.features)) return [];
 
@@ -418,11 +412,17 @@ class UnifiedIngestionEngine {
         const props = feature.properties || {};
         const geometry = feature.geometry;
         
-        // Resilient sourceId generation
-        const sourceId = props.id?.toString() || feature.id?.toString() || `user-${Date.now()}-${Math.random()}`;
+        // Resilient sourceId generation - avoid re-prefixing already processed user IDs
+        let sourceId = props.id?.toString() || feature.id?.toString() || `user-${Date.now()}-${Math.random()}`;
         if (!sourceId) {
           filtered++;
           return null;
+        }
+        
+        // If ID already has user: prefix, don't add another one
+        if (sourceId.startsWith('user:user:')) {
+          // Remove extra prefixes (handle the repeated prefix bug)
+          sourceId = sourceId.replace(/^(user:)+/, 'user:');
         }
         
         // Resilient centroid computation with fallbacks
