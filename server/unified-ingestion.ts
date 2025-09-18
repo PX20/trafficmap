@@ -469,6 +469,8 @@ class UnifiedIngestionEngine {
               source: 'user',
               userReported: true,
               categoryId: this.getCategoryId(props.category),
+              // CRITICAL: Ensure reporterId is set from userId for user attribution
+              reporterId: props.reporterId || props.userId,
             },
             userId: props.userId,
             photoUrl: props.photoUrl,
