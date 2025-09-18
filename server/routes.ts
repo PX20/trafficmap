@@ -3706,6 +3706,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete unified incident (authenticated users only, own incidents)
+  app.delete('/api/unified-incidents/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const userId = req.user?.id;
+
+      if (!userId) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+
+      // Get the incident to check ownership
+      const incident = await storage.getUnifiedIncident(id);
+      if (!incident) {
+        return res.status(404).json({ error: 'Incident not found' });
+      }
+
+      // Check if user owns this incident (only for user-reported incidents)
+      if (incident.source !== 'user') {
+        return res.status(403).json({ error: 'Cannot delete official incidents' });
+      }
+
+      if (incident.userId !== userId) {
+        return res.status(403).json({ error: 'You can only delete your own incidents' });
+      }
+
+      // Delete the incident
+      const success = await storage.deleteUnifiedIncident(id);
+      if (!success) {
+        return res.status(500).json({ error: 'Failed to delete incident' });
+      }
+
+      res.json({ success: true, message: 'Incident deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting unified incident:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
   // REMOVED: Legacy background ingestion - replaced by unified ingestion pipeline
 
   // Initialize unified ingestion pipeline for multi-source consolidation

@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MessageCircle, Heart, Share2, MapPin, Clock, AlertTriangle, Car, Shield, Eye, Zap, Info, Timer, Route, Construction, Copy, Check, ArrowLeft, Camera, ImageIcon, X, Loader2, ExternalLink } from "lucide-react";
+import { MessageCircle, Heart, Share2, MapPin, Clock, AlertTriangle, Car, Shield, Eye, Zap, Info, Timer, Route, Construction, Copy, Check, ArrowLeft, Camera, ImageIcon, X, Loader2, ExternalLink, Edit, Trash, MoreHorizontal } from "lucide-react";
 import { useLocation } from "wouter";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -190,6 +190,29 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
         variant: "destructive",
       });
     }
+  });
+
+  // Delete incident mutation
+  const deleteIncidentMutation = useMutation({
+    mutationFn: async () => {
+      if (!eventId) throw new Error("No event ID");
+      return apiRequest("DELETE", `/api/unified-incidents/${eventId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/unified"] });
+      toast({
+        title: "Incident deleted",
+        description: "Your incident report has been deleted",
+      });
+      onClose(); // Close the modal after deletion
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete incident. Please try again.",
+        variant: "destructive",
+      });
+    },
   });
 
   // Comment like mutation
@@ -835,6 +858,12 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
     return 'text-purple-600'; // Community
   };
   
+  // Check if current user owns this incident
+  const isCurrentUserOwner = () => {
+    if (!user || !isUserReported) return false;
+    return user.id === props.userId;
+  };
+
   const getReporterInfo = () => {
     // Access user details from originalProperties  
     const originalProps = props.originalProperties || {};
@@ -1364,16 +1393,55 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
                   </Button>
                 </div>
                 
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleShare}
-                  className="flex items-center space-x-2 text-muted-foreground hover:text-foreground"
-                  data-testid="button-share"
-                >
-                  {copySuccess ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
-                  <span>Share</span>
-                </Button>
+                <div className="flex items-center space-x-1">
+                  {/* Edit and Delete buttons for user-owned incidents */}
+                  {isCurrentUserOwner() && (
+                    <>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          toast({
+                            title: "Edit functionality",
+                            description: "Edit functionality coming soon!",
+                          });
+                        }}
+                        className="flex items-center space-x-2 text-muted-foreground hover:text-foreground"
+                        data-testid="button-edit-incident"
+                      >
+                        <Edit className="w-4 h-4" />
+                        <span>Edit</span>
+                      </Button>
+                      
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          if (window.confirm("Are you sure you want to delete this incident? This action cannot be undone.")) {
+                            deleteIncidentMutation.mutate();
+                          }
+                        }}
+                        disabled={deleteIncidentMutation.isPending}
+                        className="flex items-center space-x-2 text-red-600 hover:text-red-700 hover:bg-red-50"
+                        data-testid="button-delete-incident"
+                      >
+                        <Trash className="w-4 h-4" />
+                        <span>Delete</span>
+                      </Button>
+                    </>
+                  )}
+                  
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleShare}
+                    className="flex items-center space-x-2 text-muted-foreground hover:text-foreground"
+                    data-testid="button-share"
+                  >
+                    {copySuccess ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
+                    <span>Share</span>
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
