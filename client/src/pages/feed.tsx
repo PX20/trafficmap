@@ -882,6 +882,7 @@ export default function Feed() {
                             </Button>
                           </div>
                         </div>
+                        </div>
 
                         {/* Post Content - Social Media Style */}
                         <div className="px-4 pb-2">
