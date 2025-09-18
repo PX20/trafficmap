@@ -523,26 +523,17 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
   };
 
   const renderComment = (comment: Comment, isReply = false) => {
-    const userData = getUserData(comment.userId);
-    
     return (
       <div key={comment.id} className={`${isReply ? 'ml-8 border-l-2 border-muted pl-4' : ''}`}>
         <div className="flex gap-3 mb-3">
-          <Avatar className="w-8 h-8">
-            <AvatarImage src={userData.avatar} alt={userData.name} />
-            <AvatarFallback>{userData.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-          </Avatar>
+          <ReporterAttribution 
+            userId={comment.userId} 
+            variant="compact" 
+            className="flex-shrink-0"
+          />
           <div className="flex-1">
             <div className="bg-muted p-3 rounded-lg">
               <div className="flex items-center justify-between mb-1">
-                <div className="flex items-center gap-2">
-                  <Link href={`/users/${comment.userId}`}>
-                    <span className="text-sm font-medium text-blue-600 hover:text-blue-800 cursor-pointer hover:underline" data-testid={`link-user-${comment.userId}`}>
-                      {userData.name}
-                    </span>
-                  </Link>
-                  <span className="text-xs text-muted-foreground">• {userData.location}</span>
-                </div>
                 <span className="text-xs text-muted-foreground">
                   {getTimeAgo(comment.createdAt?.toString() || '')}
                 </span>
@@ -635,30 +626,6 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
   }, {});
   
 
-  // User data mapping - NO FALLBACKS, return null if no user data
-  const getUserData = (userId: string) => {
-    // Check if this is the current logged-in user
-    if (user && userId === user.id) {
-      const displayName = user.displayName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'You';
-      return {
-        name: displayName,
-        avatar: user.profileImageUrl || '',
-        location: user.homeSuburb || user.primarySuburb || 'Brisbane'
-      };
-    }
-    
-    // Mock users for demo purposes
-    const users: Record<string, { name: string; avatar: string; location: string }> = {
-      'user-001': { name: 'Sarah Chen', avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b1-0/0/photo-1494790108755-2616b612b1-0.jpg?w=150&h=150&fit=crop&crop=face', location: 'Woolloongabba' },
-      'user-002': { name: 'Mike Thompson', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face', location: 'South Brisbane' },
-      'user-003': { name: 'Emma Rodriguez', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face', location: 'West End' },
-      'user-004': { name: 'James Wilson', avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face', location: 'Kangaroo Point' },
-      'user-005': { name: 'Lisa Nguyen', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop&crop=face', location: 'Fortitude Valley' },
-    };
-    
-    // Return user data if found, or null (no fallbacks) - use ReporterAttribution component for proper user handling
-    return users[userId] || null;
-  };
 
   // This function now only handles official agencies - user reports use ReporterAttribution component
   const agencyInfo = getAgencyInfo(incident);
@@ -1154,16 +1121,13 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
                   <div className="space-y-3">
                     {followUps.map((followUp: IncidentFollowUp) => (
                       <div key={followUp.id} className="flex gap-3 p-3 bg-white/60 rounded-lg border border-green-100">
-                        <Avatar className="w-8 h-8">
-                          <AvatarFallback className="text-xs bg-green-100 text-green-700">
-                            {getUserData(followUp.userId).name.split(' ').map(n => n[0]).join('')}
-                          </AvatarFallback>
-                        </Avatar>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
-                            <span className="font-medium text-sm text-gray-900">
-                              {getUserData(followUp.userId).name}
-                            </span>
+                            <ReporterAttribution 
+                              userId={followUp.userId} 
+                              variant="compact" 
+                              className="flex-shrink-0"
+                            />
                             <Badge 
                               variant="outline" 
                               className={`text-xs ${
@@ -1286,12 +1250,11 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
             {isAuthenticated ? (
               <div className="mt-3 pt-3 border-t">
                 <div className="flex gap-2">
-                  <Avatar className="w-7 h-7">
-                    <AvatarImage src={user?.profileImageUrl || undefined} />
-                    <AvatarFallback className="text-xs">
-                      {user?.firstName?.[0] || user?.email?.[0] || 'U'}
-                    </AvatarFallback>
-                  </Avatar>
+                  <ReporterAttribution 
+                    userId={user?.id} 
+                    variant="compact" 
+                    className="flex-shrink-0"
+                  />
                   <div className="flex-1">
                     <Textarea
                       value={newComment}

@@ -16,6 +16,7 @@ import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/useAuth";
+import { ReporterAttribution } from "@/components/ReporterAttribution";
 
 interface EventModalProps {
   eventId: string | null;
@@ -572,16 +573,15 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
     return (
       <div key={comment.id} className={`${actualDepth > 0 ? 'ml-10 border-l border-muted/50 pl-3 mt-2' : ''}`}>
         <div className="group flex space-x-3 pb-2" data-testid={`comment-${comment.id}`}>
-          <Avatar className="w-10 h-10 flex-shrink-0">
-            <AvatarFallback className="text-sm font-medium bg-gradient-to-br from-blue-500 to-purple-600 text-white">
-              {comment.username?.charAt(0)?.toUpperCase() || 'U'}
-            </AvatarFallback>
-          </Avatar>
+          <ReporterAttribution 
+            userId={comment.userId} 
+            variant="compact" 
+            className="flex-shrink-0"
+          />
           <div className="flex-1 min-w-0">
             {/* Content Container - Facebook style */}
             <div className="bg-muted/40 rounded-2xl px-3 py-2.5 inline-block max-w-full">
               <div className="flex items-center space-x-2 mb-1">
-                <span className="text-sm font-semibold text-foreground">{comment.username || 'Anonymous'}</span>
                 {/* Only show delete button for own comments */}
                 {user?.id === comment.userId && (
                   <Button
@@ -638,11 +638,11 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
             {/* Facebook-style Reply Form */}
             {replyingTo === comment.id && (
               <div className="flex space-x-3 mt-3">
-                <Avatar className="w-8 h-8 flex-shrink-0">
-                  <AvatarFallback className="text-xs bg-gradient-to-br from-green-500 to-blue-600 text-white">
-                    {'U'}
-                  </AvatarFallback>
-                </Avatar>
+                <ReporterAttribution 
+                  userId={user?.id} 
+                  variant="compact" 
+                  className="flex-shrink-0"
+                />
                 <div className="flex-1 space-y-2">
                   <div className="bg-muted/40 rounded-2xl px-3 py-2 border border-muted">
                     <input
