@@ -266,7 +266,25 @@ class UnifiedIngestionEngine {
         } as InsertUnifiedIncident;
       });
 
-    const allAlreadyNormalized = [...userReports, ...legacyIncidentsForNormalization];
+    // Transform userReports to ensure proper userId and reporterId mapping
+    const transformedUserReports = userReports.map(incident => {
+      // Extract user_id from database and map to both userId and properties.reporterId
+      const userId = incident.userId || (incident as any).user_id || null;
+      
+      return {
+        ...incident,
+        userId: userId, // Set userId field
+        properties: {
+          ...incident.properties,
+          // CRITICAL: Set reporterId in properties for user attribution
+          reporterId: userId,
+          source: 'user',
+          userReported: true
+        }
+      } as InsertUnifiedIncident;
+    });
+
+    const allAlreadyNormalized = [...transformedUserReports, ...legacyIncidentsForNormalization];
 
     console.log(`📊 User Reports Fetch: ${userReports.length} unified + ${legacyIncidentsForNormalization.length} legacy = ${allAlreadyNormalized.length} total user incidents (emergency incidents excluded from user pipeline)`);
     
