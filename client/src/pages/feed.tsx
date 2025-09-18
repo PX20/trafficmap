@@ -629,6 +629,10 @@ export default function Feed() {
         }
         return newSet;
       });
+      
+      // Invalidate social cache to sync with map view
+      queryClient.invalidateQueries({ queryKey: ["/api/incidents", incidentId, "social"] });
+      
       toast({
         title: isLiked ? "Liked incident" : "Removed like",
         description: isLiked ? "You've liked this incident." : "You've removed your like from this incident.",
