@@ -8,6 +8,15 @@ QLD Safety Monitor is a comprehensive real-time safety and incident monitoring a
 
 Preferred communication style: Simple, everyday language.
 
+## Recent Changes
+
+### September 18, 2025 - User Attribution System Fixed
+- **RESOLVED**: Fixed persistent "Anonymous" display issue for community reports
+- **Root Cause**: Database JSONB `properties` field contained correct `reporterId` values, but `convertIncidentsToGeoJSON` method wasn't extracting them for API responses
+- **Solution**: Added extraction of `reporterId` from database properties in storage layer: `reporterId: (incident.properties as any)?.reporterId || incident.userId || undefined`
+- **Impact**: Community reports now properly display actual user names instead of "Anonymous"
+- **Technical Details**: Issue was in storage.ts line 707 where properties transformation didn't include reporterId field extraction
+
 ## System Architecture
 
 ### Frontend Architecture
