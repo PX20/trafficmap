@@ -836,29 +836,19 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
   };
   
   const getReporterInfo = () => {
-    // Debug logging for test incident
-    if (props.title === 'User Details Test Report') {
-      console.log('🐛 DEBUG Test Incident Properties:', {
-        reporterName: props.reporterName,
-        authorName: props.authorName, 
-        reportedBy: props.reportedBy,
-        userName: props.userName,
-        userId: props.userId,
-        reporterId: props.reporterId,
-        allProps: Object.keys(props).sort()
-      });
-    }
+    // Access user details from originalProperties  
+    const originalProps = props.originalProperties || {};
     
     // Trust props.source explicitly when present, only use fallbacks when source is missing
     if (isUserReported) {
       // Always prioritize the actual author's information over current viewer
-      const displayName = props.reporterName || 
-        props.reportedBy?.split('@')[0] ||
-        props.authorName ||
-        props.userName ||
-        (user && user.id === props.reporterId ? (user.displayName || user.firstName || user.email?.split('@')[0]) : undefined) || 
+      const displayName = originalProps.reporterName || 
+        originalProps.reportedBy?.split('@')[0] ||
+        originalProps.authorName ||
+        originalProps.userName ||
+        (user && user.id === (originalProps.reporterId || props.userId) ? (user.displayName || user.firstName || user.email?.split('@')[0]) : undefined) || 
         (() => {
-          const id = props.userId || props.reporterId;
+          const id = props.userId || originalProps.reporterId;
           return id ? `User ${id.slice(-4)}` : 'Anonymous Reporter';
         })();
       
@@ -866,7 +856,7 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
         name: displayName,
         agency: 'Community',
         initials: displayName.slice(0, 2).toUpperCase(),
-        avatar: props.reporterAvatar || (user?.id === props.reporterId ? user?.profileImageUrl : undefined)
+        avatar: originalProps.reporterAvatar || (user?.id === (originalProps.reporterId || props.userId) ? user?.profileImageUrl : undefined)
       };
     }
     
