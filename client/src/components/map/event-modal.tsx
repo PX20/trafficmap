@@ -836,6 +836,19 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
   };
   
   const getReporterInfo = () => {
+    // Debug logging for test incident
+    if (props.title === 'User Details Test Report') {
+      console.log('🐛 DEBUG Test Incident Properties:', {
+        reporterName: props.reporterName,
+        authorName: props.authorName, 
+        reportedBy: props.reportedBy,
+        userName: props.userName,
+        userId: props.userId,
+        reporterId: props.reporterId,
+        allProps: Object.keys(props).sort()
+      });
+    }
+    
     // Trust props.source explicitly when present, only use fallbacks when source is missing
     if (isUserReported) {
       // Always prioritize the actual author's information over current viewer
