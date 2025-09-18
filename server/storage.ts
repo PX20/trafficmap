@@ -88,7 +88,7 @@ import {
   type SafeUser
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, or, ne, sql } from "drizzle-orm";
+import { eq, desc, and, or, ne, sql, inArray } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import bcrypt from "bcryptjs";
 import { spatialLookup, computeGeocellForIncident, type SpatialQuery, type SpatialQueryResult } from "./spatial-lookup";
@@ -856,7 +856,7 @@ export class DatabaseStorage implements IStorage {
     return await db
       .select()
       .from(users)
-      .where(sql`${users.id} = ANY(${limitedIds})`);
+      .where(inArray(users.id, limitedIds));
   }
 
   // Comment voting operations
