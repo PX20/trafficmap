@@ -271,6 +271,16 @@ class UnifiedIngestionEngine {
       // Extract user_id from database and map to both userId and properties.reporterId
       const userId = incident.userId || (incident as any).user_id || null;
       
+      // DEBUG: Log the first few transformations to understand the data structure
+      if (userReports.indexOf(incident) < 3) {
+        console.log(`🐞 DEBUG transform incident ${userReports.indexOf(incident)}:`, {
+          originalUserId: incident.userId,
+          userIdFromAny: (incident as any).user_id,
+          extractedUserId: userId,
+          incidentKeys: Object.keys(incident)
+        });
+      }
+      
       return {
         ...incident,
         userId: userId, // Set userId field

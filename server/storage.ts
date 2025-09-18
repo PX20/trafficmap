@@ -700,6 +700,8 @@ export class DatabaseStorage implements IStorage {
         userId: incident.userId || undefined,
         photoUrl: incident.photoUrl || undefined,
         verificationStatus: incident.verificationStatus || undefined,
+        // CRITICAL: Extract reporterId from JSONB properties for user attribution
+        reporterId: (incident.properties as any)?.reporterId || incident.userId || undefined,
         originalProperties: incident.properties,
       },
       geometry: incident.geometry as any,
