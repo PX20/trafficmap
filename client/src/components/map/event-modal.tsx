@@ -880,7 +880,12 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
     }
     
     // Fallback - but default to community rather than government agency
-    return { name: 'Community Member', agency: 'Community', initials: 'CM' };
+    const fallbackId = props.userId || props.reporterId || props.id || 'Unknown';
+    return { 
+      name: `Community Reporter ${fallbackId.slice(-4)}`, 
+      agency: 'Community', 
+      initials: 'CR' 
+    };
   };
   
   const getTitle = () => {
