@@ -667,7 +667,7 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
   if (!event) return null;
 
   const props = event.properties;
-  const source = props.source; // 'tmr', 'emergency', 'user'
+  const source = String(props.source || '').toLowerCase(); // normalize source defensively
   
   const isUserReported = source === 'user';
   const isTrafficEvent = source === 'tmr';
@@ -836,17 +836,18 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
   };
   
   const getReporterInfo = () => {
-    // Check for user reports first - even if source detection failed
-    const hasUserIndicators = isUserReported || props.userReported || props.reporterId || props.reporterName || props.reportedBy || props.userId || props.authorName || props.userName;
-    
-    if (isUserReported || hasUserIndicators) {
+    // Trust props.source explicitly when present, only use fallbacks when source is missing
+    if (isUserReported) {
       // Always prioritize the actual author's information over current viewer
       const displayName = props.reporterName || 
         props.reportedBy?.split('@')[0] ||
         props.authorName ||
         props.userName ||
         (user && user.id === props.reporterId ? (user.displayName || user.firstName || user.email?.split('@')[0]) : undefined) || 
-        ((props.userId || props.reporterId) ? `Community Reporter ${(props.userId || props.reporterId).slice(-4)}` : 'Community Reporter');
+        (() => {
+          const id = props.userId || props.reporterId;
+          return id ? `Community Reporter ${id.slice(-4)}` : 'Community Reporter';
+        })();
       
       return {
         name: displayName,
@@ -879,12 +880,38 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
       return { name: 'Emergency Services QLD', agency: 'ESQ', initials: 'ESQ' };
     }
     
-    // Fallback - but default to community rather than government agency
-    const fallbackId = props.userId || props.reporterId || props.id || 'Unknown';
+    // Handle legacy source distinctly
+    if (source === 'legacy') {
+      const fallbackId = props.userId || props.reporterId || props.id;
+      const displayName = fallbackId && fallbackId !== 'Unknown' ? 
+        `Community Reporter ${fallbackId.slice(-4)}` : 'Community Reporter';
+      return {
+        name: displayName,
+        agency: 'Legacy Report',
+        initials: 'LR'
+      };
+    }
+    
+    // Fallback only when source is missing/unknown - check for user indicators
+    if (!source || source === 'unknown') {
+      const hasUserIndicators = props.userReported || props.reporterId || props.reporterName || props.reportedBy || props.userId || props.authorName || props.userName;
+      if (hasUserIndicators) {
+        const fallbackId = props.userId || props.reporterId || props.id;
+        const displayName = fallbackId && fallbackId !== 'Unknown' ? 
+          `Community Reporter ${fallbackId.slice(-4)}` : 'Community Reporter';
+        return { 
+          name: displayName, 
+          agency: 'Community', 
+          initials: 'CR' 
+        };
+      }
+    }
+    
+    // Final fallback for unrecognized sources
     return { 
-      name: `Community Reporter ${fallbackId.slice(-4)}`, 
-      agency: 'Community', 
-      initials: 'CR' 
+      name: 'Unknown Source', 
+      agency: 'Unknown', 
+      initials: 'UK' 
     };
   };
   
