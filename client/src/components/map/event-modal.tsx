@@ -692,7 +692,8 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
   const props = event.properties;
   const source = String(props.source || '').toLowerCase(); // normalize source defensively
   
-  const isUserReported = source === 'user';
+  // Check both explicit source field AND userReported property for user incidents
+  const isUserReported = source === 'user' || props.userReported === true;
   const isTrafficEvent = source === 'tmr';
   const isEmergencyEvent = source === 'emergency';
   
