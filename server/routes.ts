@@ -5,7 +5,7 @@ import { setupAuth } from "./auth";
 import { isAuthenticated, setupAuth as setupReplitAuth } from "./replitAuth";
 import webpush from "web-push";
 import Stripe from "stripe";
-import { insertIncidentSchema, insertCommentSchema, insertConversationSchema, insertMessageSchema, insertNotificationSchema, insertIncidentCommentSchema } from "@shared/schema";
+import { insertIncidentSchema, insertCommentSchema, insertConversationSchema, insertMessageSchema, insertNotificationSchema, insertIncidentCommentSchema, type SafeUser } from "@shared/schema";
 import { z } from "zod";
 import {
   ObjectStorageService,
@@ -743,6 +743,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Image compression error:', error);
       res.status(500).json({ error: 'Compression failed' });
+    }
+  });
+
+  // Batch users lookup endpoint for community reports - FINAL IMPLEMENTATION
+  // Note: Originally requested as /api/users/batch but conflicts with existing parameterized route
+  // This endpoint provides the same functionality at /api/batch-users
+  app.get('/api/batch-users', async (req, res) => {
+    try {
+      const { ids } = req.query;
+      
+      // Validate that ids parameter exists and is a string
+      if (!ids || typeof ids !== 'string') {
+        return res.status(400).json({ 
+          error: 'Missing or invalid ids parameter. Expected comma-separated user IDs.' 
+        });
+      }
+      
+      // Parse and validate user IDs
+      const userIds = ids.split(',')
+        .map(id => id.trim())
+        .filter(id => id.length > 0);
+      
+      // Validate that we have valid IDs
+      if (userIds.length === 0) {
+        return res.status(400).json({ 
+          error: 'No valid user IDs provided' 
+        });
+      }
+      
+      // Limit to 100 IDs per request to prevent abuse
+      if (userIds.length > 100) {
+        return res.status(400).json({ 
+          error: 'Too many user IDs requested. Maximum 100 IDs per request.' 
+        });
+      }
+      
+      // Fetch users from storage
+      const users = await storage.getUsersByIds(userIds);
+      
+      // Transform to safe user format - only public fields
+      const safeUsers: SafeUser[] = users.map(user => ({
+        id: user.id,
+        displayName: user.displayName,
+        avatarUrl: user.profileImageUrl, // Map profileImageUrl to avatarUrl
+        accountType: user.accountType,
+      }));
+      
+      // Return safe user data (missing users are simply not included in response)
+      res.json(safeUsers);
+      
+    } catch (error) {
+      console.error("Error fetching batch users:", error);
+      res.status(500).json({ error: "Failed to fetch user data" });
     }
   });
 
@@ -2070,7 +2123,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // User Profile Routes
+  // Batch users lookup endpoint for community reports (MUST be before parameterized route)
+  app.get('/api/users/batch', async (req, res) => {
+    try {
+      const { ids } = req.query;
+      
+      // Validate that ids parameter exists and is a string
+      if (!ids || typeof ids !== 'string') {
+        return res.status(400).json({ 
+          error: 'Missing or invalid ids parameter. Expected comma-separated user IDs.' 
+        });
+      }
+      
+      // Parse and validate user IDs
+      const userIds = ids.split(',')
+        .map(id => id.trim())
+        .filter(id => id.length > 0);
+      
+      // Validate that we have valid IDs
+      if (userIds.length === 0) {
+        return res.status(400).json({ 
+          error: 'No valid user IDs provided' 
+        });
+      }
+      
+      // Limit to 100 IDs per request to prevent abuse
+      if (userIds.length > 100) {
+        return res.status(400).json({ 
+          error: 'Too many user IDs requested. Maximum 100 IDs per request.' 
+        });
+      }
+      
+      // Fetch users from storage
+      const users = await storage.getUsersByIds(userIds);
+      
+      // Transform to safe user format - only public fields
+      const safeUsers: SafeUser[] = users.map(user => ({
+        id: user.id,
+        displayName: user.displayName,
+        avatarUrl: user.profileImageUrl, // Map profileImageUrl to avatarUrl
+        accountType: user.accountType,
+      }));
+      
+      // Return safe user data (missing users are simply not included in response)
+      res.json(safeUsers);
+      
+    } catch (error) {
+      console.error("Error fetching batch users:", error);
+      res.status(500).json({ error: "Failed to fetch user data" });
+    }
+  });
+
+  // User Profile Routes (parameterized routes must come after specific routes)
   app.get('/api/users/:userId', async (req: any, res) => {
     try {
       // Use the same auth pattern as other routes

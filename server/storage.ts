@@ -84,7 +84,8 @@ import {
   type InsertCommentLike,
   type UnifiedIncidentsResponse,
   generateUnifiedIncidentId,
-  prepareUnifiedIncidentForInsert
+  prepareUnifiedIncidentForInsert,
+  type SafeUser
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, or, ne, sql } from "drizzle-orm";
@@ -124,6 +125,9 @@ export interface IStorage {
     businessAddress?: string; 
   }): Promise<User | undefined>;
   getUsersBySuburb(suburb: string): Promise<User[]>;
+  
+  // Batch user operations
+  getUsersByIds(userIds: string[]): Promise<User[]>;
   
   // Terms and conditions
   acceptUserTerms(id: string): Promise<User | undefined>;
@@ -841,6 +845,18 @@ export class DatabaseStorage implements IStorage {
 
   async getUsersBySuburb(suburb: string): Promise<User[]> {
     return await db.select().from(users).where(eq(users.primarySuburb, suburb));
+  }
+
+  async getUsersByIds(userIds: string[]): Promise<User[]> {
+    if (!userIds.length) return [];
+    
+    // Use in clause for efficient batch lookup - limited to 1000 IDs for performance
+    const limitedIds = userIds.slice(0, 1000);
+    
+    return await db
+      .select()
+      .from(users)
+      .where(sql`${users.id} = ANY(${limitedIds})`);
   }
 
   // Comment voting operations

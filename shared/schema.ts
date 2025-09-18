@@ -644,6 +644,14 @@ export const insertReportSchema = createInsertSchema(reports).omit({
 export type UpsertUser = typeof users.$inferInsert;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
+
+// Safe user type for batch lookups - only includes public fields
+export type SafeUser = {
+  id: string;
+  displayName: string | null;
+  avatarUrl: string | null;
+  accountType: "regular" | "business" | null;
+};
 export type TrafficEvent = typeof trafficEvents.$inferSelect;
 export type InsertTrafficEvent = z.infer<typeof insertTrafficEventSchema>;
 export type Incident = typeof incidents.$inferSelect;
