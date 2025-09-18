@@ -242,8 +242,8 @@ class UnifiedIngestionEngine {
           severity: 'medium',
           status: incident.status === 'Reported' ? 'active' : incident.status || 'active',
           geometry: incident.geometry,
-          centroidLat: incident.geometry?.coordinates?.[1] || 0,
-          centroidLng: incident.geometry?.coordinates?.[0] || 0,
+          centroidLat: (incident.geometry as any)?.coordinates?.[1] || 0,
+          centroidLng: (incident.geometry as any)?.coordinates?.[0] || 0,
           regionIds: [],
           geocell: '',
           incidentTime: incident.publishedDate || new Date(),
@@ -425,6 +425,24 @@ class UnifiedIngestionEngine {
           sourceId = sourceId.replace(/^(user:)+/, 'user:');
         }
         
+        // CRITICAL: Clean reporterId and userId from malformed prefixes too
+        let cleanReporterId: string | null = null;
+        let cleanUserId: string | null = null;
+        
+        if (props.reporterId) {
+          cleanReporterId = props.reporterId.toString();
+          if (cleanReporterId && cleanReporterId.startsWith('user:user:')) {
+            cleanReporterId = cleanReporterId.replace(/^(user:)+/, 'user:');
+          }
+        }
+        
+        if (props.userId) {
+          cleanUserId = props.userId.toString();
+          if (cleanUserId && cleanUserId.startsWith('user:user:')) {
+            cleanUserId = cleanUserId.replace(/^(user:)+/, 'user:');
+          }
+        }
+        
         // Resilient centroid computation with fallbacks
         let centroid = this.computeCentroid(geometry);
         
@@ -469,10 +487,10 @@ class UnifiedIngestionEngine {
               source: 'user',
               userReported: true,
               categoryId: this.getCategoryId(props.category),
-              // CRITICAL: Ensure reporterId is set from userId for user attribution
-              reporterId: props.reporterId || props.userId,
+              // CRITICAL: Ensure reporterId is set from cleaned userId for user attribution
+              reporterId: cleanReporterId || cleanUserId,
             },
-            userId: props.userId,
+            userId: cleanUserId,
             photoUrl: props.photoUrl,
             verificationStatus: props.verificationStatus || 'unverified'
           };
