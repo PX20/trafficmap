@@ -58,6 +58,26 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
     severity: z.enum(["low", "medium", "high", "critical"]).optional(),
   });
 
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+  
+  // Use unified incidents API
+  const { data: unifiedData } = useQuery({
+    queryKey: ["/api/unified"],
+  });
+
+  // Fetch all subcategories to resolve UUIDs to names
+  const { data: subcategories = [] } = useQuery({
+    queryKey: ["/api/subcategories"],
+  });
+
+  // Find event in unified incidents data
+  const event = (unifiedData as any)?.features?.find((f: any) => 
+    f.properties.id?.toString() === eventId ||
+    f.id?.toString() === eventId
+  );
+
   // Edit form setup
   const editForm = useForm<z.infer<typeof editIncidentSchema>>({
     resolver: zodResolver(editIncidentSchema),
@@ -85,26 +105,6 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
       });
     }
   }, [showEditModal, event, editForm]);
-  
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const { user } = useAuth();
-  
-  // Use unified incidents API
-  const { data: unifiedData } = useQuery({
-    queryKey: ["/api/unified"],
-  });
-
-  // Fetch all subcategories to resolve UUIDs to names
-  const { data: subcategories = [] } = useQuery({
-    queryKey: ["/api/subcategories"],
-  });
-
-  // Find event in unified incidents data
-  const event = (unifiedData as any)?.features?.find((f: any) => 
-    f.properties.id?.toString() === eventId ||
-    f.id?.toString() === eventId
-  );
 
   // Get social data for the incident
   const { data: socialData } = useQuery({
