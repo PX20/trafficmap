@@ -1133,39 +1133,97 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
 
   return (
     <Dialog open={!!eventId} onOpenChange={onClose}>
-      <DialogContent className="max-w-md max-h-[90vh] flex flex-col" data-testid="modal-event-details">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto p-0" data-testid="modal-event-details">
         {!commentsView ? (
-          // Main Incident View
-          <>
-            <DialogHeader className="pb-4 bg-gradient-to-r from-pink-50 to-purple-50 dark:from-pink-950/20 dark:to-purple-950/20 -m-6 mb-4 p-6 rounded-t-lg">
-              {/* Vibrant Social Media Style Header */}
-              <div className="space-y-4">
-                {/* Title First - Social Media Style */}
-                <div className="flex items-center justify-between">
-                  <h1 className="text-xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent leading-tight" data-testid="social-title">
-                    {getTitle()}
-                  </h1>
-                  <div className="w-12 h-12 rounded-full flex items-center justify-center bg-gradient-to-br from-pink-500 to-purple-500 shadow-lg">
-                    {getIncidentIcon()}
-                  </div>
+          // Main Incident View - Redesigned for clarity
+          <div className="flex flex-col">
+            {/* Clean Header */}
+            <div className="p-6 pb-4 border-b bg-muted/10">
+              <div className="flex items-start justify-between mb-3">
+                <Badge 
+                  variant="secondary" 
+                  className="bg-blue-100 text-blue-800 border-blue-200 font-medium"
+                >
+                  {getIncidentIcon()}
+                  <span className="ml-1">
+                    {getSubcategoryName(props.subcategory || props.category || props.incidentType) || 'Incident'}
+                  </span>
+                </Badge>
+              </div>
+              <h2 className="text-xl font-bold text-foreground" data-testid="social-title">
+                {getTitle()}
+              </h2>
+            </div>
+
+            {/* Content Section */}
+            <div className="p-6 space-y-5">
+              {/* Description */}
+              {getDescription() && (
+                <div>
+                  <p className="text-foreground leading-relaxed" data-testid="text-incident-description">
+                    {getDescription()}
+                  </p>
                 </div>
+              )}
+
+              {/* Image Thumbnail */}
+              {thumbnail && (
+                <div className="rounded-lg overflow-hidden bg-muted">
+                  <img 
+                    src={thumbnail} 
+                    alt="Incident photo" 
+                    className="w-full h-48 object-cover"
+                    data-testid="img-incident-thumbnail"
+                  />
+                </div>
+              )}
+
+              {/* Location and Time */}
+              <div className="space-y-3">
+                {getLocation() && (
+                  <div className="flex items-center space-x-3">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-muted/50 flex items-center justify-center">
+                      <MapPin className="w-4 h-4 text-muted-foreground" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-muted-foreground truncate">
+                        {getLocation()}
+                      </p>
+                    </div>
+                  </div>
+                )}
                 
-                {/* User Profile - Clickable */}
+                {getTimestamp() && (
+                  <div className="flex items-center space-x-3">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-muted/50 flex items-center justify-center">
+                      <Clock className="w-4 h-4 text-muted-foreground" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm text-muted-foreground" data-testid="text-event-time">
+                        {formatDate(getTimestamp())}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Reporter Information */}
+              <div className="bg-muted/30 rounded-lg p-4">
                 <div className="flex items-center space-x-3">
                   <Avatar 
-                    className={`w-12 h-12 ring-2 ring-white shadow-lg ${isUserReported && props.reporterId ? 'cursor-pointer hover:ring-4 hover:ring-pink-200 transition-all transform hover:scale-105' : ''}`}
+                    className={`w-10 h-10 ${isUserReported && props.reporterId ? 'cursor-pointer hover:ring-2 hover:ring-blue-200 transition-all' : ''}`}
                     onClick={isUserReported && props.reporterId ? () => {
                       setLocation(`/users/${props.reporterId}`);
                     } : undefined}
                   >
                     <AvatarImage src={reporterInfo.avatar} alt={reporterInfo.name} />
-                    <AvatarFallback className="text-white font-bold bg-gradient-to-br from-pink-500 to-purple-500">
+                    <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-medium">
                       {reporterInfo.initials}
                     </AvatarFallback>
                   </Avatar>
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
                     <p 
-                      className={`text-base font-semibold text-gray-800 dark:text-gray-200 ${isUserReported && props.reporterId ? 'cursor-pointer hover:text-pink-600 transition-colors' : ''}`}
+                      className={`font-medium text-foreground ${isUserReported && props.reporterId ? 'cursor-pointer hover:text-blue-600 transition-colors' : ''}`}
                       onClick={isUserReported && props.reporterId ? () => {
                         setLocation(`/users/${props.reporterId}`);
                       } : undefined}
@@ -1173,244 +1231,97 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
                     >
                       {reporterInfo.name}
                     </p>
-                    <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
-                      <Clock className="w-4 h-4" />
-                      <span data-testid="text-event-time">
-                        {formatDate(getTimestamp())}
-                      </span>
-                      <span className="text-pink-500">•</span>
-                      <MapPin className="w-4 h-4" />
-                      <span className="line-clamp-1 text-gray-600 dark:text-gray-400">{getLocation()}</span>
-                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {isUserReported ? 'Community Report' : reporterInfo.agency}
+                    </p>
                   </div>
                 </div>
               </div>
-            </DialogHeader>
-        
-        <div className="flex-1 overflow-y-auto space-y-4 pr-2">
 
-          {/* Image Thumbnail */}
-          {thumbnail && (
-            <div className="rounded-lg overflow-hidden bg-muted">
-              <img 
-                src={thumbnail} 
-                alt="Incident photo" 
-                className="w-full h-32 object-cover"
-                data-testid="img-incident-thumbnail"
-              />
+              {/* Additional Details for Traffic/Emergency */}
+              {(isTrafficEvent || isEmergencyEvent) && (
+                <div className="space-y-3">
+                  {/* Traffic Information */}
+                  {isTrafficEvent && props.originalProperties && (
+                    <>
+                      {(props.originalProperties.impact || props.originalProperties.advice) && (
+                        <div className="bg-orange-50 dark:bg-orange-950/20 rounded-lg p-3 border border-orange-200 dark:border-orange-800">
+                          <div className="flex items-start space-x-2">
+                            <AlertTriangle className="w-4 h-4 text-orange-600 mt-0.5 flex-shrink-0" />
+                            <div className="flex-1 space-y-2">
+                              {props.originalProperties.impact && (
+                                <div>
+                                  <h5 className="text-xs font-medium text-orange-800 dark:text-orange-200 mb-1">Traffic Impact</h5>
+                                  <p className="text-xs text-orange-700 dark:text-orange-300" data-testid="traffic-impact">
+                                    {typeof props.originalProperties.impact === 'string' 
+                                      ? props.originalProperties.impact 
+                                      : extractStringFromObject(props.originalProperties.impact) || 'Traffic impact information available'
+                                    }
+                                  </p>
+                                </div>
+                              )}
+                              {props.originalProperties.advice && (
+                                <div>
+                                  <h5 className="text-xs font-medium text-orange-800 dark:text-orange-200 mb-1">Advice</h5>
+                                  <p className="text-xs text-orange-700 dark:text-orange-300" data-testid="traffic-advice">
+                                    {typeof props.originalProperties.advice === 'string' 
+                                      ? props.originalProperties.advice 
+                                      : extractStringFromObject(props.originalProperties.advice) || 'Traffic advice information available'
+                                    }
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
             </div>
-          )}
 
-          {/* Vibrant Social Media Content */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700" data-testid="section-description">
-            <p className="text-base text-gray-800 dark:text-gray-200 leading-relaxed font-medium" data-testid="text-incident-description">
-              {getDescription()}
-            </p>
-            {isUserReported && (props.category || props.incidentType) && (
-              <div className="flex items-center space-x-2 mt-4">
-                <span className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-gradient-to-r from-pink-100 to-purple-100 text-pink-700 dark:from-pink-900/20 dark:to-purple-900/20 dark:text-pink-300 border border-pink-200 dark:border-pink-800">
-                  <Heart className="w-4 h-4 mr-1" />
-                  {getSubcategoryName(props.subcategory || props.category || props.incidentType)}
-                </span>
-              </div>
-            )}
-          </div>
-
-          {/* Minimal Status for Social Media */}
-          <div className="">
-            {/* Remove priority badges - not needed for social media style */}
-
-            {/* TMR Traffic Comprehensive Information */}
-            {isTrafficEvent && props.originalProperties && (
-              <div className="space-y-3" data-testid="traffic-details">
-                {/* Traffic Impact & Advice */}
-                {(props.originalProperties.impact || props.originalProperties.advice) && (
-                  <div className="bg-orange-50 dark:bg-orange-950/20 rounded-lg p-3 border border-orange-200 dark:border-orange-800">
-                    <div className="flex items-start space-x-2">
-                      <AlertTriangle className="w-4 h-4 text-orange-600 mt-0.5 flex-shrink-0" />
-                      <div className="flex-1 space-y-2">
-                        {props.originalProperties.impact && (
-                          <div>
-                            <h5 className="text-xs font-medium text-orange-800 dark:text-orange-200 mb-1">Traffic Impact</h5>
-                            <p className="text-xs text-orange-700 dark:text-orange-300" data-testid="traffic-impact">
-                              {typeof props.originalProperties.impact === 'string' 
-                                ? props.originalProperties.impact 
-                                : extractStringFromObject(props.originalProperties.impact) || 'Traffic impact information available'
-                              }
-                            </p>
-                          </div>
-                        )}
-                        {props.originalProperties.advice && (
-                          <div>
-                            <h5 className="text-xs font-medium text-orange-800 dark:text-orange-200 mb-1">Advice</h5>
-                            <p className="text-xs text-orange-700 dark:text-orange-300" data-testid="traffic-advice">
-                              {typeof props.originalProperties.advice === 'string' 
-                                ? props.originalProperties.advice 
-                                : extractStringFromObject(props.originalProperties.advice) || 'Traffic advice information available'
-                              }
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Timeline & Duration */}
-                {getDuration() && (
-                  <div className="bg-blue-50 dark:bg-blue-950/20 rounded-lg p-3 border border-blue-200 dark:border-blue-800">
-                    <div className="flex items-start space-x-2">
-                      <Timer className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
-                      <div className="flex-1">
-                        <h5 className="text-xs font-medium text-blue-800 dark:text-blue-200 mb-1">Duration</h5>
-                        <p className="text-xs text-blue-700 dark:text-blue-300" data-testid="traffic-duration">{getDuration()}</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Road Conditions & Restrictions */}
-                {getRoadConditions() && (
-                  <div className="bg-yellow-50 dark:bg-yellow-950/20 rounded-lg p-3 border border-yellow-200 dark:border-yellow-800">
-                    <div className="flex items-start space-x-2">
-                      <Construction className="w-4 h-4 text-yellow-600 mt-0.5 flex-shrink-0" />
-                      <div className="flex-1">
-                        <h5 className="text-xs font-medium text-yellow-800 dark:text-yellow-200 mb-1">Road Conditions</h5>
-                        <div className="space-y-1">
-                          {getRoadConditions()?.map((condition, index) => (
-                            <p key={index} className="text-xs text-yellow-700 dark:text-yellow-300" data-testid={`road-condition-${index}`}>{condition}</p>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Additional Information */}
-                {props.originalProperties.information && props.originalProperties.information !== getDescription() && (
-                  <div className="text-xs space-y-1">
-                    <h5 className="font-medium text-foreground">Additional Information</h5>
-                    <p className="text-muted-foreground" data-testid="traffic-additional-info">{props.originalProperties.information}</p>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Emergency Services Comprehensive Information */}
-            {isEmergencyEvent && props.originalProperties && (
-              <div className="space-y-3" data-testid="emergency-details">
-                {/* Response Status */}
-                <div className="bg-red-50 dark:bg-red-950/20 rounded-lg p-3 border border-red-200 dark:border-red-800">
-                  <div className="flex items-start space-x-2">
-                    <Shield className="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" />
-                    <div className="flex-1">
-                      <h5 className="text-xs font-medium text-red-800 dark:text-red-200 mb-2">Emergency Response</h5>
-                      <div className="grid grid-cols-2 gap-2 text-xs">
-                        {props.originalProperties.VehiclesOnScene !== undefined && (
-                          <div className="flex justify-between">
-                            <span className="text-red-700 dark:text-red-300">On scene:</span>
-                            <span className="font-medium text-red-800 dark:text-red-200" data-testid="vehicles-on-scene">{props.originalProperties.VehiclesOnScene}</span>
-                          </div>
-                        )}
-                        {props.originalProperties.VehiclesOnRoute !== undefined && (
-                          <div className="flex justify-between">
-                            <span className="text-red-700 dark:text-red-300">En route:</span>
-                            <span className="font-medium text-red-800 dark:text-red-200" data-testid="vehicles-en-route">{props.originalProperties.VehiclesOnRoute}</span>
-                          </div>
-                        )}
-                        {props.originalProperties.VehiclesAssigned !== undefined && (
-                          <div className="flex justify-between col-span-2">
-                            <span className="text-red-700 dark:text-red-300">Total assigned:</span>
-                            <span className="font-medium text-red-800 dark:text-red-200" data-testid="vehicles-assigned">{props.originalProperties.VehiclesAssigned}</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
+            {/* Actions Footer */}
+            <div className="border-t bg-muted/10 px-6 py-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setCommentsView(true)}
+                    className="flex items-center space-x-2 text-muted-foreground hover:text-foreground"
+                    data-testid="button-comments"
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                    <span>{socialData?.commentCount || 0}</span>
+                  </Button>
+                  
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => likeMutation.mutate()}
+                    disabled={likeMutation.isPending}
+                    className="flex items-center space-x-2 text-muted-foreground hover:text-foreground"
+                    data-testid="button-like"
+                  >
+                    <Heart className="w-4 h-4" />
+                    <span>{socialData?.likeCount || 0}</span>
+                  </Button>
                 </div>
-
-                {/* Incident Details */}
-                <div className="bg-gray-50 dark:bg-gray-950/20 rounded-lg p-3 border border-gray-200 dark:border-gray-800">
-                  <div className="flex items-start space-x-2">
-                    <Info className="w-4 h-4 text-gray-600 mt-0.5 flex-shrink-0" />
-                    <div className="flex-1 space-y-2">
-                      <h5 className="text-xs font-medium text-gray-800 dark:text-gray-200">Incident Information</h5>
-                      {props.originalProperties.Master_Incident_Number && (
-                        <div className="flex justify-between">
-                          <span className="text-gray-700 dark:text-gray-300 text-xs">Incident #:</span>
-                          <span className="font-mono text-xs text-gray-800 dark:text-gray-200" data-testid="incident-number">{props.originalProperties.Master_Incident_Number}</span>
-                        </div>
-                      )}
-                      {props.originalProperties.Jurisdiction && (
-                        <div className="flex justify-between">
-                          <span className="text-gray-700 dark:text-gray-300 text-xs">Jurisdiction:</span>
-                          <span className="text-xs text-gray-800 dark:text-gray-200" data-testid="jurisdiction">{props.originalProperties.Jurisdiction}</span>
-                        </div>
-                      )}
-                      {props.originalProperties.Response_Date && (
-                        <div className="flex justify-between">
-                          <span className="text-gray-700 dark:text-gray-300 text-xs">Response time:</span>
-                          <span className="text-xs text-gray-800 dark:text-gray-200" data-testid="response-time">{formatDate(props.originalProperties.Response_Date)}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
+                
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleShare}
+                  className="flex items-center space-x-2 text-muted-foreground hover:text-foreground"
+                  data-testid="button-share"
+                >
+                  {copySuccess ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
+                  <span>Share</span>
+                </Button>
               </div>
-            )}
-
-            {/* Social Media Style User Details - Minimal */}
-            {isUserReported && (props.details || props.locationDescription) && (
-              <div className="text-sm space-y-2" data-testid="user-report-details">
-                {props.details && (
-                  <p className="text-muted-foreground" data-testid="user-report-details-text">{props.details}</p>
-                )}
-                {props.locationDescription && props.locationDescription !== getLocation() && (
-                  <p className="text-muted-foreground text-xs" data-testid="location-description">
-                    📍 {props.locationDescription}
-                  </p>
-                )}
-              </div>
-            )}
+            </div>
           </div>
-
-          {/* Social Interaction Bar */}
-          <div className="flex items-center justify-between py-2 border-t">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="flex items-center space-x-1 text-muted-foreground hover:text-foreground"
-              data-testid="button-comments"
-              onClick={() => setCommentsView(true)}
-            >
-              <MessageCircle className="w-4 h-4" />
-              <span className="text-xs">{socialData?.commentCount || 0}</span>
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="flex items-center space-x-1 text-muted-foreground hover:text-foreground"
-              data-testid="button-like"
-              onClick={() => likeMutation.mutate()}
-              disabled={likeMutation.isPending}
-            >
-              <Heart className="w-4 h-4" />
-              <span className="text-xs">{socialData?.likeCount || 0}</span>
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="flex items-center space-x-1 text-muted-foreground hover:text-foreground"
-              data-testid="button-share"
-              onClick={handleShare}
-            >
-              {copySuccess ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
-              <span className="text-xs">{copySuccess ? "Copied!" : "Share"}</span>
-            </Button>
-          </div>
-
-        </div>
-          </>
         ) : (
           // Social Media-Style Comments View
           <>
@@ -1450,122 +1361,94 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
                 </div>
               </div>
 
-              {/* Facebook-style Add Comment Form */}
+              {/* Add Comment Form */}
               <div className="space-y-3 border-b pb-4">
                 <div className="flex space-x-3">
                   <Avatar className="w-10 h-10 flex-shrink-0">
                     <AvatarFallback className="text-sm font-medium bg-gradient-to-br from-blue-500 to-purple-600 text-white">
-                      {'U'}
+                      {user?.firstName?.[0] || user?.email?.[0]?.toUpperCase() || 'U'}
                     </AvatarFallback>
                   </Avatar>
-                  <div className="flex-1 space-y-2">
-                    <div className="bg-muted/40 rounded-2xl px-4 py-3 border border-muted">
-                      <input
-                        type="text"
-                        placeholder="Write a comment..."
+                  <div className="flex-1">
+                    <form onSubmit={handleCommentSubmit} className="space-y-3">
+                      <textarea
                         value={newComment}
                         onChange={(e) => setNewComment(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' && newComment.trim()) {
-                            commentMutation.mutate({ 
-                              content: newComment.trim(),
-                              photo: selectedPhoto || undefined,
-                              altText: photoAltText || undefined
-                            });
-                          }
-                        }}
-                        className="w-full bg-transparent text-sm placeholder:text-muted-foreground border-none outline-none resize-none"
-                        disabled={commentMutation.isPending || isUploadingPhoto}
-                        data-testid="input-comment"
+                        placeholder="Write a comment..."
+                        className="w-full p-3 rounded-lg border bg-background text-foreground min-h-[80px] resize-none"
+                        data-testid="textarea-comment"
                       />
-                    </div>
-                    
-                    {/* Photo Preview */}
-                    {photoPreview && (
-                      <PhotoPreview 
-                        preview={photoPreview}
-                        altText={photoAltText}
-                        setAltText={setPhotoAltText}
-                        onRemove={() => removePhoto(false)}
-                        isReply={false}
-                      />
-                    )}
-                    
-                    {/* Action Bar */}
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={(e) => handlePhotoSelect(e, false)}
-                          className="hidden"
-                          id="comment-photo-upload"
-                          disabled={commentMutation.isPending || isUploadingPhoto}
-                          data-testid="input-photo-upload"
-                        />
-                        <label 
-                          htmlFor="comment-photo-upload"
-                          className="flex items-center space-x-1 px-3 py-1.5 text-xs rounded-full bg-muted/50 hover:bg-muted transition-colors cursor-pointer"
-                          data-testid="button-add-photo"
+                      <div className="flex justify-end">
+                        <Button 
+                          type="submit" 
+                          size="sm"
+                          disabled={!newComment.trim() || commentMutation.isPending}
+                          data-testid="button-submit-comment"
                         >
-                          <Camera className="w-3 h-3" />
-                          <span>Photo</span>
-                        </label>
-                        {selectedPhoto && (
-                          <span className="text-xs text-muted-foreground">
-                            📸 {selectedPhoto.name}
-                          </span>
-                        )}
+                          {commentMutation.isPending ? 'Posting...' : 'Post'}
+                        </Button>
                       </div>
-                      
-                      <Button
-                        size="sm"
-                        onClick={() => {
-                          if (newComment.trim()) {
-                            commentMutation.mutate({ 
-                              content: newComment.trim(),
-                              photo: selectedPhoto || undefined,
-                              altText: photoAltText || undefined
-                            });
-                          }
-                        }}
-                        disabled={!newComment.trim() || commentMutation.isPending || isUploadingPhoto}
-                        data-testid="button-post-comment"
-                        className="h-8 px-4 text-xs bg-primary text-primary-foreground hover:bg-primary/90 rounded-full"
-                      >
-                        {commentMutation.isPending || isUploadingPhoto ? "..." : "Post"}
-                      </Button>
-                    </div>
+                    </form>
                   </div>
                 </div>
-                <p className="text-xs text-muted-foreground italic text-center">
-                  Please log in to post comments
-                </p>
               </div>
 
               {/* Comments List */}
-              <div className="flex-1 space-y-4 overflow-y-auto max-h-64">
-                {socialData?.comments?.length === 0 ? (
-                  <div className="text-center py-8">
-                    <MessageCircle className="w-12 h-12 text-muted-foreground/50 mx-auto mb-3" />
-                    <p className="text-sm text-muted-foreground">No comments yet</p>
-                    <p className="text-xs text-muted-foreground">Be the first to comment!</p>
-                  </div>
-                ) : (
-                  socialData?.comments?.map((comment: any) => renderComment(comment, 0))
-                )}
-              </div>
-
-              {/* Social Stats Footer */}
-              <div className="border-t pt-3 flex items-center justify-between text-xs text-muted-foreground">
-                <span>{socialData?.commentCount || 0} comments</span>
-                <span>{socialData?.likeCount || 0} likes</span>
-              </div>
+              {comments.length > 0 ? (
+                <div className="space-y-4">
+                  {comments.map((comment) => (
+                    <div key={comment.id} className="flex space-x-3">
+                      <Avatar className="w-8 h-8 flex-shrink-0">
+                        <AvatarFallback className="text-xs bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+                          {comment.authorName?.[0]?.toUpperCase() || 'U'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0 space-y-1">
+                        <div className="bg-muted/30 rounded-lg p-3">
+                          <div className="flex items-center space-x-2 mb-1">
+                            <span className="text-sm font-medium">{comment.authorName}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {formatDate(comment.createdAt)}
+                            </span>
+                          </div>
+                          <p className="text-sm">{comment.content}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <MessageCircle className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                  <p>No comments yet. Be the first to comment!</p>
+                </div>
+              )}
             </div>
           </>
         )}
       </DialogContent>
-      <PhotoModal />
+
+      {/* Photo Modal for full-size viewing */}
+      <Dialog open={!!selectedPhotoModal} onOpenChange={() => setSelectedPhotoModal(null)}>
+        <DialogContent className="max-w-4xl w-full h-[90vh] p-0 bg-black/90 border-none" data-testid="photo-modal">
+          <div className="relative w-full h-full flex items-center justify-center">
+            <img
+              src={selectedPhotoModal?.url}
+              alt={selectedPhotoModal?.alt}
+              className="max-w-full max-h-full object-contain"
+              data-testid="img-modal-photo"
+            />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setSelectedPhotoModal(null)}
+              className="absolute top-4 right-4 bg-black/50 hover:bg-black/70 text-white"
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }
