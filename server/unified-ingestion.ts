@@ -193,8 +193,27 @@ class UnifiedIngestionEngine {
     // Fetch recent user-reported incidents from unified incidents table
     const unifiedIncidents = await storage.getAllUnifiedIncidents();
     
-    // Filter for user reports only
-    const userReports = unifiedIncidents.filter(incident => incident.source === 'user');
+    // Filter for user reports only - EXCLUDE emergency incidents even if marked as source='user'
+    const userReports = unifiedIncidents.filter(incident => {
+      // Only include if source is 'user' AND it's not an emergency incident
+      if (incident.source !== 'user') return false;
+      
+      // Exclude if it has emergency characteristics (these are misclassified emergency incidents)
+      const title = incident.title?.toLowerCase() || '';
+      const props = incident.properties || {};
+      
+      // Exclude incidents with emergency-related titles or properties
+      const isEmergencyIncident = 
+        title.includes('fire') ||
+        title.includes('rescue') ||
+        title.includes('ambulance') ||
+        title.includes('medical emergency') ||
+        props.Jurisdiction ||
+        props.Master_Incident_Number ||
+        props.OBJECTID;
+        
+      return !isEmergencyIncident;
+    });
     
     // ALSO fetch RECENT legacy incidents from the old incidents table (last 7 days only)
     const sevenDaysAgo = new Date();
@@ -261,7 +280,7 @@ class UnifiedIngestionEngine {
         }))
     ];
     
-    console.log(`📊 User Reports Fetch: ${userReports.length} unified + ${legacyIncidents.filter(i => i.geometry).length} legacy = ${allFeatures.length} total user incidents`);
+    console.log(`📊 User Reports Fetch: ${userReports.length} unified + ${legacyIncidents.filter(i => i.geometry).length} legacy = ${allFeatures.length} total user incidents (emergency incidents excluded from user pipeline)`);
     
     // Return in GeoJSON-like format for consistent processing
     return {
@@ -370,7 +389,12 @@ class UnifiedIngestionEngine {
           incidentTime: props.Response_Date ? new Date(props.Response_Date) : new Date(),
           lastUpdated: props.LastUpdate ? new Date(props.LastUpdate) : new Date(),
           publishedAt: new Date(),
-          properties: props
+          properties: {
+            ...props,
+            // CRITICAL: Ensure emergency incidents are never marked as user reports
+            source: 'emergency',
+            userReported: false
+          }
         };
 
         return prepareUnifiedIncidentForInsert(incident);
