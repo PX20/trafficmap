@@ -38,6 +38,8 @@ import {
 import { Link, useLocation } from "wouter";
 import type { Comment, IncidentFollowUp } from "@shared/schema";
 import { ReportModal } from "@/components/report-modal";
+import { getAgencyInfo, isUserReport } from "@/lib/agency-info";
+import { ReporterAttribution } from "@/components/ReporterAttribution";
 
 interface IncidentDetailModalProps {
   incident: any;
@@ -633,11 +635,11 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
   }, {});
   
 
-  // User data mapping
+  // User data mapping - NO FALLBACKS, return null if no user data
   const getUserData = (userId: string) => {
     // Check if this is the current logged-in user
     if (user && userId === user.id) {
-      const displayName = user.displayName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username || 'You';
+      const displayName = user.displayName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'You';
       return {
         name: displayName,
         avatar: user.profileImageUrl || '',
@@ -654,70 +656,13 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
       'user-005': { name: 'Lisa Nguyen', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop&crop=face', location: 'Fortitude Valley' },
     };
     
-    return users[userId] || { 
-      name: `Community Member`, 
-      avatar: '', 
-      location: 'Queensland' 
-    };
+    // Return user data if found, or null (no fallbacks) - use ReporterAttribution component for proper user handling
+    return users[userId] || null;
   };
 
-  const getSourceInfo = (incident: any) => {
-    if (incident.properties?.userReported) {
-      // Extract user data from properties
-      const reporterName = incident.properties?.reporterName || incident.properties?.reportedBy?.split('@')[0] || 'Anonymous User';
-      return { 
-        name: reporterName, 
-        type: 'Community Report', 
-        avatar: reporterName.split(' ').map((word: string) => word.charAt(0).toUpperCase()).join('').slice(0, 2), 
-        color: 'bg-gradient-to-br from-purple-500 to-purple-600'
-      };
-    }
-    
-    // Determine government agency based on incident type and source
-    if (incident.type === 'traffic') {
-      return { 
-        name: 'Transport and Main Roads', 
-        type: 'TMR Official', 
-        avatar: 'TMR', 
-        color: 'bg-gradient-to-br from-orange-500 to-orange-600'
-      };
-    }
-    
-    // Emergency incident - determine specific service
-    const eventType = incident.properties?.Event_Type?.toLowerCase() || '';
-    const description = incident.properties?.description?.toLowerCase() || '';
-    
-    if (eventType.includes('fire') || eventType.includes('burn') || eventType.includes('hazmat') || description.includes('fire')) {
-      return { 
-        name: 'Queensland Fire & Emergency', 
-        type: 'QFES Official', 
-        avatar: 'QFE', 
-        color: 'bg-gradient-to-br from-red-500 to-red-600'
-      };
-    } else if (eventType.includes('police') || eventType.includes('crime') || eventType.includes('traffic enforcement') || description.includes('police')) {
-      return { 
-        name: 'Queensland Police Service', 
-        type: 'QPS Official', 
-        avatar: 'QPS', 
-        color: 'bg-gradient-to-br from-blue-700 to-blue-800'
-      };
-    } else if (eventType.includes('medical') || eventType.includes('ambulance') || eventType.includes('cardiac') || description.includes('medical') || description.includes('ambulance')) {
-      return { 
-        name: 'Queensland Ambulance Service', 
-        type: 'QAS Official', 
-        avatar: 'QAS', 
-        color: 'bg-gradient-to-br from-green-600 to-green-700'
-      };
-    } else {
-      // Default to general emergency services
-      return { 
-        name: 'Emergency Services Queensland', 
-        type: 'ESQ Official', 
-        avatar: 'ESQ', 
-        color: 'bg-gradient-to-br from-red-500 to-red-600'
-      };
-    }
-  };
+  // This function now only handles official agencies - user reports use ReporterAttribution component
+  const agencyInfo = getAgencyInfo(incident);
+  const isUserIncident = isUserReport(incident);
 
   // Don't render if no incident
   if (!incident) {
@@ -743,8 +688,8 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
         <DialogHeader className="relative p-3 sm:p-6 pb-2 sm:pb-4 flex-shrink-0 bg-gradient-to-r from-gray-50/80 to-white/80 backdrop-blur-sm">
           {/* Enhanced Header */}
           <div className="flex items-center gap-4">
-            {/* Clickable User Avatar/Name for user-reported incidents only */}
-            {incident.properties?.userReported && incident.properties?.reporterId ? (
+            {/* Handle user-reported incidents with ReporterAttribution */}
+            {isUserIncident && incident.properties?.reporterId ? (
               <div 
                 className="flex items-center gap-4 cursor-pointer hover:bg-gray-50 p-2 -ml-2 rounded-xl transition-colors flex-1"
                 onClick={() => {
@@ -753,68 +698,67 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
                 }}
                 data-testid="button-user-profile"
               >
-                <div className="relative">
-                  <Avatar className="w-14 h-14 ring-4 ring-white shadow-xl">
-                    <AvatarFallback className={`${getSourceInfo(incident).color} text-white font-bold text-lg`}>
-                      {getSourceInfo(incident).avatar}
-                    </AvatarFallback>
-                  </Avatar>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start gap-2 mb-1 flex-wrap">
-                    <h4 className="font-bold text-gray-900 text-sm sm:text-lg leading-tight hover:text-blue-600 transition-colors break-words flex-1 min-w-0 hyphens-auto" style={{wordBreak: 'break-word', overflowWrap: 'break-word'}}>
-                      {getSourceInfo(incident).name}
-                    </h4>
-                    <Badge variant="secondary" className="px-2 sm:px-3 py-1 bg-gradient-to-r from-blue-100 to-purple-100 text-blue-700 border-blue-200 font-medium text-xs sm:text-sm flex-shrink-0">
-                      {getSourceInfo(incident).type.split(' ')[0]}
-                    </Badge>
-                  </div>
-                  <div className="flex items-center gap-3 text-sm text-gray-600">
-                    <div className="flex items-center gap-1">
-                      <Clock className="w-4 h-4 text-blue-500" />
-                      <span className="font-medium">{getTimeAgo(
-                        incident.properties?.published || 
-                        incident.properties?.Response_Date || 
-                        incident.properties?.createdAt || 
-                        incident.properties?.timeReported ||
-                        incident.properties?.last_updated
-                      )}</span>
-                    </div>
+                <ReporterAttribution 
+                  userId={incident.properties.reporterId} 
+                  variant="default" 
+                  className="flex-1"
+                />
+                <div className="flex items-center gap-3 text-sm text-gray-600">
+                  <div className="flex items-center gap-1">
+                    <Clock className="w-4 h-4 text-blue-500" />
+                    <span className="font-medium">{getTimeAgo(
+                      incident.properties?.published || 
+                      incident.properties?.Response_Date || 
+                      incident.properties?.createdAt || 
+                      incident.properties?.timeReported ||
+                      incident.properties?.last_updated
+                    )}</span>
                   </div>
                 </div>
               </div>
             ) : (
-              // Non-clickable version for official incidents
+              // Non-clickable version for official incidents  
               <>
-                <div className="relative">
-                  <Avatar className="w-14 h-14 ring-4 ring-white shadow-xl">
-                    <AvatarFallback className={`${getSourceInfo(incident).color} text-white font-bold text-lg`}>
-                      {getSourceInfo(incident).avatar}
-                    </AvatarFallback>
-                  </Avatar>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start gap-2 mb-1 flex-wrap">
-                    <h4 className="font-bold text-gray-900 text-base sm:text-lg leading-tight break-words flex-1 min-w-0">
-                      {getSourceInfo(incident).name}
-                    </h4>
-                    <Badge variant="secondary" className="px-2 sm:px-3 py-1 bg-gradient-to-r from-blue-100 to-purple-100 text-blue-700 border-blue-200 font-medium text-xs sm:text-sm flex-shrink-0">
-                      {getSourceInfo(incident).type.split(' ')[0]}
-                    </Badge>
-                  </div>
-                  <div className="flex items-center gap-3 text-sm text-gray-600">
-                    <div className="flex items-center gap-1">
-                      <Clock className="w-4 h-4 text-blue-500" />
-                      <span className="font-medium">{getTimeAgo(
-                        incident.properties?.published || 
-                        incident.properties?.Response_Date || 
-                        incident.properties?.createdAt || 
-                        incident.properties?.timeReported ||
-                        incident.properties?.last_updated
-                      )}</span>
+                {agencyInfo ? (
+                  <>
+                    <div className="relative">
+                      <Avatar className="w-14 h-14 ring-4 ring-white shadow-xl">
+                        <AvatarFallback className={`${agencyInfo.color} text-white font-bold text-lg`}>
+                          {agencyInfo.avatar}
+                        </AvatarFallback>
+                      </Avatar>
                     </div>
-                  </div>
-                </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start gap-2 mb-1 flex-wrap">
+                        <h4 className="font-bold text-gray-900 text-base sm:text-lg leading-tight break-words flex-1 min-w-0">
+                          {agencyInfo.name}
+                        </h4>
+                        <Badge variant="secondary" className="px-2 sm:px-3 py-1 bg-gradient-to-r from-blue-100 to-purple-100 text-blue-700 border-blue-200 font-medium text-xs sm:text-sm flex-shrink-0">
+                          {agencyInfo.type.split(' ')[0]}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-3 text-sm text-gray-600">
+                        <div className="flex items-center gap-1">
+                          <Clock className="w-4 h-4 text-blue-500" />
+                          <span className="font-medium">{getTimeAgo(
+                            incident.properties?.published || 
+                            incident.properties?.Response_Date || 
+                            incident.properties?.createdAt || 
+                            incident.properties?.timeReported ||
+                            incident.properties?.last_updated
+                          )}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  // Fallback for incidents without clear agency info - use ReporterAttribution
+                  <ReporterAttribution 
+                    userId={incident.properties?.reporterId} 
+                    variant="default" 
+                    className="flex-1"
+                  />
+                )}
               </>
             )}
             <Button variant="ghost" size="sm" className="w-10 h-10 p-0 shrink-0 rounded-full hover:bg-gray-100">

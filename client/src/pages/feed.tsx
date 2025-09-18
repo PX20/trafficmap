@@ -18,6 +18,8 @@ import { FilterState } from "@/pages/home";
 import { useTrafficData } from "@/hooks/use-traffic-data";
 import { SponsoredPost } from "@/components/sponsored-post";
 import { InlineComments } from "@/components/inline-comments";
+import { getAgencyInfo, isUserReport } from "@/lib/agency-info";
+import { ReporterAttribution } from "@/components/ReporterAttribution";
 import { 
   MapPin, 
   Clock, 
@@ -812,132 +814,9 @@ export default function Feed() {
                     return `incident-${incident.properties?.Master_Incident_Number || incident.properties?.id || index}`;
                   };
 
-                  const getSourceInfo = (incident: any) => {
-                    // Use the unified schema's source field for consistent identification
-                    const source = incident.source || incident.properties?.source;
-                    
-                    if (source === 'tmr') {
-                      // Government API Feed - Transport and Main Roads
-                      return { 
-                        name: 'Transport and Main Roads', 
-                        type: 'TMR Official', 
-                        avatar: 'TMR', 
-                        color: 'bg-gradient-to-br from-orange-500 to-orange-600',
-                        photoUrl: null
-                      };
-                    }
-                    
-                    if (source === 'user') {
-                      // Community Posts - User-reported incidents
-                      // Get reporter name from various possible fields
-                      const reporterName = incident.properties?.reporterName || 
-                        incident.properties?.reportedBy?.split('@')[0] || 
-                        incident.properties?.authorName ||
-                        incident.properties?.userName ||
-                        (incident.properties?.userId ? `User ${incident.properties.userId.slice(-4)}` : 'Community Member');
-                      const photoUrl = incident.properties?.photoUrl;
-                      
-                      // Create initials from the reporter name
-                      const getInitials = (name: string) => {
-                        return name.split(' ').map(word => word.charAt(0).toUpperCase()).join('').slice(0, 2);
-                      };
-                      
-                      return { 
-                        name: reporterName, 
-                        type: 'Community Report', 
-                        avatar: getInitials(reporterName), 
-                        color: 'bg-gradient-to-br from-purple-500 to-purple-600',
-                        photoUrl: photoUrl
-                      };
-                    }
-                    
-                    if (source === 'emergency') {
-                      // Government API Feed - Emergency Services
-                      // Determine specific emergency service based on incident data
-                      const eventType = incident.properties?.Event_Type?.toLowerCase() || '';
-                      const description = incident.properties?.description?.toLowerCase() || '';
-                      
-                      if (eventType.includes('fire') || eventType.includes('burn') || eventType.includes('hazmat') || description.includes('fire')) {
-                        return { 
-                          name: 'Queensland Fire & Emergency', 
-                          type: 'QFES Official', 
-                          avatar: 'QFE', 
-                          color: 'bg-gradient-to-br from-red-500 to-red-600',
-                          photoUrl: null
-                        };
-                      } else if (eventType.includes('police') || eventType.includes('crime') || eventType.includes('traffic enforcement') || description.includes('police')) {
-                        return { 
-                          name: 'Queensland Police Service', 
-                          type: 'QPS Official', 
-                          avatar: 'QPS', 
-                          color: 'bg-gradient-to-br from-blue-700 to-blue-800',
-                          photoUrl: null
-                        };
-                      } else if (eventType.includes('medical') || eventType.includes('ambulance') || eventType.includes('cardiac') || description.includes('medical') || description.includes('ambulance')) {
-                        return { 
-                          name: 'Queensland Ambulance Service', 
-                          type: 'QAS Official', 
-                          avatar: 'QAS', 
-                          color: 'bg-gradient-to-br from-green-600 to-green-700',
-                          photoUrl: null
-                        };
-                      } else {
-                        // Default to general emergency services
-                        return { 
-                          name: 'Emergency Services Queensland', 
-                          type: 'ESQ Official', 
-                          avatar: 'ESQ', 
-                          color: 'bg-gradient-to-br from-red-500 to-red-600',
-                          photoUrl: null
-                        };
-                      }
-                    }
-                    
-                    // Fallback for incidents without clear source (legacy data)
-                    // Try to determine from incident structure
-                    if (incident.type === 'traffic' || incident.properties?.category === 'traffic') {
-                      return { 
-                        name: 'Transport and Main Roads', 
-                        type: 'TMR Official', 
-                        avatar: 'TMR', 
-                        color: 'bg-gradient-to-br from-orange-500 to-orange-600',
-                        photoUrl: null
-                      };
-                    }
-                    
-                    if (incident.properties?.userReported) {
-                      // Get reporter name from various possible fields  
-                      const reporterName = incident.properties?.reporterName || 
-                        incident.properties?.reportedBy?.split('@')[0] || 
-                        incident.properties?.authorName ||
-                        incident.properties?.userName ||
-                        (incident.properties?.userId ? `User ${incident.properties.userId.slice(-4)}` : 'Community Member');
-                      const photoUrl = incident.properties?.photoUrl;
-                      
-                      const getInitials = (name: string) => {
-                        return name.split(' ').map(word => word.charAt(0).toUpperCase()).join('').slice(0, 2);
-                      };
-                      
-                      return { 
-                        name: reporterName, 
-                        type: 'Community Report', 
-                        avatar: getInitials(reporterName), 
-                        color: 'bg-gradient-to-br from-purple-500 to-purple-600',
-                        photoUrl: photoUrl
-                      };
-                    }
-                    
-                    // Default fallback for unknown sources
-                    return { 
-                      name: 'Emergency Services Queensland', 
-                      type: 'ESQ Official', 
-                      avatar: 'ESQ', 
-                      color: 'bg-gradient-to-br from-red-500 to-red-600',
-                      photoUrl: null
-                    };
-                  };
-
-                  const sourceInfo = getSourceInfo(incident);
+                  // Get agency info for official sources only - NO user fallbacks
+                  const agencyInfo = getAgencyInfo(incident);
+                  const isUserIncident = isUserReport(incident);
                   
                   // Only show engagement for user-reported incidents
                   const isUserReported = incident.properties?.userReported;
@@ -954,48 +833,50 @@ export default function Feed() {
                         <div className="p-4 pb-3">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                              <Avatar 
-                                className={`w-12 h-12 ring-2 ring-primary/20 ${isUserReported ? 'cursor-pointer hover:ring-primary/40 transition-all' : ''}`}
-                                onClick={isUserReported && incident.properties?.reporterId ? (e) => {
-                                  e.stopPropagation();
-                                  setLocation(`/users/${incident.properties.reporterId}`);
-                                } : undefined}
-                              >
-                                {sourceInfo.photoUrl ? (
-                                  <img src={sourceInfo.photoUrl} alt={sourceInfo.name} className="w-full h-full object-cover" />
-                                ) : (
-                                  <AvatarFallback className={`${sourceInfo.color} text-white font-bold text-sm shadow-lg`}>
-                                    {sourceInfo.avatar}
-                                  </AvatarFallback>
-                                )}
-                              </Avatar>
-                              <div>
-                                <div className="flex items-center gap-2">
-                                  <h4 
-                                    className={`font-bold text-foreground text-base ${isUserReported && incident.properties?.reporterId ? 'cursor-pointer hover:text-primary transition-colors' : ''}`}
-                                    onClick={isUserReported && incident.properties?.reporterId ? (e) => {
-                                      e.stopPropagation();
-                                      setLocation(`/users/${incident.properties.reporterId}`);
-                                    } : undefined}
-                                  >
-                                    {sourceInfo.name}
-                                  </h4>
-                                  <Badge 
-                                    variant={incident.properties?.userReported ? "secondary" : "default"} 
-                                    className={`text-xs px-2 py-1 font-medium ${
-                                      incident.properties?.userReported 
-                                        ? 'bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-700' 
-                                        : 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-700'
-                                    }`}
-                                  >
-                                    {sourceInfo.type}
-                                  </Badge>
+                              {isUserIncident ? (
+                                <div 
+                                  className="cursor-pointer hover:opacity-80 transition-all flex items-center gap-3"
+                                  onClick={incident.properties?.reporterId ? (e) => {
+                                    e.stopPropagation();
+                                    setLocation(`/users/${incident.properties.reporterId}`);
+                                  } : undefined}
+                                >
+                                  <ReporterAttribution 
+                                    userId={incident.properties?.reporterId} 
+                                    variant="default"
+                                  />
                                 </div>
-                                <p className="text-xs text-muted-foreground">
-                                  {getTimeAgo(incident)}
-                                </p>
-                              </div>
-                            </div>
+                              ) : agencyInfo ? (
+                                <div className="flex items-center gap-3">
+                                  <Avatar className="w-12 h-12 ring-2 ring-primary/20">
+                                    <AvatarFallback className={`${agencyInfo.color} text-white font-bold text-sm shadow-lg`}>
+                                      {agencyInfo.avatar}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <div>
+                                    <div className="flex items-center gap-2">
+                                      <h4 className="font-bold text-foreground text-base">
+                                        {agencyInfo.name}
+                                      </h4>
+                                      <Badge 
+                                        variant="default" 
+                                        className="text-xs px-2 py-1 font-medium bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-700"
+                                      >
+                                        {agencyInfo.type.split(' ')[0]}
+                                      </Badge>
+                                    </div>
+                                    <p className="text-xs text-muted-foreground">
+                                      {getTimeAgo(incident)}
+                                    </p>
+                                  </div>
+                                </div>
+                              ) : (
+                                // Fallback for unrecognized incidents  
+                                <ReporterAttribution 
+                                  userId={null} 
+                                  variant="default"
+                                />
+                              )}
                             <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                               <MoreHorizontal className="w-4 h-4" />
                             </Button>
