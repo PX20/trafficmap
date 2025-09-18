@@ -846,7 +846,7 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
         (user && user.id === props.reporterId ? (user.displayName || user.firstName || user.email?.split('@')[0]) : undefined) || 
         (() => {
           const id = props.userId || props.reporterId;
-          return id ? `Community Reporter ${id.slice(-4)}` : 'Community Reporter';
+          return id ? `User ${id.slice(-4)}` : 'Anonymous Reporter';
         })();
       
       return {
@@ -1225,11 +1225,11 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
                         variant="outline" 
                         className={`text-xs ${getAgencyColor(reporterInfo.agency)}`}
                       >
-                        {reporterInfo.agency === 'Community' ? 'Community Report' : reporterInfo.agency}
+                        {reporterInfo.agency}
                       </Badge>
                     </div>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {isUserReported ? 'Community-reported incident' : 
+                      {isUserReported ? 'Community report' : 
                        isTrafficEvent ? 'Official traffic report' : 
                        'Emergency services report'}
                     </p>
