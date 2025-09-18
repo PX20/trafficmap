@@ -1448,7 +1448,7 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
               {/* Comments List */}
               {comments.length > 0 ? (
                 <div className="space-y-4">
-                  {comments.map((comment) => (
+                  {comments.map((comment: any) => (
                     <div key={comment.id} className="flex space-x-3">
                       <Avatar className="w-8 h-8 flex-shrink-0">
                         <AvatarFallback className="text-xs bg-gradient-to-br from-blue-500 to-purple-600 text-white">
