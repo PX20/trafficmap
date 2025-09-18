@@ -654,6 +654,7 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
 
   const props = event.properties;
   const source = props.source; // 'tmr', 'emergency', 'user'
+  
   const isUserReported = source === 'user';
   const isTrafficEvent = source === 'tmr';
   const isEmergencyEvent = source === 'emergency';
@@ -821,11 +822,17 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
   };
   
   const getReporterInfo = () => {
-    if (isUserReported) {
+    // Check for user reports first - even if source detection failed
+    const hasUserIndicators = isUserReported || props.userReported || props.reporterId || props.reporterName || props.reportedBy || props.userId || props.authorName || props.userName;
+    
+    if (isUserReported || hasUserIndicators) {
       // Always prioritize the actual author's information over current viewer
       const displayName = props.reporterName || 
+        props.reportedBy?.split('@')[0] ||
+        props.authorName ||
+        props.userName ||
         (user && user.id === props.reporterId ? (user.displayName || user.firstName || user.email?.split('@')[0]) : undefined) || 
-        'Community Member';
+        (props.userId ? `User ${props.userId.slice(-4)}` : 'Community Member');
       
       return {
         name: displayName,
@@ -858,7 +865,8 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
       return { name: 'Emergency Services QLD', agency: 'ESQ', initials: 'ESQ' };
     }
     
-    return { name: 'Queensland Services', agency: 'QLD', initials: 'QLD' };
+    // Fallback - but default to community rather than government agency
+    return { name: 'Community Member', agency: 'Community', initials: 'CM' };
   };
   
   const getTitle = () => {

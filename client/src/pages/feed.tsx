@@ -825,7 +825,12 @@ export default function Feed() {
                     
                     if (source === 'user') {
                       // Community Posts - User-reported incidents
-                      const reporterName = incident.properties?.reporterName || incident.properties?.reportedBy?.split('@')[0] || 'Anonymous User';
+                      // Get reporter name from various possible fields
+                      const reporterName = incident.properties?.reporterName || 
+                        incident.properties?.reportedBy?.split('@')[0] || 
+                        incident.properties?.authorName ||
+                        incident.properties?.userName ||
+                        (incident.properties?.userId ? `User ${incident.properties.userId.slice(-4)}` : 'Community Member');
                       const photoUrl = incident.properties?.photoUrl;
                       
                       // Create initials from the reporter name
@@ -897,7 +902,12 @@ export default function Feed() {
                     }
                     
                     if (incident.properties?.userReported) {
-                      const reporterName = incident.properties?.reporterName || 'Anonymous User';
+                      // Get reporter name from various possible fields  
+                      const reporterName = incident.properties?.reporterName || 
+                        incident.properties?.reportedBy?.split('@')[0] || 
+                        incident.properties?.authorName ||
+                        incident.properties?.userName ||
+                        (incident.properties?.userId ? `User ${incident.properties.userId.slice(-4)}` : 'Community Member');
                       const photoUrl = incident.properties?.photoUrl;
                       
                       const getInitials = (name: string) => {
