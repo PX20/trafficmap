@@ -94,6 +94,20 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
     }
   });
 
+  const comments = socialData?.comments || [];
+
+  // Handle comment submission
+  const handleCommentSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newComment.trim() || !user) return;
+    
+    commentMutation.mutate({
+      content: newComment.trim(),
+      photo: selectedPhoto || undefined,
+      altText: photoAltText || undefined
+    });
+  };
+
   // Comment mutation
   const commentMutation = useMutation({
     mutationFn: async ({ content, parentCommentId, photo, altText }: { content: string; parentCommentId?: string; photo?: File; altText?: string }) => {
@@ -832,7 +846,7 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
         props.authorName ||
         props.userName ||
         (user && user.id === props.reporterId ? (user.displayName || user.firstName || user.email?.split('@')[0]) : undefined) || 
-        (props.userId ? `User ${props.userId.slice(-4)}` : 'Community Member');
+        ((props.userId || props.reporterId) ? `Community Reporter ${(props.userId || props.reporterId).slice(-4)}` : 'Community Reporter');
       
       return {
         name: displayName,
@@ -1155,6 +1169,43 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
               </h2>
             </div>
 
+            {/* Reporter Information - Moved to Top */}
+            <div className="px-6 pt-4 pb-2 border-b bg-muted/5">
+              <div className="bg-muted/30 rounded-lg p-4">
+                <div className="flex items-center space-x-3">
+                  <Avatar 
+                    className={`w-10 h-10 ${isUserReported && props.reporterId ? 'cursor-pointer hover:ring-2 hover:ring-blue-200 transition-all' : ''}`}
+                    onClick={isUserReported && props.reporterId ? () => {
+                      setLocation(`/users/${props.reporterId}`);
+                    } : undefined}
+                  >
+                    <AvatarImage src={reporterInfo.avatar} alt={reporterInfo.name} data-testid="img-reporter-avatar" />
+                    <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-medium">
+                      {reporterInfo.initials}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center space-x-2">
+                      <h4 className="text-sm font-medium text-foreground" data-testid="text-reporter-name">
+                        {reporterInfo.name}
+                      </h4>
+                      <Badge 
+                        variant="outline" 
+                        className={`text-xs ${getAgencyColor(reporterInfo.agency)}`}
+                      >
+                        {reporterInfo.agency === 'Community' ? 'Community Report' : reporterInfo.agency}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {isUserReported ? 'Community-reported incident' : 
+                       isTrafficEvent ? 'Official traffic report' : 
+                       'Emergency services report'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Content Section */}
             <div className="p-6 space-y-5">
               {/* Description */}
@@ -1205,37 +1256,6 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
                     </div>
                   </div>
                 )}
-              </div>
-
-              {/* Reporter Information */}
-              <div className="bg-muted/30 rounded-lg p-4">
-                <div className="flex items-center space-x-3">
-                  <Avatar 
-                    className={`w-10 h-10 ${isUserReported && props.reporterId ? 'cursor-pointer hover:ring-2 hover:ring-blue-200 transition-all' : ''}`}
-                    onClick={isUserReported && props.reporterId ? () => {
-                      setLocation(`/users/${props.reporterId}`);
-                    } : undefined}
-                  >
-                    <AvatarImage src={reporterInfo.avatar} alt={reporterInfo.name} />
-                    <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-medium">
-                      {reporterInfo.initials}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <p 
-                      className={`font-medium text-foreground ${isUserReported && props.reporterId ? 'cursor-pointer hover:text-blue-600 transition-colors' : ''}`}
-                      onClick={isUserReported && props.reporterId ? () => {
-                        setLocation(`/users/${props.reporterId}`);
-                      } : undefined}
-                      data-testid="link-reporter-profile"
-                    >
-                      {reporterInfo.name}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {isUserReported ? 'Community Report' : reporterInfo.agency}
-                    </p>
-                  </div>
-                </div>
               </div>
 
               {/* Additional Details for Traffic/Emergency */}
