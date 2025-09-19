@@ -797,124 +797,48 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
           </div>
         </div>
         
-        {/* Scrollable Content Area */}
+        {/* Content Area - Social Media Style */}
         <div className="flex-1 overflow-y-auto">
           <div className="p-4 sm:p-6 pt-0 space-y-6">
-            <div className="relative p-6 rounded-2xl bg-gradient-to-br from-white via-gray-50 to-white border border-gray-100 shadow-lg overflow-hidden">
-              {/* Content decorative elements */}
-              <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-blue-200/20 to-purple-200/20 rounded-full blur-lg"></div>
-              
-              <div className="relative flex items-start gap-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-lg">
-                  {getIncidentIcon(incident)}
+            <DialogTitle className="hidden">{getIncidentTitle(incident)}</DialogTitle>
+            
+            {/* Main Post Content */}
+            <div className="space-y-4">
+              {/* Description */}
+              {incident.properties?.description && (
+                <div className="text-base leading-relaxed whitespace-pre-wrap break-words">
+                  {incident.properties.description}
                 </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-3 mb-3">
-                    <DialogTitle className="text-xl font-bold text-gray-900 leading-tight">
-                      {getIncidentTitle(incident)}
-                    </DialogTitle>
-                    <div className="flex flex-wrap gap-2">
-                      {getStatusBadge(incident)}
+              )}
+              
+              {/* Key Details - Simplified */}
+              <div className="space-y-3">
+                {/* Traffic Details - Simplified */}
+                {incident.type === 'traffic' && (
+                  <div className="p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Car className="w-4 h-4 text-blue-600" />
+                      <h4 className="font-semibold text-blue-900 dark:text-blue-100">
+                        {incident.properties?.event_type || incident.properties?.event_subtype || 'Traffic Event'}
+                      </h4>
+                    </div>
+                    
+                    <div className="space-y-2 text-sm">
+                      {incident.properties?.road_summary?.locality && (
+                        <div><span className="font-medium">Location:</span> {incident.properties.road_summary.locality}</div>
+                      )}
+                      {incident.properties?.road_summary?.road_name && (
+                        <div><span className="font-medium">Road:</span> {incident.properties.road_summary.road_name}</div>
+                      )}
+                      {incident.properties?.advice && (
+                        <div><span className="font-medium">Advice:</span> {incident.properties.advice}</div>
+                      )}
+                      {incident.properties?.traffic_impact && (
+                        <div><span className="font-medium">Impact:</span> {incident.properties.traffic_impact}</div>
+                      )}
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-gray-700 mb-4">
-                    <div className="p-1.5 bg-blue-500 rounded-lg">
-                      <MapPin className="w-3.5 h-3.5 text-white" />
-                    </div>
-                    <span className="font-semibold">{getIncidentLocation(incident)}</span>
-                  </div>
-                  
-                  {/* Enhanced Details */}
-                  <div className="space-y-4">
-                    {/* Enhanced Traffic Details - Government Style */}
-                    {incident.type === 'traffic' && (
-                      <div className="relative p-4 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 overflow-hidden">
-                        <div className="absolute top-0 right-0 w-12 h-12 bg-gradient-to-br from-blue-200/30 to-indigo-200/30 rounded-full blur-lg"></div>
-                        <div className="relative space-y-4">
-                          <div className="flex items-center gap-3 mb-4">
-                            <div className="p-2 bg-blue-600 rounded-lg">
-                              <Car className="w-4 h-4 text-white" />
-                            </div>
-                            <h4 className="font-bold text-blue-900 text-lg">
-                              {incident.properties?.event_type || incident.properties?.event_subtype || 'Traffic Event'}
-                            </h4>
-                          </div>
-                          
-                          <div className="space-y-3 text-sm">
-                            {/* Suburbs/Localities */}
-                            {incident.properties?.road_summary?.locality && (
-                              <div className="flex flex-col sm:flex-row gap-1 sm:gap-3">
-                                <div className="font-semibold text-blue-800 min-w-0 sm:w-32">Suburbs / Localities</div>
-                                <div className="text-blue-900 break-words">{incident.properties.road_summary.locality}</div>
-                              </div>
-                            )}
-                            
-                            {/* Roads */}
-                            {incident.properties?.road_summary?.road_name && (
-                              <div className="flex flex-col sm:flex-row gap-1 sm:gap-3">
-                                <div className="font-semibold text-blue-800 min-w-0 sm:w-32">Roads</div>
-                                <div className="text-blue-900 break-words">{incident.properties.road_summary.road_name}</div>
-                              </div>
-                            )}
-                            
-                            {/* Location details */}
-                            {incident.properties?.description && (
-                              <div className="flex flex-col sm:flex-row gap-1 sm:gap-3">
-                                <div className="font-semibold text-blue-800 min-w-0 sm:w-32">Location details</div>
-                                <div className="text-blue-900 break-words">{incident.properties.description}</div>
-                              </div>
-                            )}
-                            
-                            {/* What to expect */}
-                            {incident.properties?.advice && (
-                              <div className="flex flex-col sm:flex-row gap-1 sm:gap-3">
-                                <div className="font-semibold text-blue-800 min-w-0 sm:w-32">What to expect</div>
-                                <div className="text-blue-900 break-words">{incident.properties.advice}</div>
-                              </div>
-                            )}
-                            
-                            {/* Traffic impact */}
-                            {incident.properties?.traffic_impact && (
-                              <div className="flex flex-col sm:flex-row gap-1 sm:gap-3">
-                                <div className="font-semibold text-blue-800 min-w-0 sm:w-32">Impact</div>
-                                <div className="text-blue-900 break-words">{incident.properties.traffic_impact}</div>
-                              </div>
-                            )}
-                            
-                            {/* Last updated */}
-                            {incident.properties?.last_updated && (
-                              <div className="flex flex-col sm:flex-row gap-1 sm:gap-3">
-                                <div className="font-semibold text-blue-800 min-w-0 sm:w-32">Last updated</div>
-                                <div className="text-blue-900 break-words">
-                                  {new Date(incident.properties.last_updated).toLocaleString('en-AU', {
-                                    day: 'numeric',
-                                    month: 'short',
-                                    year: 'numeric',
-                                    hour: 'numeric',
-                                    minute: '2-digit',
-                                    hour12: true
-                                  })}
-                                </div>
-                              </div>
-                            )}
-                            
-                            {/* Information provided by */}
-                            <div className="flex flex-col sm:flex-row gap-1 sm:gap-3">
-                              <div className="font-semibold text-blue-800 min-w-0 sm:w-32">Information provided by</div>
-                              <div className="text-blue-900 break-words">Department of Transport and Main Roads</div>
-                            </div>
-                            
-                            {/* Event ID */}
-                            {incident.properties?.id && (
-                              <div className="flex flex-col sm:flex-row gap-1 sm:gap-3">
-                                <div className="font-semibold text-blue-800 min-w-0 sm:w-32">Event ID</div>
-                                <div className="text-blue-900 font-mono break-all">{incident.properties.id}</div>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    )}
+                )}
                 
                     {/* Enhanced Emergency Incident Details - Government Style */}
                     {!incident.properties?.userReported && incident.type !== 'traffic' && (
@@ -1373,8 +1297,6 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
                 </p>
               </div>
             )}
-            </div>
-          </div>
           </div>
         </div>
       </DialogContent>
