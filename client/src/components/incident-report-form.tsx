@@ -261,7 +261,7 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
           </DialogDescription>
         </DialogHeader>
         
-        <div className="flex-1 overflow-y-auto pr-1 sm:pr-2">
+        <div className="flex-1 overflow-y-auto px-4 sm:px-6">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             {/* Category Selection */}
