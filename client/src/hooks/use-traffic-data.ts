@@ -89,7 +89,7 @@ export function useTrafficData(filters: FilterState): ProcessedTrafficData {
   // Debug regional filtering
   console.log('🏠 HOME LOCATION:', filters.homeLocation, 'TARGET REGION:', targetRegionId);
   
-  // Regional filtering function using regionIds with text fallback
+  // FIXED: Geometry-based regional filtering with regionIds fallback
   const isInRegion = (feature: any) => {
     if (!targetRegionId) return false;
     
@@ -110,16 +110,49 @@ export function useTrafficData(filters: FilterState): ProcessedTrafficData {
       });
     }
     
-    // Use pre-computed regionIds for accurate filtering
+    // PRIORITY 1: Geometry-based filtering (if home coordinates available)
+    if (filters.homeCoordinates && feature.geometry?.coordinates) {
+      const [lng, lat] = feature.geometry.coordinates;
+      const homeLng = filters.homeCoordinates.lon;
+      const homeLat = filters.homeCoordinates.lat;
+      
+      // Calculate distance using Haversine formula
+      const R = 6371; // Earth's radius in km
+      const dLat = (lat - homeLat) * Math.PI / 180;
+      const dLng = (lng - homeLng) * Math.PI / 180;
+      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(homeLat * Math.PI / 180) * Math.cos(lat * Math.PI / 180) *
+                Math.sin(dLng/2) * Math.sin(dLng/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      const distance = R * c;
+      
+      // Include incidents within reasonable radius of home location (50km for regional area)
+      const inRadius = distance <= 50;
+      if (inRadius) {
+        console.log('✅ GEOMETRY MATCH:', feature.id, 'distance:', distance.toFixed(1) + 'km');
+        return true;
+      } else {
+        console.log('❌ GEOMETRY REJECT:', feature.id, 'distance:', distance.toFixed(1) + 'km');
+      }
+    }
+    
+    // PRIORITY 2: Use pre-computed regionIds (but don't reject if geometry passed)
     if (Array.isArray(regionIds) && regionIds.includes(targetRegionId)) {
+      console.log('✅ REGIONIDS MATCH:', feature.id, 'regionIds:', regionIds);
       return true;
     }
     
-    // Fallback to text-based matching for any features missing regionIds
+    // PRIORITY 3: Fallback to text-based matching for any features missing both geometry and regionIds
     const text = `${feature.properties?.location ?? ''} ${feature.properties?.description ?? ''} ${feature.properties?.title ?? ''}`.toLowerCase();
     const textMatch = (targetRegion?.suburbs || []).some(suburb => text.includes(suburb.toLowerCase()));
     
-    return textMatch;
+    if (textMatch) {
+      console.log('✅ TEXT MATCH:', feature.id, 'text contains regional suburb');
+      return true;
+    }
+    
+    console.log('❌ NO MATCH:', feature.id, 'failed all filters');
+    return false;
   };
 
   // Apply regional filtering for feed data
