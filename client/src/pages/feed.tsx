@@ -543,7 +543,7 @@ export default function Feed() {
     }
     
     if (incident.properties?.userReported) {
-      return incident.properties?.description || 'Community safety report 📢';
+      return incident.properties?.description || '';
     }
     
     // Emergency incidents - keep them simple and social media friendly
