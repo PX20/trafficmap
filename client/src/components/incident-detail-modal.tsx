@@ -40,6 +40,7 @@ import type { Comment, IncidentFollowUp } from "@shared/schema";
 import { ReportModal } from "@/components/report-modal";
 import { getAgencyInfo, isUserReport } from "@/lib/agency-info";
 import { ReporterAttribution } from "@/components/ReporterAttribution";
+import { getIncidentCategory, getIncidentSubcategory } from "@/lib/incident-utils";
 
 interface IncidentDetailModalProps {
   incident: any;
@@ -991,16 +992,41 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
                     )}
                 
                     {/* Enhanced Community Report Details */}
-                    {incident.properties?.userReported && incident.properties?.description && (
+                    {incident.properties?.userReported && (
                       <div className="relative p-4 rounded-xl bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 overflow-hidden">
                         <div className="absolute top-0 right-0 w-12 h-12 bg-gradient-to-br from-purple-200/30 to-indigo-200/30 rounded-full blur-lg"></div>
-                        <div className="relative flex items-start gap-3">
-                          <div className="p-2 bg-purple-500 rounded-lg">
-                            <MessageCircle className="w-4 h-4 text-white" />
+                        <div className="relative space-y-3">
+                          <div className="flex items-center gap-3 mb-3">
+                            <div className="p-2 bg-purple-500 rounded-lg">
+                              <MessageCircle className="w-4 h-4 text-white" />
+                            </div>
+                            <h4 className="font-bold text-purple-900 text-base">Community Report Details</h4>
                           </div>
-                          <div>
-                            <h4 className="font-bold text-purple-900 mb-2 text-base">Reporter Details</h4>
-                            <p className="text-sm text-purple-800 font-medium leading-relaxed">{incident.properties.description}</p>
+                          
+                          <div className="space-y-3 text-sm">
+                            {/* Category */}
+                            {getIncidentCategory(incident) && (
+                              <div className="flex flex-col sm:flex-row gap-1 sm:gap-3">
+                                <div className="font-semibold text-purple-800 min-w-0 sm:w-24">Category</div>
+                                <div className="text-purple-900 break-words">{getIncidentCategory(incident)}</div>
+                              </div>
+                            )}
+                            
+                            {/* Subcategory */}
+                            {getIncidentSubcategory(incident) && (
+                              <div className="flex flex-col sm:flex-row gap-1 sm:gap-3">
+                                <div className="font-semibold text-purple-800 min-w-0 sm:w-24">Subcategory</div>
+                                <div className="text-purple-900 break-words">{getIncidentSubcategory(incident)}</div>
+                              </div>
+                            )}
+                            
+                            {/* Description */}
+                            {incident.properties?.description && (
+                              <div className="flex flex-col sm:flex-row gap-1 sm:gap-3">
+                                <div className="font-semibold text-purple-800 min-w-0 sm:w-24">Description</div>
+                                <div className="text-purple-900 break-words leading-relaxed">{incident.properties.description}</div>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>

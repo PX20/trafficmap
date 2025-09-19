@@ -82,3 +82,31 @@ export function getIncidentLocation(incident: any): string {
   
   return 'Location not specified';
 }
+
+export function getIncidentCategory(incident: any): string {
+  if (!incident) return '';
+  
+  // Use the unified structure category if available
+  if (incident.properties?.category) {
+    return incident.properties.category;
+  }
+  
+  // Fallback to other category fields
+  if (incident.category) return incident.category;
+  
+  return '';
+}
+
+export function getIncidentSubcategory(incident: any): string {
+  if (!incident) return '';
+  
+  // Use the unified structure subcategory if available
+  if (incident.properties?.subcategory) {
+    return incident.properties.subcategory;
+  }
+  
+  // Fallback to other subcategory fields
+  if (incident.subcategory) return incident.subcategory;
+  
+  return '';
+}
