@@ -645,100 +645,89 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
       }
     }}>
       <DialogContent 
-        className="w-[calc(100vw-1rem)] sm:w-[95vw] max-w-sm sm:max-w-lg max-h-[95vh] sm:max-h-[85vh] flex flex-col p-0 bg-gradient-to-br from-white via-gray-50 to-white border-0 shadow-2xl overflow-hidden" 
+        className="p-0 bg-background border-0 sm:border" 
         data-testid="modal-incident-details"
         aria-describedby="modal-description"
       >
-        {/* Decorative Background Elements */}
-        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-200/30 to-purple-200/30 rounded-full blur-2xl"></div>
-        <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-br from-orange-200/20 to-pink-200/20 rounded-full blur-lg"></div>
-        
-        <DialogHeader className="relative p-3 sm:p-6 pb-2 sm:pb-4 flex-shrink-0 bg-gradient-to-r from-gray-50/80 to-white/80 backdrop-blur-sm">
-          {/* Enhanced Header */}
-          <div className="flex items-center gap-4">
-            {/* Handle user-reported incidents with ReporterAttribution */}
-            {isUserIncident && incident.properties?.reporterId ? (
-              <div 
-                className="flex items-center gap-4 cursor-pointer hover:bg-gray-50 p-2 -ml-2 rounded-xl transition-colors flex-1"
-                onClick={() => {
-                  setLocation(`/users/${incident.properties.reporterId}`);
-                  onClose(); // Close the modal when navigating to profile
-                }}
-                data-testid="button-user-profile"
-              >
-                <ReporterAttribution 
-                  userId={incident.properties.reporterId} 
-                  variant="default" 
-                  className="flex-1"
-                />
-                <div className="flex items-center gap-3 text-sm text-gray-600">
-                  <div className="flex items-center gap-1">
-                    <Clock className="w-4 h-4 text-blue-500" />
-                    <span className="font-medium">{getTimeAgo(
-                      incident.properties?.published || 
-                      incident.properties?.Response_Date || 
-                      incident.properties?.createdAt || 
-                      incident.properties?.timeReported ||
-                      incident.properties?.last_updated
-                    )}</span>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              // Non-clickable version for official incidents  
-              <>
-                {agencyInfo ? (
-                  <>
-                    <div className="relative">
-                      <Avatar className="w-14 h-14 ring-4 ring-white shadow-xl">
-                        <AvatarFallback className={`${agencyInfo.color} text-white font-bold text-lg`}>
-                          {agencyInfo.avatar}
-                        </AvatarFallback>
-                      </Avatar>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start gap-2 mb-1 flex-wrap">
-                        <h4 className="font-bold text-gray-900 text-base sm:text-lg leading-tight break-words flex-1 min-w-0">
-                          {agencyInfo.name}
-                        </h4>
-                        <Badge variant="secondary" className="px-2 sm:px-3 py-1 bg-gradient-to-r from-blue-100 to-purple-100 text-blue-700 border-blue-200 font-medium text-xs sm:text-sm flex-shrink-0">
-                          {agencyInfo.type.split(' ')[0]}
-                        </Badge>
-                      </div>
-                      <div className="flex items-center gap-3 text-sm text-gray-600">
-                        <div className="flex items-center gap-1">
-                          <Clock className="w-4 h-4 text-blue-500" />
-                          <span className="font-medium">{getTimeAgo(
-                            incident.properties?.published || 
-                            incident.properties?.Response_Date || 
-                            incident.properties?.createdAt || 
-                            incident.properties?.timeReported ||
-                            incident.properties?.last_updated
-                          )}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  // Fallback for incidents without clear agency info - use ReporterAttribution
+        {/* Social Media Style Header - Sticky */}
+        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border/50">
+          <div className="p-4 sm:p-6">
+            <div className="flex items-start gap-3">
+              {/* Profile Section */}
+              <div className="flex-shrink-0">
+                {isUserIncident ? (
                   <ReporterAttribution 
-                    userId={incident.properties?.reporterId} 
-                    variant="default" 
-                    className="flex-1"
+                    userId={incident.properties?.reporterId}
+                    variant="compact" 
+                    className="w-12 h-12 text-lg font-semibold"
                   />
+                ) : (
+                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                    {getIncidentIcon(incident)}
+                  </div>
                 )}
-              </>
-            )}
-            <Button variant="ghost" size="sm" className="w-10 h-10 p-0 shrink-0 rounded-full hover:bg-gray-100">
-              <MoreHorizontal className="w-5 h-5 text-gray-500" />
-            </Button>
+              </div>
+              
+              {/* User Info & Content */}
+              <div className="flex-1 min-w-0">
+                {/* Name and Handle Row */}
+                <div className="flex items-center gap-2 mb-1">
+                  {isUserIncident ? (
+                    <ReporterAttribution 
+                      userId={incident.properties?.reporterId}
+                      variant="minimal" 
+                      className="font-semibold text-base truncate"
+                    />
+                  ) : (
+                    <span className="font-semibold text-base text-primary truncate">
+                      {agencyInfo?.name || 'Official'}
+                    </span>
+                  )}
+                  {!isUserIncident && (
+                    <Badge variant="secondary" className="text-xs px-2 py-0.5">
+                      Official
+                    </Badge>
+                  )}
+                  {getStatusBadge(incident)}
+                </div>
+                
+                {/* Metadata Row */}
+                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+                  <Clock className="w-4 h-4" />
+                  <span>{getTimeAgo((incident.properties?.incidentTime || incident.properties?.lastUpdated || incident.lastUpdated))}</span>
+                  <span>•</span>
+                  <MapPin className="w-4 h-4" />
+                  <span className="truncate">{getIncidentLocation(incident)}</span>
+                </div>
+                
+                {/* Category & Subcategory Chips */}
+                {(getIncidentCategory(incident) || getIncidentSubcategory(incident)) && (
+                  <div className="flex items-center gap-2 mb-3">
+                    {getIncidentCategory(incident) && (
+                      <Badge variant="outline" className="text-xs">
+                        {getIncidentCategory(incident)}
+                      </Badge>
+                    )}
+                    {getIncidentSubcategory(incident) && (
+                      <Badge variant="secondary" className="text-xs">
+                        {getIncidentSubcategory(incident)}
+                      </Badge>
+                    )}
+                  </div>
+                )}
+                
+                {/* Title */}
+                <h2 className="font-semibold text-lg leading-tight mb-2">
+                  {getIncidentTitle(incident)}
+                </h2>
+              </div>
+            </div>
           </div>
-        </DialogHeader>
+        </div>
         
-        {/* Enhanced Scrollable Content Container */}
-        <div className="relative flex-1 overflow-y-auto">
-          {/* Main Incident Card */}
-          <div className="p-3 sm:p-6 space-y-3 sm:space-y-6" id="modal-description">
+        {/* Scrollable Content Area */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="p-4 sm:p-6 pt-0 space-y-6">
             <div className="relative p-6 rounded-2xl bg-gradient-to-br from-white via-gray-50 to-white border border-gray-100 shadow-lg overflow-hidden">
               {/* Content decorative elements */}
               <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-blue-200/20 to-purple-200/20 rounded-full blur-lg"></div>
