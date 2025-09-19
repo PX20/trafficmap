@@ -7,6 +7,16 @@ import {
   DialogHeader, 
   DialogTitle 
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -33,7 +43,9 @@ import {
   CheckCircle,
   ClipboardList,
   TrendingUp,
-  Flag
+  Flag,
+  Edit3,
+  Trash2
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import type { Comment, IncidentFollowUp } from "@shared/schema";
@@ -88,6 +100,48 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
     
     markCompleteMutation.mutate();
   };
+
+  // Delete functionality
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  
+  // Delete mutation
+  const deleteIncidentMutation = useMutation({
+    mutationFn: async () => {
+      if (!incidentId) throw new Error('No incident ID');
+      return apiRequest('DELETE', `/api/incidents/${incidentId}`);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Report deleted",
+        description: "Your incident report has been deleted",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/incidents'] });
+      onClose();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete incident",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleDeleteIncident = () => {
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDeleteIncident = () => {
+    deleteIncidentMutation.mutate();
+    setShowDeleteConfirm(false);
+  };
+
+  const handleEditIncident = () => {
+    // Navigate to edit form with incident data
+    setLocation(`/edit-incident/${incidentId}`);
+    onClose();
+  };
+
   const [newComment, setNewComment] = useState("");
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyText, setReplyText] = useState("");
@@ -292,7 +346,8 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
   const { data: likeData, isLoading: likeStatusLoading } = useQuery({
     queryKey: ['/api/incidents', incidentId, 'social', 'likes'],
     queryFn: async () => {
-      return await apiRequest('GET', `/api/incidents/${incidentId}/social/likes/status`);
+      const response = await apiRequest('GET', `/api/incidents/${incidentId}/social/likes/status`);
+      return await response.json();
     },
     enabled: isOpen && !!incidentId && isAuthenticated
   });
@@ -1092,6 +1147,33 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
                     </Button>
                   )}
                   
+                  {/* Edit and Delete Buttons - only show for incident creator */}
+                  {isIncidentCreator && incident.properties?.userReported && (
+                    <>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="group flex items-center gap-2 px-3 py-2 rounded-lg text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200"
+                        onClick={handleEditIncident}
+                        data-testid="button-edit-incident"
+                      >
+                        <Edit3 className="w-4 h-4" />
+                        <span className="text-sm font-medium">Edit</span>
+                      </Button>
+                      
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="group flex items-center gap-2 px-3 py-2 rounded-lg text-gray-500 hover:text-red-600 hover:bg-red-50 transition-all duration-200"
+                        onClick={handleDeleteIncident}
+                        data-testid="button-delete-incident"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        <span className="text-sm font-medium">Delete</span>
+                      </Button>
+                    </>
+                  )}
+
                   {/* Mark Complete Button - only show for incident creator and not already completed */}
                   {isIncidentCreator && !isIncidentCompleted && incident.properties?.userReported && (
                     <Button 
@@ -1309,6 +1391,28 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
         entityId={reportEntityId}
         entityTitle={reportEntityTitle}
       />
+      
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Incident Report</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this incident report? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDeleteIncident}
+              className="bg-red-600 hover:bg-red-700"
+              disabled={deleteIncidentMutation.isPending}
+            >
+              {deleteIncidentMutation.isPending ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }
