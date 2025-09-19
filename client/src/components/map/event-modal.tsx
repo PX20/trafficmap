@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MessageCircle, Heart, Share2, MapPin, Clock, AlertTriangle, Car, Shield, Eye, Zap, Info, Timer, Route, Construction, Copy, Check, ArrowLeft, Camera, ImageIcon, X, Loader2, ExternalLink, Edit, Trash, MoreHorizontal } from "lucide-react";
+import { MessageCircle, Heart, Share2, MapPin, Clock, AlertTriangle, Car, Shield, Eye, Zap, Info, Timer, Route, Construction, Copy, Check, ArrowLeft, Camera, ImageIcon, X, Loader2, ExternalLink, Edit, Trash, MoreHorizontal, Upload, CheckCircle } from "lucide-react";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,6 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/useAuth";
 import { ReporterAttribution } from "@/components/ReporterAttribution";
+import { ObjectUploader } from "@/components/ObjectUploader";
 
 interface EventModalProps {
   eventId: string | null;
@@ -47,15 +48,19 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
   
   // Edit modal state
   const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedEditCategoryId, setSelectedEditCategoryId] = useState<string>("");
+  const [editUploadedPhotoUrl, setEditUploadedPhotoUrl] = useState<string>("");
+  const [isEditPhotoUploading, setIsEditPhotoUploading] = useState(false);
   
-  // Edit form schema
+  // Edit form schema - matches submission form
   const editIncidentSchema = z.object({
     title: z.string().min(1, "Title is required"),
     description: z.string().optional(),
     location: z.string().min(1, "Location is required"),
-    category: z.string().optional(),
-    subcategory: z.string().optional(),
-    severity: z.enum(["low", "medium", "high", "critical"]).optional(),
+    categoryId: z.string().min(1, "Category is required"),
+    subcategoryId: z.string().min(1, "Subcategory is required"),
+    photoUrl: z.string().optional(),
+    policeNotified: z.enum(["yes", "no", "not_needed", "unsure"]).optional(),
   });
 
   const { toast } = useToast();
@@ -67,10 +72,19 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
     queryKey: ["/api/unified"],
   });
 
-  // Fetch all subcategories to resolve UUIDs to names
+  // Fetch categories and subcategories for edit form
+  const { data: categories = [] } = useQuery({
+    queryKey: ["/api/categories"],
+  });
+
   const { data: subcategories = [] } = useQuery({
     queryKey: ["/api/subcategories"],
   });
+
+  // Get filtered subcategories for the selected category in edit form
+  const editSubcategories = (subcategories as any[]).filter((sub: any) => 
+    selectedEditCategoryId ? sub.categoryId === selectedEditCategoryId : false
+  );
 
   // Find event in unified incidents data
   const event = (unifiedData as any)?.features?.find((f: any) => 
@@ -85,9 +99,10 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
       title: "",
       description: "",
       location: "",
-      category: "",
-      subcategory: "",
-      severity: "medium",
+      categoryId: "",
+      subcategoryId: "",
+      photoUrl: "",
+      policeNotified: "unsure",
     },
   });
 
@@ -95,16 +110,55 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
   useEffect(() => {
     if (showEditModal && event) {
       const props = event.properties;
+      setSelectedEditCategoryId(props.category || "");
+      setEditUploadedPhotoUrl(props.photoUrl || "");
       editForm.reset({
         title: props.title || "",
         description: props.description || "",
         location: props.location || "",
-        category: props.category || "",
-        subcategory: props.subcategory || "",
-        severity: props.severity || "medium",
+        categoryId: props.category || "",
+        subcategoryId: props.subcategory || "",
+        photoUrl: props.photoUrl || "",
+        policeNotified: props.policeNotified || "unsure",
       });
     }
   }, [showEditModal, event, editForm]);
+
+  // Photo upload functions for edit form
+  const handleEditGetUploadParameters = async () => {
+    const response = await apiRequest("POST", "/api/objects/upload", {});
+    const responseData = await response.json();
+    return {
+      method: "PUT" as const,
+      url: responseData.uploadURL,
+    };
+  };
+
+  const handleEditPhotoUploadStart = () => {
+    setIsEditPhotoUploading(true);
+  };
+
+  const handleEditPhotoUploadComplete = (result: any) => {
+    setIsEditPhotoUploading(false);
+    if (result.successful && result.successful.length > 0) {
+      const uploadedUrl = result.successful[0].uploadURL;
+      setEditUploadedPhotoUrl(uploadedUrl);
+      editForm.setValue("photoUrl", uploadedUrl);
+      toast({
+        title: "Photo uploaded",
+        description: "Your photo has been uploaded successfully.",
+      });
+    }
+  };
+
+  const handleEditPhotoUploadError = (error: any) => {
+    setIsEditPhotoUploading(false);
+    toast({
+      title: "Upload failed",
+      description: "Failed to upload photo. Please try again.",
+      variant: "destructive",
+    });
+  };
 
   // Get social data for the incident
   const { data: socialData } = useQuery({
@@ -1717,23 +1771,106 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
                 )}
               />
 
+              {/* Category Selection */}
               <FormField
                 control={editForm.control}
-                name="severity"
+                name="categoryId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Severity</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
+                    <FormLabel>Category</FormLabel>
+                    <Select value={field.value} onValueChange={(value) => {
+                      field.onChange(value);
+                      setSelectedEditCategoryId(value);
+                      editForm.setValue("subcategoryId", ""); // Reset subcategory when category changes
+                    }}>
                       <FormControl>
-                        <SelectTrigger data-testid="select-edit-severity">
-                          <SelectValue placeholder="Select severity" />
+                        <SelectTrigger data-testid="select-edit-category">
+                          <SelectValue placeholder="Select category" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="low">Low</SelectItem>
-                        <SelectItem value="medium">Medium</SelectItem>
-                        <SelectItem value="high">High</SelectItem>
-                        <SelectItem value="critical">Critical</SelectItem>
+                        {(categories as any[]).map((category) => (
+                          <SelectItem key={category.id} value={category.id}>
+                            {category.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Subcategory Selection */}
+              <FormField
+                control={editForm.control}
+                name="subcategoryId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Subcategory</FormLabel>
+                    <Select value={field.value} onValueChange={field.onChange} disabled={!selectedEditCategoryId}>
+                      <FormControl>
+                        <SelectTrigger data-testid="select-edit-subcategory">
+                          <SelectValue placeholder="Select subcategory" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {editSubcategories.map((subcategory) => (
+                          <SelectItem key={subcategory.id} value={subcategory.id}>
+                            {subcategory.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Photo Upload */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Photo (Optional)</label>
+                <ObjectUploader
+                  getUploadParameters={handleEditGetUploadParameters}
+                  onUploadStart={handleEditPhotoUploadStart}
+                  onUploadComplete={handleEditPhotoUploadComplete}
+                  onUploadError={handleEditPhotoUploadError}
+                  maxFiles={1}
+                  acceptedFileTypes={['image/*']}
+                  className="w-full"
+                />
+                {isEditPhotoUploading && (
+                  <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Uploading photo...</span>
+                  </div>
+                )}
+                {editUploadedPhotoUrl && (
+                  <div className="flex items-center space-x-2 text-sm text-green-600">
+                    <CheckCircle className="w-4 h-4" />
+                    <span>Photo uploaded successfully</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Police Notified */}
+              <FormField
+                control={editForm.control}
+                name="policeNotified"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Police Notified</FormLabel>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <FormControl>
+                        <SelectTrigger data-testid="select-edit-police-notified">
+                          <SelectValue placeholder="Select option" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="yes">Yes</SelectItem>
+                        <SelectItem value="no">No</SelectItem>
+                        <SelectItem value="not_needed">Not Needed</SelectItem>
+                        <SelectItem value="unsure">Unsure</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
