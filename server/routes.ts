@@ -3869,7 +3869,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ error: 'Cannot edit official incidents' });
       }
 
-      if (incident.userId !== userId) {
+      // Enhanced ownership checking - handle multiple forms of user identification
+      const incidentUserId = incident.userId;
+      const reporterId = (incident.properties as any)?.reporterId;
+      const isOwner = incidentUserId === userId || reporterId === userId;
+
+      if (!isOwner) {
+        // Check if incident has corrupted data (no user attribution)
+        if (!incidentUserId && !reporterId) {
+          return res.status(403).json({ 
+            error: 'This incident has corrupted ownership data and cannot be edited' 
+          });
+        }
         return res.status(403).json({ error: 'You can only edit your own incidents' });
       }
 
@@ -3878,9 +3889,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         title: z.string().min(1, "Title is required").optional(),
         description: z.string().optional(),
         location: z.string().min(1, "Location is required").optional(),
-        category: z.string().optional(),
-        subcategory: z.string().optional(),
-        severity: z.enum(["low", "medium", "high", "critical"]).optional(),
+        categoryId: z.string().optional(),
+        subcategoryId: z.string().optional(),
+        photoUrl: z.string().optional(),
+        policeNotified: z.enum(["yes", "no", "not_needed", "unsure"]).optional(),
       });
 
       let cleanedData;
