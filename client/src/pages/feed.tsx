@@ -727,17 +727,6 @@ export default function Feed() {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-2xl font-bold text-foreground">Safety Feed</h1>
-            <p className="text-muted-foreground">
-              {selectedSuburb && showRegionalUpdates ? (
-                (() => {
-                  const region = findRegionBySuburb(selectedSuburb.split(' ')[0]);
-                  const regionName = region ? region.name : selectedSuburb;
-                  return `${sortedIncidents.length} incidents in ${regionName} region`;
-                })()
-              ) : (
-                sortedIncidents.length > 0 ? `${sortedIncidents.length} active incidents across Queensland` : 'Real-time incidents across Queensland'
-              )}
-            </p>
           </div>
           <Button
             variant="outline"
