@@ -1301,9 +1301,38 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
                   </span>
                 </Badge>
               </div>
-              <h2 className="text-xl font-bold text-foreground" data-testid="social-title">
-                {getTitle()}
-              </h2>
+              <div className="flex items-start justify-between">
+                <h2 className="text-xl font-bold text-foreground flex-1" data-testid="social-title">
+                  {getTitle()}
+                </h2>
+                
+                {/* Edit/Delete buttons for user's own posts */}
+                {user?.id && (props.reporterId === user.id || props.userId === user.id) && (
+                  <div className="flex items-center space-x-2 ml-4">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowEditModal(true)}
+                      className="h-8 px-3 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                      data-testid="button-edit-incident"
+                    >
+                      <Edit className="w-3 h-3 mr-1" />
+                      Edit
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => deleteIncidentMutation.mutate()}
+                      className="h-8 px-3 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                      disabled={deleteIncidentMutation.isPending}
+                      data-testid="button-delete-incident"
+                    >
+                      <Trash className="w-3 h-3 mr-1" />
+                      Delete
+                    </Button>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Reporter Information - Moved to Top */}

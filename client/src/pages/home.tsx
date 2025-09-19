@@ -283,14 +283,11 @@ export default function Home() {
         </button>
       )}
 
-      {/* Use IncidentDetailModal for consistent edit/delete functionality */}
-      {selectedIncident && (
-        <IncidentDetailModal
-          incident={selectedIncident}
-          isOpen={!!selectedIncident}
-          onClose={() => setSelectedIncident(null)}
-        />
-      )}
+      {/* Use enhanced EventModal instead of IncidentDetailModal for unified data */}
+      <EventModal 
+        eventId={selectedIncident ? (selectedIncident.properties?.id || selectedIncident.id) : null}
+        onClose={() => setSelectedIncident(null)}
+      />
       
       
       <IncidentReportForm 
