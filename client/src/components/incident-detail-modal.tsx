@@ -213,14 +213,28 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
       return response;
     },
     onMutate: async () => {
-      // Optimistic update
+      // Cancel in-flight queries to prevent race conditions
+      await queryClient.cancelQueries({ queryKey: ['/api/incidents', incidentId, 'social', 'likes'] });
+      
+      // Store previous values for rollback
+      const previousData = queryClient.getQueryData(['/api/incidents', incidentId, 'social', 'likes']);
       const previousLiked = isLiked;
       const previousCount = likeCount;
       
-      setIsLiked(!isLiked);
-      setLikeCount(prev => isLiked ? prev - 1 : prev + 1);
+      // Optimistically update query cache
+      const newLiked = !isLiked;
+      const newCount = isLiked ? likeCount - 1 : likeCount + 1;
       
-      return { previousLiked, previousCount };
+      queryClient.setQueryData(['/api/incidents', incidentId, 'social', 'likes'], {
+        liked: newLiked,
+        count: newCount
+      });
+      
+      // Update local state for immediate UI feedback
+      setIsLiked(newLiked);
+      setLikeCount(newCount);
+      
+      return { previousData, previousLiked, previousCount };
     },
     onSuccess: (data: any) => {
       // Update with real server response
@@ -236,8 +250,14 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
       queryClient.invalidateQueries({ queryKey: ['/api/incidents', incidentId, 'social', 'likes'] });
     },
     onError: (error: any, variables, context) => {
-      // Revert optimistic update on error
+      // Revert optimistic updates on error
       if (context) {
+        // Revert query cache
+        if (context.previousData) {
+          queryClient.setQueryData(['/api/incidents', incidentId, 'social', 'likes'], context.previousData);
+        }
+        
+        // Revert local state
         setIsLiked(context.previousLiked);
         setLikeCount(context.previousCount);
       }
@@ -247,6 +267,10 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
         description: error.message || "Failed to update like status",
         variant: "destructive",
       });
+    },
+    onSettled: () => {
+      // Always invalidate to ensure fresh data after mutation
+      queryClient.invalidateQueries({ queryKey: ['/api/incidents', incidentId, 'social', 'likes'] });
     },
   });
   
@@ -265,12 +289,10 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
   };
 
   // Fetch like status and count when modal opens
-  const { data: likeData } = useQuery({
+  const { data: likeData, isLoading: likeStatusLoading } = useQuery({
     queryKey: ['/api/incidents', incidentId, 'social', 'likes'],
     queryFn: async () => {
-      const response = await fetch(`/api/incidents/${incidentId}/social/likes/status`);
-      if (!response.ok) throw new Error('Failed to fetch like status');
-      return response.json();
+      return await apiRequest('GET', `/api/incidents/${incidentId}/social/likes/status`);
     },
     enabled: isOpen && !!incidentId && isAuthenticated
   });
@@ -1107,6 +1129,9 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
                         : 'text-gray-500 hover:text-blue-600 hover:bg-blue-50'
                     }`}
                     onClick={handleLike}
+                    disabled={likeMutation.isPending || likeStatusLoading}
+                    aria-pressed={isLiked}
+                    aria-label={isLiked ? "Unlike this incident" : "Like this incident"}
                     data-testid="button-like-incident"
                   >
                     <Heart className={`w-4 h-4 transition-colors ${isLiked ? 'fill-blue-600 text-blue-600' : ''}`} />
