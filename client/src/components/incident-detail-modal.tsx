@@ -206,11 +206,53 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
     }
   };
 
+  // Like mutation with optimistic updates
+  const likeMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest('POST', `/api/incidents/${incidentId}/social/likes/toggle`);
+      return response;
+    },
+    onMutate: async () => {
+      // Optimistic update
+      const previousLiked = isLiked;
+      const previousCount = likeCount;
+      
+      setIsLiked(!isLiked);
+      setLikeCount(prev => isLiked ? prev - 1 : prev + 1);
+      
+      return { previousLiked, previousCount };
+    },
+    onSuccess: (data: any) => {
+      // Update with real server response
+      setIsLiked(data.liked);
+      setLikeCount(data.count);
+      
+      toast({
+        title: data.liked ? "Liked" : "Unliked",
+        description: data.liked ? "Added to your liked incidents" : "Removed from your liked incidents",
+      });
+      
+      // Invalidate related queries
+      queryClient.invalidateQueries({ queryKey: ['/api/incidents', incidentId, 'social', 'likes'] });
+    },
+    onError: (error: any, variables, context) => {
+      // Revert optimistic update on error
+      if (context) {
+        setIsLiked(context.previousLiked);
+        setLikeCount(context.previousCount);
+      }
+      
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update like status",
+        variant: "destructive",
+      });
+    },
+  });
+  
   // Like functionality
   const handleLike = () => {
-    console.log("Like button clicked!", { isAuthenticated, incident });
     if (!isAuthenticated) {
-      console.log("User not authenticated");
       toast({
         title: "Please log in",
         description: "You need to log in to like incidents",
@@ -218,24 +260,32 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
       });
       return;
     }
-
-    setIsLiked(!isLiked);
-    setLikeCount(prev => isLiked ? prev - 1 : prev + 1);
     
-    console.log("Showing like toast");
-    toast({
-      title: isLiked ? "Unliked" : "Liked",
-      description: isLiked ? "Removed from your liked incidents" : "Added to your liked incidents",
-    });
+    likeMutation.mutate();
   };
 
-  // Reset like state when modal opens
+  // Fetch like status and count when modal opens
+  const { data: likeData } = useQuery({
+    queryKey: ['/api/incidents', incidentId, 'social', 'likes'],
+    queryFn: async () => {
+      const response = await fetch(`/api/incidents/${incidentId}/social/likes/status`);
+      if (!response.ok) throw new Error('Failed to fetch like status');
+      return response.json();
+    },
+    enabled: isOpen && !!incidentId && isAuthenticated
+  });
+  
+  // Update local state when API data changes
   useEffect(() => {
-    if (isOpen && incident && incidentId) {
-      setLikeCount(0); // No fake counts - real functionality not implemented
+    if (likeData) {
+      setIsLiked(likeData.liked || false);
+      setLikeCount(likeData.count || 0);
+    } else if (isOpen && incidentId) {
+      // Reset for non-authenticated users or when no data
       setIsLiked(false);
+      setLikeCount(0);
     }
-  }, [isOpen, incident, incidentId]);
+  }, [likeData, isOpen, incidentId]);
 
   const { data: comments = [], isLoading: commentsLoading } = useQuery({
     queryKey: ["/api/incidents", incidentId, "comments"],
