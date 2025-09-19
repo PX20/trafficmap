@@ -1307,7 +1307,12 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
                 </h2>
                 
                 {/* Edit/Delete buttons for user's own posts */}
-                {user?.id && (props.reporterId === user.id || props.userId === user.id) && (
+                {(user?.id && (
+                  props.reporterId === user.id || 
+                  props.userId === user.id ||
+                  props.originalProperties?.reporterId === user.id ||
+                  (props.originalProperties?.reportedBy === user.email)
+                )) && (
                   <div className="flex items-center space-x-2 ml-4">
                     <Button
                       variant="ghost"
