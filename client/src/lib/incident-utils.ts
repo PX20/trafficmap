@@ -83,16 +83,53 @@ export function getIncidentLocation(incident: any): string {
   return 'Location not specified';
 }
 
+// Category UUID to human name mappings based on server category seeding
+const CATEGORY_MAPPINGS: Record<string, string> = {
+  '792759f4-1b98-4665-b14c-44a54e9969e9': 'Safety & Crime',
+  '9b1d58d9-cfd1-4c31-93e9-754276a5f265': 'Infrastructure & Hazards',
+  '2f8e7d5a-3b9c-4a2e-8f1d-6c4b8a9e5f3d': 'Emergency Situations',
+  'd03f47a9-10fb-4656-ae73-92e959d7566a': 'Wildlife & Nature',
+  'deaca906-3561-4f80-b79f-ed99561c3b04': 'Community Issues',
+  '4ea3a6f0-c49e-4baf-9ca5-f074ca2811b0': 'Pets',
+  'd1dfcd4e-48e9-4e58-9476-4782a2a132f3': 'Lost & Found'
+};
+
+const SUBCATEGORY_MAPPINGS: Record<string, string> = {
+  '1605bc8c-d0cc-4b56-9eb6-aaa6f008cdff': 'Dangerous Animals',
+  '9e7942dc-cfa9-44a5-8c4f-55efcaa6d915': 'Animal Welfare',
+  'a3f8e5b2-7c9d-4e1f-8a5b-2d7f9c6e8a4b': 'Environmental Issues',
+  'b7c8f6a9-3e5d-4f2a-9c1b-8e7a6d5f4c3b': 'Violence & Threats',
+  'c9d7e8f1-4a6b-5c3d-a2e9-7f8c6b5a4d3e': 'Theft & Property Crime',
+  'd1e9f2a3-5b7c-6d4e-b3f1-8a9d7c6b5e4f': 'Suspicious Activity',
+  'e2f1a4b5-6c8d-7e5f-c4a2-9b8e7d6c5f4a': 'Public Disturbances',
+  'f3a2b5c6-7d9e-8f6a-d5b3-ac9f8e7d6c5b': 'Road Hazards',
+  'a4b3c6d7-8e1f-9a7b-e6c4-bd1a9f8e7d6c': 'Missing Pets',
+  'b5c4d7e8-9f2a-ab8c-f7d5-ce2b1a9f8e7d': 'Found Pets'
+};
+
 export function getIncidentCategory(incident: any): string {
   if (!incident) return '';
   
-  // Use the unified structure category if available
-  if (incident.properties?.category) {
-    return incident.properties.category;
+  // Get the raw category ID first
+  let categoryId = '';
+  
+  if (incident.properties?.categoryId) {
+    categoryId = incident.properties.categoryId;
+  } else if (incident.properties?.category) {
+    categoryId = incident.properties.category;
+  } else if (incident.category) {
+    categoryId = incident.category;
   }
   
-  // Fallback to other category fields
-  if (incident.category) return incident.category;
+  // If we have a UUID, try to map it to human name
+  if (categoryId && CATEGORY_MAPPINGS[categoryId]) {
+    return CATEGORY_MAPPINGS[categoryId];
+  }
+  
+  // If it's already a human name, return as-is
+  if (categoryId && !categoryId.includes('-')) {
+    return categoryId;
+  }
   
   return '';
 }
@@ -100,13 +137,26 @@ export function getIncidentCategory(incident: any): string {
 export function getIncidentSubcategory(incident: any): string {
   if (!incident) return '';
   
-  // Use the unified structure subcategory if available
-  if (incident.properties?.subcategory) {
-    return incident.properties.subcategory;
+  // Get the raw subcategory ID first
+  let subcategoryId = '';
+  
+  if (incident.properties?.subcategoryId) {
+    subcategoryId = incident.properties.subcategoryId;
+  } else if (incident.properties?.subcategory) {
+    subcategoryId = incident.properties.subcategory;
+  } else if (incident.subcategory) {
+    subcategoryId = incident.subcategory;
   }
   
-  // Fallback to other subcategory fields
-  if (incident.subcategory) return incident.subcategory;
+  // If we have a UUID, try to map it to human name
+  if (subcategoryId && SUBCATEGORY_MAPPINGS[subcategoryId]) {
+    return SUBCATEGORY_MAPPINGS[subcategoryId];
+  }
+  
+  // If it's already a human name, return as-is
+  if (subcategoryId && !subcategoryId.includes('-')) {
+    return subcategoryId;
+  }
   
   return '';
 }
