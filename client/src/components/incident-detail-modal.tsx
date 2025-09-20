@@ -52,7 +52,7 @@ import type { Comment, IncidentFollowUp } from "@shared/schema";
 import { ReportModal } from "@/components/report-modal";
 import { getAgencyInfo, isUserReport } from "@/lib/agency-info";
 import { ReporterAttribution } from "@/components/ReporterAttribution";
-import { getIncidentCategory, getIncidentSubcategory } from "@/lib/incident-utils";
+import { getIncidentCategory, getIncidentSubcategory, getReporterUserId } from "@/lib/incident-utils";
 
 interface IncidentDetailModalProps {
   incident: any;
@@ -160,7 +160,7 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
 
   // Check if current user is the creator of this incident
   const isIncidentCreator = user && incident && 
-    incident.properties?.reporterId === user.id;
+    getReporterUserId(incident) === user.id;
   
   // Check if incident is already completed
   const isIncidentCompleted = incident && 

@@ -18,6 +18,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/useAuth";
 import { ReporterAttribution } from "@/components/ReporterAttribution";
 import { ObjectUploader } from "@/components/ObjectUploader";
+import { getIncidentCategory, getIncidentSubcategory, getReporterUserId } from "@/lib/incident-utils";
 
 interface EventModalProps {
   eventId: string | null;
@@ -956,8 +957,8 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
     }
     
     if (isUserReported) {
-      const incidentType = props.category || props.incidentType;
-      const subcategory = getSubcategoryName(props.subcategory);
+      const incidentType = getIncidentCategory(event) || props.incidentType;
+      const subcategory = getIncidentSubcategory(event);
       
       // Handle pets-related incidents
       if (incidentType?.toLowerCase() === 'pets' || subcategory?.toLowerCase().includes('pet')) {
@@ -1291,12 +1292,13 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
     return valueFrom(['description', 'information', 'details', 'message'], 'No description available');
   };
 
-  // Helper function to resolve subcategory UUID to display name
-  const getSubcategoryName = (subcategoryId: string): string => {
-    if (!subcategoryId || !Array.isArray(subcategories)) return subcategoryId;
+  // Helper function to get human-readable category/subcategory display
+  const getCategoryDisplayName = (incident: any): string => {
+    const category = getIncidentCategory(incident);
+    const subcategory = getIncidentSubcategory(incident);
     
-    const subcategory = subcategories.find((sub: any) => sub.id === subcategoryId);
-    return subcategory?.name || subcategoryId;
+    // If we have a subcategory, use it; otherwise use category
+    return subcategory || category || 'Incident';
   };
 
   const getDuration = () => {
@@ -1351,7 +1353,7 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
                 >
                   {getIncidentIcon()}
                   <span className="ml-1">
-                    {getSubcategoryName(props.subcategory || props.category || props.incidentType) || 'Incident'}
+                    {getCategoryDisplayName(event)}
                   </span>
                 </Badge>
               </div>

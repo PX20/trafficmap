@@ -160,3 +160,11 @@ export function getIncidentSubcategory(incident: any): string {
   
   return '';
 }
+
+// Helper to get the reporter's user ID consistently across both modals
+export function getReporterUserId(incident: any): string | null {
+  if (!incident) return null;
+  
+  // Try userId first (direct field), then fallback to properties.reporterId
+  return incident.userId || incident.properties?.reporterId || null;
+}
