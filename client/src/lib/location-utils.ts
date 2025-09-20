@@ -13,12 +13,39 @@ export interface BoundingBox {
 }
 
 /**
+ * Validate if coordinates are valid numbers within expected ranges
+ * @param coord Coordinate object to validate
+ * @returns true if coordinates are valid
+ */
+function isValidCoordinate(coord: Coordinates): boolean {
+  if (!coord || typeof coord !== 'object') return false;
+  
+  const { lat, lon } = coord;
+  
+  // Check if values are numbers and not NaN
+  if (typeof lat !== 'number' || typeof lon !== 'number') return false;
+  if (isNaN(lat) || isNaN(lon)) return false;
+  
+  // Check if coordinates are within valid ranges
+  // Latitude: -90 to 90, Longitude: -180 to 180
+  if (lat < -90 || lat > 90) return false;
+  if (lon < -180 || lon > 180) return false;
+  
+  return true;
+}
+
+/**
  * Calculate the distance between two geographic points using the Haversine formula
  * @param point1 First coordinate point
  * @param point2 Second coordinate point
  * @returns Distance in kilometers
  */
 export function calculateDistance(point1: Coordinates, point2: Coordinates): number {
+  // Validate inputs to prevent NaN values
+  if (!isValidCoordinate(point1) || !isValidCoordinate(point2)) {
+    return Infinity; // Return a high value for invalid coordinates so they get filtered out
+  }
+  
   const R = 6371; // Earth's radius in kilometers
   
   const dLat = toRad(point2.lat - point1.lat);
@@ -31,7 +58,10 @@ export function calculateDistance(point1: Coordinates, point2: Coordinates): num
     Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(lat1) * Math.cos(lat2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   
-  return R * c;
+  const distance = R * c;
+  
+  // Final validation to catch any calculation errors
+  return isNaN(distance) ? Infinity : distance;
 }
 
 /**
@@ -145,35 +175,46 @@ export function filterLocationsByProximity<T extends { coordinates: [number, num
 export function extractCoordinatesFromGeometry(geometry: any): [number, number] | null {
   if (!geometry || !geometry.coordinates) return null;
   
+  let coords: [number, number] | null = null;
+  
   if (geometry.type === 'Point') {
-    return [geometry.coordinates[0], geometry.coordinates[1]];
-  }
-  
-  if (geometry.type === 'MultiPoint' && geometry.coordinates[0]) {
+    coords = [geometry.coordinates[0], geometry.coordinates[1]];
+  } else if (geometry.type === 'MultiPoint' && geometry.coordinates[0]) {
     const point = geometry.coordinates[0];
-    return [point[0], point[1]];
-  }
-  
-  if (geometry.type === 'GeometryCollection' && geometry.geometries) {
+    coords = [point[0], point[1]];
+  } else if (geometry.type === 'GeometryCollection' && geometry.geometries) {
     const pointGeometry = geometry.geometries.find((g: any) => g.type === 'Point');
     if (pointGeometry?.coordinates) {
-      return [pointGeometry.coordinates[0], pointGeometry.coordinates[1]];
+      coords = [pointGeometry.coordinates[0], pointGeometry.coordinates[1]];
     }
-  }
-  
-  // Handle other geometry types by taking first coordinate
-  if (geometry.geometries?.[0]?.coordinates) {
+  } else if (geometry.geometries?.[0]?.coordinates) {
+    // Handle other geometry types by taking first coordinate
     const geom = geometry.geometries[0];
     if (geom.type === 'Point') {
-      return [geom.coordinates[0], geom.coordinates[1]];
-    }
-    if (geom.type === 'MultiLineString' || geom.type === 'LineString') {
+      coords = [geom.coordinates[0], geom.coordinates[1]];
+    } else if (geom.type === 'MultiLineString' || geom.type === 'LineString') {
       const firstLine = geom.type === 'MultiLineString' ? geom.coordinates[0] : geom.coordinates;
       if (firstLine && firstLine[0]) {
-        return [firstLine[0][0], firstLine[0][1]];
+        coords = [firstLine[0][0], firstLine[0][1]];
       }
     }
   }
   
+  // Validate extracted coordinates
+  if (coords && isValidCoordinatePair(coords[0], coords[1])) {
+    return coords;
+  }
+  
   return null;
+}
+
+/**
+ * Validate if a coordinate pair contains valid numbers
+ */
+function isValidCoordinatePair(lon: number, lat: number): boolean {
+  if (typeof lon !== 'number' || typeof lat !== 'number') return false;
+  if (isNaN(lon) || isNaN(lat)) return false;
+  if (lat < -90 || lat > 90) return false;
+  if (lon < -180 || lon > 180) return false;
+  return true;
 }
