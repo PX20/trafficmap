@@ -20,6 +20,7 @@ import { SponsoredPost } from "@/components/sponsored-post";
 import { InlineComments } from "@/components/inline-comments";
 import { getAgencyInfo, isUserReport } from "@/lib/agency-info";
 import { ReporterAttribution } from "@/components/ReporterAttribution";
+import { getReporterUserId } from "@/lib/incident-utils";
 import { 
   MapPin, 
   Clock, 
@@ -825,13 +826,13 @@ export default function Feed() {
                               {isUserIncident ? (
                                 <div 
                                   className="cursor-pointer hover:opacity-80 transition-all flex items-center gap-3"
-                                  onClick={incident.properties?.reporterId ? (e) => {
+                                  onClick={getReporterUserId(incident) ? (e) => {
                                     e.stopPropagation();
-                                    setLocation(`/users/${incident.properties.reporterId}`);
+                                    setLocation(`/users/${getReporterUserId(incident)}`);
                                   } : undefined}
                                 >
                                   <ReporterAttribution 
-                                    userId={incident.properties?.reporterId} 
+                                    userId={getReporterUserId(incident)} 
                                     variant="default"
                                   />
                                 </div>
