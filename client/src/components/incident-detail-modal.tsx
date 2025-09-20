@@ -1196,8 +1196,8 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
               </div>
             </div>
           
-            {/* Follow-ups Section - Only show for user-reported incidents */}
-            {incident?.properties?.userReported && (
+            {/* Follow-ups Section - Hidden for cleaner social media experience */}
+            {false && incident?.properties?.userReported && (
               <div className="relative p-4 rounded-2xl bg-gradient-to-br from-green-50/80 to-emerald-50/80 border border-green-200 shadow-sm">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="p-2 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg">
