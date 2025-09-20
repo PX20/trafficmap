@@ -10,6 +10,15 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### September 20, 2025 - Modal Consistency System Implemented
+- **RESOLVED**: Complete modal consistency between map markers and feed incidents 
+- **Key Fixes**: 
+  1. **User Attribution Logic**: Created `getReporterUserId()` helper function and fixed `isIncidentCreator` to use correct userId field - users can now properly edit/delete their own reports
+  2. **Category Mapping**: Applied UUID-to-human mapping functions to both modals - categories now display as "Wildlife & Nature", "Safety & Crime" instead of ugly UUIDs
+  3. **UI Cleanup**: Hidden Status Updates section in feed modal for cleaner social media experience
+- **Impact**: Both map and feed modals now provide identical, user-friendly experiences with proper attribution and readable categories
+- **Architect Review**: Passed - modal consistency achieved across all interface components
+
 ### September 18, 2025 - User Attribution System Fixed
 - **RESOLVED**: Fixed persistent "Anonymous" display issue for community reports
 - **Root Cause**: Database JSONB `properties` field contained correct `reporterId` values, but `convertIncidentsToGeoJSON` method wasn't extracting them for API responses
