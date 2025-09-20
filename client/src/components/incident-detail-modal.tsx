@@ -784,7 +784,7 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
               <div className="flex-shrink-0">
                 {isUserIncident ? (
                   <ReporterAttribution 
-                    userId={incident.properties?.reporterId}
+                    userId={incident.userId || incident.properties?.reporterId}
                     variant="compact" 
                     className="w-12 h-12 text-lg font-semibold"
                   />
@@ -801,7 +801,7 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
                 <div className="flex items-center gap-2 mb-1">
                   {isUserIncident ? (
                     <ReporterAttribution 
-                      userId={incident.properties?.reporterId}
+                      userId={incident.userId || incident.properties?.reporterId}
                       variant="minimal" 
                       className="font-semibold text-base truncate"
                     />
