@@ -683,6 +683,7 @@ export class DatabaseStorage implements IStorage {
     const features: UnifiedFeature[] = incidents.map(incident => ({
       type: "Feature",
       id: incident.id,
+      source: incident.source, // CRITICAL: Expose source at top level for isUserReport() function
       properties: {
         id: incident.id,
         source: incident.source,
