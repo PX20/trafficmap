@@ -336,10 +336,12 @@ class UnifiedIngestionEngine {
         const regionIds = this.computeRegionIds(centroid.lat, centroid.lng, props);
 
         // Create unified incident
+        const title = `${props.event_type || 'Traffic'} - ${props.event_subtype || 'Event'}`;
+        
         const incident: InsertUnifiedIncident = {
           source: 'tmr',
           sourceId: feature.id?.toString() || props.id || `tmr-${Date.now()}`,
-          title: `${props.event_type || 'Traffic'} - ${props.event_subtype || 'Event'}`,
+          title,
           description: [props.description, props.advice, props.information].filter(Boolean).join('. '),
           location: props.road_summary ? `${props.road_summary.road_name}, ${props.road_summary.locality}` : 'Queensland',
           category: 'traffic',
@@ -354,6 +356,7 @@ class UnifiedIngestionEngine {
           incidentTime: props.published ? new Date(props.published) : new Date(),
           lastUpdated: props.last_updated ? new Date(props.last_updated) : new Date(),
           publishedAt: new Date(),
+          userId: this.getAgencyUserId('tmr', title, props),
           properties: props
         };
 
@@ -376,10 +379,12 @@ class UnifiedIngestionEngine {
 
         const regionIds = this.computeRegionIds(centroid.lat, centroid.lng, props);
 
+        const title = props.Master_Incident_Number || props.Incident_Number || 'Emergency Incident';
+        
         const incident: InsertUnifiedIncident = {
           source: 'emergency',
           sourceId: feature.id?.toString() || props.OBJECTID?.toString() || `emg-${Date.now()}`,
-          title: props.Master_Incident_Number || props.Incident_Number || 'Emergency Incident',
+          title,
           description: `${props.GroupedType || 'Emergency incident'} in ${props.Locality || props.Location || 'Queensland'}. Status: ${props.CurrentStatus || 'Active'}. Vehicles: ${props.VehiclesOnScene || 0} on scene, ${props.VehiclesOnRoute || 0} en route.`,
           location: props.Locality ? `${props.Location}, ${props.Locality}` : (props.Location || 'Queensland'),
           category: this.getEmergencyCategory(props),
@@ -394,6 +399,7 @@ class UnifiedIngestionEngine {
           incidentTime: props.Response_Date ? new Date(props.Response_Date) : new Date(),
           lastUpdated: props.LastUpdate ? new Date(props.LastUpdate) : new Date(),
           publishedAt: new Date(),
+          userId: this.getAgencyUserId('emergency', title, props),
           properties: {
             ...props,
             // CRITICAL: Ensure emergency incidents are never marked as user reports
@@ -792,6 +798,37 @@ class UnifiedIngestionEngine {
     if (impact.includes('minor') || impact.includes('light')) return 'low';
     
     return 'medium';
+  }
+
+  // Helper function to determine agency user ID based on incident data
+  private getAgencyUserId(source: string, title: string, props: any): string | undefined {
+    if (source === 'tmr') {
+      return 'agency:tmr';
+    }
+    
+    if (source === 'emergency') {
+      const lowerTitle = title.toLowerCase();
+      
+      // QFES - Fire and Emergency Services
+      if (lowerTitle.includes('fire') || lowerTitle.includes('hazmat') || title.startsWith('QF')) {
+        return 'agency:qfes';
+      }
+      
+      // QAS - Ambulance Service (Rescue operations)
+      if (lowerTitle.includes('rescue')) {
+        return 'agency:qas';
+      }
+      
+      // QPS - Police Service (Power/Gas incidents often handled by police)
+      if (lowerTitle.includes('power') || lowerTitle.includes('gas') || lowerTitle.includes('police') || lowerTitle.includes('crime')) {
+        return 'agency:qps';
+      }
+      
+      // Default to QFES for other emergency incidents
+      return 'agency:qfes';
+    }
+    
+    return undefined;
   }
 
   private getEmergencyCategory(props: any): string {
