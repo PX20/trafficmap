@@ -684,6 +684,7 @@ export class DatabaseStorage implements IStorage {
       type: "Feature",
       id: incident.id,
       source: incident.source, // CRITICAL: Expose source at top level for isUserReport() function
+      userId: incident.userId, // CRITICAL: Expose userId at top level for getReporterUserId() function
       properties: {
         id: incident.id,
         source: incident.source,
