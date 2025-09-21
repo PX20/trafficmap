@@ -87,7 +87,7 @@ export function getIncidentLocation(incident: any): string {
 const CATEGORY_MAPPINGS: Record<string, string> = {
   '792759f4-1b98-4665-b14c-44a54e9969e9': 'Safety & Crime',
   '9b1d58d9-cfd1-4c31-93e9-754276a5f265': 'Infrastructure & Hazards',
-  '2f8e7d5a-3b9c-4a2e-8f1d-6c4b8a9e5f3d': 'Emergency Situations',
+  '54d31da5-fc10-4ad2-8eca-04bac680e668': 'Emergency Situations',
   'd03f47a9-10fb-4656-ae73-92e959d7566a': 'Wildlife & Nature',
   'deaca906-3561-4f80-b79f-ed99561c3b04': 'Community Issues',
   '4ea3a6f0-c49e-4baf-9ca5-f074ca2811b0': 'Pets',
