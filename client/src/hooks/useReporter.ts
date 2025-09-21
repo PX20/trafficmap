@@ -1,11 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-
-interface SafeUser {
-  id: string;
-  displayName: string | null;
-  avatarUrl: string | null;
-  accountType: string | null;
-}
+import { SafeUser } from "@shared/schema";
 
 interface UseReporterResult {
   user: SafeUser | null;
