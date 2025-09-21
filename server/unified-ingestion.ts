@@ -204,12 +204,12 @@ class UnifiedIngestionEngine {
       // STRICT RULE: Exclude anything with emergency dataset fingerprints
       const props = incident.properties || {};
       const hasEmergencyFingerprints = 
-        (props as any)?.Jurisdiction ||
-        (props as any)?.Master_Incident_Number ||
-        (props as any)?.OBJECTID ||
-        (props as any)?.CurrentStatus ||
-        (props as any)?.VehiclesOnScene ||
-        (props as any)?.GroupedType;
+        (props as any)?.Jurisdiction || (props as any)?.jurisdiction ||
+        (props as any)?.Master_Incident_Number || (props as any)?.master_incident_number ||
+        (props as any)?.OBJECTID || (props as any)?.objectid ||
+        (props as any)?.CurrentStatus || (props as any)?.current_status ||
+        (props as any)?.VehiclesOnScene || (props as any)?.vehicles_on_scene ||
+        (props as any)?.GroupedType || (props as any)?.grouped_type;
         
       if (hasEmergencyFingerprints) return false;
       
@@ -248,7 +248,10 @@ class UnifiedIngestionEngine {
           title.includes('RESCUE') ||
           title.includes('VEGETATION') ||
           title.includes('PERMITTED') ||
-          title.includes('HAZMAT');
+          title.includes('HAZMAT') ||
+          title.includes('POWER') ||
+          title.includes('ELECTRICAL') ||
+          title.includes('GAS');
           
         if (isEmergencyIncident) {
           console.log(`🚫 LEGACY FILTER: Excluding emergency incident "${title}" from user pipeline`);
