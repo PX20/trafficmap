@@ -47,8 +47,7 @@ app.use((req, res, next) => {
       'DATABASE_URL': process.env.DATABASE_URL,
       'SESSION_SECRET': process.env.SESSION_SECRET,
       'STRIPE_SECRET_KEY': process.env.STRIPE_SECRET_KEY,
-      'VAPID_PRIVATE_KEY': process.env.VAPID_PRIVATE_KEY,
-      'REPLIT_DB_URL': process.env.REPLIT_DB_URL
+      'VAPID_PRIVATE_KEY': process.env.VAPID_PRIVATE_KEY
     };
 
     let hasErrors = false;
