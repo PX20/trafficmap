@@ -193,26 +193,31 @@ class UnifiedIngestionEngine {
     // Fetch recent user-reported incidents from unified incidents table
     const unifiedIncidents = await storage.getAllUnifiedIncidents();
     
-    // Filter for user reports only - EXCLUDE emergency incidents even if marked as source='user'
+    // Filter for user reports only - STRICT filtering to prevent emergency incidents leaking
     const userReports = unifiedIncidents.filter(incident => {
-      // Only include if source is 'user' AND it's not an emergency incident
+      // Only include if source is 'user'
       if (incident.source !== 'user') return false;
       
-      // Exclude if it has emergency characteristics (these are misclassified emergency incidents)
-      const title = incident.title?.toLowerCase() || '';
-      const props = incident.properties || {};
+      // STRICT RULE: Exclude anything with agency attribution
+      if (incident.userId?.startsWith('agency:')) return false;
       
-      // Exclude incidents with emergency-related titles or properties
-      const isEmergencyIncident = 
-        title.includes('fire') ||
-        title.includes('rescue') ||
-        title.includes('ambulance') ||
-        title.includes('medical emergency') ||
+      // STRICT RULE: Exclude anything with emergency dataset fingerprints
+      const props = incident.properties || {};
+      const hasEmergencyFingerprints = 
         (props as any)?.Jurisdiction ||
         (props as any)?.Master_Incident_Number ||
-        (props as any)?.OBJECTID;
+        (props as any)?.OBJECTID ||
+        (props as any)?.CurrentStatus ||
+        (props as any)?.VehiclesOnScene ||
+        (props as any)?.GroupedType;
         
-      return !isEmergencyIncident;
+      if (hasEmergencyFingerprints) return false;
+      
+      // STRICT RULE: Only include if explicitly marked as user-reported OR has non-agency userId
+      const isUserReported = (props as any)?.userReported === true;
+      const hasValidUserId = incident.userId && !incident.userId.startsWith('agency:');
+      
+      return isUserReported || hasValidUserId;
     });
     
     // ALSO fetch RECENT legacy incidents from the old incidents table (last 7 days only)
