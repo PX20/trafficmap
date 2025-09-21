@@ -836,13 +836,13 @@ class UnifiedIngestionEngine {
     const incidentNumber = props.Master_Incident_Number?.toLowerCase() || '';
     const groupedType = props.GroupedType?.toLowerCase() || '';
     
-    // Detect category from jurisdiction and incident patterns
-    if (jurisdiction.includes('fire') || incidentNumber.includes('qf') || groupedType.includes('fire')) return 'fire';
-    if (jurisdiction.includes('ambulance') || incidentNumber.includes('qa') || groupedType.includes('medical')) return 'medical';
-    if (jurisdiction.includes('police') || incidentNumber.includes('qp') || groupedType.includes('police')) return 'crime';
-    if (jurisdiction.includes('ses') || jurisdiction.includes('rescue') || groupedType.includes('rescue')) return 'rescue';
+    // Map to actual category names that exist in the system
+    if (jurisdiction.includes('fire') || incidentNumber.includes('qf') || groupedType.includes('fire')) return 'Emergency Situations';
+    if (jurisdiction.includes('ambulance') || incidentNumber.includes('qa') || groupedType.includes('medical')) return 'Emergency Situations';
+    if (jurisdiction.includes('police') || incidentNumber.includes('qp') || groupedType.includes('police')) return 'Safety & Crime';
+    if (jurisdiction.includes('ses') || jurisdiction.includes('rescue') || groupedType.includes('rescue')) return 'Emergency Situations';
     
-    return 'emergency';
+    return 'Emergency Situations';
   }
 
   private getEmergencySeverity(props: any): 'low' | 'medium' | 'high' | 'critical' {
