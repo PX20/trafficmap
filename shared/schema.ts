@@ -196,6 +196,7 @@ export const users = pgTable("users", {
   businessAddress: varchar("business_address"),
   businessCategory: varchar("business_category"),
   role: varchar("role").default("user"), // 'user' | 'admin'
+  isOfficialAgency: boolean("is_official_agency").default(false), // Mark agency accounts
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
