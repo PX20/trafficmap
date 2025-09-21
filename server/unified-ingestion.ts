@@ -262,13 +262,30 @@ class UnifiedIngestionEngine {
       })
       .map(incident => {
         const props = incident.properties || {};
+        // Smart categorization based on content
+        const title = incident.title || '';
+        const description = incident.description || '';
+        const content = `${title} ${description}`.toLowerCase();
+        
+        let smartCategory = incident.categoryId;
+        if (!smartCategory) {
+          // Categorize power/electrical/utility incidents as Infrastructure & Hazards
+          if (content.includes('power') || content.includes('electrical') || 
+              content.includes('utility') || content.includes('gas') ||
+              content.includes('water leak') || content.includes('outage')) {
+            smartCategory = 'Infrastructure & Hazards';
+          } else {
+            smartCategory = 'Community Issues';
+          }
+        }
+        
         return {
           source: 'user',
           sourceId: incident.id,
           title: incident.title,
           description: incident.description || '',
           location: incident.location,
-          category: incident.categoryId || 'Community Issues',
+          category: smartCategory,
           subcategory: incident.subcategoryId || '',
           severity: 'medium',
           status: incident.status === 'Reported' ? 'active' : incident.status || 'active',
@@ -286,7 +303,7 @@ class UnifiedIngestionEngine {
             title: incident.title,
             description: incident.description || '',
             location: incident.location,
-            category: incident.categoryId || 'Community Issues',
+            category: smartCategory,
             source: 'user',
             userReported: true,
             reporterId: null // Legacy incidents don't have reporter info
@@ -572,7 +589,7 @@ class UnifiedIngestionEngine {
     const categoryMap: Record<string, string> = {
       'Safety & Crime': '792759f4-1b98-4665-b14c-44a54e9969e9',
       'Infrastructure & Hazards': '9b1d58d9-cfd1-4c31-93e9-754276a5f265',
-      'Emergency Situations': 'deaca906-3561-4f80-b79f-ed99561c3b04',
+      'Emergency Situations': '54d31da5-fc10-4ad2-8eca-04bac680e668',
       'Wildlife & Nature': 'd03f47a9-10fb-4656-ae73-92e959d7566a',
       'Community Issues': 'deaca906-3561-4f80-b79f-ed99561c3b04',
       'Pets': '4ea3a6f0-c49e-4baf-9ca5-f074ca2811b0',
