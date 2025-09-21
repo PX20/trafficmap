@@ -652,6 +652,7 @@ export type SafeUser = {
   displayName: string | null;
   avatarUrl: string | null;
   accountType: "regular" | "business" | null;
+  isOfficialAgency: boolean;
 };
 export type TrafficEvent = typeof trafficEvents.$inferSelect;
 export type InsertTrafficEvent = z.infer<typeof insertTrafficEventSchema>;

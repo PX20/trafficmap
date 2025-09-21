@@ -2,7 +2,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useReporter } from "@/hooks/useReporter";
-import { User, Building2 } from "lucide-react";
+import { User, Building2, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ReporterAttributionProps {
@@ -112,6 +112,9 @@ export function ReporterAttribution({
   const fallbackInitial = user.displayName ? 
     user.displayName.charAt(0).toUpperCase() : 
     userId.charAt(0).toUpperCase();
+  
+  // Check if this is an official agency account
+  const isOfficialAgency = user.isOfficialAgency || userId.startsWith('agency:');
 
   return (
     <div 
@@ -130,7 +133,11 @@ export function ReporterAttribution({
           />
         ) : null}
         <AvatarFallback 
-          className="bg-primary text-primary-foreground"
+          className={cn(
+            isOfficialAgency 
+              ? "bg-blue-600 text-white border-2 border-blue-700" 
+              : "bg-primary text-primary-foreground"
+          )}
           data-testid={`reporter-avatar-fallback-${userId}`}
         >
           {fallbackInitial}
@@ -149,15 +156,29 @@ export function ReporterAttribution({
             {displayName}
           </span>
           
-          {variant === "default" && showAccountType && user.accountType === "business" && (
-            <Badge 
-              variant="secondary" 
-              className="text-xs w-fit"
-              data-testid={`reporter-account-type-${userId}`}
-            >
-              <Building2 className="h-3 w-3 mr-1" />
-              Business
-            </Badge>
+          {variant === "default" && showAccountType && (
+            <>
+              {isOfficialAgency && (
+                <Badge 
+                  variant="default" 
+                  className="text-xs w-fit bg-blue-600 hover:bg-blue-700 text-white"
+                  data-testid={`reporter-official-badge-${userId}`}
+                >
+                  <Shield className="h-3 w-3 mr-1" />
+                  Official
+                </Badge>
+              )}
+              {!isOfficialAgency && user.accountType === "business" && (
+                <Badge 
+                  variant="secondary" 
+                  className="text-xs w-fit"
+                  data-testid={`reporter-account-type-${userId}`}
+                >
+                  <Building2 className="h-3 w-3 mr-1" />
+                  Business
+                </Badge>
+              )}
+            </>
           )}
         </div>
       )}

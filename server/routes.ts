@@ -788,6 +788,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         displayName: user.displayName,
         avatarUrl: user.profileImageUrl, // Map profileImageUrl to avatarUrl
         accountType: user.accountType,
+        isOfficialAgency: user.isOfficialAgency || false,
       }));
       
       // Return safe user data (missing users are simply not included in response)
@@ -2163,6 +2164,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         displayName: user.displayName,
         avatarUrl: user.profileImageUrl, // Map profileImageUrl to avatarUrl
         accountType: user.accountType,
+        isOfficialAgency: user.isOfficialAgency || false,
       }));
       
       // Return safe user data (missing users are simply not included in response)
