@@ -233,7 +233,30 @@ class UnifiedIngestionEngine {
     
     // Prepare legacy incidents for normalization (convert to UnifiedIncident format)
     const legacyIncidentsForNormalization = legacyIncidents
-      .filter(incident => incident.geometry) // Only include incidents with geometry
+      .filter(incident => {
+        if (!incident.geometry) return false; // Only include incidents with geometry
+        
+        // CRITICAL: Exclude legacy emergency incidents from user pipeline
+        const title = incident.title || '';
+        const isEmergencyIncident = 
+          title.includes('FIRE') ||
+          title.includes('QF') ||
+          title.includes('QA') ||
+          title.includes('QP') ||
+          title.includes('EMERGENCY') ||
+          title.includes('AMBULANCE') ||
+          title.includes('RESCUE') ||
+          title.includes('VEGETATION') ||
+          title.includes('PERMITTED') ||
+          title.includes('HAZMAT');
+          
+        if (isEmergencyIncident) {
+          console.log(`🚫 LEGACY FILTER: Excluding emergency incident "${title}" from user pipeline`);
+          return false;
+        }
+        
+        return true;
+      })
       .map(incident => {
         const props = incident.properties || {};
         return {

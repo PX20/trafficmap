@@ -595,6 +595,20 @@ export class DatabaseStorage implements IStorage {
   async upsertUnifiedIncident(source: 'tmr' | 'emergency' | 'user', sourceId: string, incident: InsertUnifiedIncident): Promise<SelectUnifiedIncident> {
     const id = generateUnifiedIncidentId(source, sourceId);
     try {
+      // First check if an incident with this ID already exists
+      const [existing] = await db
+        .select()
+        .from(unifiedIncidents)
+        .where(eq(unifiedIncidents.id, id))
+        .limit(1);
+
+      // DEDUPLICATION RULE: Prefer emergency/tmr incidents over user reports
+      if (existing && existing.source !== 'user' && source === 'user') {
+        // Don't overwrite emergency/tmr incidents with user reports
+        console.log(`🚫 DEDUP: Skipping user report ${id} - emergency/tmr incident already exists`);
+        return existing;
+      }
+
       const [upserted] = await db
         .insert(unifiedIncidents)
         .values({
