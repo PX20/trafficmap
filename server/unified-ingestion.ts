@@ -387,8 +387,8 @@ class UnifiedIngestionEngine {
           title,
           description: `${props.GroupedType || 'Emergency incident'} in ${props.Locality || props.Location || 'Queensland'}. Status: ${props.CurrentStatus || 'Active'}. Vehicles: ${props.VehiclesOnScene || 0} on scene, ${props.VehiclesOnRoute || 0} en route.`,
           location: props.Locality ? `${props.Location}, ${props.Locality}` : (props.Location || 'Queensland'),
-          category: this.getEmergencyCategory(props),
-          subcategory: props.Incident_Type || props.Type || 'emergency',
+          category: 'emergency', // Use internal category code
+          subcategory: this.getEmergencyCategory(props), // Move detailed classification to subcategory
           severity: this.getEmergencySeverity(props),
           status: (props.CurrentStatus === 'Closed' || props.CurrentStatus === 'Resolved') ? 'resolved' : 'active',
           geometry,
