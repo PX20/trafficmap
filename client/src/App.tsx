@@ -54,13 +54,13 @@ function Router() {
     });
     
     queryClient.prefetchQuery({
-      queryKey: ["/api/traffic/events"],
+      queryKey: ["/api/unified"],
       queryFn: async () => {
-        const response = await fetch("/api/traffic/events");
+        const response = await fetch("/api/unified");
         if (response.ok) return response.json();
         return null;
       },
-      staleTime: 1 * 60 * 1000, // 1 minute - traffic data changes more frequently
+      staleTime: 1 * 60 * 1000, // 1 minute - unified data changes frequently
     });
   }, []);
 

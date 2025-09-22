@@ -148,10 +148,10 @@ export default function Feed() {
   });
 
   const { data: eventsData, isLoading: eventsLoading } = useQuery({
-    queryKey: ["/api/traffic/events"],
+    queryKey: ["/api/unified"],
     queryFn: async () => {
-      const response = await fetch("/api/traffic/events");
-      if (!response.ok) throw new Error('Failed to fetch traffic events');
+      const response = await fetch("/api/unified");
+      if (!response.ok) throw new Error('Failed to fetch unified data');
       return response.json();
     },
     staleTime: 5 * 60 * 1000, // 5 minutes

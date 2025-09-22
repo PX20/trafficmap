@@ -41,7 +41,7 @@ export function useAuth() {
       
       // Refresh incident data to ensure fresh information after login
       queryClient.invalidateQueries({ queryKey: ["/api/incidents"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/traffic/events"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/unified"] });
       
       toast({
         title: "Signed in successfully",
@@ -67,7 +67,7 @@ export function useAuth() {
       
       // Refresh incident data for new users
       queryClient.invalidateQueries({ queryKey: ["/api/incidents"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/traffic/events"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/unified"] });
       
       toast({
         title: "Account created!",

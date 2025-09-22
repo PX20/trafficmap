@@ -1,7 +1,7 @@
 export async function getTrafficEvents() {
-  const response = await fetch('/api/traffic/events');
+  const response = await fetch('/api/unified');
   if (!response.ok) {
-    throw new Error(`Failed to fetch traffic events: ${response.statusText}`);
+    throw new Error(`Failed to fetch unified data: ${response.statusText}`);
   }
   return response.json();
 }
