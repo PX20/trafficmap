@@ -99,7 +99,7 @@ export function ReporterAttribution({
               "text-muted-foreground",
               variant === "compact" ? "text-xs" : "text-sm"
             )}>
-              User unavailable
+              User not found
             </span>
           </div>
         )}
@@ -107,11 +107,11 @@ export function ReporterAttribution({
     );
   }
 
-  // Success state - display user information
-  const displayName = user.displayName || "Anonymous User";
-  const fallbackInitial = user.displayName ? 
-    user.displayName.charAt(0).toUpperCase() : 
-    "A";
+  // Success state - display user information  
+  const displayName = user.displayName || 
+                     user.firstName || 
+                     `User ${userId.slice(-4)}`;
+  const fallbackInitial = (user.displayName || user.firstName || userId).charAt(0).toUpperCase();
   
   // Check if this is an official agency account
   const isOfficialAgency = user.isOfficialAgency || userId.startsWith('agency:');
