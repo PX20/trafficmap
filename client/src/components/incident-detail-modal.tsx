@@ -360,21 +360,26 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
     const actualDepth = Math.min(depth, maxDepth);
     
     return (
-      <div key={comment.id} className={`${actualDepth > 0 ? 'ml-10 border-l border-muted/50 pl-3 mt-2' : ''}`}>
-        <div className="group flex space-x-3 pb-2" data-testid={`comment-${comment.id}`}>
+      <div key={comment.id} className={`${actualDepth > 0 ? 'ml-8 border-l-2 border-muted/30 pl-4 mt-3' : 'mt-4'}`}>
+        <div className="group flex space-x-3" data-testid={`comment-${comment.id}`}>
           <ReporterAttribution 
             userId={comment.userId} 
             variant="compact" 
-            className="flex-shrink-0"
+            className="flex-shrink-0 mt-1"
           />
           <div className="flex-1 min-w-0">
-            <div className="bg-muted/40 rounded-2xl px-3 py-2.5 inline-block max-w-full">
-              <div className="flex items-center space-x-2 mb-1">
+            <div className="bg-white dark:bg-gray-800 border border-muted/20 rounded-2xl px-4 py-3 shadow-sm">
+              <div className="flex items-center justify-between mb-2">
+                <ReporterAttribution 
+                  userId={comment.userId} 
+                  variant="minimal" 
+                  className="font-medium text-sm"
+                />
                 <span className="text-xs text-muted-foreground">
                   {getTimeAgo({ properties: { incidentTime: comment.createdAt } })}
                 </span>
               </div>
-              <p className="text-sm break-words" data-testid={`comment-content-${comment.id}`}>
+              <p className="text-sm text-foreground leading-relaxed break-words" data-testid={`comment-content-${comment.id}`}>
                 {comment.content}
               </p>
             </div>

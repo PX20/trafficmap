@@ -108,10 +108,10 @@ export function ReporterAttribution({
   }
 
   // Success state - display user information
-  const displayName = user.displayName || `User ${userId.slice(0, 4)}`;
+  const displayName = user.displayName || "Anonymous User";
   const fallbackInitial = user.displayName ? 
     user.displayName.charAt(0).toUpperCase() : 
-    userId.charAt(0).toUpperCase();
+    "A";
   
   // Check if this is an official agency account
   const isOfficialAgency = user.isOfficialAgency || userId.startsWith('agency:');
