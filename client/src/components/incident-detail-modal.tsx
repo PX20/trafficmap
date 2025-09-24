@@ -249,13 +249,20 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
   const getIncidentLocation = (incident: any) => {
     if (!incident) return "Location not specified";
     
-    if (incident.type === 'traffic') {
+    // Handle TMR traffic incidents from unified API
+    if (incident.type === 'traffic' || incident.source === 'tmr') {
       const roadName = incident.properties?.road_summary?.road_name || '';
       const locality = incident.properties?.road_summary?.locality || '';
       
       if (roadName && locality) {
         return `${roadName}, ${locality}`;
       }
+      
+      // Fallback to unified location field for TMR incidents
+      if (incident.properties?.location) {
+        return incident.properties.location;
+      }
+      
       return roadName || locality || "Location not specified";
     }
     
