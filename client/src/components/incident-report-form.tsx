@@ -147,7 +147,7 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
         title: "Report Submitted! ✅",
         description: "Your incident will appear on the map shortly. Thank you for keeping the community informed.",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/incidents"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/unified"] });
       form.reset();
       onClose();
     },

@@ -141,7 +141,7 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
         title: "Report deleted",
         description: "Your incident report has been deleted",
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/incidents'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/unified'] });
       onClose();
     },
     onError: (error: any) => {

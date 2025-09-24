@@ -39,8 +39,7 @@ export function useAuth() {
     onSuccess: (user: SelectUser) => {
       queryClient.setQueryData(["/api/auth/user"], user);
       
-      // Refresh incident data to ensure fresh information after login
-      queryClient.invalidateQueries({ queryKey: ["/api/incidents"] });
+      // Refresh unified incident data to ensure fresh information after login
       queryClient.invalidateQueries({ queryKey: ["/api/unified"] });
       
       toast({
@@ -65,8 +64,7 @@ export function useAuth() {
     onSuccess: (user: SelectUser) => {
       queryClient.setQueryData(["/api/auth/user"], user);
       
-      // Refresh incident data for new users
-      queryClient.invalidateQueries({ queryKey: ["/api/incidents"] });
+      // Refresh unified incident data for new users
       queryClient.invalidateQueries({ queryKey: ["/api/unified"] });
       
       toast({
