@@ -122,11 +122,11 @@ export function setupAuth(app: Express) {
   // Cache cleanup function
   const cleanupCache = () => {
     const now = Date.now();
-    for (const [key, value] of userCache.entries()) {
+    userCache.forEach((value, key) => {
       if (now - value.timestamp > CACHE_TTL) {
         userCache.delete(key);
       }
-    }
+    });
     
     // Enforce max cache size by removing oldest entries
     if (userCache.size > MAX_CACHE_SIZE) {
