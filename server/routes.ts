@@ -786,6 +786,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const safeUsers: SafeUser[] = users.map(user => ({
         id: user.id,
         displayName: user.displayName,
+        firstName: user.firstName,
+        lastName: user.lastName,
         avatarUrl: user.profileImageUrl, // Map profileImageUrl to avatarUrl
         accountType: user.accountType,
         isOfficialAgency: user.isOfficialAgency || false,
@@ -2162,6 +2164,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const safeUsers: SafeUser[] = users.map(user => ({
         id: user.id,
         displayName: user.displayName,
+        firstName: user.firstName,
+        lastName: user.lastName,
         avatarUrl: user.profileImageUrl, // Map profileImageUrl to avatarUrl
         accountType: user.accountType,
         isOfficialAgency: user.isOfficialAgency || false,

@@ -650,6 +650,8 @@ export type User = typeof users.$inferSelect;
 export type SafeUser = {
   id: string;
   displayName: string | null;
+  firstName: string | null;
+  lastName: string | null;
   avatarUrl: string | null;
   accountType: "regular" | "business" | null;
   isOfficialAgency: boolean;
