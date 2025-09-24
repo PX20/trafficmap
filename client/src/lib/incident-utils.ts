@@ -168,3 +168,70 @@ export function getReporterUserId(incident: any): string | null {
   // Try userId first (direct field), then fallback to properties.reporterId
   return incident.userId || incident.properties?.reporterId || null;
 }
+
+// Get appropriate icon for incident based on source and category
+export function getIncidentIconProps(incident: any): { iconName: string, color: string } {
+  if (!incident) return { iconName: 'AlertTriangle', color: 'text-gray-500' };
+  
+  const source = incident.source || incident.properties?.source;
+  
+  if (source === 'tmr') {
+    // TMR Traffic Events
+    const eventType = incident.properties?.event_type?.toLowerCase() || '';
+    if (eventType.includes('congestion')) {
+      return { iconName: 'Timer', color: 'text-orange-600' }; // Timer for congestion
+    }
+    return { iconName: 'Car', color: 'text-orange-600' }; // Car for other traffic events
+  }
+  
+  if (source === 'emergency') {
+    // Emergency Services - determine by incident type
+    const eventType = incident.properties?.Event_Type?.toLowerCase() || '';
+    const description = incident.properties?.description?.toLowerCase() || '';
+    
+    if (eventType.includes('fire') || description.includes('fire')) {
+      return { iconName: 'Flame', color: 'text-red-600' };
+    } else if (eventType.includes('medical') || description.includes('medical')) {
+      return { iconName: 'Heart', color: 'text-green-600' };
+    } else if (eventType.includes('police') || description.includes('police')) {
+      return { iconName: 'Shield', color: 'text-blue-600' };
+    }
+    return { iconName: 'AlertTriangle', color: 'text-red-600' };
+  }
+  
+  if (source === 'user') {
+    // User Reports - category-specific icons
+    const categoryId = incident.properties?.categoryId || incident.category;
+    
+    switch (categoryId) {
+      case '792759f4-1b98-4665-b14c-44a54e9969e9': // Safety & Crime
+        return { iconName: 'Shield', color: 'text-red-600' };
+      case '9b1d58d9-cfd1-4c31-93e9-754276a5f265': // Infrastructure & Hazards  
+        return { iconName: 'Construction', color: 'text-yellow-600' };
+      case '54d31da5-fc10-4ad2-8eca-04bac680e668': // Emergency Situations
+        return { iconName: 'Zap', color: 'text-red-500' };
+      case 'd03f47a9-10fb-4656-ae73-92e959d7566a': // Wildlife & Nature
+        return { iconName: 'Trees', color: 'text-green-600' };
+      case 'deaca906-3561-4f80-b79f-ed99561c3b04': // Community Issues
+        return { iconName: 'Users', color: 'text-blue-600' };
+      case '4ea3a6f0-c49e-4baf-9ca5-f074ca2811b0': // Pets
+        return { iconName: 'Heart', color: 'text-pink-600' };
+      case 'd1dfcd4e-48e9-4e58-9476-4782a2a132f3': // Lost & Found
+        return { iconName: 'Search', color: 'text-indigo-600' };
+      default:
+        return { iconName: 'Users', color: 'text-purple-600' }; // Default for user reports
+    }
+  }
+  
+  // Fallback for legacy data
+  if (incident.type === 'traffic' || incident.properties?.category === 'traffic') {
+    return { iconName: 'Car', color: 'text-orange-600' };
+  }
+  
+  if (incident.properties?.userReported) {
+    return { iconName: 'Users', color: 'text-purple-600' };
+  }
+  
+  // Default emergency icon
+  return { iconName: 'AlertTriangle', color: 'text-red-600' };
+}

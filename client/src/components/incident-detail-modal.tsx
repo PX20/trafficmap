@@ -30,11 +30,16 @@ import {
   X,
   Users,
   Check,
-  ArrowLeft
+  ArrowLeft,
+  Timer,
+  Construction,
+  Trees,
+  Search,
+  Flame
 } from "lucide-react";
 import { useLocation } from "wouter";
 import { ReporterAttribution } from "@/components/ReporterAttribution";
-import { getIncidentCategory, getIncidentSubcategory, getReporterUserId } from "@/lib/incident-utils";
+import { getIncidentCategory, getIncidentSubcategory, getReporterUserId, getIncidentIconProps } from "@/lib/incident-utils";
 
 interface IncidentDetailModalProps {
   incident: any;
@@ -166,23 +171,24 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
 
   // Helper functions
   const getIncidentIcon = (incident: any) => {
-    if (!incident) return <AlertTriangle className="w-5 h-5 text-gray-500" />;
+    const { iconName, color } = getIncidentIconProps(incident);
+    const iconClass = `w-5 h-5 ${color}`;
     
-    const source = incident.source || incident.properties?.source;
-    
-    if (source === 'user') {
-      return <Users className="w-5 h-5 text-purple-600" />;
+    // Map icon names to components
+    switch (iconName) {
+      case 'Car': return <Car className={iconClass} />;
+      case 'Timer': return <Timer className={iconClass} />;
+      case 'Shield': return <Shield className={iconClass} />;
+      case 'Construction': return <Construction className={iconClass} />;
+      case 'Zap': return <Zap className={iconClass} />;
+      case 'Trees': return <Trees className={iconClass} />;
+      case 'Users': return <Users className={iconClass} />;
+      case 'Heart': return <Heart className={iconClass} />;
+      case 'Search': return <Search className={iconClass} />;
+      case 'Flame': return <Flame className={iconClass} />;
+      case 'AlertTriangle':
+      default: return <AlertTriangle className={iconClass} />;
     }
-    
-    if (source === 'tmr') {
-      return <Car className="w-5 h-5 text-orange-600" />;
-    }
-    
-    if (source === 'emergency') {
-      return <Shield className="w-5 h-5 text-red-600" />;
-    }
-    
-    return <AlertTriangle className="w-5 h-5 text-red-600" />;
   };
 
   const getIncidentTitle = (incident: any) => {

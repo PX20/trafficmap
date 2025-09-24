@@ -20,7 +20,7 @@ import { SponsoredPost } from "@/components/sponsored-post";
 import { InlineComments } from "@/components/inline-comments";
 import { getAgencyInfo, isUserReport } from "@/lib/agency-info";
 import { ReporterAttribution } from "@/components/ReporterAttribution";
-import { getReporterUserId } from "@/lib/incident-utils";
+import { getReporterUserId, getIncidentIconProps } from "@/lib/incident-utils";
 import { 
   MapPin, 
   Clock, 
@@ -38,6 +38,11 @@ import {
   User,
   Users,
   TrendingUp,
+  Timer,
+  Construction,
+  Trees,
+  Search,
+  Flame,
   Plus,
   Info
 } from "lucide-react";
@@ -417,47 +422,24 @@ export default function Feed() {
   };
 
   const getIncidentIcon = (incident: any) => {
-    // Use the unified schema's source field for consistent identification
-    const source = incident.source || incident.properties?.source;
+    const { iconName, color } = getIncidentIconProps(incident);
+    const iconClass = `w-5 h-5 ${color}`;
     
-    if (source === 'tmr') {
-      // Government API Feed - Transport and Main Roads
-      return <Car className="w-5 h-5 text-orange-600" />;
+    // Map icon names to components
+    switch (iconName) {
+      case 'Car': return <Car className={iconClass} />;
+      case 'Timer': return <Timer className={iconClass} />;
+      case 'Shield': return <Shield className={iconClass} />;
+      case 'Construction': return <Construction className={iconClass} />;
+      case 'Zap': return <Zap className={iconClass} />;
+      case 'Trees': return <Trees className={iconClass} />;
+      case 'Users': return <Users className={iconClass} />;
+      case 'Heart': return <Heart className={iconClass} />;
+      case 'Search': return <Search className={iconClass} />;
+      case 'Flame': return <Flame className={iconClass} />;
+      case 'AlertTriangle':
+      default: return <AlertTriangle className={iconClass} />;
     }
-    
-    if (source === 'user') {
-      // Community Posts - User-reported incidents  
-      return <Users className="w-5 h-5 text-purple-600" />;
-    }
-    
-    if (source === 'emergency') {
-      // Government API Feed - Emergency Services
-      // Determine specific icon based on incident type
-      const eventType = incident.properties?.Event_Type?.toLowerCase() || '';
-      const description = incident.properties?.description?.toLowerCase() || '';
-      
-      if (eventType.includes('fire') || description.includes('fire')) {
-        return <Zap className="w-5 h-5 text-red-600" />;
-      } else if (eventType.includes('medical') || description.includes('medical')) {
-        return <Heart className="w-5 h-5 text-green-600" />;
-      } else if (eventType.includes('police') || description.includes('police')) {
-        return <Shield className="w-5 h-5 text-blue-600" />;
-      }
-      return <AlertTriangle className="w-5 h-5 text-red-600" />;
-    }
-    
-    // Fallback for incidents without clear source (legacy data)
-    // Try to determine from incident structure
-    if (incident.type === 'traffic' || incident.properties?.category === 'traffic') {
-      return <Car className="w-5 h-5 text-orange-600" />;
-    }
-    
-    if (incident.properties?.userReported) {
-      return <Users className="w-5 h-5 text-purple-600" />;
-    }
-    
-    // Default emergency icon for unknown sources
-    return <AlertTriangle className="w-5 h-5 text-red-600" />;
   };
 
   const getIncidentTitle = (incident: any) => {
