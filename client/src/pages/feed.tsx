@@ -211,9 +211,8 @@ export default function Feed() {
       return response.json();
     },
     onSuccess: () => {
-      // Invalidate both all incidents and regional incidents queries
-      queryClient.invalidateQueries({ queryKey: ["/api/incidents"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/incidents", filters.homeLocation] });
+      // Invalidate unified incidents query
+      queryClient.invalidateQueries({ queryKey: ["/api/unified"] });
       toast({
         title: "Data refreshed",
         description: "Incidents have been updated from emergency services",
@@ -635,6 +634,8 @@ export default function Feed() {
       
       // Invalidate social cache to sync with map view
       queryClient.invalidateQueries({ queryKey: ["/api/incidents", incidentId, "social"] });
+      // Also invalidate unified data since likes affect display
+      queryClient.invalidateQueries({ queryKey: ["/api/unified"] });
       
       toast({
         title: isLiked ? "Liked incident" : "Removed like",

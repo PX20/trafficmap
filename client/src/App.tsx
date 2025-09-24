@@ -40,19 +40,9 @@ function Router() {
   // Check if new user needs account setup
   const needsAccountSetup = user && !user.accountType;
 
-  // Preload incident data as soon as app starts
+  // Preload unified incident data as soon as app starts
   useEffect(() => {
-    // Start fetching data immediately for faster loading
-    queryClient.prefetchQuery({
-      queryKey: ["/api/incidents"],
-      queryFn: async () => {
-        const response = await fetch("/api/incidents");
-        if (response.ok) return response.json();
-        return null;
-      },
-      staleTime: 2 * 60 * 1000, // 2 minutes - consider data fresh for this long
-    });
-    
+    // Start fetching unified data immediately for faster loading
     queryClient.prefetchQuery({
       queryKey: ["/api/unified"],
       queryFn: async () => {
