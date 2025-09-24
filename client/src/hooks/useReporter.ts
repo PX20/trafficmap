@@ -16,7 +16,7 @@ interface UseReporterResult {
  */
 export function useReporter(userId: string | null | undefined): UseReporterResult {
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["/api/users", userId],
+    queryKey: ["/api/batch-users", userId],
     queryFn: async () => {
       if (!userId) return null;
       
