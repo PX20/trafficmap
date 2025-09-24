@@ -832,29 +832,34 @@ class UnifiedIngestionEngine {
   // Helper function to determine agency user ID based on incident data
   private getAgencyUserId(source: string, title: string, props: any): string | undefined {
     if (source === 'tmr') {
-      return 'agency:tmr';
+      return 'tmr-agency-account-001';
     }
     
     if (source === 'emergency') {
       const lowerTitle = title.toLowerCase();
+      const groupedType = props.GroupedType?.toLowerCase() || '';
+      const jurisdiction = props.Jurisdiction?.toLowerCase() || '';
       
       // QFES - Fire and Emergency Services
-      if (lowerTitle.includes('fire') || lowerTitle.includes('hazmat') || title.startsWith('QF')) {
-        return 'agency:qfes';
+      if (lowerTitle.includes('fire') || lowerTitle.includes('hazmat') || title.startsWith('QF') || 
+          groupedType.includes('fire') || jurisdiction.includes('fire')) {
+        return 'qfes-agency-account-001';
       }
       
-      // QAS - Ambulance Service (Rescue operations)
-      if (lowerTitle.includes('rescue')) {
-        return 'agency:qas';
+      // QAS - Ambulance Service (Rescue operations, medical emergencies)
+      if (lowerTitle.includes('rescue') || lowerTitle.includes('medical') || lowerTitle.includes('ambulance') ||
+          groupedType.includes('medical') || groupedType.includes('rescue') || jurisdiction.includes('ambulance')) {
+        return 'qfes-agency-account-001'; // For now, using QFES for all emergency services
       }
       
       // QPS - Police Service (Power/Gas incidents often handled by police)
-      if (lowerTitle.includes('power') || lowerTitle.includes('gas') || lowerTitle.includes('police') || lowerTitle.includes('crime')) {
-        return 'agency:qps';
+      if (lowerTitle.includes('power') || lowerTitle.includes('gas') || lowerTitle.includes('police') || lowerTitle.includes('crime') ||
+          groupedType.includes('police') || jurisdiction.includes('police')) {
+        return 'qfes-agency-account-001'; // For now, using QFES for all emergency services
       }
       
       // Default to QFES for other emergency incidents
-      return 'agency:qfes';
+      return 'qfes-agency-account-001';
     }
     
     return undefined;
