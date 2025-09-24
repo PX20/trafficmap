@@ -236,27 +236,8 @@ class UnifiedIngestionEngine {
       .filter(incident => {
         if (!incident.geometry) return false; // Only include incidents with geometry
         
-        // CRITICAL: Exclude legacy emergency incidents from user pipeline
-        const title = incident.title || '';
-        const isEmergencyIncident = 
-          title.includes('FIRE') ||
-          title.includes('QF') ||
-          title.includes('QA') ||
-          title.includes('QP') ||
-          title.includes('EMERGENCY') ||
-          title.includes('AMBULANCE') ||
-          title.includes('RESCUE') ||
-          title.includes('VEGETATION') ||
-          title.includes('PERMITTED') ||
-          title.includes('HAZMAT') ||
-          title.includes('POWER') ||
-          title.includes('ELECTRICAL') ||
-          title.includes('GAS');
-          
-        if (isEmergencyIncident) {
-          console.log(`🚫 LEGACY FILTER: Excluding emergency incident "${title}" from user pipeline`);
-          return false;
-        }
+        // NOTE: Emergency incidents are handled by the Emergency Services pipeline,
+        // so we don't need to filter them here - they won't be in the legacy user incidents table anyway
         
         return true;
       })
