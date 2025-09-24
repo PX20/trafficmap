@@ -165,8 +165,11 @@ export function getIncidentSubcategory(incident: any): string {
 export function getReporterUserId(incident: any): string | null {
   if (!incident) return null;
   
-  // Try userId first (direct field), then fallback to properties.reporterId
-  return incident.userId || incident.properties?.reporterId || null;
+  // Fix: Check for non-empty values - try properties first since that's where the data actually is
+  return incident.properties?.reporterId || 
+         incident.properties?.userId || 
+         (incident.userId && incident.userId.trim() !== '' ? incident.userId : null) ||
+         null;
 }
 
 // Get appropriate icon for incident based on source and category
