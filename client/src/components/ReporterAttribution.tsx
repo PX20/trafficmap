@@ -108,10 +108,11 @@ export function ReporterAttribution({
   }
 
   // Success state - display user information  
+  // Better fallback: use displayName, or generate from email/id
   const displayName = user.displayName || 
-                     user.firstName || 
-                     `User ${userId.slice(-4)}`;
-  const fallbackInitial = (user.displayName || user.firstName || userId).charAt(0).toUpperCase();
+                     (userId.includes('@') ? userId.split('@')[0] : null) ||
+                     `Community User`;
+  const fallbackInitial = (user.displayName || displayName).charAt(0).toUpperCase();
   
   // Check if this is an official agency account
   const isOfficialAgency = user.isOfficialAgency || userId.startsWith('agency:');
