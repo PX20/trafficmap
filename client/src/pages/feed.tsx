@@ -861,11 +861,53 @@ export default function Feed() {
                                   </div>
                                 </div>
                               ) : (
-                                // Fallback for unrecognized incidents  
-                                <ReporterAttribution 
-                                  userId={null} 
-                                  variant="default"
-                                />
+                                // Fallback for unrecognized incidents - detect emergency services
+                                (() => {
+                                  // Check if this looks like an emergency incident
+                                  const title = getIncidentTitle(incident).toLowerCase();
+                                  const description = getIncidentDescription(incident).toLowerCase();
+                                  const eventType = incident.properties?.Event_Type?.toLowerCase() || '';
+                                  
+                                  if (title.includes('fire') || title.includes('qf') || eventType.includes('fire') || 
+                                      description.includes('fire') || description.includes('qfes') ||
+                                      title.includes('rescue') || title.includes('ambulance') || 
+                                      title.includes('police') || title.includes('hazmat')) {
+                                    // This is an emergency incident - show as Emergency Services
+                                    return (
+                                      <div className="flex items-center gap-3">
+                                        <Avatar className="w-12 h-12 ring-2 ring-primary/20">
+                                          <AvatarFallback className="bg-gradient-to-br from-red-500 to-red-600 text-white font-bold text-sm shadow-lg">
+                                            ES
+                                          </AvatarFallback>
+                                        </Avatar>
+                                        <div>
+                                          <div className="flex items-center gap-2">
+                                            <h4 className="font-bold text-foreground text-base">
+                                              Emergency Services
+                                            </h4>
+                                            <Badge 
+                                              variant="default" 
+                                              className="text-xs px-2 py-1 font-medium bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-700"
+                                            >
+                                              Official
+                                            </Badge>
+                                          </div>
+                                          <p className="text-xs text-muted-foreground">
+                                            {getTimeAgo(incident)}
+                                          </p>
+                                        </div>
+                                      </div>
+                                    );
+                                  }
+                                  
+                                  // For truly unknown incidents, show anonymous
+                                  return (
+                                    <ReporterAttribution 
+                                      userId={null} 
+                                      variant="default"
+                                    />
+                                  );
+                                })()
                               )}
                             <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                               <MoreHorizontal className="w-4 h-4" />
