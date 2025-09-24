@@ -272,6 +272,11 @@ export function IncidentDetailModal({ incident, isOpen, onClose }: IncidentDetai
              "Location not specified";
     }
     
+    // For emergency incidents, try unified location field first
+    if (incident.source === 'emergency' && incident.properties?.location) {
+      return incident.properties.location;
+    }
+    
     if (incident.properties?.locationDescription) {
       return incident.properties.locationDescription;
     }
