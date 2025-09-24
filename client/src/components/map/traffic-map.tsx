@@ -695,11 +695,12 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
     const getIconSvg = (type: string) => {
       switch(type.toLowerCase()) {
         // Traffic events - all get car/traffic icon
+        case 'congestion':
+          return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>`;
         case 'crash':
         case 'hazard': 
         case 'restriction':
         case 'incident':
-        case 'congestion':
         case 'roadworks':
         case 'special_event':
         case 'special event':
