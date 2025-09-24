@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MessageCircle, Heart, Share2, MapPin, Clock, AlertTriangle, Car, Shield, Eye, Zap, Info, Timer, Route, Construction, Copy, Check, ArrowLeft, Camera, ImageIcon, X, Loader2, ExternalLink, Edit, Trash, MoreHorizontal, Upload, CheckCircle } from "lucide-react";
+import { MessageCircle, Heart, Share2, MapPin, Clock, AlertTriangle, Car, Shield, Eye, Zap, Info, Timer, Route, Construction, Copy, Check, ArrowLeft, Camera, ImageIcon, X, Loader2, ExternalLink, Edit, Trash, MoreHorizontal, Upload, CheckCircle, Trees, Search, Flame, Users } from "lucide-react";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -18,7 +18,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/useAuth";
 import { ReporterAttribution } from "@/components/ReporterAttribution";
 import { ObjectUploader } from "@/components/ObjectUploader";
-import { getIncidentCategory, getIncidentSubcategory, getReporterUserId } from "@/lib/incident-utils";
+import { getIncidentCategory, getIncidentSubcategory, getReporterUserId, getIncidentIconProps } from "@/lib/incident-utils";
 
 interface EventModalProps {
   eventId: string | null;
@@ -938,43 +938,24 @@ export function EventModal({ eventId, onClose }: EventModalProps) {
     return (typeof current === 'string' && current.trim()) ? current.trim() : '';
   };
   const getIncidentIcon = () => {
-    if (isTrafficEvent) {
-      const originalProps = props.originalProperties || {};
-      const eventTypeStr = originalProps.event_type?.toLowerCase() || props.category?.toLowerCase();
-      if (eventTypeStr?.includes('crash') || eventTypeStr?.includes('accident')) return <Car className="w-5 h-5 text-red-500" />;
-      if (eventTypeStr?.includes('hazard')) return <AlertTriangle className="w-5 h-5 text-yellow-500" />;
-      if (eventTypeStr?.includes('congestion')) return <Car className="w-5 h-5 text-orange-500" />;
-      return <AlertTriangle className="w-5 h-5 text-orange-500" />;
-    }
+    const { iconName, color } = getIncidentIconProps(event);
+    const iconClass = `w-5 h-5 ${color}`;
     
-    if (isEmergencyEvent) {
-      const originalProps = props.originalProperties || {};
-      const groupedType = (originalProps.GroupedType || '').toUpperCase();
-      if (groupedType.includes('FIRE')) return <AlertTriangle className="w-5 h-5 text-red-600" />;
-      if (groupedType.includes('POLICE')) return <Shield className="w-5 h-5 text-blue-600" />;
-      if (groupedType.includes('AMBULANCE')) return <AlertTriangle className="w-5 h-5 text-green-600" />;
-      return <AlertTriangle className="w-5 h-5 text-red-600" />;
+    // Map icon names to components
+    switch (iconName) {
+      case 'Car': return <Car className={iconClass} />;
+      case 'Timer': return <Timer className={iconClass} />;
+      case 'Shield': return <Shield className={iconClass} />;
+      case 'Construction': return <Construction className={iconClass} />;
+      case 'Zap': return <Zap className={iconClass} />;
+      case 'Trees': return <Trees className={iconClass} />;
+      case 'Users': return <Users className={iconClass} />;
+      case 'Heart': return <Heart className={iconClass} />;
+      case 'Search': return <Search className={iconClass} />;
+      case 'Flame': return <Flame className={iconClass} />;
+      case 'AlertTriangle':
+      default: return <AlertTriangle className={iconClass} />;
     }
-    
-    if (isUserReported) {
-      const incidentType = getIncidentCategory(event) || props.incidentType;
-      const subcategory = getIncidentSubcategory(event);
-      
-      // Handle pets-related incidents
-      if (incidentType?.toLowerCase() === 'pets' || subcategory?.toLowerCase().includes('pet')) {
-        return <Heart className="w-5 h-5 text-pink-600" />;
-      }
-      
-      if (['crime', 'theft', 'violence', 'vandalism'].includes(incidentType?.toLowerCase())) {
-        return <Shield className="w-5 h-5 text-purple-600" />;
-      }
-      if (incidentType?.toLowerCase() === 'suspicious') {
-        return <Eye className="w-5 h-5 text-amber-600" />;
-      }
-      return <Zap className="w-5 h-5 text-indigo-600" />;
-    }
-    
-    return <AlertTriangle className="w-5 h-5 text-red-600" />;
   };
   
   const getAgencyColor = (agency: string) => {
