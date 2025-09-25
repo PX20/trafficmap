@@ -188,7 +188,17 @@ export default function Feed() {
     };
   }, []);
 
-  // Initialize like status for visible incidents
+  // Use the same traffic data hook as the map for consistent filtering
+  // 🎯 UNIFIED PIPELINE: Use same data as map, then filter by location
+  const { events: allEvents, incidents: allIncidents, regionalEvents, regionalIncidents } = useTrafficData(filters);
+  
+  // Filter to user's region for personalized feed view
+  const feedEvents = filters.locationFilter ? regionalEvents : allEvents;
+  const feedIncidents = filters.locationFilter ? regionalIncidents : allIncidents;
+  
+  console.log('📱 FEED: Using', feedEvents.length, 'events,', feedIncidents.length, 'incidents (location filter:', filters.locationFilter + ')');
+
+  // Initialize like status for visible incidents (after feedIncidents is declared)
   useEffect(() => {
     if (!user || !feedIncidents?.length || likeStatusLoaded) return;
 
@@ -219,16 +229,6 @@ export default function Feed() {
 
     initializeLikeStatus();
   }, [user, feedIncidents, likeStatusLoaded]);
-
-  // Use the same traffic data hook as the map for consistent filtering
-  // 🎯 UNIFIED PIPELINE: Use same data as map, then filter by location
-  const { events: allEvents, incidents: allIncidents, regionalEvents, regionalIncidents } = useTrafficData(filters);
-  
-  // Filter to user's region for personalized feed view
-  const feedEvents = filters.locationFilter ? regionalEvents : allEvents;
-  const feedIncidents = filters.locationFilter ? regionalIncidents : allIncidents;
-  
-  console.log('📱 FEED: Using', feedEvents.length, 'events,', feedIncidents.length, 'incidents (location filter:', filters.locationFilter + ')');
   
   // Sync selected suburb with filter location
   useEffect(() => {
