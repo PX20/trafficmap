@@ -22,15 +22,17 @@ export function InlineComments({ incident, onClose }: InlineCommentsProps) {
   const incidentId = getIncidentId(incident);
 
   // Fetch comments
-  const { data: comments = [], isLoading: commentsLoading } = useQuery({
-    queryKey: ["/api/incidents", incidentId, "comments"],
+  const { data: commentsData, isLoading: commentsLoading } = useQuery({
+    queryKey: ["/api/incidents", incidentId, "social", "comments"],
     queryFn: async () => {
-      const response = await fetch(`/api/incidents/${incidentId}/comments`);
+      const response = await fetch(`/api/incidents/${incidentId}/social/comments`);
       if (!response.ok) throw new Error('Failed to fetch comments');
       return response.json();
     },
     enabled: !!incidentId
   });
+
+  const comments = commentsData?.comments || [];
 
   // Comment submission
   const createCommentMutation = useMutation({
@@ -39,7 +41,7 @@ export function InlineComments({ incident, onClose }: InlineCommentsProps) {
     },
     onSuccess: () => {
       setNewComment("");
-      queryClient.invalidateQueries({ queryKey: ["/api/incidents", incidentId, "comments"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/incidents", incidentId, "social", "comments"] });
       toast({
         title: "Comment posted",
         description: "Your comment has been added successfully.",
