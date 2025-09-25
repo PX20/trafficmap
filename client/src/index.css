@@ -458,3 +458,28 @@
 .leaflet-popup .ring-2 { box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.05); }
 .leaflet-popup .ring-red-100 { box-shadow: 0 0 0 2px #fee2e2; }
 .leaflet-popup .ring-purple-100 { box-shadow: 0 0 0 2px #f3e8ff; }
+
+/* Mobile-specific improvements for comment functionality */
+.mobile-safe-comments {
+  position: relative;
+  min-height: 200px;
+}
+
+/* Ensure comment input doesn't disappear on mobile */
+@media (max-width: 768px) {
+  .mobile-safe-comments textarea {
+    position: relative !important;
+    transform: none !important;
+    transition: none !important;
+  }
+  
+  .mobile-safe-comments .comment-form {
+    position: sticky;
+    bottom: 0;
+    background: white;
+    z-index: 10;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid hsl(214.3, 31.8%, 91.4%);
+  }
+}

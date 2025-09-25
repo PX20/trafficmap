@@ -126,19 +126,21 @@ function IncidentDetailPage({ asModal = true, incidentId: propIncidentId }: Inci
       return apiRequest('POST', `/api/incidents/${decodedId}/social/likes/toggle`);
     },
     onSuccess: (data: any) => {
-      const liked = data?.liked || false;
-      setIsLiked(liked);
-      
-      // Invalidate social cache to sync with other views  
-      queryClient.invalidateQueries({ queryKey: ["/api/incidents", decodedId, "social", "likes"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/incidents", decodedId, "social"] });
-      // Also invalidate unified data since likes affect display
-      queryClient.invalidateQueries({ queryKey: ["/api/unified"] });
-      
-      toast({
-        title: liked ? "Liked incident" : "Removed like",
-        description: liked ? "You've liked this incident." : "You've removed your like from this incident.",
-      });
+      const liked = data?.liked;
+      if (liked !== undefined) {
+        setIsLiked(liked);
+        
+        // Invalidate social cache to sync with other views  
+        queryClient.invalidateQueries({ queryKey: ["/api/incidents", decodedId, "social", "likes"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/incidents", decodedId, "social"] });
+        // Also invalidate unified data since likes affect display
+        queryClient.invalidateQueries({ queryKey: ["/api/unified"] });
+        
+        toast({
+          title: liked ? "Liked incident" : "Removed like",
+          description: liked ? "You've liked this incident." : "You've removed your like from this incident.",
+        });
+      }
     },
     onError: (error: any) => {
       toast({
@@ -476,14 +478,28 @@ function IncidentDetailPage({ asModal = true, incidentId: propIncidentId }: Inci
           {showComments && (
             <Card className="border border-blue-200/60 shadow-sm bg-blue-50/30">
               <CardContent className="p-4">
-                <div className="flex items-center gap-2 mb-4">
-                  <MessageCircle className="h-4 w-4 text-blue-600" />
-                  <h3 className="font-semibold text-gray-900">Comments</h3>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <MessageCircle className="h-4 w-4 text-blue-600" />
+                    <h3 className="font-semibold text-gray-900">Comments</h3>
+                  </div>
+                  {/* Close button for mobile */}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowComments(false)}
+                    className="md:hidden"
+                    data-testid="close-comments"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
                 </div>
-                <InlineComments 
-                  incident={incident} 
-                  onClose={() => setShowComments(false)}
-                />
+                <div className="mobile-safe-comments">
+                  <InlineComments 
+                    incident={incident} 
+                    onClose={() => setShowComments(false)}
+                  />
+                </div>
               </CardContent>
             </Card>
           )}
@@ -496,11 +512,14 @@ function IncidentDetailPage({ asModal = true, incidentId: propIncidentId }: Inci
   if (asModal) {
     return (
       <Dialog open={true} onOpenChange={handleClose}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl max-h-[95vh] overflow-hidden flex flex-col p-0">
           <DialogHeader className="sr-only">
             <DialogTitle>Incident Details</DialogTitle>
           </DialogHeader>
-          {content}
+          {/* Scrollable content area */}
+          <div className="overflow-y-auto flex-1 p-6">
+            {content}
+          </div>
         </DialogContent>
       </Dialog>
     );
