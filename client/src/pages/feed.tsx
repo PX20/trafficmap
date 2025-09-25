@@ -596,26 +596,28 @@ export default function Feed() {
       return apiRequest('POST', `/api/incidents/${incidentId}/social/likes/toggle`);
     },
     onSuccess: (data: any, incidentId) => {
-      const isLiked = data?.liked || false;
-      setLikedIncidents(prev => {
-        const newSet = new Set(prev);
-        if (isLiked) {
-          newSet.add(incidentId);
-        } else {
-          newSet.delete(incidentId);
-        }
-        return newSet;
-      });
-      
-      // Invalidate social cache to sync with map view
-      queryClient.invalidateQueries({ queryKey: ["/api/incidents", incidentId, "social"] });
-      // Also invalidate unified data since likes affect display
-      queryClient.invalidateQueries({ queryKey: ["/api/unified"] });
-      
-      toast({
-        title: isLiked ? "Liked incident" : "Removed like",
-        description: isLiked ? "You've liked this incident." : "You've removed your like from this incident.",
-      });
+      const isLiked = data?.liked;
+      if (isLiked !== undefined) {
+        setLikedIncidents(prev => {
+          const newSet = new Set(prev);
+          if (isLiked) {
+            newSet.add(incidentId);
+          } else {
+            newSet.delete(incidentId);
+          }
+          return newSet;
+        });
+        
+        // Invalidate social cache to sync with map view
+        queryClient.invalidateQueries({ queryKey: ["/api/incidents", incidentId, "social"] });
+        // Also invalidate unified data since likes affect display
+        queryClient.invalidateQueries({ queryKey: ["/api/unified"] });
+        
+        toast({
+          title: isLiked ? "Liked incident" : "Removed like",
+          description: isLiked ? "You've liked this incident." : "You've removed your like from this incident.",
+        });
+      }
     },
     onError: (error: any) => {
       toast({
