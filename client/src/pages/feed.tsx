@@ -9,7 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { Link, useLocation } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { IncidentDetailModal } from "@/components/incident-detail-modal";
+import { navigateToIncident } from "@/lib/incident-utils";
 import { IncidentReportForm } from "@/components/incident-report-form";
 import { AppHeader } from "@/components/map/app-header";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -53,8 +53,7 @@ export default function Feed() {
   const isMobile = useIsMobile();
   const [, setLocation] = useLocation();
   const [selectedSuburb, setSelectedSuburb] = useState("");
-  const [selectedIncident, setSelectedIncident] = useState<any>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  // Modal functionality moved to unified /incident/:id route
   const [showRegionalUpdates, setShowRegionalUpdates] = useState(true);
   const [reportFormOpen, setReportFormOpen] = useState(false);
   const [likedIncidents, setLikedIncidents] = useState<Set<string>>(new Set());
@@ -588,13 +587,7 @@ export default function Feed() {
   };
 
   const handleIncidentClick = (incident: any) => {
-    setSelectedIncident(incident);
-    setIsModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setSelectedIncident(null);
+    navigateToIncident(incident, setLocation);
   };
 
   // Like mutation using existing API
@@ -1047,14 +1040,7 @@ export default function Feed() {
       </div>
 
 
-      {/* Incident Detail Modal */}
-      {selectedIncident && (
-        <IncidentDetailModal
-          incident={selectedIncident}
-          isOpen={isModalOpen}
-          onClose={handleCloseModal}
-        />
-      )}
+      {/* Modal functionality moved to unified /incident/:id route */}
       
       {/* Incident Report Form */}
       <IncidentReportForm
