@@ -3,11 +3,12 @@ import { TrafficMap } from "@/components/map/traffic-map";
 import { SimpleFilterSidebar } from "@/components/map/simple-filter-sidebar";
 import { AppHeader } from "@/components/map/app-header";
 import { IncidentDetailModal } from "@/components/incident-detail-modal";
-import { EventModal } from "@/components/map/event-modal";
 import { IncidentReportForm } from "@/components/incident-report-form";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
+import { navigateToIncident } from "@/lib/incident-utils";
 
 export interface FilterState {
   // Simplified source-based filters
@@ -49,7 +50,7 @@ export default function Home() {
   // Safety Monitor - Main Home Component
   const isMobile = useIsMobile();
   const [sidebarOpen, setSidebarOpen] = useState(false); // Always start closed on mobile for better UX
-  const [selectedIncident, setSelectedIncident] = useState<any>(null);
+  const [, setLocation] = useLocation();
   const [reportFormOpen, setReportFormOpen] = useState(false);
   const [filters, setFilters] = useState<FilterState>({
     showTrafficEvents: true,
@@ -241,7 +242,7 @@ export default function Home() {
       } ${isMobile ? 'h-[calc(100dvh-4rem)]' : ''}`}>
         <TrafficMap 
           filters={filters}
-          onEventSelect={setSelectedIncident}
+          onEventSelect={(incident) => navigateToIncident(incident, setLocation)}
         />
       </main>
 
@@ -283,11 +284,7 @@ export default function Home() {
         </button>
       )}
 
-      {/* Use enhanced EventModal instead of IncidentDetailModal for unified data */}
-      <EventModal 
-        eventId={selectedIncident ? (selectedIncident.properties?.id || selectedIncident.id) : null}
-        onClose={() => setSelectedIncident(null)}
-      />
+      {/* Modal functionality moved to unified /incident/:id route */}
       
       
       <IncidentReportForm 
