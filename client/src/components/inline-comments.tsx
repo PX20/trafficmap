@@ -37,7 +37,7 @@ export function InlineComments({ incident, onClose }: InlineCommentsProps) {
   // Comment submission
   const createCommentMutation = useMutation({
     mutationFn: async (content: string) => {
-      return apiRequest("POST", `/api/incidents/${incidentId}/comments`, { content });
+      return apiRequest("POST", `/api/incidents/${incidentId}/social/comments`, { content });
     },
     onSuccess: () => {
       setNewComment("");
