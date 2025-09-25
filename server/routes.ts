@@ -1834,13 +1834,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { incidentId } = req.params;
       
       if (!req.user || !req.user.id) {
+        console.error("Comment creation failed: No user or user.id", { 
+          hasUser: !!req.user, 
+          userId: req.user?.id,
+          userClaims: req.user?.claims?.sub 
+        });
         return res.status(401).json({ message: "Authentication required" });
       }
       
       const userId = req.user.id;
+      console.log("Comment creation attempt:", { userId, incidentId });
+      
       const user = await storage.getUser(userId);
+      console.log("User lookup result:", { userId, foundUser: !!user, userDisplayName: user?.displayName });
       
       if (!user) {
+        console.error("Comment creation failed: User not found in database", { userId });
         return res.status(404).json({ message: "User not found" });
       }
 
