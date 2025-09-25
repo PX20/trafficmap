@@ -1,4 +1,4 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -28,6 +28,21 @@ function Router() {
   const { user, isLoading } = useAuth();
   const isAuthenticated = !!user;
   const [showTermsModal, setShowTermsModal] = useState(false);
+  const [location] = useLocation();
+  
+  // Track the background route to maintain when showing incident modal
+  const [backgroundRoute, setBackgroundRoute] = useState<string>('/');
+  
+  // Check if current route is an incident detail route
+  const incidentMatch = location.match(/^\/incident\/(.+)$/);
+  const isIncidentRoute = !!incidentMatch;
+  
+  // Update background route when not on incident route
+  useEffect(() => {
+    if (!isIncidentRoute && location !== backgroundRoute) {
+      setBackgroundRoute(location);
+    }
+  }, [location, isIncidentRoute, backgroundRoute]);
 
   // Check if user needs to accept terms or complete account setup
   useEffect(() => {
@@ -78,40 +93,57 @@ function Router() {
     );
   }
 
-  // Handle authenticated users
+  // Handle authenticated users  
+  // Determine which route to render (use background route if on incident route)
+  const routeToRender = isIncidentRoute ? backgroundRoute : location;
+  
+  // Helper function to render route components properly  
+  const renderRouteComponent = (route: string) => {
+    if (needsAccountSetup) {
+      return <AccountSetup />;
+    }
+    
+    // Handle parameterized routes by creating a temporary Switch with the background route
+    if (route.startsWith('/edit-ad/') || route.startsWith('/edit-incident/') || 
+        route.startsWith('/users/') || route.startsWith('/messages/')) {
+      return (
+        <Switch location={route}>
+          <Route path="/edit-ad/:id" component={EditAd} />
+          <Route path="/edit-incident/:id" component={EditIncident} />
+          <Route path="/users/:userId" component={UserProfile} />
+          <Route path="/messages/:conversationId" component={Messages} />
+          <Route path="/messages" component={Messages} />
+        </Switch>
+      );
+    }
+    
+    // Handle simple routes
+    switch (route) {
+      case '/map': return <Home />;
+      case '/feed': return <Feed />;
+      case '/advertise':
+      case '/create-ad': return <CreateAd />;
+      case '/business-upgrade': return <BusinessUpgrade />;
+      case '/business-dashboard': return <BusinessDashboard />;
+      case '/account-setup': return <AccountSetup />;
+      case '/profile': return <Profile />;
+      case '/messages': return <Messages />;
+      case '/notifications': return <Notifications />;
+      case '/admin': return <AdminDashboard />;
+      case '/login': return <Login />;
+      default: return <Feed />; // Default to Feed
+    }
+  };
+  
   return (
     <>
-      <Switch>
-        {/* Redirect new users to account setup */}
-        {needsAccountSetup ? (
-          <>
-            <Route path="/account-setup" component={AccountSetup} />
-            <Route component={AccountSetup} />
-          </>
-        ) : (
-          <>
-            <Route path="/" component={Feed} />
-            <Route path="/map" component={Home} />
-            <Route path="/feed" component={Feed} />
-            <Route path="/advertise" component={CreateAd} />
-            <Route path="/create-ad" component={CreateAd} />
-            <Route path="/edit-ad/:id" component={EditAd} />
-            <Route path="/edit-incident/:id" component={EditIncident} />
-            <Route path="/incident/:incidentId" component={IncidentDetail} />
-            <Route path="/business-upgrade" component={BusinessUpgrade} />
-            <Route path="/business-dashboard" component={BusinessDashboard} />
-            <Route path="/account-setup" component={AccountSetup} />
-            <Route path="/profile" component={Profile} />
-            <Route path="/users/:userId" component={UserProfile} />
-            <Route path="/messages" component={Messages} />
-            <Route path="/messages/:conversationId" component={Messages} />
-            <Route path="/notifications" component={Notifications} />
-            <Route path="/admin" component={AdminDashboard} />
-            <Route path="/login" component={Login} />
-            {/* <Route component={NotFound} /> */}
-          </>
-        )}
-      </Switch>
+      {/* Render background route (or current route if not on incident) */}
+      {renderRouteComponent(routeToRender)}
+      
+      {/* Incident Detail Modal Overlay - Render over any page when on incident route */}
+      {isIncidentRoute && incidentMatch && (
+        <IncidentDetail incidentId={incidentMatch[1]} />
+      )}
       
       {/* Terms and Conditions Modal */}
       <TermsAndConditionsModal

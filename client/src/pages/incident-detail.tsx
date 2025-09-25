@@ -10,14 +10,19 @@ import { InlineComments } from "@/components/inline-comments";
 import { getIncidentCategory, getIncidentSubcategory, getReporterUserId, getIncidentIconProps } from "@/lib/incident-utils";
 import { getIncidentTitle, getIncidentLocation } from "@/lib/incident-utils";
 
-interface IncidentDetailPageProps {
+export interface IncidentDetailPageProps {
   /** Whether to render as a modal overlay (default) or full page */
   asModal?: boolean;
+  /** Incident ID to display - if provided, overrides URL params */
+  incidentId?: string;
 }
 
-function IncidentDetailPage({ asModal = true }: IncidentDetailPageProps) {
-  const { incidentId } = useParams<{ incidentId: string }>();
+function IncidentDetailPage({ asModal = true, incidentId: propIncidentId }: IncidentDetailPageProps) {
+  const { incidentId: urlIncidentId } = useParams<{ incidentId: string }>();
   const [, setLocation] = useLocation();
+  
+  // Use prop incidentId if provided, otherwise use URL param
+  const incidentId = propIncidentId || urlIncidentId;
   
   // Decode the URL-encoded incident ID
   const decodedId = incidentId ? decodeIncidentId(incidentId) : null;
@@ -28,9 +33,24 @@ function IncidentDetailPage({ asModal = true }: IncidentDetailPageProps) {
     staleTime: 1 * 60 * 1000, // 1 minute
   });
   
-  // Find the specific incident by ID
+  // Find the specific incident by ID, handling prefixed IDs from navigateToIncident
   const incident = (unifiedData as any)?.features?.find((feature: any) => {
-    // Check multiple possible ID formats
+    if (!decodedId) return false;
+    
+    // Handle prefixed IDs created by getIncidentId/navigateToIncident
+    if (decodedId.startsWith('tmr:')) {
+      const tmrId = decodedId.substring(4); // Remove "tmr:" prefix
+      return feature.properties?.originalProperties?.id === tmrId;
+    }
+    
+    if (decodedId.startsWith('esq:')) {
+      const esqId = decodedId.substring(4); // Remove "esq:" prefix
+      return feature.properties?.Master_Incident_Number === esqId ||
+             feature.properties?.Incident_Number === esqId ||
+             feature.properties?.IncidentNumber === esqId;
+    }
+    
+    // For unprefixed IDs (direct matches and user reports)
     return feature.id === decodedId || 
            feature.properties?.id === decodedId ||
            feature.properties?.Master_Incident_Number === decodedId ||
@@ -218,6 +238,6 @@ function IncidentDetailPage({ asModal = true }: IncidentDetailPageProps) {
 }
 
 // Route wrapper component that matches wouter expectations
-export default function IncidentDetailRoute() {
-  return <IncidentDetailPage asModal={true} />;
+export default function IncidentDetailRoute(props: IncidentDetailPageProps) {
+  return <IncidentDetailPage asModal={true} {...props} />;
 }
