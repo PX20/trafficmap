@@ -1,17 +1,20 @@
 import { useParams, useLocation } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ArrowLeft, X, MapPin, Clock, AlertTriangle, Shield, Car, Flame, Heart, Users, Construction, Trees, Search, Zap } from "lucide-react";
+import { ArrowLeft, X, MapPin, Clock, AlertTriangle, Shield, Car, Flame, Heart, Users, Construction, Trees, Search, Zap, MessageCircle, Share } from "lucide-react";
 import { decodeIncidentId } from "@/lib/incident-utils";
 import { ReporterAttribution } from "@/components/ReporterAttribution";
 import { InlineComments } from "@/components/inline-comments";
 import { getIncidentCategory, getIncidentSubcategory, getReporterUserId, getIncidentIconProps } from "@/lib/incident-utils";
 import { getIncidentTitle, getIncidentLocation } from "@/lib/incident-utils";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 export interface IncidentDetailPageProps {
   /** Whether to render as a modal overlay (default) or full page */
@@ -23,9 +26,15 @@ export interface IncidentDetailPageProps {
 function IncidentDetailPage({ asModal = true, incidentId: propIncidentId }: IncidentDetailPageProps) {
   const { incidentId: urlIncidentId } = useParams<{ incidentId: string }>();
   const [, setLocation] = useLocation();
+  const { user } = useAuth();
+  const { toast } = useToast();
   
   // Use prop incidentId if provided, otherwise use URL param
   const incidentId = propIncidentId || urlIncidentId;
+  
+  // Social interaction state
+  const [isLiked, setIsLiked] = useState(false);
+  const [showComments, setShowComments] = useState(false);
   
   // Decode the URL-encoded incident ID
   const decodedId = incidentId ? decodeIncidentId(incidentId) : null;
@@ -65,6 +74,87 @@ function IncidentDetailPage({ asModal = true, incidentId: propIncidentId }: Inci
     
     return false;
   }) || null;
+  
+  // Like mutation using existing API
+  const likeMutation = useMutation({
+    mutationFn: async () => {
+      if (!decodedId) throw new Error('No incident ID');
+      return apiRequest('POST', `/api/incidents/${decodedId}/social/likes/toggle`);
+    },
+    onSuccess: (data: any) => {
+      const liked = data?.liked || false;
+      setIsLiked(liked);
+      toast({
+        title: liked ? "Liked incident" : "Removed like",
+        description: liked ? "You've liked this incident." : "You've removed your like from this incident.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to toggle like",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Social interaction handlers
+  const handleLikeClick = () => {
+    if (!user) {
+      toast({
+        title: "Please log in",
+        description: "You need to log in to like incidents",
+        variant: "destructive",
+      });
+      return;
+    }
+    likeMutation.mutate();
+  };
+
+  const handleCommentsToggle = () => {
+    setShowComments(!showComments);
+  };
+
+  const handleShareClick = async () => {
+    if (!incident) return;
+    
+    const shareUrl = `${window.location.origin}/incident/${incidentId}`;
+    const shareTitle = getIncidentTitle(incident);
+    const shareText = `${shareTitle} - ${getIncidentLocation(incident)}`;
+
+    // Try native Web Share API first (mobile devices)
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: shareTitle,
+          text: shareText,
+          url: shareUrl,
+        });
+        toast({
+          title: "Shared successfully",
+          description: "Incident shared successfully.",
+        });
+        return;
+      } catch (error) {
+        // User cancelled or error occurred - fall through to clipboard
+      }
+    }
+
+    // Fallback: copy to clipboard
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      toast({
+        title: "Link copied",
+        description: "Incident link copied to clipboard.",
+      });
+    } catch (error) {
+      toast({
+        title: "Share failed",
+        description: "Unable to copy link to clipboard.",
+        variant: "destructive",
+      });
+    }
+  };
   
   // Handle close - navigate back or to home
   const handleClose = () => {
@@ -274,17 +364,74 @@ function IncidentDetailPage({ asModal = true, incidentId: propIncidentId }: Inci
             </Card>
           )}
           
-          {/* Comments section for user reports */}
-          {isUserReport && incident && (
-            <Card className="border border-purple-200/60 shadow-sm bg-purple-50/30">
+          {/* Social Interaction Bar */}
+          <Card className="border border-gray-200/60 shadow-sm">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  {/* Comments Button */}
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className={`flex items-center gap-1 transition-colors px-3 py-2 h-auto text-xs md:text-sm min-h-[44px] ${
+                      showComments 
+                        ? 'text-blue-500 hover:text-blue-600' 
+                        : 'hover:text-blue-500'
+                    }`}
+                    onClick={handleCommentsToggle}
+                    data-testid={`button-comments-${decodedId}`}
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                    <span className="hidden sm:inline">Comments</span>
+                    <span className="text-muted-foreground">(0)</span>
+                  </Button>
+                  
+                  {/* Like Button */}
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className={`flex items-center gap-1 transition-colors px-3 py-2 h-auto text-xs md:text-sm min-h-[44px] ${
+                      isLiked 
+                        ? 'text-red-500 hover:text-red-600' 
+                        : 'hover:text-red-500'
+                    }`}
+                    onClick={handleLikeClick}
+                    disabled={likeMutation.isPending}
+                    data-testid={`button-like-${decodedId}`}
+                  >
+                    <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
+                    <span className="text-muted-foreground">
+                      ({isLiked ? '1' : '0'})
+                    </span>
+                  </Button>
+                  
+                  {/* Share Button */}
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="flex items-center gap-1 transition-colors px-3 py-2 h-auto text-xs md:text-sm min-h-[44px] hover:text-green-500"
+                    onClick={handleShareClick}
+                    data-testid={`button-share-${decodedId}`}
+                  >
+                    <Share className="w-4 h-4" />
+                    <span className="hidden sm:inline">Share</span>
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Comments Section (conditionally shown) */}
+          {showComments && (
+            <Card className="border border-blue-200/60 shadow-sm bg-blue-50/30">
               <CardContent className="p-4">
                 <div className="flex items-center gap-2 mb-4">
-                  <Users className="h-4 w-4 text-purple-600" />
+                  <MessageCircle className="h-4 w-4 text-blue-600" />
                   <h3 className="font-semibold text-gray-900">Comments</h3>
                 </div>
                 <InlineComments 
                   incident={incident} 
-                  onClose={() => {}} // Comments don't need close functionality in this context
+                  onClose={() => setShowComments(false)}
                 />
               </CardContent>
             </Card>
