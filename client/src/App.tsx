@@ -21,6 +21,7 @@ import Login from "@/pages/login";
 import AdminDashboard from "@/pages/admin-dashboard";
 import EditAd from "@/pages/edit-ad";
 import EditIncident from "@/pages/edit-incident";
+import IncidentDetail from "@/pages/incident-detail";
 import { TermsAndConditionsModal } from "@/components/terms-and-conditions-modal";
 
 function Router() {
@@ -96,6 +97,7 @@ function Router() {
             <Route path="/create-ad" component={CreateAd} />
             <Route path="/edit-ad/:id" component={EditAd} />
             <Route path="/edit-incident/:id" component={EditIncident} />
+            <Route path="/incident/:incidentId" component={IncidentDetail} />
             <Route path="/business-upgrade" component={BusinessUpgrade} />
             <Route path="/business-dashboard" component={BusinessDashboard} />
             <Route path="/account-setup" component={AccountSetup} />
