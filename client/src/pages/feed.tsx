@@ -58,6 +58,7 @@ export default function Feed() {
   const [reportFormOpen, setReportFormOpen] = useState(false);
   const [likedIncidents, setLikedIncidents] = useState<Set<string>>(new Set());
   const [expandedComments, setExpandedComments] = useState<Set<string>>(new Set());
+  const [likeStatusLoaded, setLikeStatusLoaded] = useState(false);
   
   // Initialize filter state with same defaults as map
   const [filters, setFilters] = useState<FilterState>({
@@ -186,6 +187,38 @@ export default function Feed() {
       window.removeEventListener('storage', handleStorageChange);
     };
   }, []);
+
+  // Initialize like status for visible incidents
+  useEffect(() => {
+    if (!user || !incidentsData?.features || likeStatusLoaded) return;
+
+    const initializeLikeStatus = async () => {
+      const visibleIncidents = incidentsData.features.slice(0, 20); // Check first 20 incidents
+      const likedIds = new Set<string>();
+
+      for (const incident of visibleIncidents) {
+        const incidentId = incident.id || incident.properties?.id;
+        if (!incidentId) continue;
+
+        try {
+          const response = await fetch(`/api/incidents/${incidentId}/social/likes/status`);
+          if (response.ok) {
+            const data = await response.json();
+            if (data.liked) {
+              likedIds.add(incidentId);
+            }
+          }
+        } catch (error) {
+          // Silently fail for individual status checks
+        }
+      }
+
+      setLikedIncidents(likedIds);
+      setLikeStatusLoaded(true);
+    };
+
+    initializeLikeStatus();
+  }, [user, incidentsData?.features, likeStatusLoaded]);
 
   // Use the same traffic data hook as the map for consistent filtering
   // 🎯 UNIFIED PIPELINE: Use same data as map, then filter by location
