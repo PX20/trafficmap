@@ -9,9 +9,12 @@ export function getIncidentId(incident: any): string | null {
   if (incident.id) return incident.id;
   if (incident.properties?.id) return incident.properties.id;
   
-  // For TMR incidents
-  if (incident.properties?.originalProperties?.id) {
-    return `tmr:${incident.properties.originalProperties.id}`;
+  // For TMR incidents - check for TMR source and get ID from properties
+  if (incident.source === 'tmr' || incident.properties?.source === 'tmr') {
+    const tmrId = incident.properties?.id;
+    if (tmrId) {
+      return `tmr:${tmrId}`;
+    }
   }
   
   // For emergency incidents
