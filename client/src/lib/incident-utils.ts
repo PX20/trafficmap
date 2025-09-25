@@ -29,8 +29,8 @@ export function getIncidentId(incident: any): string | null {
   }
   
   // For user reports
-  if (incident.properties?.userReported && incident.properties?.reportId) {
-    return incident.properties.reportId;
+  if (incident.properties?.userReported && incident.properties?.reporterId) {
+    return incident.properties.reporterId;
   }
   
   // Fallback: create a deterministic ID from available data

@@ -40,7 +40,7 @@ function IncidentDetailPage({ asModal = true, incidentId: propIncidentId }: Inci
     // Handle prefixed IDs created by getIncidentId/navigateToIncident
     if (decodedId.startsWith('tmr:')) {
       const tmrId = decodedId.substring(4); // Remove "tmr:" prefix
-      return feature.properties?.originalProperties?.id === tmrId;
+      return feature.properties?.id === tmrId;
     }
     
     if (decodedId.startsWith('esq:')) {
@@ -54,7 +54,7 @@ function IncidentDetailPage({ asModal = true, incidentId: propIncidentId }: Inci
     return feature.id === decodedId || 
            feature.properties?.id === decodedId ||
            feature.properties?.Master_Incident_Number === decodedId ||
-           feature.properties?.reportId === decodedId;
+           feature.properties?.reporterId === decodedId;
   }) || null;
   
   // Handle close - navigate back or to home
