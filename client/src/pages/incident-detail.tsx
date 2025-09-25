@@ -40,12 +40,17 @@ function IncidentDetailPage({ asModal = true, incidentId: propIncidentId }: Inci
   const incident = (unifiedData as any)?.features?.find((feature: any) => {
     if (!decodedId) return false;
     
-    // Handle prefixed IDs created by getIncidentId/navigateToIncident
-    if (decodedId.startsWith('tmr:')) {
-      const tmrId = decodedId.substring(4); // Remove "tmr:" prefix
-      return feature.properties?.id === tmrId;
+    // Direct ID match (works for all unified incident IDs: tmr:xxx, user:xxx, esq:xxx)
+    if (feature.id === decodedId) {
+      return true;
     }
     
+    // Also check properties.id for backward compatibility
+    if (feature.properties?.id === decodedId) {
+      return true;
+    }
+    
+    // Handle legacy prefixed emergency IDs (esq:xxx format)
     if (decodedId.startsWith('esq:')) {
       const esqId = decodedId.substring(4); // Remove "esq:" prefix
       return feature.properties?.Master_Incident_Number === esqId ||
@@ -53,11 +58,12 @@ function IncidentDetailPage({ asModal = true, incidentId: propIncidentId }: Inci
              feature.properties?.IncidentNumber === esqId;
     }
     
-    // For unprefixed IDs (direct matches and user reports)
-    return feature.id === decodedId || 
-           feature.properties?.id === decodedId ||
-           feature.properties?.Master_Incident_Number === decodedId ||
-           feature.properties?.reporterId === decodedId;
+    // For user reports with reporterId
+    if (feature.properties?.reporterId === decodedId) {
+      return true;
+    }
+    
+    return false;
   }) || null;
   
   // Handle close - navigate back or to home
