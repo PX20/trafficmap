@@ -190,10 +190,10 @@ export default function Feed() {
 
   // Initialize like status for visible incidents
   useEffect(() => {
-    if (!user || !incidentsData?.features || likeStatusLoaded) return;
+    if (!user || !feedIncidents?.length || likeStatusLoaded) return;
 
     const initializeLikeStatus = async () => {
-      const visibleIncidents = incidentsData.features.slice(0, 20); // Check first 20 incidents
+      const visibleIncidents = feedIncidents.slice(0, 20); // Check first 20 incidents
       const likedIds = new Set<string>();
 
       for (const incident of visibleIncidents) {
@@ -218,7 +218,7 @@ export default function Feed() {
     };
 
     initializeLikeStatus();
-  }, [user, incidentsData?.features, likeStatusLoaded]);
+  }, [user, feedIncidents, likeStatusLoaded]);
 
   // Use the same traffic data hook as the map for consistent filtering
   // 🎯 UNIFIED PIPELINE: Use same data as map, then filter by location

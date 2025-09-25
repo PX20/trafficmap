@@ -155,7 +155,7 @@ export function InlineComments({ incident, onClose }: InlineCommentsProps) {
             )}
           </Avatar>
           <div className="flex-1">
-            <div className="flex gap-2">
+            <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
               <div className="flex-1 relative">
                 <input
                   type="text"
@@ -168,6 +168,8 @@ export function InlineComments({ incident, onClose }: InlineCommentsProps) {
                       handleSubmitComment();
                     }
                   }}
+                  onClick={(e) => e.stopPropagation()}
+                  onFocus={(e) => e.stopPropagation()}
                   disabled={!isAuthenticated || createCommentMutation.isPending}
                   className="w-full px-3 py-3 md:px-3 md:py-2 text-sm md:text-base rounded-lg border border-border bg-background focus:ring-2 focus:ring-primary focus:border-transparent outline-none disabled:opacity-50 min-h-[44px] md:min-h-[40px]"
                   data-testid="input-comment"
