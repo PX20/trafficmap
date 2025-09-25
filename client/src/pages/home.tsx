@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { TrafficMap } from "@/components/map/traffic-map";
 import { SimpleFilterSidebar } from "@/components/map/simple-filter-sidebar";
 import { AppHeader } from "@/components/map/app-header";
-import { IncidentDetailModal } from "@/components/incident-detail-modal";
 import { IncidentReportForm } from "@/components/incident-report-form";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";

@@ -299,7 +299,7 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
               zIndexOffset: zIndexOffset
             });
 
-            // Use enhanced EventModal instead of Leaflet popup
+            // Use unified incident navigation instead of Leaflet popup
             marker.on('click', () => {
               onEventSelect(feature);
             });
@@ -528,7 +528,7 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
               zIndexOffset: zIndexOffset
             });
 
-            // Use enhanced EventModal instead of Leaflet popup
+            // Use unified incident navigation instead of Leaflet popup
             marker.on('click', () => {
               onEventSelect(feature);
             });
