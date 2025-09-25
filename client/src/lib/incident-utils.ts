@@ -172,6 +172,44 @@ export function getReporterUserId(incident: any): string | null {
          null;
 }
 
+// Unified incident navigation system for consolidating map and feed modals
+export function getCanonicalIncidentId(incident: any): string | null {
+  if (!incident) return null;
+  
+  // Use the existing getIncidentId logic to get the primary identifier
+  const primaryId = getIncidentId(incident);
+  if (!primaryId) return null;
+  
+  // Ensure the ID is URL-safe by encoding special characters
+  return encodeURIComponent(primaryId);
+}
+
+export function decodeIncidentId(encodedId: string): string {
+  try {
+    return decodeURIComponent(encodedId);
+  } catch (e) {
+    console.warn('Failed to decode incident ID:', encodedId);
+    return encodedId;
+  }
+}
+
+export function createIncidentUrl(incident: any): string | null {
+  const canonicalId = getCanonicalIncidentId(incident);
+  if (!canonicalId) return null;
+  
+  return `/incident/${canonicalId}`;
+}
+
+// Helper function for navigating to incidents from map or feed
+export function navigateToIncident(incident: any, setLocation: (url: string) => void): void {
+  const url = createIncidentUrl(incident);
+  if (url) {
+    setLocation(url);
+  } else {
+    console.warn('Could not create URL for incident:', incident);
+  }
+}
+
 // Get appropriate icon for incident based on source and category
 export function getIncidentIconProps(incident: any): { iconName: string, color: string } {
   if (!incident) return { iconName: 'AlertTriangle', color: 'text-gray-500' };
