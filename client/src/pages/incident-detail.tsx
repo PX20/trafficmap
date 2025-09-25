@@ -75,6 +75,50 @@ function IncidentDetailPage({ asModal = true, incidentId: propIncidentId }: Inci
     return false;
   }) || null;
   
+  // Fetch like status for authenticated users
+  const { data: likeStatus } = useQuery({
+    queryKey: ["/api/incidents", decodedId, "social", "likes"],
+    queryFn: async () => {
+      if (!decodedId) return null;
+      const response = await fetch(`/api/incidents/${decodedId}/social/likes/status`, {
+        credentials: 'include'
+      });
+      if (response.status === 401) {
+        // Not authenticated, return default state
+        const countResponse = await fetch(`/api/incidents/${decodedId}/social/likes`);
+        if (countResponse.ok) {
+          const countData = await countResponse.json();
+          return { liked: false, count: countData.count || 0 };
+        }
+        return { liked: false, count: 0 };
+      }
+      if (!response.ok) throw new Error('Failed to fetch like status');
+      return response.json();
+    },
+    enabled: !!decodedId,
+    staleTime: 1 * 60 * 1000, // 1 minute
+  });
+
+  // Fetch comments count
+  const { data: commentsData } = useQuery({
+    queryKey: ["/api/incidents", decodedId, "comments"],
+    queryFn: async () => {
+      if (!decodedId) return null;
+      const response = await fetch(`/api/incidents/${decodedId}/social/comments`);
+      if (!response.ok) throw new Error('Failed to fetch comments');
+      return response.json();
+    },
+    enabled: !!decodedId,
+    staleTime: 1 * 60 * 1000, // 1 minute
+  });
+
+  // Initialize like state from like status data
+  useEffect(() => {
+    if (likeStatus?.liked !== undefined) {
+      setIsLiked(likeStatus.liked);
+    }
+  }, [likeStatus]);
+
   // Like mutation using existing API
   const likeMutation = useMutation({
     mutationFn: async () => {
@@ -84,6 +128,13 @@ function IncidentDetailPage({ asModal = true, incidentId: propIncidentId }: Inci
     onSuccess: (data: any) => {
       const liked = data?.liked || false;
       setIsLiked(liked);
+      
+      // Invalidate social cache to sync with other views  
+      queryClient.invalidateQueries({ queryKey: ["/api/incidents", decodedId, "social", "likes"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/incidents", decodedId, "social"] });
+      // Also invalidate unified data since likes affect display
+      queryClient.invalidateQueries({ queryKey: ["/api/unified"] });
+      
       toast({
         title: liked ? "Liked incident" : "Removed like",
         description: liked ? "You've liked this incident." : "You've removed your like from this incident.",
@@ -383,7 +434,7 @@ function IncidentDetailPage({ asModal = true, incidentId: propIncidentId }: Inci
                   >
                     <MessageCircle className="w-4 h-4" />
                     <span className="hidden sm:inline">Comments</span>
-                    <span className="text-muted-foreground">(0)</span>
+                    <span className="text-muted-foreground">({commentsData?.count || 0})</span>
                   </Button>
                   
                   {/* Like Button */}
@@ -401,7 +452,7 @@ function IncidentDetailPage({ asModal = true, incidentId: propIncidentId }: Inci
                   >
                     <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
                     <span className="text-muted-foreground">
-                      ({isLiked ? '1' : '0'})
+                      ({likeStatus?.count || 0})
                     </span>
                   </Button>
                   
