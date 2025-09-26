@@ -1062,11 +1062,19 @@ export default function Feed() {
                                   likedIncidents.has(incident.id || incident.properties?.id) 
                                     ? 'text-red-500 hover:text-red-600' 
                                     : 'hover:text-red-500'
-                                }`}
+                                } border-2 border-yellow-500 bg-yellow-100 dark:bg-yellow-900`}
                                 onClick={(e) => {
+                                  console.log('🚨 BUTTON CLICKED! Event:', e);
+                                  console.log('🚨 Incident object:', incident);
+                                  console.log('🚨 Incident ID:', incident.id || incident.properties?.id);
                                   e.stopPropagation();
                                   handleLikeClick(incident.id || incident.properties?.id);
                                 }}
+                                onMouseDown={() => console.log('🟡 MOUSE DOWN on like button')}
+                                onMouseUp={() => console.log('🟡 MOUSE UP on like button')}
+                                onMouseEnter={() => console.log('🟡 MOUSE ENTER on like button')}
+                                style={{ pointerEvents: 'auto', zIndex: 1000 }}
+                                data-testid={`button-like-${incident.id || incident.properties?.id}`}
                               >
                                 <Heart className={`w-4 h-4 ${
                                   likedIncidents.has(incident.id || incident.properties?.id) ? 'fill-current' : ''
