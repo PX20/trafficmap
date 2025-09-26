@@ -303,15 +303,21 @@ function IncidentDetailPage({ asModal = true, incidentId: propIncidentId }: Inci
         </CardHeader>
 
         <CardContent className="space-y-6 p-6">
-          {/* Reporter attribution for user reports */}
-          {isUserReport && reporterUserId && (
+          {/* Reporter attribution for all incidents with attribution */}
+          {reporterUserId && (
             <div className={`rounded-xl p-4 border-l-4 ${
-              source === 'user' ? 'bg-purple-50 border-purple-200' : 'bg-gray-50 border-gray-200'
+              source === 'user' ? 'bg-purple-50 border-purple-200' : 
+              source === 'emergency' ? 'bg-red-50 border-red-200' :
+              source === 'tmr' ? 'bg-orange-50 border-orange-200' :
+              'bg-gray-50 border-gray-200'
             }`}>
-              <p className="text-sm font-medium text-gray-600 mb-3">Reported by</p>
+              <p className="text-sm font-medium text-gray-600 mb-3">
+                {source === 'user' ? 'Reported by' : 'Official Source'}
+              </p>
               <ReporterAttribution 
                 userId={reporterUserId} 
                 variant="default"
+                showAccountType={source !== 'user'}
               />
             </div>
           )}
