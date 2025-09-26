@@ -28,6 +28,7 @@ import {
   isPointInPolygon,
   QLD_REGIONS,
 } from "./region-utils";
+import { computeGeocellForIncident } from "./spatial-lookup";
 
 
 const API_BASE_URL = "https://api.qldtraffic.qld.gov.au";
@@ -1540,8 +1541,83 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('Creating incident with data:', JSON.stringify(incident, null, 2));
       const newIncident = await storage.createIncident(incident);
       console.log('Successfully created incident:', newIncident.id);
+      
+      // IMMEDIATE UNIFIED STORE UPDATE: Add incident to unified store immediately
+      // so it appears in frontend without waiting for background ingestion pipeline
+      try {
+        // Extract coordinates safely using proper utility function
+        const coordinates = extractCoordinatesFromGeometry(newIncident.geometry);
+        
+        if (!coordinates) {
+          console.error('⚠️ Cannot add incident to unified store: missing valid coordinates');
+          // Return regular incident if no valid coordinates
+          res.json(newIncident);
+          return;
+        }
+        
+        const [lat, lng] = coordinates;
+        const reporterUserId = userId; // We already have this from auth
+        
+        // Create properly normalized unified incident following exact schema from ingestion pipeline
+        const unifiedIncident = {
+          source: 'user' as const,
+          sourceId: newIncident.id,
+          title: newIncident.title,
+          description: newIncident.description || '',
+          location: newIncident.location || '',
+          category: newIncident.categoryId || '',
+          subcategory: newIncident.subcategoryId || '',
+          severity: 'medium' as const,
+          status: 'active' as const,
+          geometry: newIncident.geometry as any,
+          centroidLat: lat,
+          centroidLng: lng,
+          regionIds: getRegionFromCoordinates(lat, lng) ? [getRegionFromCoordinates(lat, lng)!.id] : [],
+          geocell: '', // Will be computed after full incident creation
+          incidentTime: newIncident.publishedDate || new Date(),
+          lastUpdated: new Date(),
+          publishedAt: new Date(),
+          userId: reporterUserId,
+          properties: {
+            ...(newIncident.properties as object || {}),
+            id: newIncident.id,
+            title: newIncident.title,
+            description: newIncident.description || '',
+            location: newIncident.location,
+            category: newIncident.categoryId,
+            source: 'user',
+            userReported: true,
+            reporterId: reporterUserId
+          },
+          photoUrl: newIncident.photoUrl,
+          verificationStatus: 'unverified' as const,
+          // Add default values for fields that may be expected downstream
+          tags: [],
+          impact: 'local' as const,
+          confidence: 0.8
+        };
+
+        // Compute geocell with full incident context
+        unifiedIncident.geocell = computeGeocellForIncident(unifiedIncident);
+
+        await storage.upsertUnifiedIncident('user', newIncident.id, unifiedIncident);
+        console.log('✅ Incident immediately added to unified store for instant frontend display');
+        
+        // Return the unified incident so frontend can invalidate cache
+        res.json({ 
+          success: true, 
+          incident: newIncident,
+          unifiedIncident: unifiedIncident,
+          message: 'Incident reported successfully'
+        });
+        
+      } catch (unifiedError) {
+        console.error('⚠️ Failed to add incident to unified store, but regular incident was created:', unifiedError);
+        // Return regular incident even if unified update fails
+        res.json(newIncident);
+      }
+      
       console.log('=== INCIDENT SUBMISSION DEBUG END ===');
-      res.json(newIncident);
     } catch (error: unknown) {
       console.error('=== INCIDENT SUBMISSION ERROR ===');
       console.error('Error type:', error instanceof Error ? error.constructor.name : 'Unknown');
