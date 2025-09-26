@@ -127,7 +127,9 @@ export function InlineComments({ incident, onClose }: InlineCommentsProps) {
                   <div className="bg-background rounded-lg px-3 py-2 md:px-4 md:py-3 shadow-sm border border-border/50">
                     <div className="flex items-center gap-2 mb-1">
                       <span className="font-medium text-sm md:text-base">
-                        {comment.user?.displayName || comment.user?.firstName || 'Anonymous'}
+                        {comment.user?.firstName && comment.user?.lastName 
+                          ? `${comment.user.firstName} ${comment.user.lastName}`
+                          : comment.user?.displayName || comment.user?.firstName || 'Anonymous'}
                       </span>
                       <span className="text-xs md:text-sm text-muted-foreground">
                         {getTimeAgo(comment.createdAt)}
