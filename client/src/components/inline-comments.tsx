@@ -167,7 +167,11 @@ export function InlineComments({ incident, onClose }: InlineCommentsProps) {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      setReplyingTo(replyingTo === comment.id ? null : comment.id);
+                    }}
                     className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
                     data-testid={`button-reply-${comment.id}`}
                   >
@@ -199,15 +203,22 @@ export function InlineComments({ incident, onClose }: InlineCommentsProps) {
                     onKeyPress={(e) => {
                       if (e.key === 'Enter' && !e.shiftKey) {
                         e.preventDefault();
+                        e.stopPropagation();
                         handleSubmitReply(comment.id);
                       }
                     }}
+                    onClick={(e) => e.stopPropagation()}
+                    onFocus={(e) => e.stopPropagation()}
                     disabled={!isAuthenticated || createCommentMutation.isPending}
                     className="flex-1 px-2 py-1 text-sm rounded border border-border bg-background focus:ring-1 focus:ring-primary focus:border-transparent outline-none disabled:opacity-50"
                     data-testid={`input-reply-${comment.id}`}
                   />
                   <Button
-                    onClick={() => handleSubmitReply(comment.id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      handleSubmitReply(comment.id);
+                    }}
                     disabled={!isAuthenticated || !replyContent.trim() || createCommentMutation.isPending}
                     size="sm"
                     className="h-8 w-8 px-0"
