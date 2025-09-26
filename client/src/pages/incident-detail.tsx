@@ -33,7 +33,6 @@ function IncidentDetailPage({ asModal = true, incidentId: propIncidentId }: Inci
   const incidentId = propIncidentId || urlIncidentId;
   
   // Social interaction state
-  const [isLiked, setIsLiked] = useState(false);
   const [showComments, setShowComments] = useState(false);
   
   // Decode the URL-encoded incident ID
@@ -75,29 +74,6 @@ function IncidentDetailPage({ asModal = true, incidentId: propIncidentId }: Inci
     return false;
   }) || null;
   
-  // Fetch like status for authenticated users
-  const { data: likeStatus } = useQuery({
-    queryKey: ["/api/incidents", decodedId, "social", "likes"],
-    queryFn: async () => {
-      if (!decodedId) return null;
-      const response = await fetch(`/api/incidents/${decodedId}/social/likes/status`, {
-        credentials: 'include'
-      });
-      if (response.status === 401) {
-        // Not authenticated, return default state
-        const countResponse = await fetch(`/api/incidents/${decodedId}/social/likes`);
-        if (countResponse.ok) {
-          const countData = await countResponse.json();
-          return { liked: false, count: countData.count || 0 };
-        }
-        return { liked: false, count: 0 };
-      }
-      if (!response.ok) throw new Error('Failed to fetch like status');
-      return response.json();
-    },
-    enabled: !!decodedId,
-    staleTime: 1 * 60 * 1000, // 1 minute
-  });
 
   // Fetch comments count
   const { data: commentsData } = useQuery({
@@ -112,57 +88,8 @@ function IncidentDetailPage({ asModal = true, incidentId: propIncidentId }: Inci
     staleTime: 1 * 60 * 1000, // 1 minute
   });
 
-  // Initialize like state from like status data
-  useEffect(() => {
-    if (likeStatus?.liked !== undefined) {
-      setIsLiked(likeStatus.liked);
-    }
-  }, [likeStatus]);
-
-  // Like mutation using existing API
-  const likeMutation = useMutation({
-    mutationFn: async () => {
-      if (!decodedId) throw new Error('No incident ID');
-      return apiRequest('POST', `/api/incidents/${decodedId}/social/likes/toggle`);
-    },
-    onSuccess: (data: any) => {
-      const liked = data?.liked;
-      if (liked !== undefined) {
-        setIsLiked(liked);
-        
-        // Invalidate social cache to sync with other views  
-        queryClient.invalidateQueries({ queryKey: ["/api/incidents", decodedId, "social", "likes"] });
-        queryClient.invalidateQueries({ queryKey: ["/api/incidents", decodedId, "social"] });
-        // Also invalidate unified data since likes affect display
-        queryClient.invalidateQueries({ queryKey: ["/api/unified"] });
-        
-        toast({
-          title: liked ? "Liked incident" : "Removed like",
-          description: liked ? "You've liked this incident." : "You've removed your like from this incident.",
-        });
-      }
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to toggle like",
-        variant: "destructive",
-      });
-    },
-  });
 
   // Social interaction handlers
-  const handleLikeClick = () => {
-    if (!user) {
-      toast({
-        title: "Please log in",
-        description: "You need to log in to like incidents",
-        variant: "destructive",
-      });
-      return;
-    }
-    likeMutation.mutate();
-  };
 
   const handleCommentsToggle = () => {
     setShowComments(!showComments);
@@ -437,25 +364,6 @@ function IncidentDetailPage({ asModal = true, incidentId: propIncidentId }: Inci
                     <MessageCircle className="w-4 h-4" />
                     <span className="hidden sm:inline">Comments</span>
                     <span className="text-muted-foreground">({commentsData?.count || 0})</span>
-                  </Button>
-                  
-                  {/* Like Button */}
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className={`flex items-center gap-1 transition-colors px-3 py-2 h-auto text-xs md:text-sm min-h-[44px] ${
-                      isLiked 
-                        ? 'text-red-500 hover:text-red-600' 
-                        : 'hover:text-red-500'
-                    }`}
-                    onClick={handleLikeClick}
-                    disabled={likeMutation.isPending}
-                    data-testid={`button-like-${decodedId}`}
-                  >
-                    <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
-                    <span className="text-muted-foreground">
-                      ({likeStatus?.count || 0})
-                    </span>
                   </Button>
                   
                   {/* Share Button */}
