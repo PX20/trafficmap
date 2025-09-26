@@ -848,14 +848,15 @@ class UnifiedIngestionEngine {
       
       // QAS - Ambulance Service (Rescue operations, medical emergencies)
       if (lowerTitle.includes('rescue') || lowerTitle.includes('medical') || lowerTitle.includes('ambulance') ||
-          groupedType.includes('medical') || groupedType.includes('rescue') || jurisdiction.includes('ambulance')) {
-        return 'qfes-agency-account-001'; // For now, using QFES for all emergency services
+          groupedType.includes('medical') || groupedType.includes('rescue') || jurisdiction.includes('ambulance') ||
+          title.startsWith('QA')) {
+        return 'qas-agency-account-001';
       }
       
       // QPS - Police Service (Power/Gas incidents often handled by police)
       if (lowerTitle.includes('power') || lowerTitle.includes('gas') || lowerTitle.includes('police') || lowerTitle.includes('crime') ||
-          groupedType.includes('police') || jurisdiction.includes('police')) {
-        return 'qfes-agency-account-001'; // For now, using QFES for all emergency services
+          groupedType.includes('police') || jurisdiction.includes('police') || title.startsWith('QP')) {
+        return 'qps-agency-account-001';
       }
       
       // Default to QFES for other emergency incidents
