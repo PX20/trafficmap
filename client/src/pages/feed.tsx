@@ -17,7 +17,6 @@ import { findRegionBySuburb, getRegionalSuburbs } from "@/lib/regions";
 import { FilterState } from "@/pages/home";
 import { useTrafficData } from "@/hooks/use-traffic-data";
 import { SponsoredPost } from "@/components/sponsored-post";
-import { InlineComments } from "@/components/inline-comments";
 import { getAgencyInfo, isUserReport } from "@/lib/agency-info";
 import { ReporterAttribution } from "@/components/ReporterAttribution";
 import { getReporterUserId, getIncidentIconProps } from "@/lib/incident-utils";
@@ -31,8 +30,6 @@ import {
   Eye,
   Zap,
   RefreshCw,
-  MessageCircle,
-  Heart,
   Share,
   MoreHorizontal,
   User,
@@ -56,10 +53,6 @@ export default function Feed() {
   // Modal functionality moved to unified /incident/:id route
   const [showRegionalUpdates, setShowRegionalUpdates] = useState(true);
   const [reportFormOpen, setReportFormOpen] = useState(false);
-  const [likedIncidents, setLikedIncidents] = useState<Set<string>>(new Set());
-  const [expandedComments, setExpandedComments] = useState<Set<string>>(new Set());
-  const [likeStatusLoaded, setLikeStatusLoaded] = useState(false);
-  const [socialCounts, setSocialCounts] = useState<Record<string, { likes: number; comments: number }>>({})
   
   // Initialize filter state with same defaults as map
   const [filters, setFilters] = useState<FilterState>({
@@ -199,69 +192,6 @@ export default function Feed() {
   
   console.log('📱 FEED: Using', feedEvents.length, 'events,', feedIncidents.length, 'incidents (location filter:', filters.locationFilter + ')');
 
-  // Initialize like status and social counts for all visible incidents
-  useEffect(() => {
-    if (!user || !feedIncidents?.length) return;
-
-    const initializeSocialData = async () => {
-      const likedIds = new Set<string>();
-      const counts: Record<string, { likes: number; comments: number }> = {};
-
-      // Process all incidents in batches for better performance
-      const batchSize = 10;
-      for (let i = 0; i < feedIncidents.length; i += batchSize) {
-        const batch = feedIncidents.slice(i, i + batchSize);
-        
-        // Process batch in parallel
-        await Promise.all(batch.map(async (incident) => {
-          const incidentId = incident.id || incident.properties?.id;
-          if (!incidentId) return;
-
-          try {
-            // Fetch like status and counts in parallel
-            const [likeStatusResponse, commentsResponse] = await Promise.all([
-              fetch(`/api/incidents/${incidentId}/social/likes/status`),
-              fetch(`/api/incidents/${incidentId}/social/comments`)
-            ]);
-
-            let likeData, commentsData;
-            
-            // Process like status and count
-            if (likeStatusResponse.ok) {
-              likeData = await likeStatusResponse.json();
-              if (likeData.liked) {
-                likedIds.add(incidentId);
-              }
-            }
-
-            // Process comment count
-            if (commentsResponse.ok) {
-              commentsData = await commentsResponse.json();
-            }
-
-            // Store counts
-            counts[incidentId] = {
-              likes: likeData?.count || 0,
-              comments: commentsData?.count || commentsData?.comments?.length || 0
-            };
-          } catch (error) {
-            // Silently fail for individual status checks
-            console.debug('Failed to fetch social data for incident:', incidentId, error);
-            // Set default counts for failed requests
-            counts[incidentId] = { likes: 0, comments: 0 };
-          }
-        }));
-      }
-
-      setLikedIncidents(likedIds);
-      setSocialCounts(counts);
-      setLikeStatusLoaded(true);
-    };
-
-    // Reset and reinitialize when feed changes
-    setLikeStatusLoaded(false);
-    initializeSocialData();
-  }, [user, feedIncidents]);
   
   // Sync selected suburb with filter location
   useEffect(() => {
@@ -499,7 +429,7 @@ export default function Feed() {
       case 'Zap': return <Zap className={iconClass} />;
       case 'Trees': return <Trees className={iconClass} />;
       case 'Users': return <Users className={iconClass} />;
-      case 'Heart': return <Heart className={iconClass} />;
+      case 'Heart': return <AlertTriangle className={iconClass} />;
       case 'Search': return <Search className={iconClass} />;
       case 'Flame': return <Flame className={iconClass} />;
       case 'AlertTriangle':
@@ -656,96 +586,6 @@ export default function Feed() {
     navigateToIncident(incident, setLocation);
   };
 
-  // Like mutation using existing API
-  const likeMutation = useMutation({
-    mutationFn: async (incidentId: string) => {
-      return apiRequest('POST', `/api/incidents/${incidentId}/social/likes/toggle`);
-    },
-    onSuccess: (data: any, incidentId) => {
-      const isLiked = data?.liked;
-      const newCount = data?.count || 0;
-      
-      if (isLiked !== undefined) {
-        setLikedIncidents(prev => {
-          const newSet = new Set(prev);
-          if (isLiked) {
-            newSet.add(incidentId);
-          } else {
-            newSet.delete(incidentId);
-          }
-          return newSet;
-        });
-
-        // Update social counts with new like count, preserving existing comment count
-        setSocialCounts(prev => ({
-          ...prev,
-          [incidentId]: {
-            likes: newCount,
-            comments: prev[incidentId]?.comments || 0 // Preserve existing comment count
-          }
-        }));
-        
-        // Invalidate social cache to sync with map view
-        queryClient.invalidateQueries({ queryKey: ["/api/incidents", incidentId, "social"] });
-        // Also invalidate unified data since likes affect display
-        queryClient.invalidateQueries({ queryKey: ["/api/unified"] });
-        
-        toast({
-          title: isLiked ? "Liked incident" : "Removed like",
-          description: isLiked ? "You've liked this incident." : "You've removed your like from this incident.",
-        });
-      }
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to toggle like",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handleLikeClick = (incidentId: string) => {
-    console.log('🔥 Like clicked! Incident ID:', incidentId, 'User:', user?.id);
-    
-    if (!incidentId) {
-      console.error('❌ No incident ID provided to handleLikeClick');
-      toast({
-        title: "Error",
-        description: "Cannot like incident - missing ID",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    if (!user) {
-      console.log('❌ User not logged in');
-      toast({
-        title: "Please log in",
-        description: "You need to log in to like incidents",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    console.log('✅ Triggering like mutation for:', incidentId);
-    likeMutation.mutate(incidentId);
-  };
-
-  const handleCommentsClick = (incident: any) => {
-    const incidentId = incident.id || incident.properties?.id;
-    if (!incidentId) return;
-
-    setExpandedComments(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(incidentId)) {
-        newSet.delete(incidentId);
-      } else {
-        newSet.add(incidentId);
-      }
-      return newSet;
-    });
-  };
 
   const handleShareClick = async (incident: any) => {
     const incidentId = incident.id || incident.properties?.id;
@@ -1036,49 +876,6 @@ export default function Feed() {
                         <div className="px-4 py-2 border-t border-border/50">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2 md:gap-4">
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                className={`flex items-center gap-1 transition-colors px-3 py-2 h-auto text-xs md:text-sm min-h-[44px] ${
-                                  expandedComments.has(incident.id || incident.properties?.id) 
-                                    ? 'text-blue-500 hover:text-blue-600' 
-                                    : 'hover:text-blue-500'
-                                }`}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleCommentsClick(incident);
-                                }}
-                                data-testid={`button-comments-${incident.id || incident.properties?.id}`}
-                              >
-                                <MessageCircle className="w-4 h-4" />
-                                <span className="hidden sm:inline">Comments</span>
-                                <span className="text-muted-foreground">({socialCounts[incident.id || incident.properties?.id]?.comments || 0})</span>
-                              </Button>
-                              
-                              {/* Like Button - Using simple button instead of React Button component */}
-                              <button 
-                                className={`flex items-center gap-1 transition-colors px-3 py-2 h-auto text-xs md:text-sm min-h-[44px] rounded-md hover:bg-accent hover:text-accent-foreground ${
-                                  likedIncidents.has(incident.id || incident.properties?.id) 
-                                    ? 'text-red-500 hover:text-red-600' 
-                                    : 'hover:text-red-500'
-                                }`}
-                                onClick={(e) => {
-                                  console.log('🚨 LIKE BUTTON CLICKED! Event:', e);
-                                  console.log('🚨 Incident object:', incident);
-                                  console.log('🚨 Incident ID:', incident.id || incident.properties?.id);
-                                  e.stopPropagation();
-                                  handleLikeClick(incident.id || incident.properties?.id);
-                                }}
-                                style={{ pointerEvents: 'auto', zIndex: 1000 }}
-                                data-testid={`button-like-${incident.id || incident.properties?.id}`}
-                              >
-                                <Heart className={`w-4 h-4 ${
-                                  likedIncidents.has(incident.id || incident.properties?.id) ? 'fill-current' : ''
-                                }`} />
-                                <span className="text-muted-foreground">
-                                  ({socialCounts[incident.id || incident.properties?.id]?.likes || 0})
-                                </span>
-                              </button>
                               
                               <Button 
                                 variant="ghost" 
@@ -1113,20 +910,6 @@ export default function Feed() {
                           </div>
                         </div>
 
-                        {/* Inline Comments Section */}
-                        {expandedComments.has(incident.id || incident.properties?.id) && (
-                          <InlineComments 
-                            incident={incident} 
-                            onClose={() => {
-                              const incidentId = incident.id || incident.properties?.id;
-                              setExpandedComments(prev => {
-                                const newSet = new Set(prev);
-                                newSet.delete(incidentId);
-                                return newSet;
-                              });
-                            }}
-                          />
-                        )}
                       </CardContent>
                     </Card>
                   );
