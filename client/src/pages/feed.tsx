@@ -1055,6 +1055,21 @@ export default function Feed() {
                                 <span className="text-muted-foreground">({socialCounts[incident.id || incident.properties?.id]?.comments || 0})</span>
                               </Button>
                               
+                              {/* TESTING: Simple test button to check if ANY clicks work */}
+                              <button 
+                                style={{ 
+                                  background: 'red', 
+                                  color: 'white', 
+                                  padding: '10px', 
+                                  border: 'none', 
+                                  zIndex: 9999,
+                                  position: 'relative'
+                                }}
+                                onClick={() => alert('TEST BUTTON WORKS!')}
+                              >
+                                TEST CLICK
+                              </button>
+                              
                               <Button 
                                 variant="ghost" 
                                 size="sm" 
@@ -1062,7 +1077,7 @@ export default function Feed() {
                                   likedIncidents.has(incident.id || incident.properties?.id) 
                                     ? 'text-red-500 hover:text-red-600' 
                                     : 'hover:text-red-500'
-                                } border-2 border-yellow-500 bg-yellow-100 dark:bg-yellow-900`}
+                                }`}
                                 onClick={(e) => {
                                   console.log('🚨 BUTTON CLICKED! Event:', e);
                                   console.log('🚨 Incident object:', incident);
