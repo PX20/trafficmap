@@ -396,6 +396,7 @@ export const incidentComments = pgTable("incident_comments", {
   userId: varchar("user_id").notNull(), // References users.id
   parentCommentId: varchar("parent_comment_id"), // References incident_comments.id for nested replies
   content: text("content").notNull(), // Content validation in Zod schema
+  photoUrl: text("photo_url"), // Optional photo attachment
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
