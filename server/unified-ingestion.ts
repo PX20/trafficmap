@@ -840,12 +840,7 @@ class UnifiedIngestionEngine {
       const groupedType = props.GroupedType?.toLowerCase() || '';
       const jurisdiction = props.Jurisdiction?.toLowerCase() || '';
       
-      // QFES - Fire and Emergency Services
-      if (lowerTitle.includes('fire') || lowerTitle.includes('hazmat') || title.startsWith('QF') || 
-          groupedType.includes('fire') || jurisdiction.includes('fire')) {
-        return 'qfes-agency-account-001';
-      }
-      
+      // Priority check: First check incident types that override prefixes
       // QAS - Ambulance Service (Rescue operations, medical emergencies)
       if (lowerTitle.includes('rescue') || lowerTitle.includes('medical') || lowerTitle.includes('ambulance') ||
           groupedType.includes('medical') || groupedType.includes('rescue') || jurisdiction.includes('ambulance') ||
@@ -857,6 +852,12 @@ class UnifiedIngestionEngine {
       if (lowerTitle.includes('power') || lowerTitle.includes('gas') || lowerTitle.includes('police') || lowerTitle.includes('crime') ||
           groupedType.includes('police') || jurisdiction.includes('police') || title.startsWith('QP')) {
         return 'qps-agency-account-001';
+      }
+      
+      // QFES - Fire and Emergency Services (fire incidents and fallback for QF prefix)
+      if (lowerTitle.includes('fire') || lowerTitle.includes('hazmat') || title.startsWith('QF') || 
+          groupedType.includes('fire') || jurisdiction.includes('fire')) {
+        return 'qfes-agency-account-001';
       }
       
       // Default to QFES for other emergency incidents
