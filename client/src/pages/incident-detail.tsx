@@ -363,7 +363,7 @@ function IncidentDetailPage({ asModal = true, incidentId: propIncidentId }: Inci
                   >
                     <MessageCircle className="w-4 h-4" />
                     <span className="hidden sm:inline">Comments</span>
-                    <span className="text-muted-foreground">({commentsData?.count || 0})</span>
+                    <span className="text-muted-foreground">{commentsData?.count || 0}</span>
                   </Button>
                   
                   {/* Share Button */}
