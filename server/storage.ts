@@ -74,14 +74,8 @@ import {
   type InsertUnifiedIncident,
   type UnifiedFeature,
   incidentComments,
-  incidentLikes,
-  commentLikes,
   type IncidentComment,
   type InsertIncidentComment,
-  type IncidentLike,
-  type InsertIncidentLike,
-  type CommentLike,
-  type InsertCommentLike,
   type UnifiedIncidentsResponse,
   generateUnifiedIncidentId,
   prepareUnifiedIncidentForInsert,
@@ -266,12 +260,6 @@ export interface IStorage {
   getIncidentCommentsCount(incidentId: string): Promise<number>;
   createIncidentComment(comment: InsertIncidentComment): Promise<IncidentComment>;
   deleteIncidentComment(id: string, userId: string): Promise<boolean>;
-  
-  // Incident like operations
-  getIncidentLikes(incidentId: string): Promise<IncidentLike[]>;
-  getIncidentLikesCount(incidentId: string): Promise<number>;
-  toggleIncidentLike(incidentId: string, userId: string): Promise<{ liked: boolean; count: number }>;
-  isIncidentLikedByUser(incidentId: string, userId: string): Promise<boolean>;
 
   // Billing operations
   getBillingPlans(): Promise<BillingPlan[]>;
@@ -1666,59 +1654,8 @@ export class DatabaseStorage implements IStorage {
       .where(eq(incidentComments.incidentId, incidentId))
       .orderBy(desc(incidentComments.createdAt));
     
-    // Get like information for all comments if user is provided
-    const commentsWithLikes = await Promise.all(
-      result.map(async (comment) => {
-        const likeCount = await this.getCommentLikesCount(comment.id);
-        const isLiked = userId ? await this.isCommentLikedByUser(comment.id, userId) : false;
-        
-        return {
-          ...comment,
-          likeCount,
-          isLiked
-        };
-      })
-    );
-    
-    // Organize comments into nested structure
-    const comments = commentsWithLikes;
-    const commentMap = new Map<string, IncidentComment & { replies?: IncidentComment[]; likeCount: number; isLiked: boolean }>();
-    const topLevelComments: (IncidentComment & { replies?: IncidentComment[]; likeCount: number; isLiked: boolean })[] = [];
-    
-    // First, create a map of all comments
-    comments.forEach(comment => {
-      commentMap.set(comment.id, { ...comment, replies: [] });
-    });
-    
-    // Then, organize into tree structure
-    comments.forEach(comment => {
-      const commentWithReplies = commentMap.get(comment.id)!;
-      
-      if (comment.parentCommentId) {
-        // This is a reply - add it to parent's replies
-        const parent = commentMap.get(comment.parentCommentId);
-        if (parent) {
-          parent.replies!.push(commentWithReplies);
-        }
-      } else {
-        // This is a top-level comment
-        topLevelComments.push(commentWithReplies);
-      }
-    });
-    
-    // Sort replies by creation time (oldest first for replies)
-    const sortReplies = (comments: any[]) => {
-      comments.forEach(comment => {
-        if (comment.replies && comment.replies.length > 0) {
-          comment.replies.sort((a: any, b: any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
-          sortReplies(comment.replies);
-        }
-      });
-    };
-    
-    sortReplies(topLevelComments);
-    
-    return topLevelComments as IncidentComment[];
+    // Simple comment list without likes or nesting
+    return result;
   }
 
   async getIncidentCommentsCount(incidentId: string): Promise<number> {
@@ -1753,102 +1690,8 @@ export class DatabaseStorage implements IStorage {
     return (result.rowCount ?? 0) > 0;
   }
 
-  async getIncidentLikes(incidentId: string): Promise<IncidentLike[]> {
-    const result = await db
-      .select()
-      .from(incidentLikes)
-      .where(eq(incidentLikes.incidentId, incidentId))
-      .orderBy(desc(incidentLikes.createdAt));
-    return result;
-  }
 
-  async getIncidentLikesCount(incidentId: string): Promise<number> {
-    const result = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(incidentLikes)
-      .where(eq(incidentLikes.incidentId, incidentId));
-    return result[0]?.count || 0;
-  }
 
-  async toggleIncidentLike(incidentId: string, userId: string): Promise<{ liked: boolean; count: number }> {
-    // Check if user already liked this incident
-    const [existingLike] = await db
-      .select()
-      .from(incidentLikes)
-      .where(and(eq(incidentLikes.incidentId, incidentId), eq(incidentLikes.userId, userId)));
-
-    if (existingLike) {
-      // Remove the like
-      await db
-        .delete(incidentLikes)
-        .where(and(eq(incidentLikes.incidentId, incidentId), eq(incidentLikes.userId, userId)));
-      
-      const count = await this.getIncidentLikesCount(incidentId);
-      return { liked: false, count };
-    } else {
-      // Add the like
-      await db
-        .insert(incidentLikes)
-        .values({ incidentId, userId });
-      
-      const count = await this.getIncidentLikesCount(incidentId);
-      return { liked: true, count };
-    }
-  }
-
-  async isIncidentLikedByUser(incidentId: string, userId: string): Promise<boolean> {
-    const [existingLike] = await db
-      .select()
-      .from(incidentLikes)
-      .where(and(eq(incidentLikes.incidentId, incidentId), eq(incidentLikes.userId, userId)));
-    
-    return !!existingLike;
-  }
-
-  // Comment likes methods
-  async toggleCommentLike(commentId: string, userId: string): Promise<{ liked: boolean; count: number }> {
-    // Check if user already liked this comment
-    const [existingLike] = await db
-      .select()
-      .from(commentLikes)
-      .where(and(eq(commentLikes.commentId, commentId), eq(commentLikes.userId, userId)));
-
-    if (existingLike) {
-      // Remove the like
-      await db
-        .delete(commentLikes)
-        .where(and(eq(commentLikes.commentId, commentId), eq(commentLikes.userId, userId)));
-      
-      const count = await this.getCommentLikesCount(commentId);
-      return { liked: false, count };
-    } else {
-      // Add the like
-      await db
-        .insert(commentLikes)
-        .values({ commentId, userId });
-      
-      const count = await this.getCommentLikesCount(commentId);
-      return { liked: true, count };
-    }
-  }
-
-  async getCommentLikesCount(commentId: string): Promise<number> {
-    const result = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(commentLikes)
-      .where(eq(commentLikes.commentId, commentId));
-    
-    return result[0]?.count || 0;
-  }
-
-  async isCommentLikedByUser(commentId: string, userId: string): Promise<boolean> {
-    const [existingLike] = await db
-      .select()
-      .from(commentLikes)
-      .where(and(eq(commentLikes.commentId, commentId), eq(commentLikes.userId, userId)));
-    
-    return !!existingLike;
-  }
 
 }
 

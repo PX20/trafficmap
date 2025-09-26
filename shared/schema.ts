@@ -389,6 +389,20 @@ export const reports = pgTable("reports", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Incident comments for unified incident system - social media style commenting
+export const incidentComments = pgTable("incident_comments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  incidentId: varchar("incident_id").notNull(), // References unified_incidents.id
+  userId: varchar("user_id").notNull(), // References users.id
+  content: text("content").notNull(), // Content validation in Zod schema
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  // Performance indexes for comment queries
+  index("idx_incident_comments_incident_time").on(table.incidentId, table.createdAt.desc()),
+  index("idx_incident_comments_user").on(table.userId, table.incidentId),
+]);
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   comments: many(comments),
@@ -578,6 +592,17 @@ export const insertCommentSchema = createInsertSchema(comments).omit({
   createdAt: true,
   updatedAt: true,
 });
+
+export const insertIncidentCommentSchema = createInsertSchema(incidentComments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  content: z.string().min(1, "Comment cannot be empty").max(500, "Comment too long"),
+});
+
+export type IncidentComment = typeof incidentComments.$inferSelect;
+export type InsertIncidentComment = z.infer<typeof insertIncidentCommentSchema>;
 
 export const insertNeighborhoodGroupSchema = createInsertSchema(neighborhoodGroups).omit({
   id: true,
@@ -806,127 +831,6 @@ export const campaignAnalytics = pgTable("campaign_analytics", {
   campaignDateIdx: index("idx_campaign_analytics_date").on(table.campaignId, table.date),
 }));
 
-// ============================================================================
-// INCIDENT SOCIAL INTERACTION SCHEMA - Comments and Likes
-// ============================================================================
-
-export const incidentComments = pgTable("incident_comments", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  incidentId: varchar("incident_id").notNull(), // References unified_incidents.id
-  userId: varchar("user_id").notNull(), // References users.id
-  parentCommentId: varchar("parent_comment_id"), // References incident_comments.id for nested replies
-  username: varchar("username").notNull(), // Store for display (denormalized)
-  content: text("content").notNull(),
-  photoUrl: varchar("photo_url"), // URL to uploaded photo in object storage
-  photoAlt: varchar("photo_alt"), // Alt text for accessibility
-  photoSize: integer("photo_size"), // File size in bytes
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-}, (table) => ({
-  incidentIdx: index("idx_incident_comments_incident").on(table.incidentId),
-  userIdx: index("idx_incident_comments_user").on(table.userId),
-  parentIdx: index("idx_incident_comments_parent").on(table.parentCommentId),
-  createdAtIdx: index("idx_incident_comments_created").on(table.createdAt),
-}));
-
-export const incidentLikes = pgTable("incident_likes", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  incidentId: varchar("incident_id").notNull(), // References unified_incidents.id
-  userId: varchar("user_id").notNull(), // References users.id
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-}, (table) => ({
-  incidentIdx: index("idx_incident_likes_incident").on(table.incidentId),
-  userIdx: index("idx_incident_likes_user").on(table.userId),
-  // Unique constraint to prevent duplicate likes from same user
-  uniqueUserIncident: unique("unique_user_incident_like").on(table.userId, table.incidentId),
-}));
-
-// Comment likes table for social interactions
-export const commentLikes = pgTable("comment_likes", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  commentId: varchar("comment_id").notNull(), // References comments.id
-  userId: varchar("user_id").notNull(), // References users.id
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-}, (table) => ({
-  commentIdx: index("idx_comment_likes_comment").on(table.commentId),
-  userIdx: index("idx_comment_likes_user").on(table.userId),
-  // Unique constraint to prevent duplicate likes from same user
-  uniqueUserComment: unique("unique_user_comment_like").on(table.userId, table.commentId),
-}));
-
-// Relations
-export const incidentCommentsRelations = relations(incidentComments, ({ one, many }) => ({
-  incident: one(unifiedIncidents, {
-    fields: [incidentComments.incidentId],
-    references: [unifiedIncidents.id],
-  }),
-  user: one(users, {
-    fields: [incidentComments.userId],
-    references: [users.id],
-  }),
-  parentComment: one(incidentComments, {
-    fields: [incidentComments.parentCommentId],
-    references: [incidentComments.id],
-  }),
-  replies: many(incidentComments),
-}));
-
-export const incidentLikesRelations = relations(incidentLikes, ({ one }) => ({
-  incident: one(unifiedIncidents, {
-    fields: [incidentLikes.incidentId],
-    references: [unifiedIncidents.id],
-  }),
-  user: one(users, {
-    fields: [incidentLikes.userId],
-    references: [users.id],
-  }),
-}));
-
-export const commentLikesRelations = relations(commentLikes, ({ one }) => ({
-  comment: one(incidentComments, {
-    fields: [commentLikes.commentId],
-    references: [incidentComments.id],
-  }),
-  user: one(users, {
-    fields: [commentLikes.userId],
-    references: [users.id],
-  }),
-}));
-
-// Zod schemas for validation
-export const insertIncidentCommentSchema = createInsertSchema(incidentComments).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-}).extend({
-  content: z.string().min(1, "Comment cannot be empty").max(1000, "Comment too long"),
-  parentCommentId: z.string().optional().nullable(), // Allow replies to other comments
-  photoUrl: z.string().optional().nullable(), // Optional photo URL
-  photoAlt: z.string().optional().nullable(), // Optional alt text for accessibility
-  photoSize: z.number().optional().nullable(), // Optional file size in bytes
-});
-
-export const insertIncidentLikeSchema = createInsertSchema(incidentLikes).omit({
-  id: true,
-  createdAt: true,
-});
-
-export const insertCommentLikeSchema = createInsertSchema(commentLikes).omit({
-  id: true,
-  createdAt: true,
-});
-
-export type IncidentComment = typeof incidentComments.$inferSelect;
-export type InsertIncidentComment = z.infer<typeof insertIncidentCommentSchema>;
-export type CommentLike = typeof commentLikes.$inferSelect;
-export type InsertCommentLike = z.infer<typeof insertCommentLikeSchema>;
-
-// Type for nested comments with replies
-export type NestedIncidentComment = IncidentComment & {
-  replies?: NestedIncidentComment[];
-};
-export type IncidentLike = typeof incidentLikes.$inferSelect;
-export type InsertIncidentLike = z.infer<typeof insertIncidentLikeSchema>;
 
 export type AdCampaign = typeof adCampaigns.$inferSelect;
 export type InsertAdCampaign = typeof adCampaigns.$inferInsert;

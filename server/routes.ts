@@ -1758,26 +1758,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Comment likes toggle endpoint
-  app.post("/api/incidents/:incidentId/social/comments/:commentId/likes/toggle", isAuthenticated, async (req: any, res) => {
-    try {
-      const { commentId } = req.params;
-      
-      // Safe extraction of user ID with proper null checks
-      const userId = req.user?.claims?.sub || req.user?.id;
-
-      if (!userId) {
-        secureLogger.authError('Toggle comment like: No user ID found', { user: req.user });
-        return res.status(401).json({ message: "Authentication required" });
-      }
-
-      const result = await storage.toggleCommentLike(commentId, userId);
-      res.json(result);
-    } catch (error) {
-      console.error("Error toggling comment like:", error);
-      res.status(500).json({ message: "Failed to toggle comment like" });
-    }
-  });
 
   // Legacy endpoint for backwards compatibility
   app.delete("/api/comments/:commentId", isAuthenticated, async (req: any, res) => {
@@ -2075,56 +2055,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get incident likes
-  app.get("/api/incidents/:incidentId/social/likes", async (req, res) => {
-    try {
-      const { incidentId } = req.params;
-      const count = await storage.getIncidentLikesCount(incidentId);
-      res.json({ count });
-    } catch (error) {
-      console.error("Error fetching incident likes:", error);
-      res.status(500).json({ message: "Failed to fetch likes" });
-    }
-  });
-
-  // Toggle incident like
-  app.post("/api/incidents/:incidentId/social/likes/toggle", isAuthenticated, async (req: any, res) => {
-    try {
-      const { incidentId } = req.params;
-      
-      if (!req.user || !req.user.id) {
-        return res.status(401).json({ message: "Authentication required" });
-      }
-      
-      const userId = req.user.id;
-      const result = await storage.toggleIncidentLike(incidentId, userId);
-      
-      res.json(result);
-    } catch (error) {
-      console.error("Error toggling incident like:", error);
-      res.status(500).json({ message: "Failed to toggle like" });
-    }
-  });
-
-  // Check if user liked incident
-  app.get("/api/incidents/:incidentId/social/likes/status", isAuthenticated, async (req: any, res) => {
-    try {
-      const { incidentId } = req.params;
-      
-      if (!req.user || !req.user.id) {
-        return res.status(401).json({ message: "Authentication required" });
-      }
-      
-      const userId = req.user.id;
-      const liked = await storage.isIncidentLikedByUser(incidentId, userId);
-      const count = await storage.getIncidentLikesCount(incidentId);
-      
-      res.json({ liked, count });
-    } catch (error) {
-      console.error("Error checking like status:", error);
-      res.status(500).json({ message: "Failed to check like status" });
-    }
-  });
 
   // Batch users lookup endpoint for community reports (MUST be before parameterized route)
   app.get('/api/users/batch', async (req, res) => {
