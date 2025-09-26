@@ -1,0 +1,1001 @@
+(index):1  Mixed Content: The page at 'https://bfc32a2b-fdc5-4d33-878b-1ae391600670-00-188pkkzjfpeaq.janeway.replit.dev/' was loaded over HTTPS, but requested an insecure script 'http://replit.com.x.3b600242091c2047dc08cd50e46f5138b1f7.43d75327.id.opendns.com/s/malware.opendns.com/?X-OpenDNS-Session=aa51dc5c0ccc5aad4_3b600242091c2047dc08cd50e46f5138b1f7_ea371374081818e23375e69926bd002a716ba5c4_server=nginx-proxy-https-42237891633f.iproxy.syd&url=https://replit.com/public/js/replit-dev-banner.js%3FX-OpenDNS-Session=_3f1c927b0aa440405308ca20aac2b498c7999270f944_0ERomTj9_&proxy=y&prefs=1597504&tagging=0x110004214C4001C10000070070000080039F7000102000000000'. This request has been blocked; the content must be served over HTTPS.
+ ❌ NO MATCH: tmr:749747 failed all filters
+ ❌ NO MATCH: tmr:749745 failed all filters
+ ❌ NO MATCH: tmr:749744 failed all filters
+ ❌ NO MATCH: tmr:749738 failed all filters
+ ❌ NO MATCH: tmr:749736 failed all filters
+ ❌ NO MATCH: tmr:749731 failed all filters
+ ✅ REGIONIDS MATCH: tmr:749723 regionIds: Array(1)
+ ✅ REGIONIDS MATCH: tmr:749702 regionIds: Array(1)
+ ❌ NO MATCH: tmr:749668 failed all filters
+ ❌ NO MATCH: tmr:749727 failed all filters
+ ❌ NO MATCH: tmr:749689 failed all filters
+ ❌ NO MATCH: tmr:749733 failed all filters
+ ❌ NO MATCH: tmr:749730 failed all filters
+ ❌ NO MATCH: tmr:749726 failed all filters
+ ❌ NO MATCH: tmr:749729 failed all filters
+ ❌ NO MATCH: tmr:748325 failed all filters
+ ❌ NO MATCH: tmr:749667 failed all filters
+ ❌ NO MATCH: tmr:749309 failed all filters
+ ❌ NO MATCH: tmr:749644 failed all filters
+ ❌ NO MATCH: tmr:749655 failed all filters
+ ❌ NO MATCH: tmr:749656 failed all filters
+ ❌ NO MATCH: tmr:749647 failed all filters
+ ❌ NO MATCH: tmr:749642 failed all filters
+ ❌ NO MATCH: tmr:749606 failed all filters
+ ❌ NO MATCH: tmr:749565 failed all filters
+ ❌ NO MATCH: tmr:749521 failed all filters
+ ❌ NO MATCH: tmr:749517 failed all filters
+ ❌ NO MATCH: tmr:749430 failed all filters
+ ❌ NO MATCH: tmr:749446 failed all filters
+ ❌ NO MATCH: tmr:749348 failed all filters
+ ❌ NO MATCH: tmr:749247 failed all filters
+ ❌ NO MATCH: tmr:749320 failed all filters
+ ❌ NO MATCH: tmr:748315 failed all filters
+ ❌ NO MATCH: tmr:748297 failed all filters
+ ❌ NO MATCH: tmr:747806 failed all filters
+ ❌ NO MATCH: tmr:748309 failed all filters
+ ❌ NO MATCH: tmr:746444 failed all filters
+ ❌ NO MATCH: tmr:747025 failed all filters
+ ❌ NO MATCH: tmr:749654 failed all filters
+ ❌ NO MATCH: tmr:749653 failed all filters
+ ❌ NO MATCH: tmr:749650 failed all filters
+ ❌ NO MATCH: tmr:749645 failed all filters
+ ❌ NO MATCH: tmr:749652 failed all filters
+ ❌ NO MATCH: tmr:749638 failed all filters
+ ❌ NO MATCH: tmr:749651 failed all filters
+ ❌ NO MATCH: tmr:749646 failed all filters
+ ❌ NO MATCH: tmr:749627 failed all filters
+ ❌ NO MATCH: tmr:749616 failed all filters
+ ❌ NO MATCH: tmr:749624 failed all filters
+ ❌ NO MATCH: tmr:749618 failed all filters
+ ❌ NO MATCH: tmr:749621 failed all filters
+ ❌ NO MATCH: tmr:749625 failed all filters
+ ✅ REGIONIDS MATCH: tmr:749617 regionIds: Array(1)
+ ❌ NO MATCH: tmr:749628 failed all filters
+ ✅ REGIONIDS MATCH: tmr:749610 regionIds: Array(1)
+ ✅ REGIONIDS MATCH: tmr:749600 regionIds: Array(1)
+ ❌ NO MATCH: tmr:749614 failed all filters
+ ❌ NO MATCH: tmr:749595 failed all filters
+ ❌ NO MATCH: tmr:749597 failed all filters
+ ❌ NO MATCH: tmr:749598 failed all filters
+ ✅ REGIONIDS MATCH: tmr:749580 regionIds: Array(1)
+ ❌ NO MATCH: tmr:749578 failed all filters
+ ❌ NO MATCH: tmr:749574 failed all filters
+ ❌ NO MATCH: tmr:749369 failed all filters
+ ❌ NO MATCH: tmr:749451 failed all filters
+ ✅ REGIONIDS MATCH: tmr:749466 regionIds: Array(1)
+ ❌ NO MATCH: tmr:748827 failed all filters
+ ❌ NO MATCH: tmr:748805 failed all filters
+ ❌ NO MATCH: tmr:749626 failed all filters
+ ❌ NO MATCH: tmr:749611 failed all filters
+ ❌ NO MATCH: tmr:749620 failed all filters
+ ❌ NO MATCH: tmr:749605 failed all filters
+ ❌ NO MATCH: tmr:749604 failed all filters
+ ❌ NO MATCH: tmr:749317 failed all filters
+ ❌ NO MATCH: tmr:749623 failed all filters
+ ❌ NO MATCH: tmr:749619 failed all filters
+ ❌ NO MATCH: tmr:749467 failed all filters
+ ❌ NO MATCH: tmr:749528 failed all filters
+ ❌ NO MATCH: tmr:749601 failed all filters
+ ❌ NO MATCH: tmr:749615 failed all filters
+ ❌ NO MATCH: tmr:749571 failed all filters
+ ❌ NO MATCH: tmr:749569 failed all filters
+ ❌ NO MATCH: tmr:749584 failed all filters
+ ❌ NO MATCH: tmr:749579 failed all filters
+ ❌ NO MATCH: tmr:749591 failed all filters
+ ❌ NO MATCH: tmr:749590 failed all filters
+ ❌ NO MATCH: tmr:749572 failed all filters
+ ❌ NO MATCH: tmr:749581 failed all filters
+ ❌ NO MATCH: tmr:749575 failed all filters
+ ❌ NO MATCH: tmr:749576 failed all filters
+ ❌ NO MATCH: tmr:749554 failed all filters
+ ❌ NO MATCH: tmr:749550 failed all filters
+ ❌ NO MATCH: tmr:749408 failed all filters
+ ❌ NO MATCH: tmr:749453 failed all filters
+ ❌ NO MATCH: tmr:749253 failed all filters
+ ❌ NO MATCH: tmr:749210 failed all filters
+ ❌ NO MATCH: tmr:749570 failed all filters
+ ❌ NO MATCH: tmr:749459 failed all filters
+ ❌ NO MATCH: tmr:749582 failed all filters
+ ❌ NO MATCH: tmr:749013 failed all filters
+ ❌ NO MATCH: tmr:749009 failed all filters
+ ❌ NO MATCH: tmr:749003 failed all filters
+ ❌ NO MATCH: tmr:749000 failed all filters
+ ❌ NO MATCH: tmr:748997 failed all filters
+ ❌ NO MATCH: tmr:749008 failed all filters
+ ❌ NO MATCH: tmr:749085 failed all filters
+ ❌ NO MATCH: tmr:743711 failed all filters
+ ❌ NO MATCH: tmr:749577 failed all filters
+ ❌ NO MATCH: tmr:749566 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:6711d9a5-72c2-4247-9d41-dad0b455cc52 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:9e43089d-a18a-473a-84bd-e75cfc662252 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:e0c2ea5e-26f0-4654-b72a-f464853280f3 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:f7a12862-5a18-4fc6-97da-f6b8eaae725d failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:ae507e81-6b49-4fc0-9785-fe4ff2b3dac7 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:a545c672-1140-4116-b20e-40323d7eaadd failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:1fb8c709-6fad-48ce-b21b-d53e7a4e17ec failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:75cc8b96-fba6-4824-8df6-a5ef5a6b4663 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:ab31050a-3089-407a-b124-59392d324518 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:5b1bb012-c888-4064-9509-f13e01e363a1 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:9ac1a4c8-0a67-432a-8925-2acd244543c2 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:08ab7b7c-fe3c-413f-9271-495f49366690 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:c05c133a-6bb7-4387-a201-40da3b5f4ce7 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:def4f798-b84b-4a85-b0a2-e7e0f942792c failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:814944f6-7696-43e2-9cbc-e15cc90713fd failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:5a0a4646-d3e3-48fc-b1eb-f5cae7109bf2 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:cfd165e1-5b1d-4d85-8769-e7c92e495f7b failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:179cfae1-8da5-4deb-8929-169d4fedbe68 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:e22755b9-0957-4ecb-b7bf-2b77a3be8733 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:39115e7f-3aa9-425b-9950-ea042e0ae055 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:f16ec95b-bb70-4649-9462-4767a84c87b4 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:805539de-e4f5-4aa5-90d4-68505167c084 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:a0924c56-6c19-47c0-a74f-72baad613884 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:987af5f5-87cf-4d3d-a8cb-816a4aff5557 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:1ab411d2-dd7b-46ca-9dc9-b58a61109d47 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:09f07366-ace0-418c-a7bb-014293977178 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:0caafc86-839b-4f46-8d28-32b863d8456d failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:23665c1c-93c6-4516-a655-490a145854ef failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:7b344d9a-b5b5-4de3-b569-354a9a6be294 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:f6159887-518d-459f-aab4-dfef6bc5cf76 failed all filters
+ 👤 USER INCIDENT: Object
+ ✅ TEXT MATCH: user:464a2459-e210-4892-99a6-0d0c26509914 text contains regional suburb
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:7f8d2c9d-b0f4-43a5-9015-dcd38d0eab31 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:c685b616-bc9e-4dfe-9ff2-bbec415fb737 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:e9f2f466-253b-45b7-b616-481649b2ea61 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:528dc9fe-1f78-4119-8ce5-060ec600783c failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:ab82a3bc-dc0c-49f1-987e-7d251ab6fca2 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:33313072-976a-4c2b-9078-d7ed05a709e7 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:61feaaa3-f82a-45e4-b472-f4aa13c0b62f failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:60c9ea09-6944-4417-b9b6-ee2f50b9cb37 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:2a0fe7fc-5ab2-44b1-8fa3-c632615825f6 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:c36070cb-ff75-4301-91d0-ab0850bca0b7 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:17d77ed1-b0b3-4aad-a12f-f73ced708fdf failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:03a8704e-7936-4751-be11-09c3e705894f failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:21d6f659-78aa-4b47-9655-69f8436e74f8 failed all filters
+ 👤 USER INCIDENT: Object
+ ✅ TEXT MATCH: user:97825b93-f693-46af-8639-81c852cdcfd1 text contains regional suburb
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:11eac04d-d08d-4d31-b716-1aaef466d09a failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:31f1787f-0cca-4599-aace-6c889d8121a7 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:0131bd14-1cd2-4822-8ad4-28cecbf51113 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:bbe924b0-e863-4719-837c-2e3244dc8bb0 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:79e841df-e6db-4c19-bf9d-fb0a9b91318d failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:94bea768-6322-4f19-822f-7e4e00a7c0f6 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:2eccdcd3-a2e3-4e9b-af5b-3a2edaeca1a5 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:91a8d15a-fa49-4456-b937-873832c6546b failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:8e95c024-c322-407c-a866-5b90e7701aaa failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:12e6e942-09f1-4290-9390-4490dca06bca failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:f06af8d0-0550-4de5-b0d7-01729dce3ce3 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:bf41b867-cd35-4ce7-ac39-e5e06dfbe582 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:b17cf9de-a0d3-4b63-869f-7d67fe5626ac failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:79d9d4de-195f-4c83-ba8e-941404ea25c8 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:ab340b00-cb2c-47eb-8bfd-eaf776ecb177 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:cc16056b-ac1a-4a9b-8998-a152ba693978 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:317300d6-3ae1-4842-a563-02fe7b9d20eb failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:d0e53adc-4abe-4e97-882d-5facd0e08058 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:557762bf-e262-485f-b2ab-1e11fa1c9b33 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:60900151-5134-469a-a380-b8562c465db9 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ✅ TEXT MATCH: user:81082fae-b154-4306-bbd4-2c541838bcff text contains regional suburb
+ 👤 USER INCIDENT: Object
+ ✅ REGIONIDS MATCH: user:test-found-alex regionIds: Array(1)
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ✅ TEXT MATCH: user:c8931d3d-64d0-47f9-be5d-c233a506b40f text contains regional suburb
+ 👤 USER INCIDENT: Object
+ ✅ REGIONIDS MATCH: user:e7bbf56b-25e3-4eae-a40f-7d4945616fb0 regionIds: Array(1)
+ 👤 USER INCIDENT: Object
+ ✅ REGIONIDS MATCH: user:test-road-maroochydore regionIds: Array(1)
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ✅ TEXT MATCH: user:dc8dc270-24fc-424a-81a7-0f71b06d8585 text contains regional suburb
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ✅ REGIONIDS MATCH: user:sc_streetlight_005 regionIds: Array(1)
+ 👤 USER INCIDENT: Object
+ ✅ REGIONIDS MATCH: user:user-report-002 regionIds: Array(1)
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:13c975f9-1d49-4275-ba59-48831beaf53d failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ✅ REGIONIDS MATCH: user:47aa7d29-370c-4aeb-b2fc-4c78ae034d9f regionIds: Array(1)
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:4da67f8d-e429-4cd6-81cc-1fc84190b160 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ✅ REGIONIDS MATCH: user:1b505a3e-70c1-4c46-b857-25cd2809e89a regionIds: Array(1)
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ✅ REGIONIDS MATCH: user:test-susp-mooloolaba regionIds: Array(1)
+ 👤 USER INCIDENT: Object
+ ✅ REGIONIDS MATCH: user:test-utility-buddina regionIds: Array(1)
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ✅ REGIONIDS MATCH: user:sc_community_bbq_001 regionIds: Array(1)
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ✅ REGIONIDS MATCH: user:872982a5-6181-420a-a8df-568acf2d07cc regionIds: Array(1)
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ✅ REGIONIDS MATCH: user:sc_pothole_002 regionIds: Array(1)
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ✅ REGIONIDS MATCH: user:sc_playground_003 regionIds: Array(1)
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ✅ REGIONIDS MATCH: user:sc_garage_sale_001 regionIds: Array(1)
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ✅ TEXT MATCH: user:62b55ab5-d0d5-41e8-9a6c-1801322c20d3 text contains regional suburb
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ✅ REGIONIDS MATCH: user:admin-test-1758194377.200809 regionIds: Array(1)
+ 👤 USER INCIDENT: Object
+ ✅ REGIONIDS MATCH: user:user-report-004 regionIds: Array(1)
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ✅ REGIONIDS MATCH: user:sc_dumping_004 regionIds: Array(1)
+ 👤 USER INCIDENT: Object
+ ✅ REGIONIDS MATCH: user:d16d0d86-9982-4d58-ac81-2f2f341cdd43 regionIds: Array(1)
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ✅ REGIONIDS MATCH: user:sc_footpath_001 regionIds: Array(1)
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ✅ REGIONIDS MATCH: user:user-report-001 regionIds: Array(1)
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ✅ REGIONIDS MATCH: user:sc_pet_missing_001 regionIds: Array(1)
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ✅ REGIONIDS MATCH: user:a25ba70a-72ee-494a-8d64-28ae4908430b regionIds: Array(1)
+ 👤 USER INCIDENT: Object
+ ✅ REGIONIDS MATCH: user:sc_found_cat_001 regionIds: Array(1)
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ✅ REGIONIDS MATCH: user:user-report-003 regionIds: Array(1)
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ✅ REGIONIDS MATCH: user:sc_found_keys_001 regionIds: Array(1)
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ✅ REGIONIDS MATCH: user:test-noise-cottontree regionIds: Array(1)
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ✅ REGIONIDS MATCH: user:sc_found_dog_001 regionIds: Array(1)
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ✅ REGIONIDS MATCH: user:test-2 regionIds: Array(1)
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:c81c9016-f033-4cdc-85a9-6c5aaa7fc87e failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ✅ REGIONIDS MATCH: user:test-theft-caloundra regionIds: Array(1)
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:e47cbca4-86fe-4120-bdd9-577d944c5c63 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ✅ REGIONIDS MATCH: user:417878e4-6f0c-48d5-8d1e-bc9ef2fb6325 regionIds: Array(1)
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ✅ REGIONIDS MATCH: user:04737af6-afc1-42f3-a540-87a292492c7f regionIds: Array(1)
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ✅ REGIONIDS MATCH: user:user-report-005 regionIds: Array(1)
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ✅ TEXT MATCH: user:b0283e9e-7a0a-4963-83d2-a6767dce270a text contains regional suburb
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ✅ REGIONIDS MATCH: user:user-report-006 regionIds: Array(1)
+ 👤 USER INCIDENT: Object
+ ✅ REGIONIDS MATCH: user:sc_lost_bike_001 regionIds: Array(1)
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ✅ REGIONIDS MATCH: user:sc_carbreak_006 regionIds: Array(1)
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-002 failed all filters
+ 👤 USER INCIDENT: Object
+ ✅ REGIONIDS MATCH: user:test-1 regionIds: Array(1)
+ 👤 USER INCIDENT: Object
+ ✅ REGIONIDS MATCH: user:b8047757-6189-46f3-9154-0617f6f5d466 regionIds: Array(1)
+ 👤 USER INCIDENT: Object
+ ✅ REGIONIDS MATCH: user:test-3 regionIds: Array(1)
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user:user-test-001 failed all filters
+ ❌ NO MATCH: emergency:84851 failed all filters
+ ❌ NO MATCH: emergency:84849 failed all filters
+ ❌ NO MATCH: emergency:84852 failed all filters
+ ❌ NO MATCH: emergency:84847 failed all filters
+ ❌ NO MATCH: emergency:84844 failed all filters
+ ❌ NO MATCH: emergency:84842 failed all filters
+ ❌ NO MATCH: emergency:84838 failed all filters
+ ❌ NO MATCH: emergency:84836 failed all filters
+ ❌ NO MATCH: emergency:84818 failed all filters
+ ❌ NO MATCH: emergency:84789 failed all filters
+ ❌ NO MATCH: emergency:84782 failed all filters
+ ❌ NO MATCH: emergency:84794 failed all filters
+ ❌ NO MATCH: emergency:84773 failed all filters
+ ❌ NO MATCH: emergency:84706 failed all filters
+ ❌ NO MATCH: emergency:84737 failed all filters
+ ❌ NO MATCH: emergency:84680 failed all filters
+ ❌ NO MATCH: emergency:84772 failed all filters
+ ❌ NO MATCH: emergency:84754 failed all filters
+ ❌ NO MATCH: emergency:84668 failed all filters
+ ❌ NO MATCH: emergency:84659 failed all filters
+ ❌ NO MATCH: emergency:84665 failed all filters
+ ❌ NO MATCH: emergency:84641 failed all filters
+ ❌ NO MATCH: emergency:84640 failed all filters
+ ❌ NO MATCH: emergency:84603 failed all filters
+ ❌ NO MATCH: emergency:84606 failed all filters
+ ❌ NO MATCH: emergency:84594 failed all filters
+ ❌ NO MATCH: emergency:84591 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:84589 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:84571 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:84311 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:84285 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:84213 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:84322 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:84187 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:84346 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:83911 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:83579 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:83547 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:84202 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:84181 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:84061 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:84034 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:84057 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:83640 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:83549 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:83706 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:83556 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:83574 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:83553 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:84850 failed all filters
+use-traffic-data.ts:150 ✅ TEXT MATCH: emergency:84843 text contains regional suburb
+use-traffic-data.ts:103 👤 USER INCIDENT: Object
+use-traffic-data.ts:154 ❌ NO MATCH: user:dd25b53d-8cff-4ed0-afc8-1488397ca636 failed all filters
+use-traffic-data.ts:103 👤 USER INCIDENT: Object
+use-traffic-data.ts:154 ❌ NO MATCH: user:872136da-de6c-4402-8d04-f1b3196b5f83 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:84454 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:84453 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:84452 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:84449 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:84450 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:84440 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:84441 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:84435 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:84428 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:84431 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:84327 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:84421 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:84287 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:84269 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:84411 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:84354 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:84337 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:84266 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:84215 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:84225 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:84260 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:84188 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:84106 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:84054 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:83923 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:83896 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:83847 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:83989 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:83605 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:83552 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:84447 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:84444 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:84446 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:84442 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:84427 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:84432 failed all filters
+ ❌ NO MATCH: emergency:84422 failed all filters
+ ❌ NO MATCH: emergency:84410 failed all filters
+ ❌ NO MATCH: emergency:84419 failed all filters
+ ❌ NO MATCH: emergency:84413 failed all filters
+ ❌ NO MATCH: emergency:84396 failed all filters
+ ❌ NO MATCH: emergency:84394 failed all filters
+ ❌ NO MATCH: emergency:84385 failed all filters
+ ❌ NO MATCH: emergency:84393 failed all filters
+ ❌ NO MATCH: emergency:84371 failed all filters
+ ❌ NO MATCH: emergency:84370 failed all filters
+ ❌ NO MATCH: emergency:84423 failed all filters
+ ❌ NO MATCH: emergency:84425 failed all filters
+ ❌ NO MATCH: emergency:84429 failed all filters
+ ❌ NO MATCH: emergency:84426 failed all filters
+ ❌ NO MATCH: emergency:84344 failed all filters
+ ❌ NO MATCH: emergency:84424 failed all filters
+ ❌ NO MATCH: emergency:84376 failed all filters
+ ❌ NO MATCH: emergency:84210 failed all filters
+ ❌ NO MATCH: emergency:84417 failed all filters
+ ❌ NO MATCH: emergency:84420 failed all filters
+ ❌ NO MATCH: emergency:84416 failed all filters
+ ❌ NO MATCH: emergency:84414 failed all filters
+ ❌ NO MATCH: emergency:84400 failed all filters
+ ❌ NO MATCH: emergency:84415 failed all filters
+ ❌ NO MATCH: emergency:84412 failed all filters
+ ❌ NO MATCH: emergency:84406 failed all filters
+ ❌ NO MATCH: emergency:84405 failed all filters
+ ❌ NO MATCH: emergency:84392 failed all filters
+ ❌ NO MATCH: emergency:84383 failed all filters
+ ❌ NO MATCH: emergency:84409 failed all filters
+ ❌ NO MATCH: emergency:84407 failed all filters
+ ❌ NO MATCH: emergency:84397 failed all filters
+ ❌ NO MATCH: emergency:84402 failed all filters
+ ❌ NO MATCH: emergency:84399 failed all filters
+ ❌ NO MATCH: emergency:84390 failed all filters
+ ❌ NO MATCH: emergency:84369 failed all filters
+ ❌ NO MATCH: emergency:84267 failed all filters
+ ❌ NO MATCH: emergency:84391 failed all filters
+ ❌ NO MATCH: emergency:84387 failed all filters
+ ❌ NO MATCH: emergency:84366 failed all filters
+ ❌ NO MATCH: emergency:84395 failed all filters
+ ❌ NO MATCH: emergency:84245 failed all filters
+ ❌ NO MATCH: emergency:84246 failed all filters
+ ❌ NO MATCH: emergency:84244 failed all filters
+ ❌ NO MATCH: emergency:84242 failed all filters
+ ❌ NO MATCH: emergency:84240 failed all filters
+ ❌ NO MATCH: emergency:84237 failed all filters
+ ❌ NO MATCH: emergency:84236 failed all filters
+ ❌ NO MATCH: emergency:84233 failed all filters
+ ❌ NO MATCH: emergency:84229 failed all filters
+ ✅ REGIONIDS MATCH: emergency:84232 regionIds: Array(1)
+ ❌ NO MATCH: emergency:84227 failed all filters
+ ❌ NO MATCH: emergency:84223 failed all filters
+ ❌ NO MATCH: emergency:84214 failed all filters
+ ❌ NO MATCH: emergency:84200 failed all filters
+ ❌ NO MATCH: emergency:84030 failed all filters
+ ❌ NO MATCH: emergency:84014 failed all filters
+ ❌ NO MATCH: emergency:84004 failed all filters
+ ❌ NO MATCH: emergency:83993 failed all filters
+ ❌ NO MATCH: emergency:83943 failed all filters
+ ❌ NO MATCH: emergency:83936 failed all filters
+ ❌ NO MATCH: emergency:84238 failed all filters
+ ❌ NO MATCH: emergency:84224 failed all filters
+ ❌ NO MATCH: emergency:84119 failed all filters
+ ❌ NO MATCH: emergency:84117 failed all filters
+ ❌ NO MATCH: emergency:84115 failed all filters
+ ❌ NO MATCH: emergency:84114 failed all filters
+ ❌ NO MATCH: emergency:84113 failed all filters
+ ❌ NO MATCH: emergency:84111 failed all filters
+ ❌ NO MATCH: emergency:84112 failed all filters
+ ❌ NO MATCH: emergency:84110 failed all filters
+ ❌ NO MATCH: emergency:84094 failed all filters
+ ❌ NO MATCH: emergency:84091 failed all filters
+ ❌ NO MATCH: emergency:83933 failed all filters
+ ❌ NO MATCH: emergency:84059 failed all filters
+ ❌ NO MATCH: emergency:84028 failed all filters
+ ❌ NO MATCH: emergency:84007 failed all filters
+ ❌ NO MATCH: emergency:83928 failed all filters
+ ❌ NO MATCH: emergency:84001 failed all filters
+ ❌ NO MATCH: emergency:83842 failed all filters
+ ❌ NO MATCH: emergency:83550 failed all filters
+ ❌ NO MATCH: emergency:83953 failed all filters
+ ❌ NO MATCH: emergency:83946 failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:dfd75735-43c3-45ab-9696-f8fb032bfb7a failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:dc141b7a-3ae8-4118-bb53-6d1b6c30278c failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:a58c7ee3-5fe1-4543-bd80-454c565156df failed all filters
+ 👤 USER INCIDENT: Object
+ ❌ NO MATCH: user:3319af15-56a5-4214-9d09-c6b62c1cc3a0 failed all filters
+ ❌ NO MATCH: emergency:84116 failed all filters
+ ❌ NO MATCH: emergency:84108 failed all filters
+ ❌ NO MATCH: emergency:84104 failed all filters
+ ❌ NO MATCH: emergency:84085 failed all filters
+ ❌ NO MATCH: emergency:84048 failed all filters
+ ✅ REGIONIDS MATCH: emergency:84101 regionIds: Array(1)
+ ❌ NO MATCH: emergency:84047 failed all filters
+ ❌ NO MATCH: emergency:83991 failed all filters
+ ❌ NO MATCH: emergency:84102 failed all filters
+ ❌ NO MATCH: emergency:84092 failed all filters
+ ❌ NO MATCH: emergency:84098 failed all filters
+ ❌ NO MATCH: emergency:84095 failed all filters
+ ❌ NO MATCH: emergency:84077 failed all filters
+ ❌ NO MATCH: emergency:84063 failed all filters
+ ❌ NO MATCH: emergency:84100 failed all filters
+ ❌ NO MATCH: emergency:83676 failed all filters
+ ❌ NO MATCH: emergency:84079 failed all filters
+ ❌ NO MATCH: emergency:84082 failed all filters
+ ❌ NO MATCH: emergency:84009 failed all filters
+ ❌ NO MATCH: emergency:84097 failed all filters
+ ❌ NO MATCH: emergency:84096 failed all filters
+ ❌ NO MATCH: emergency:84078 failed all filters
+ ✅ REGIONIDS MATCH: emergency:84089 regionIds: Array(1)
+ ❌ NO MATCH: emergency:84081 failed all filters
+ ❌ NO MATCH: emergency:84075 failed all filters
+ ❌ NO MATCH: emergency:84074 failed all filters
+ ❌ NO MATCH: emergency:84072 failed all filters
+ ❌ NO MATCH: emergency:84071 failed all filters
+ ❌ NO MATCH: emergency:84070 failed all filters
+ ✅ REGIONIDS MATCH: emergency:84069 regionIds: Array(1)
+ ❌ NO MATCH: emergency:84052 failed all filters
+ ❌ NO MATCH: emergency:84050 failed all filters
+ ✅ REGIONIDS MATCH: emergency:84049 regionIds: Array(1)
+ ❌ NO MATCH: emergency:84015 failed all filters
+ ❌ NO MATCH: emergency:83551 failed all filters
+ ❌ NO MATCH: emergency:83973 failed all filters
+ ❌ NO MATCH: emergency:83593 failed all filters
+ ❌ NO MATCH: emergency:84073 failed all filters
+ ❌ NO MATCH: emergency:84062 failed all filters
+ ❌ NO MATCH: emergency:84060 failed all filters
+ ❌ NO MATCH: emergency:84055 failed all filters
+ ❌ NO MATCH: emergency:84040 failed all filters
+ ❌ NO MATCH: emergency:84020 failed all filters
+ ❌ NO MATCH: emergency:84058 failed all filters
+ ❌ NO MATCH: emergency:84035 failed all filters
+ ❌ NO MATCH: emergency:84043 failed all filters
+ ❌ NO MATCH: emergency:83978 failed all filters
+ ❌ NO MATCH: emergency:84053 failed all filters
+ ❌ NO MATCH: emergency:84051 failed all filters
+ ❌ NO MATCH: emergency:83548 failed all filters
+ ❌ NO MATCH: emergency:84046 failed all filters
+ ❌ NO MATCH: emergency:83863 failed all filters
+ ❌ NO MATCH: emergency:84038 failed all filters
+ ❌ NO MATCH: emergency:84033 failed all filters
+ ❌ NO MATCH: emergency:84044 failed all filters
+ ❌ NO MATCH: emergency:84037 failed all filters
+ ❌ NO MATCH: emergency:84022 failed all filters
+ ❌ NO MATCH: emergency:83661 failed all filters
+ ❌ NO MATCH: emergency:83935 failed all filters
+ ❌ NO MATCH: emergency:84045 failed all filters
+ ❌ NO MATCH: emergency:84017 failed all filters
+ ❌ NO MATCH: emergency:84042 failed all filters
+ ❌ NO MATCH: emergency:84036 failed all filters
+ ❌ NO MATCH: emergency:84027 failed all filters
+ ❌ NO MATCH: emergency:84032 failed all filters
+ ❌ NO MATCH: emergency:83559 failed all filters
+ ❌ NO MATCH: emergency:84012 failed all filters
+ ❌ NO MATCH: emergency:83998 failed all filters
+ ❌ NO MATCH: emergency:83919 failed all filters
+ ❌ NO MATCH: emergency:84029 failed all filters
+ ❌ NO MATCH: emergency:83959 failed all filters
+ ❌ NO MATCH: emergency:83857 failed all filters
+ ❌ NO MATCH: emergency:84025 failed all filters
+ ❌ NO MATCH: emergency:84010 failed all filters
+ ✅ REGIONIDS MATCH: emergency:84005 regionIds: Array(1)
+ ❌ NO MATCH: emergency:84013 failed all filters
+ ❌ NO MATCH: emergency:83994 failed all filters
+ ❌ NO MATCH: emergency:83987 failed all filters
+ ❌ NO MATCH: emergency:83913 failed all filters
+ ❌ NO MATCH: emergency:84008 failed all filters
+ ✅ REGIONIDS MATCH: emergency:84006 regionIds: Array(1)
+ ❌ NO MATCH: emergency:84003 failed all filters
+ ❌ NO MATCH: emergency:84002 failed all filters
+ ❌ NO MATCH: emergency:84019 failed all filters
+ ❌ NO MATCH: emergency:83996 failed all filters
+ ❌ NO MATCH: emergency:83979 failed all filters
+ ❌ NO MATCH: emergency:83448 failed all filters
+ ❌ NO MATCH: emergency:83338 failed all filters
+ ❌ NO MATCH: emergency:83499 failed all filters
+ ❌ NO MATCH: emergency:82709 failed all filters
+ ❌ NO MATCH: emergency:83302 failed all filters
+ ❌ NO MATCH: emergency:83442 failed all filters
+ ❌ NO MATCH: emergency:83407 failed all filters
+ ❌ NO MATCH: emergency:82908 failed all filters
+ ❌ NO MATCH: emergency:80939 failed all filters
+ ❌ NO MATCH: emergency:83274 failed all filters
+ ❌ NO MATCH: emergency:80409 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:80272 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:82955 failed all filters
+use-traffic-data.ts:141 ✅ REGIONIDS MATCH: emergency:83181 regionIds: Array(1)
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:79347 failed all filters
+use-traffic-data.ts:141 ✅ REGIONIDS MATCH: emergency:83497 regionIds: Array(1)
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:83496 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:83489 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:83487 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:83488 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:81318 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:83483 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:83490 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:83067 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:83065 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:82510 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:82932 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:82612 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:82548 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:83064 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:83062 failed all filters
+use-traffic-data.ts:141 ✅ REGIONIDS MATCH: emergency:82688 regionIds: Array(1)
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:82521 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:81257 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:82870 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:82145 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:81814 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:83061 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:83053 failed all filters
+use-traffic-data.ts:141 ✅ REGIONIDS MATCH: emergency:83060 regionIds: Array(1)
+use-traffic-data.ts:141 ✅ REGIONIDS MATCH: emergency:83052 regionIds: Array(1)
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:81803 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:83057 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:83044 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:83050 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:83058 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:83047 failed all filters
+use-traffic-data.ts:141 ✅ REGIONIDS MATCH: emergency:83056 regionIds: Array(1)
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:83041 failed all filters
+use-traffic-data.ts:141 ✅ REGIONIDS MATCH: emergency:83055 regionIds: Array(1)
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:83054 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:83051 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:83049 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:83046 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:83036 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:83042 failed all filters
+use-traffic-data.ts:141 ✅ REGIONIDS MATCH: emergency:83040 regionIds: Array(1)
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:83008 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:82910 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:83028 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:83026 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:83033 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:83021 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:83032 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:83030 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:82997 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:83031 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:83018 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:83027 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:83022 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:83025 failed all filters
+use-traffic-data.ts:154 ❌ NO MATCH: emergency:83020 failed all filters
+use-traffic-data.ts:252 🔄 UNIFIED PIPELINE: Events: 1125 Incidents: 608
+use-traffic-data.ts:253 📍 REGIONAL: Events: 47 Incidents: 61
+feed.tsx:200 📱 FEED: Using 47 events, 61 incidents (location filter: true)
