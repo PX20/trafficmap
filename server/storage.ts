@@ -1649,13 +1649,26 @@ export class DatabaseStorage implements IStorage {
 
   async getIncidentComments(incidentId: string, userId?: string): Promise<IncidentComment[]> {
     const result = await db
-      .select()
+      .select({
+        id: incidentComments.id,
+        content: incidentComments.content,
+        createdAt: incidentComments.createdAt,
+        userId: incidentComments.userId,
+        incidentId: incidentComments.incidentId,
+        user: {
+          id: users.id,
+          displayName: users.displayName,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          profileImageUrl: users.profileImageUrl
+        }
+      })
       .from(incidentComments)
+      .leftJoin(users, eq(incidentComments.userId, users.id))
       .where(eq(incidentComments.incidentId, incidentId))
       .orderBy(desc(incidentComments.createdAt));
     
-    // Simple comment list without likes or nesting
-    return result;
+    return result as IncidentComment[];
   }
 
   async getIncidentCommentsCount(incidentId: string): Promise<number> {

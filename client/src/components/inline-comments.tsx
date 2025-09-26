@@ -85,20 +85,16 @@ export function InlineComments({ incident, onClose }: InlineCommentsProps) {
   return (
     <div className="border-t border-border/50 bg-muted/20">
       <div className="p-4">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <MessageCircle className="w-4 h-4 md:w-5 md:h-5 text-muted-foreground" />
-            <span className="text-sm md:text-base font-medium">Comments ({comments.length})</span>
-          </div>
+        {/* Close button for mobile only */}
+        <div className="flex justify-end mb-4 md:hidden">
           <Button
             variant="ghost"
             size="sm"
             onClick={onClose}
-            className="h-10 w-10 md:h-8 md:w-8 p-0 hover:bg-background min-h-[44px] md:min-h-[32px]"
+            className="h-10 w-10 p-0 hover:bg-background min-h-[44px]"
             data-testid="button-close-comments"
           >
-            <X className="w-5 h-5 md:w-4 md:h-4" />
+            <X className="w-5 h-5" />
           </Button>
         </div>
 
