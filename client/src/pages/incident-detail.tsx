@@ -190,8 +190,8 @@ function IncidentDetailPage({ asModal = true, incidentId: propIncidentId }: Inci
   const { iconName, color } = getIncidentIconProps(incident);
   
   // Extract source and determine if it's user-reported
-  const source = incident?.properties?.source || 'unknown';
-  const isUserReport = source === 'user_reports' || incident?.properties?.userReported;
+  const source = incident?.source || incident?.properties?.source || 'unknown';
+  const isUserReport = source === 'user' || incident?.properties?.userReported;
   
   // Extract description
   const description = incident?.properties?.description || 
