@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Link, useLocation } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { navigateToIncident } from "@/lib/incident-utils";
+import { InlineComments } from "@/components/inline-comments";
 import { IncidentReportForm } from "@/components/incident-report-form";
 import { AppHeader } from "@/components/map/app-header";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -41,7 +42,8 @@ import {
   Search,
   Flame,
   Plus,
-  Info
+  Info,
+  MessageCircle
 } from "lucide-react";
 
 export default function Feed() {
@@ -53,6 +55,9 @@ export default function Feed() {
   // Modal functionality moved to unified /incident/:id route
   const [showRegionalUpdates, setShowRegionalUpdates] = useState(true);
   const [reportFormOpen, setReportFormOpen] = useState(false);
+  
+  // Track expanded comments for each card
+  const [expandedComments, setExpandedComments] = useState<Set<string>>(new Set());
   
   // Initialize filter state with same defaults as map
   const [filters, setFilters] = useState<FilterState>({
@@ -629,6 +634,21 @@ export default function Feed() {
     }
   };
 
+  const handleCommentsToggle = (incident: any) => {
+    const incidentId = incident.id || incident.properties?.id;
+    if (!incidentId) return;
+    
+    setExpandedComments(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(incidentId)) {
+        newSet.delete(incidentId);
+      } else {
+        newSet.add(incidentId);
+      }
+      return newSet;
+    });
+  };
+
   return (
     <div className="min-h-screen bg-background pb-20">
       <AppHeader onMenuToggle={() => {}} />
@@ -876,7 +896,26 @@ export default function Feed() {
                         <div className="px-4 py-2 border-t border-border/50">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2 md:gap-4">
-                              
+                              {/* Comments Button */}
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className={`flex items-center gap-1 transition-colors px-3 py-2 h-auto text-xs md:text-sm min-h-[44px] ${
+                                  expandedComments.has(incident.id || incident.properties?.id) 
+                                    ? 'text-blue-500 hover:text-blue-600' 
+                                    : 'hover:text-blue-500'
+                                }`}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleCommentsToggle(incident);
+                                }}
+                                data-testid={`button-comments-${incident.id || incident.properties?.id}`}
+                              >
+                                <MessageCircle className="w-4 h-4" />
+                                <span className="hidden sm:inline">Comments</span>
+                                <span className="text-muted-foreground ml-1">0</span>
+                              </Button>
+
                               <Button 
                                 variant="ghost" 
                                 size="sm" 
@@ -909,6 +948,16 @@ export default function Feed() {
                             </div>
                           </div>
                         </div>
+
+                        {/* Inline Comments Section */}
+                        {expandedComments.has(incident.id || incident.properties?.id) && (
+                          <div className="px-4 pb-4 border-t border-blue-200/60 bg-blue-50/30">
+                            <InlineComments 
+                              incidentId={incident.id || incident.properties?.id}
+                              user={user}
+                            />
+                          </div>
+                        )}
 
                       </CardContent>
                     </Card>
