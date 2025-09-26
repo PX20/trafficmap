@@ -59,6 +59,7 @@ export default function Feed() {
   const [likedIncidents, setLikedIncidents] = useState<Set<string>>(new Set());
   const [expandedComments, setExpandedComments] = useState<Set<string>>(new Set());
   const [likeStatusLoaded, setLikeStatusLoaded] = useState(false);
+  const [socialCounts, setSocialCounts] = useState<Record<string, { likes: number; comments: number }>>({})
   
   // Initialize filter state with same defaults as map
   const [filters, setFilters] = useState<FilterState>({
@@ -198,37 +199,69 @@ export default function Feed() {
   
   console.log('📱 FEED: Using', feedEvents.length, 'events,', feedIncidents.length, 'incidents (location filter:', filters.locationFilter + ')');
 
-  // Initialize like status for visible incidents (after feedIncidents is declared)
+  // Initialize like status and social counts for all visible incidents
   useEffect(() => {
-    if (!user || !feedIncidents?.length || likeStatusLoaded) return;
+    if (!user || !feedIncidents?.length) return;
 
-    const initializeLikeStatus = async () => {
-      const visibleIncidents = feedIncidents.slice(0, 20); // Check first 20 incidents
+    const initializeSocialData = async () => {
       const likedIds = new Set<string>();
+      const counts: Record<string, { likes: number; comments: number }> = {};
 
-      for (const incident of visibleIncidents) {
-        const incidentId = incident.id || incident.properties?.id;
-        if (!incidentId) continue;
+      // Process all incidents in batches for better performance
+      const batchSize = 10;
+      for (let i = 0; i < feedIncidents.length; i += batchSize) {
+        const batch = feedIncidents.slice(i, i + batchSize);
+        
+        // Process batch in parallel
+        await Promise.all(batch.map(async (incident) => {
+          const incidentId = incident.id || incident.properties?.id;
+          if (!incidentId) return;
 
-        try {
-          const response = await fetch(`/api/incidents/${incidentId}/social/likes/status`);
-          if (response.ok) {
-            const data = await response.json();
-            if (data.liked) {
-              likedIds.add(incidentId);
+          try {
+            // Fetch like status and counts in parallel
+            const [likeStatusResponse, commentsResponse] = await Promise.all([
+              fetch(`/api/incidents/${incidentId}/social/likes/status`),
+              fetch(`/api/incidents/${incidentId}/social/comments`)
+            ]);
+
+            let likeData, commentsData;
+            
+            // Process like status and count
+            if (likeStatusResponse.ok) {
+              likeData = await likeStatusResponse.json();
+              if (likeData.liked) {
+                likedIds.add(incidentId);
+              }
             }
+
+            // Process comment count
+            if (commentsResponse.ok) {
+              commentsData = await commentsResponse.json();
+            }
+
+            // Store counts
+            counts[incidentId] = {
+              likes: likeData?.count || 0,
+              comments: commentsData?.count || commentsData?.comments?.length || 0
+            };
+          } catch (error) {
+            // Silently fail for individual status checks
+            console.debug('Failed to fetch social data for incident:', incidentId, error);
+            // Set default counts for failed requests
+            counts[incidentId] = { likes: 0, comments: 0 };
           }
-        } catch (error) {
-          // Silently fail for individual status checks
-        }
+        }));
       }
 
       setLikedIncidents(likedIds);
+      setSocialCounts(counts);
       setLikeStatusLoaded(true);
     };
 
-    initializeLikeStatus();
-  }, [user, feedIncidents, likeStatusLoaded]);
+    // Reset and reinitialize when feed changes
+    setLikeStatusLoaded(false);
+    initializeSocialData();
+  }, [user, feedIncidents]);
   
   // Sync selected suburb with filter location
   useEffect(() => {
@@ -630,6 +663,8 @@ export default function Feed() {
     },
     onSuccess: (data: any, incidentId) => {
       const isLiked = data?.liked;
+      const newCount = data?.count || 0;
+      
       if (isLiked !== undefined) {
         setLikedIncidents(prev => {
           const newSet = new Set(prev);
@@ -640,6 +675,15 @@ export default function Feed() {
           }
           return newSet;
         });
+
+        // Update social counts with new like count, preserving existing comment count
+        setSocialCounts(prev => ({
+          ...prev,
+          [incidentId]: {
+            likes: newCount,
+            comments: prev[incidentId]?.comments || 0 // Preserve existing comment count
+          }
+        }));
         
         // Invalidate social cache to sync with map view
         queryClient.invalidateQueries({ queryKey: ["/api/incidents", incidentId, "social"] });
@@ -993,7 +1037,7 @@ export default function Feed() {
                               >
                                 <MessageCircle className="w-4 h-4" />
                                 <span className="hidden sm:inline">Comments</span>
-                                <span className="text-muted-foreground">(0)</span>
+                                <span className="text-muted-foreground">({socialCounts[incident.id || incident.properties?.id]?.comments || 0})</span>
                               </Button>
                               
                               <Button 
@@ -1013,7 +1057,7 @@ export default function Feed() {
                                   likedIncidents.has(incident.id || incident.properties?.id) ? 'fill-current' : ''
                                 }`} />
                                 <span className="text-muted-foreground">
-                                  ({likedIncidents.has(incident.id || incident.properties?.id) ? '1' : '0'})
+                                  ({socialCounts[incident.id || incident.properties?.id]?.likes || 0})
                                 </span>
                               </Button>
                               
