@@ -1656,6 +1656,7 @@ export class DatabaseStorage implements IStorage {
         updatedAt: incidentComments.updatedAt,
         userId: incidentComments.userId,
         incidentId: incidentComments.incidentId,
+        parentCommentId: incidentComments.parentCommentId,
         user: {
           id: users.id,
           displayName: users.displayName,

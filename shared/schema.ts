@@ -394,6 +394,7 @@ export const incidentComments = pgTable("incident_comments", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   incidentId: varchar("incident_id").notNull(), // References unified_incidents.id
   userId: varchar("user_id").notNull(), // References users.id
+  parentCommentId: varchar("parent_comment_id"), // References incident_comments.id for nested replies
   content: text("content").notNull(), // Content validation in Zod schema
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -401,6 +402,7 @@ export const incidentComments = pgTable("incident_comments", {
   // Performance indexes for comment queries
   index("idx_incident_comments_incident_time").on(table.incidentId, table.createdAt.desc()),
   index("idx_incident_comments_user").on(table.userId, table.incidentId),
+  index("idx_incident_comments_parent").on(table.parentCommentId),
 ]);
 
 // Relations
