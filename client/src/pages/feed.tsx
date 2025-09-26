@@ -11,6 +11,7 @@ import { Link, useLocation } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { navigateToIncident } from "@/lib/incident-utils";
 import { InlineComments } from "@/components/inline-comments";
+import { CommentsCount } from "@/components/comments-count";
 import { IncidentReportForm } from "@/components/incident-report-form";
 import { AppHeader } from "@/components/map/app-header";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -913,7 +914,7 @@ export default function Feed() {
                               >
                                 <MessageCircle className="w-4 h-4" />
                                 <span className="hidden sm:inline">Comments</span>
-                                <span className="text-muted-foreground ml-1">0</span>
+                                <CommentsCount incidentId={incident.id || incident.properties?.id} />
                               </Button>
 
                               <Button 
