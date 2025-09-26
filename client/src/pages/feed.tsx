@@ -1055,39 +1055,20 @@ export default function Feed() {
                                 <span className="text-muted-foreground">({socialCounts[incident.id || incident.properties?.id]?.comments || 0})</span>
                               </Button>
                               
-                              {/* TESTING: Simple test button to check if ANY clicks work */}
+                              {/* Like Button - Using simple button instead of React Button component */}
                               <button 
-                                style={{ 
-                                  background: 'red', 
-                                  color: 'white', 
-                                  padding: '10px', 
-                                  border: 'none', 
-                                  zIndex: 9999,
-                                  position: 'relative'
-                                }}
-                                onClick={() => alert('TEST BUTTON WORKS!')}
-                              >
-                                TEST CLICK
-                              </button>
-                              
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                className={`flex items-center gap-1 transition-colors px-3 py-2 h-auto text-xs md:text-sm min-h-[44px] ${
+                                className={`flex items-center gap-1 transition-colors px-3 py-2 h-auto text-xs md:text-sm min-h-[44px] rounded-md hover:bg-accent hover:text-accent-foreground ${
                                   likedIncidents.has(incident.id || incident.properties?.id) 
                                     ? 'text-red-500 hover:text-red-600' 
                                     : 'hover:text-red-500'
                                 }`}
                                 onClick={(e) => {
-                                  console.log('🚨 BUTTON CLICKED! Event:', e);
+                                  console.log('🚨 LIKE BUTTON CLICKED! Event:', e);
                                   console.log('🚨 Incident object:', incident);
                                   console.log('🚨 Incident ID:', incident.id || incident.properties?.id);
                                   e.stopPropagation();
                                   handleLikeClick(incident.id || incident.properties?.id);
                                 }}
-                                onMouseDown={() => console.log('🟡 MOUSE DOWN on like button')}
-                                onMouseUp={() => console.log('🟡 MOUSE UP on like button')}
-                                onMouseEnter={() => console.log('🟡 MOUSE ENTER on like button')}
                                 style={{ pointerEvents: 'auto', zIndex: 1000 }}
                                 data-testid={`button-like-${incident.id || incident.properties?.id}`}
                               >
@@ -1097,7 +1078,7 @@ export default function Feed() {
                                 <span className="text-muted-foreground">
                                   ({socialCounts[incident.id || incident.properties?.id]?.likes || 0})
                                 </span>
-                              </Button>
+                              </button>
                               
                               <Button 
                                 variant="ghost" 
