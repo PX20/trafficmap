@@ -420,11 +420,13 @@ function IncidentDetailPage({ asModal = true, incidentId: propIncidentId }: Inci
   if (asModal) {
     return (
       <Dialog open={true} onOpenChange={handleClose}>
-        <DialogContent className="max-w-3xl max-h-[95vh] overflow-y-auto p-6">
+        <DialogContent className="max-w-3xl max-h-[95vh] flex flex-col p-0">
           <DialogHeader className="sr-only">
             <DialogTitle>Incident Details</DialogTitle>
           </DialogHeader>
-          {content}
+          <div className="flex-1 overflow-y-auto p-6">
+            {content}
+          </div>
         </DialogContent>
       </Dialog>
     );

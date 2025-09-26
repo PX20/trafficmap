@@ -305,7 +305,7 @@ export function InlineComments({ incident, onClose }: InlineCommentsProps) {
         </div>
 
         {/* Comments List */}
-        <div className="space-y-3 md:space-y-4 mb-4 max-h-60 md:max-h-80 overflow-y-auto">
+        <div className="space-y-3 md:space-y-4 mb-4">
           {commentsLoading ? (
             <div className="text-center py-4 md:py-6">
               <div className="w-6 h-6 border-2 border-muted border-t-primary rounded-full animate-spin mx-auto mb-2"></div>
