@@ -954,8 +954,8 @@ export default function Feed() {
                         {expandedComments.has(incident.id || incident.properties?.id) && (
                           <div className="px-4 pb-4 border-t border-blue-200/60 bg-blue-50/30">
                             <InlineComments 
-                              incidentId={incident.id || incident.properties?.id}
-                              user={user}
+                              incident={incident}
+                              onClose={() => handleCommentsToggle(incident)}
                             />
                           </div>
                         )}
