@@ -706,7 +706,20 @@ export default function Feed() {
   });
 
   const handleLikeClick = (incidentId: string) => {
+    console.log('🔥 Like clicked! Incident ID:', incidentId, 'User:', user?.id);
+    
+    if (!incidentId) {
+      console.error('❌ No incident ID provided to handleLikeClick');
+      toast({
+        title: "Error",
+        description: "Cannot like incident - missing ID",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     if (!user) {
+      console.log('❌ User not logged in');
       toast({
         title: "Please log in",
         description: "You need to log in to like incidents",
@@ -714,6 +727,8 @@ export default function Feed() {
       });
       return;
     }
+    
+    console.log('✅ Triggering like mutation for:', incidentId);
     likeMutation.mutate(incidentId);
   };
 
