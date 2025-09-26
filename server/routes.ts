@@ -1533,7 +1533,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           reporterName: user?.firstName && user?.lastName 
             ? `${user.firstName} ${user.lastName}` 
             : user?.firstName || user?.email?.split('@')[0] || "Anonymous User",
-          photoUrl: user?.profileImageUrl,
+          photoUrl: reportData.photoUrl || null,
           timeReported: new Date().toISOString(),
         },
       };

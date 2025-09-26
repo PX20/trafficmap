@@ -875,6 +875,22 @@ export default function Feed() {
                               }}>
                                 {getIncidentDescription(incident)}
                               </p>
+
+                              {/* Photo Display - only for user incidents with photos */}
+                              {(incident.photoUrl || incident.properties?.photoUrl) && (
+                                <div className="mb-3 -mx-1">
+                                  <img
+                                    src={incident.photoUrl || incident.properties?.photoUrl}
+                                    alt="Incident photo"
+                                    className="w-full h-48 object-cover rounded-lg border border-gray-200"
+                                    loading="lazy"
+                                    onError={(e) => {
+                                      // Hide image if it fails to load
+                                      (e.target as HTMLImageElement).style.display = 'none';
+                                    }}
+                                  />
+                                </div>
+                              )}
                               
                               <div className="flex items-start gap-2 text-xs md:text-sm text-muted-foreground">
                                 <MapPin className="w-3 h-3 md:w-4 md:h-4 flex-shrink-0 mt-0.5" />
