@@ -365,7 +365,7 @@ export function InlineComments({ incident, onClose }: InlineCommentsProps) {
                   onClick={(e) => e.stopPropagation()}
                   onFocus={(e) => e.stopPropagation()}
                   disabled={!isAuthenticated || createCommentMutation.isPending}
-                  className="w-full px-3 py-3 md:px-3 md:py-2 text-sm md:text-base rounded-lg border border-border bg-background focus:ring-2 focus:ring-primary focus:border-transparent outline-none disabled:opacity-50 min-h-[44px] md:min-h-[40px]"
+                  className="w-full px-3 py-3 md:px-3 md:py-2 text-sm md:text-base rounded-lg border border-border bg-background focus:ring-2 focus:ring-primary focus:border-transparent outline-none disabled:opacity-50 min-h-[44px] md:min-h-[40px] min-w-[140px]"
                   data-testid="input-comment"
                 />
               </div>
