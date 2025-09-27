@@ -878,3 +878,124 @@ export interface BusinessAdPerformance {
   totalSpent: number;
   averageCTR: number;
 }
+
+// ============================================================================
+// USER ATTRIBUTION SYSTEM - Centralized attribution for all incident sources
+// ============================================================================
+
+// System user IDs for all incident attribution
+export const SYSTEM_USER_IDS = {
+  // Agency accounts for official sources
+  TMR: 'tmr-agency-account-001',
+  QFES: 'qfes-agency-account-001', 
+  QAS: 'qas-agency-account-001',
+  QPS: 'qps-agency-account-001',
+  
+  // Legacy system account for historical incidents without attribution
+  LEGACY_SYSTEM: 'legacy-system-account-001'
+} as const;
+
+// Valid system user ID type
+export type SystemUserId = typeof SYSTEM_USER_IDS[keyof typeof SYSTEM_USER_IDS];
+
+// Attribution resolver result
+export interface AttributionResult {
+  userId: string;
+  reporterId: string;
+  isSystemAccount: boolean;
+}
+
+/**
+ * Centralized attribution resolver for all incident sources
+ * Ensures every incident has valid user attribution - no null values allowed
+ * 
+ * @param source - Incident source ('tmr', 'emergency', 'user', 'legacy')
+ * @param userHint - Optional user ID hint from source data
+ * @param sourceMetadata - Additional metadata for attribution resolution
+ * @returns AttributionResult with guaranteed non-null userId
+ * @throws Error if attribution cannot be resolved
+ */
+export function resolveAttribution(
+  source: string, 
+  userHint?: string | null,
+  sourceMetadata?: any
+): AttributionResult {
+  // Handle user-submitted incidents
+  if (source === 'user' && userHint) {
+    return {
+      userId: userHint,
+      reporterId: userHint,
+      isSystemAccount: false
+    };
+  }
+  
+  // Handle TMR incidents
+  if (source === 'tmr') {
+    return {
+      userId: SYSTEM_USER_IDS.TMR,
+      reporterId: SYSTEM_USER_IDS.TMR,
+      isSystemAccount: true
+    };
+  }
+  
+  // Handle emergency incidents - determine specific agency
+  if (source === 'emergency') {
+    const agencyUserId = resolveEmergencyAgency(sourceMetadata);
+    return {
+      userId: agencyUserId,
+      reporterId: agencyUserId,
+      isSystemAccount: true
+    };
+  }
+  
+  // Handle legacy incidents without original attribution
+  if (source === 'legacy') {
+    return {
+      userId: SYSTEM_USER_IDS.LEGACY_SYSTEM,
+      reporterId: SYSTEM_USER_IDS.LEGACY_SYSTEM,
+      isSystemAccount: true
+    };
+  }
+  
+  // Fallback for unknown sources or user incidents without userHint
+  if (source === 'user' && !userHint) {
+    throw new Error(`User incident missing required userHint for attribution`);
+  }
+  
+  throw new Error(`Unable to resolve attribution for source: ${source}, userHint: ${userHint}`);
+}
+
+/**
+ * Resolve specific emergency agency based on incident metadata
+ * @param metadata - Incident properties from emergency services API
+ * @returns Agency user ID
+ */
+function resolveEmergencyAgency(metadata: any = {}): SystemUserId {
+  const title = (metadata.title || '').toLowerCase();
+  const groupedType = (metadata.GroupedType || '').toLowerCase();
+  const jurisdiction = (metadata.Jurisdiction || '').toLowerCase();
+  const incidentNumber = (metadata.Master_Incident_Number || '').toLowerCase();
+  
+  // QAS - Ambulance Service (Rescue operations, medical emergencies)
+  if (title.includes('rescue') || title.includes('medical') || title.includes('ambulance') ||
+      groupedType.includes('medical') || groupedType.includes('rescue') || 
+      jurisdiction.includes('ambulance') || incidentNumber.startsWith('qa')) {
+    return SYSTEM_USER_IDS.QAS;
+  }
+  
+  // QPS - Police Service (Power/Gas incidents often handled by police)
+  if (title.includes('power') || title.includes('gas') || title.includes('police') || 
+      title.includes('crime') || groupedType.includes('police') || 
+      jurisdiction.includes('police') || incidentNumber.startsWith('qp')) {
+    return SYSTEM_USER_IDS.QPS;
+  }
+  
+  // QFES - Fire and Emergency Services (fire incidents and fallback for QF prefix)
+  if (title.includes('fire') || title.includes('hazmat') || incidentNumber.startsWith('qf') || 
+      groupedType.includes('fire') || jurisdiction.includes('fire')) {
+    return SYSTEM_USER_IDS.QFES;
+  }
+  
+  // Default to QFES for other emergency incidents
+  return SYSTEM_USER_IDS.QFES;
+}
