@@ -73,6 +73,8 @@ import {
   type SelectUnifiedIncident,
   type InsertUnifiedIncident,
   type UnifiedFeature,
+  resolveAttribution,
+  SYSTEM_USER_IDS,
   incidentComments,
   type IncidentComment,
   type InsertIncidentComment,
@@ -552,12 +554,31 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createUnifiedIncident(incident: InsertUnifiedIncident): Promise<SelectUnifiedIncident> {
+    // ATTRIBUTION ENFORCEMENT: Ensure all incidents have valid user attribution
+    const attribution = resolveAttribution(
+      incident.source, 
+      incident.userId, 
+      { 
+        title: incident.title,
+        GroupedType: incident.properties?.GroupedType,
+        Jurisdiction: incident.properties?.Jurisdiction,
+        Master_Incident_Number: incident.properties?.Master_Incident_Number
+      }
+    );
+    
     const id = generateUnifiedIncidentId(incident.source, incident.sourceId);
     const [newIncident] = await db
       .insert(unifiedIncidents)
       .values({
         ...incident,
         id,
+        userId: attribution.userId, // Override with resolved attribution
+        properties: {
+          ...incident.properties,
+          reporterId: attribution.reporterId, // Ensure reporterId in properties
+          source: incident.source,
+          userReported: !attribution.isSystemAccount
+        },
         lastUpdated: new Date(),
         publishedAt: new Date(),
         updatedAt: new Date(),
@@ -581,6 +602,18 @@ export class DatabaseStorage implements IStorage {
   }
 
   async upsertUnifiedIncident(source: 'tmr' | 'emergency' | 'user', sourceId: string, incident: InsertUnifiedIncident): Promise<SelectUnifiedIncident> {
+    // ATTRIBUTION ENFORCEMENT: Ensure all incidents have valid user attribution
+    const attribution = resolveAttribution(
+      source, 
+      incident.userId, 
+      { 
+        title: incident.title,
+        GroupedType: incident.properties?.GroupedType,
+        Jurisdiction: incident.properties?.Jurisdiction,
+        Master_Incident_Number: incident.properties?.Master_Incident_Number
+      }
+    );
+    
     const id = generateUnifiedIncidentId(source, sourceId);
     try {
       // First check if an incident with this ID already exists
@@ -604,6 +637,13 @@ export class DatabaseStorage implements IStorage {
           id,
           source,
           sourceId,
+          userId: attribution.userId, // Override with resolved attribution
+          properties: {
+            ...incident.properties,
+            reporterId: attribution.reporterId, // Ensure reporterId in properties
+            source: source,
+            userReported: !attribution.isSystemAccount
+          },
           lastUpdated: new Date(),
           publishedAt: new Date(),
           updatedAt: new Date(),
@@ -612,6 +652,13 @@ export class DatabaseStorage implements IStorage {
           target: unifiedIncidents.id, // Use primary key instead of (source, sourceId)
           set: {
             ...incident,
+            userId: attribution.userId, // Override with resolved attribution
+            properties: {
+              ...incident.properties,
+              reporterId: attribution.reporterId, // Ensure reporterId in properties
+              source: source,
+              userReported: !attribution.isSystemAccount
+            },
             lastUpdated: new Date(),
             updatedAt: new Date(),
             version: sql`${unifiedIncidents.version} + 1`,
