@@ -839,17 +839,25 @@ class UnifiedIngestionEngine {
     const groupedType = props.GroupedType?.toLowerCase() || '';
     const incidentType = props.Incident_Type?.toLowerCase() || '';
     
-    // Return detailed subcategory based on emergency type
-    if (jurisdiction.includes('fire') || incidentNumber.includes('qf') || groupedType.includes('fire')) {
-      return 'Fire & Smoke';
+    // Check specific incident types FIRST (more specific than jurisdiction)
+    if (groupedType.includes('rescue') || groupedType.includes('medical')) {
+      return 'Medical Emergencies';
     }
-    if (jurisdiction.includes('ambulance') || incidentNumber.includes('qa') || groupedType.includes('medical') || groupedType.includes('rescue')) {
+    if (groupedType.includes('hazmat') || groupedType.includes('chemical')) {
+      return 'Chemical/Hazmat';
+    }
+    
+    // Then check by jurisdiction/source (broader classification)
+    if (jurisdiction.includes('ambulance') || incidentNumber.includes('qa')) {
       return 'Medical Emergencies';
     }
     if (jurisdiction.includes('police') || incidentNumber.includes('qp') || groupedType.includes('police') || incidentType.includes('police')) {
       return 'Public Safety';
     }
-    if (jurisdiction.includes('ses') || groupedType.includes('hazmat') || groupedType.includes('chemical')) {
+    if (jurisdiction.includes('fire') || incidentNumber.includes('qf') || groupedType.includes('fire')) {
+      return 'Fire & Smoke';
+    }
+    if (jurisdiction.includes('ses')) {
       return 'Chemical/Hazmat';
     }
     
