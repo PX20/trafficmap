@@ -322,6 +322,25 @@ function IncidentDetailPage({ asModal = true, incidentId: propIncidentId }: Inci
             </div>
           )}
           
+          {/* Photo Card - for user incidents with photos */}
+          {(incident?.photoUrl || incident?.properties?.photoUrl) && (
+            <Card className="border border-gray-200/60 shadow-sm">
+              <CardContent className="p-0">
+                <img
+                  src={incident.photoUrl || incident.properties?.photoUrl}
+                  alt="Incident photo"
+                  className="w-full h-64 object-cover rounded-lg"
+                  loading="lazy"
+                  onError={(e) => {
+                    // Hide card if image fails to load
+                    const card = (e.target as HTMLImageElement).closest('.border-gray-200\\/60');
+                    if (card) (card as HTMLElement).style.display = 'none';
+                  }}
+                />
+              </CardContent>
+            </Card>
+          )}
+
           {/* Description Card */}
           <Card className="border border-gray-200/60 shadow-sm">
             <CardContent className="p-4">
