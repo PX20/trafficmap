@@ -555,14 +555,15 @@ export class DatabaseStorage implements IStorage {
 
   async createUnifiedIncident(incident: InsertUnifiedIncident): Promise<SelectUnifiedIncident> {
     // ATTRIBUTION ENFORCEMENT: Ensure all incidents have valid user attribution
+    const props = incident.properties as any || {};
     const attribution = resolveAttribution(
       incident.source, 
       incident.userId, 
       { 
         title: incident.title,
-        GroupedType: incident.properties?.GroupedType,
-        Jurisdiction: incident.properties?.Jurisdiction,
-        Master_Incident_Number: incident.properties?.Master_Incident_Number
+        GroupedType: props.GroupedType,
+        Jurisdiction: props.Jurisdiction,
+        Master_Incident_Number: props.Master_Incident_Number
       }
     );
     
@@ -570,11 +571,27 @@ export class DatabaseStorage implements IStorage {
     const [newIncident] = await db
       .insert(unifiedIncidents)
       .values({
-        ...incident,
+        source: incident.source,
+        sourceId: incident.sourceId,
+        title: incident.title,
+        description: incident.description,
+        location: incident.location,
+        category: incident.category,
+        subcategory: incident.subcategory,
+        severity: incident.severity,
+        status: incident.status,
+        geometry: incident.geometry,
+        centroidLat: incident.centroidLat,
+        centroidLng: incident.centroidLng,
+        regionIds: incident.regionIds,
+        geocell: incident.geocell,
+        incidentTime: incident.incidentTime,
+        photoUrl: incident.photoUrl,
+        verificationStatus: incident.verificationStatus,
         id,
         userId: attribution.userId, // Override with resolved attribution
         properties: {
-          ...incident.properties,
+          ...(incident.properties || {}),
           reporterId: attribution.reporterId, // Ensure reporterId in properties
           source: incident.source,
           userReported: !attribution.isSystemAccount
@@ -603,14 +620,15 @@ export class DatabaseStorage implements IStorage {
 
   async upsertUnifiedIncident(source: 'tmr' | 'emergency' | 'user', sourceId: string, incident: InsertUnifiedIncident): Promise<SelectUnifiedIncident> {
     // ATTRIBUTION ENFORCEMENT: Ensure all incidents have valid user attribution
+    const props = incident.properties as any || {};
     const attribution = resolveAttribution(
       source, 
       incident.userId, 
       { 
         title: incident.title,
-        GroupedType: incident.properties?.GroupedType,
-        Jurisdiction: incident.properties?.Jurisdiction,
-        Master_Incident_Number: incident.properties?.Master_Incident_Number
+        GroupedType: props.GroupedType,
+        Jurisdiction: props.Jurisdiction,
+        Master_Incident_Number: props.Master_Incident_Number
       }
     );
     
@@ -633,13 +651,27 @@ export class DatabaseStorage implements IStorage {
       const [upserted] = await db
         .insert(unifiedIncidents)
         .values({
-          ...incident,
+          title: incident.title,
+          description: incident.description,
+          location: incident.location,
+          category: incident.category,
+          subcategory: incident.subcategory,
+          severity: incident.severity,
+          status: incident.status,
+          geometry: incident.geometry,
+          centroidLat: incident.centroidLat,
+          centroidLng: incident.centroidLng,
+          regionIds: incident.regionIds,
+          geocell: incident.geocell,
+          incidentTime: incident.incidentTime,
+          photoUrl: incident.photoUrl,
+          verificationStatus: incident.verificationStatus,
           id,
           source,
           sourceId,
           userId: attribution.userId, // Override with resolved attribution
           properties: {
-            ...incident.properties,
+            ...(incident.properties || {}),
             reporterId: attribution.reporterId, // Ensure reporterId in properties
             source: source,
             userReported: !attribution.isSystemAccount
@@ -651,10 +683,24 @@ export class DatabaseStorage implements IStorage {
         .onConflictDoUpdate({
           target: unifiedIncidents.id, // Use primary key instead of (source, sourceId)
           set: {
-            ...incident,
+            title: incident.title,
+            description: incident.description,
+            location: incident.location,
+            category: incident.category,
+            subcategory: incident.subcategory,
+            severity: incident.severity,
+            status: incident.status,
+            geometry: incident.geometry,
+            centroidLat: incident.centroidLat,
+            centroidLng: incident.centroidLng,
+            regionIds: incident.regionIds,
+            geocell: incident.geocell,
+            incidentTime: incident.incidentTime,
+            photoUrl: incident.photoUrl,
+            verificationStatus: incident.verificationStatus,
             userId: attribution.userId, // Override with resolved attribution
             properties: {
-              ...incident.properties,
+              ...(incident.properties || {}),
               reporterId: attribution.reporterId, // Ensure reporterId in properties
               source: source,
               userReported: !attribution.isSystemAccount

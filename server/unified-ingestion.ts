@@ -285,11 +285,11 @@ class UnifiedIngestionEngine {
             description: incident.description || '',
             location: incident.location,
             category: smartCategory,
-            source: 'user',
-            userReported: true,
-            reporterId: null // Legacy incidents don't have reporter info
+            source: 'legacy',
+            userReported: false,
+            reporterId: 'legacy-system-account-001' // Legacy incidents use system account
           },
-          userId: null,
+          userId: 'legacy-system-account-001',
           photoUrl: incident.photoUrl || null,
           verificationStatus: 'unverified'
         } as InsertUnifiedIncident;
@@ -385,7 +385,7 @@ class UnifiedIngestionEngine {
           incidentTime: props.published ? new Date(props.published) : new Date(),
           lastUpdated: props.last_updated ? new Date(props.last_updated) : new Date(),
           publishedAt: new Date(),
-          userId: this.getAgencyUserId('tmr', title, props),
+          userId: undefined, // Will be resolved by storage layer attribution system
           properties: props
         };
 
@@ -428,7 +428,7 @@ class UnifiedIngestionEngine {
           incidentTime: props.Response_Date ? new Date(props.Response_Date) : new Date(),
           lastUpdated: props.LastUpdate ? new Date(props.LastUpdate) : new Date(),
           publishedAt: new Date(),
-          userId: this.getAgencyUserId('emergency', title, props),
+          userId: undefined, // Will be resolved by storage layer attribution system
           properties: {
             ...props,
             // CRITICAL: Ensure emergency incidents are never marked as user reports
@@ -829,43 +829,9 @@ class UnifiedIngestionEngine {
     return 'medium';
   }
 
-  // Helper function to determine agency user ID based on incident data
-  private getAgencyUserId(source: string, title: string, props: any): string | undefined {
-    if (source === 'tmr') {
-      return 'tmr-agency-account-001';
-    }
-    
-    if (source === 'emergency') {
-      const lowerTitle = title.toLowerCase();
-      const groupedType = props.GroupedType?.toLowerCase() || '';
-      const jurisdiction = props.Jurisdiction?.toLowerCase() || '';
-      
-      // Priority check: First check incident types that override prefixes
-      // QAS - Ambulance Service (Rescue operations, medical emergencies)
-      if (lowerTitle.includes('rescue') || lowerTitle.includes('medical') || lowerTitle.includes('ambulance') ||
-          groupedType.includes('medical') || groupedType.includes('rescue') || jurisdiction.includes('ambulance') ||
-          title.startsWith('QA')) {
-        return 'qas-agency-account-001';
-      }
-      
-      // QPS - Police Service (Power/Gas incidents often handled by police)
-      if (lowerTitle.includes('power') || lowerTitle.includes('gas') || lowerTitle.includes('police') || lowerTitle.includes('crime') ||
-          groupedType.includes('police') || jurisdiction.includes('police') || title.startsWith('QP')) {
-        return 'qps-agency-account-001';
-      }
-      
-      // QFES - Fire and Emergency Services (fire incidents and fallback for QF prefix)
-      if (lowerTitle.includes('fire') || lowerTitle.includes('hazmat') || title.startsWith('QF') || 
-          groupedType.includes('fire') || jurisdiction.includes('fire')) {
-        return 'qfes-agency-account-001';
-      }
-      
-      // Default to QFES for other emergency incidents
-      return 'qfes-agency-account-001';
-    }
-    
-    return undefined;
-  }
+  // Note: Agency user ID resolution has been moved to the centralized attribution system
+  // in shared/schema.ts resolveAttribution function. The storage layer now automatically
+  // handles attribution for all incident sources during create/upsert operations.
 
   private getEmergencyCategory(props: any): string {
     const jurisdiction = props.Jurisdiction?.toLowerCase() || '';
