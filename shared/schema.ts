@@ -966,36 +966,12 @@ export function resolveAttribution(
 }
 
 /**
- * Resolve specific emergency agency based on incident metadata
- * @param metadata - Incident properties from emergency services API
- * @returns Agency user ID
+ * Resolve emergency agency for incident attribution
+ * All emergency incidents come from QFES API, so attribute to QFES
+ * @param metadata - Incident properties from emergency services API (unused)
+ * @returns QFES agency user ID
  */
 function resolveEmergencyAgency(metadata: any = {}): SystemUserId {
-  const title = (metadata.title || '').toLowerCase();
-  const groupedType = (metadata.GroupedType || '').toLowerCase();
-  const jurisdiction = (metadata.Jurisdiction || '').toLowerCase();
-  const incidentNumber = (metadata.Master_Incident_Number || '').toLowerCase();
-  
-  // QAS - Ambulance Service (Rescue operations, medical emergencies)
-  if (title.includes('rescue') || title.includes('medical') || title.includes('ambulance') ||
-      groupedType.includes('medical') || groupedType.includes('rescue') || 
-      jurisdiction.includes('ambulance') || incidentNumber.startsWith('qa')) {
-    return SYSTEM_USER_IDS.QAS;
-  }
-  
-  // QPS - Police Service (Power/Gas incidents often handled by police)
-  if (title.includes('power') || title.includes('gas') || title.includes('police') || 
-      title.includes('crime') || groupedType.includes('police') || 
-      jurisdiction.includes('police') || incidentNumber.startsWith('qp')) {
-    return SYSTEM_USER_IDS.QPS;
-  }
-  
-  // QFES - Fire and Emergency Services (fire incidents and fallback for QF prefix)
-  if (title.includes('fire') || title.includes('hazmat') || incidentNumber.startsWith('qf') || 
-      groupedType.includes('fire') || jurisdiction.includes('fire')) {
-    return SYSTEM_USER_IDS.QFES;
-  }
-  
-  // Default to QFES for other emergency incidents
+  // All emergency incidents come from QFES API data source
   return SYSTEM_USER_IDS.QFES;
 }
