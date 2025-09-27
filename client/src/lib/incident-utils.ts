@@ -168,11 +168,11 @@ export function getIncidentSubcategory(incident: any): string {
 export function getReporterUserId(incident: any): string | null {
   if (!incident) return null;
   
-  // Fix: Check for non-empty values - try properties first since that's where the data actually is
-  return incident.properties?.reporterId || 
-         incident.properties?.userId || 
-         (incident.userId && incident.userId.trim() !== '' ? incident.userId : null) ||
-         null;
+  // Extract user ID - prioritize top-level userId from unified API response
+  const userId = incident.userId || incident.properties?.reporterId || incident.properties?.userId;
+  
+  // Return null if empty string or null/undefined
+  return userId && userId.trim() !== '' ? userId : null;
 }
 
 // Unified incident navigation system for consolidating map and feed modals
