@@ -32,45 +32,14 @@ export function getAgencyInfo(incident: any): AgencyInfo | null {
   }
   
   if (source === 'emergency') {
-    // Government API Feed - Emergency Services
-    // Determine specific emergency service based on incident data
-    const eventType = incident.properties?.Event_Type?.toLowerCase() || '';
-    const description = incident.properties?.description?.toLowerCase() || '';
-    
-    if (eventType.includes('fire') || eventType.includes('burn') || eventType.includes('hazmat') || description.includes('fire')) {
-      return { 
-        name: 'Queensland Fire & Emergency', 
-        type: 'QFES Official', 
-        avatar: 'QFE', 
-        color: 'bg-gradient-to-br from-red-500 to-red-600',
-        photoUrl: null
-      };
-    } else if (eventType.includes('police') || eventType.includes('crime') || eventType.includes('traffic enforcement') || description.includes('police')) {
-      return { 
-        name: 'Queensland Police Service', 
-        type: 'QPS Official', 
-        avatar: 'QPS', 
-        color: 'bg-gradient-to-br from-blue-700 to-blue-800',
-        photoUrl: null
-      };
-    } else if (eventType.includes('medical') || eventType.includes('ambulance') || eventType.includes('cardiac') || description.includes('medical') || description.includes('ambulance')) {
-      return { 
-        name: 'Queensland Ambulance Service', 
-        type: 'QAS Official', 
-        avatar: 'QAS', 
-        color: 'bg-gradient-to-br from-green-600 to-green-700',
-        photoUrl: null
-      };
-    } else {
-      // Default to general emergency services
-      return { 
-        name: 'Emergency Services Queensland', 
-        type: 'ESQ Official', 
-        avatar: 'ESQ', 
-        color: 'bg-gradient-to-br from-red-500 to-red-600',
-        photoUrl: null
-      };
-    }
+    // All emergency incidents come from QFES API - use consistent attribution
+    return { 
+      name: 'QFES Queensland', 
+      type: 'QFES Official', 
+      avatar: 'QFES', 
+      color: 'bg-gradient-to-br from-red-500 to-red-600',
+      photoUrl: null
+    };
   }
   
   // Legacy support for traffic incidents without unified source field
@@ -89,36 +58,12 @@ export function getAgencyInfo(incident: any): AgencyInfo | null {
     const eventType = incident.properties?.Event_Type?.toLowerCase() || '';
     const description = incident.properties?.description?.toLowerCase() || '';
     
-    if (eventType.includes('fire') || eventType.includes('burn') || eventType.includes('hazmat') || description.includes('fire')) {
+    // If has emergency-like data, treat as QFES for consistency
+    if (eventType || description) {
       return { 
-        name: 'Queensland Fire & Emergency', 
+        name: 'QFES Queensland', 
         type: 'QFES Official', 
-        avatar: 'QFE', 
-        color: 'bg-gradient-to-br from-red-500 to-red-600',
-        photoUrl: null
-      };
-    } else if (eventType.includes('police') || eventType.includes('crime') || eventType.includes('traffic enforcement') || description.includes('police')) {
-      return { 
-        name: 'Queensland Police Service', 
-        type: 'QPS Official', 
-        avatar: 'QPS', 
-        color: 'bg-gradient-to-br from-blue-700 to-blue-800',
-        photoUrl: null
-      };
-    } else if (eventType.includes('medical') || eventType.includes('ambulance') || eventType.includes('cardiac') || description.includes('medical') || description.includes('ambulance')) {
-      return { 
-        name: 'Queensland Ambulance Service', 
-        type: 'QAS Official', 
-        avatar: 'QAS', 
-        color: 'bg-gradient-to-br from-green-600 to-green-700',
-        photoUrl: null
-      };
-    } else if (eventType || description) {
-      // Has emergency-like data but not clearly categorized
-      return { 
-        name: 'Emergency Services Queensland', 
-        type: 'ESQ Official', 
-        avatar: 'ESQ', 
+        avatar: 'QFES', 
         color: 'bg-gradient-to-br from-red-500 to-red-600',
         photoUrl: null
       };
