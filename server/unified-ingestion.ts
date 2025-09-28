@@ -808,13 +808,38 @@ class UnifiedIngestionEngine {
   }
 
   private getTMRSubcategory(props: any): string {
-    const impact = String(props.impact || '').toLowerCase();
-    const type = String(props.event_type || '').toLowerCase();
+    // Handle event_type (remove quotes)
+    const type = String(props.event_type || '').toLowerCase().replace(/['"]/g, '');
     
-    if (impact.includes('blocked') || impact.includes('closed')) return 'road-closure';
-    if (impact.includes('congestion') || impact.includes('delays')) return 'congestion';
-    if (type.includes('accident') || type.includes('crash')) return 'accident';
-    if (type.includes('roadwork') || type.includes('construction')) return 'roadwork';
+    // Handle impact object properly
+    const impactObj = props.impact || {};
+    const impactType = String(impactObj.impact_type || '').toLowerCase();
+    const impactSubtype = String(impactObj.impact_subtype || '').toLowerCase();
+    const delay = String(impactObj.delay || '').toLowerCase();
+    
+    // Check for road closures first
+    if (impactType.includes('blocked') || impactType.includes('closed') || 
+        impactSubtype.includes('blocked') || impactSubtype.includes('closed')) {
+      return 'road-closure';
+    }
+    
+    // Check for congestion - look in event_type and impact fields
+    if (type.includes('congestion') || 
+        impactType.includes('congestion') || 
+        delay.includes('delays') || 
+        delay.includes('congestion')) {
+      return 'congestion';
+    }
+    
+    // Check for accidents/crashes
+    if (type.includes('accident') || type.includes('crash')) {
+      return 'accident';
+    }
+    
+    // Check for roadworks
+    if (type.includes('roadwork') || type.includes('construction')) {
+      return 'roadwork';
+    }
     
     return 'other';
   }
