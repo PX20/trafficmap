@@ -82,109 +82,90 @@ export function useTrafficData(filters: FilterState): ProcessedTrafficData {
     return source === 'emergency' || source === 'user'; // Emergency services + user reports
   });
 
-  // CLIENT-SIDE REGIONAL FILTERING for feed data using pre-computed regionIds
-  const targetRegion = findRegionBySuburb(filters.homeLocation || '');
-  const targetRegionId = targetRegion?.id;
+  // CLIENT-SIDE PROXIMITY-BASED FILTERING - Primary filtering method
+  const defaultRadius = 50; // Default 50km radius
+  const filterRadius = typeof filters.radius === 'number' ? filters.radius : defaultRadius;
   
-  // Debug regional filtering
-  console.log('🏠 HOME LOCATION:', filters.homeLocation, 'TARGET REGION:', targetRegionId);
+  // Debug proximity filtering
+  console.log('🏠 HOME LOCATION:', filters.homeLocation, 'COORDINATES:', filters.homeCoordinates, 'RADIUS:', filterRadius + 'km');
   
-  // FIXED: Geometry-based regional filtering with regionIds fallback
-  const isInRegion = (feature: any) => {
-    if (!targetRegionId) return false;
+  // PROXIMITY-BASED FILTERING: Use distance calculation as primary and only method
+  const isWithinProximity = (feature: any) => {
+    // Require home coordinates for filtering
+    if (!filters.homeCoordinates) return false;
     
-    // Derive userReported status and debug first
+    // Derive userReported status for debugging
     const isUser = feature.properties?.source === 'user';
-    const userReported = feature.properties?.userReported ?? isUser;
-    const regionIds = feature.properties?.regionIds || feature.regionIds || [];
     
-    // Debug ALL user incidents before any returns
+    // Debug user incidents
     if (isUser) {
       console.log('👤 USER INCIDENT:', {
         id: feature.id,
         title: feature.properties?.title,
         location: feature.properties?.location,
-        regionIds: regionIds,
-        userReported: userReported,
-        targetRegionId: targetRegionId
+        hasCoordinates: !!feature.geometry?.coordinates
       });
     }
     
-    // PRIORITY 1: Geometry-based filtering (if home coordinates available)
-    if (filters.homeCoordinates && feature.geometry?.coordinates) {
-      // Extract coordinates from geometry using centroid data or proper geometry parsing
-      let lng, lat;
-      
-      // First try to use pre-computed centroid from properties
-      if (feature.properties?.centroidLng && feature.properties?.centroidLat) {
-        lng = feature.properties.centroidLng;
-        lat = feature.properties.centroidLat;
+    // Extract coordinates from incident
+    let lng, lat;
+    
+    // First try to use pre-computed centroid from properties
+    if (feature.properties?.centroidLng && feature.properties?.centroidLat) {
+      lng = feature.properties.centroidLng;
+      lat = feature.properties.centroidLat;
+    } else if (feature.geometry?.coordinates) {
+      // Fallback to extracting from geometry
+      if (feature.geometry.type === 'Point') {
+        [lng, lat] = feature.geometry.coordinates;
+      } else if (feature.geometry.type === 'MultiPoint' && feature.geometry.coordinates[0]) {
+        [lng, lat] = feature.geometry.coordinates[0];
+      } else if (feature.geometry.type === 'MultiLineString' && feature.geometry.coordinates[0]?.[0]) {
+        [lng, lat] = feature.geometry.coordinates[0][0];
+      } else if (feature.geometry.type === 'LineString' && feature.geometry.coordinates[0]) {
+        [lng, lat] = feature.geometry.coordinates[0];
       } else {
-        // Fallback to extracting from geometry
-        if (feature.geometry.type === 'Point') {
-          [lng, lat] = feature.geometry.coordinates;
-        } else if (feature.geometry.type === 'MultiPoint' && feature.geometry.coordinates[0]) {
-          [lng, lat] = feature.geometry.coordinates[0];
-        } else if (feature.geometry.type === 'MultiLineString' && feature.geometry.coordinates[0]?.[0]) {
-          [lng, lat] = feature.geometry.coordinates[0][0];
-        } else if (feature.geometry.type === 'LineString' && feature.geometry.coordinates[0]) {
-          [lng, lat] = feature.geometry.coordinates[0];
-        } else {
-          // Skip invalid geometry
-          return false;
-        }
-      }
-      
-      // Validate extracted coordinates
-      if (typeof lng !== 'number' || typeof lat !== 'number' || isNaN(lng) || isNaN(lat)) {
+        console.log('❌ INVALID GEOMETRY:', feature.id, 'type:', feature.geometry.type);
         return false;
       }
-      
-      const homeLng = filters.homeCoordinates.lon;
-      const homeLat = filters.homeCoordinates.lat;
-      
-      // Calculate distance using Haversine formula
-      const R = 6371; // Earth's radius in km
-      const dLat = (lat - homeLat) * Math.PI / 180;
-      const dLng = (lng - homeLng) * Math.PI / 180;
-      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                Math.cos(homeLat * Math.PI / 180) * Math.cos(lat * Math.PI / 180) *
-                Math.sin(dLng/2) * Math.sin(dLng/2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-      const distance = R * c;
-      
-      // Include incidents within reasonable radius of home location (50km for regional area)
-      const inRadius = distance <= 50;
-      if (inRadius) {
-        console.log('✅ GEOMETRY MATCH:', feature.id, 'distance:', distance.toFixed(1) + 'km');
-        return true;
-      } else {
-        console.log('❌ GEOMETRY REJECT:', feature.id, 'distance:', distance.toFixed(1) + 'km');
-      }
+    } else {
+      console.log('❌ NO COORDINATES:', feature.id, 'missing geometry');
+      return false;
     }
     
-    // PRIORITY 2: Use pre-computed regionIds (but don't reject if geometry passed)
-    if (Array.isArray(regionIds) && regionIds.includes(targetRegionId)) {
-      console.log('✅ REGIONIDS MATCH:', feature.id, 'regionIds:', regionIds);
+    // Validate extracted coordinates
+    if (typeof lng !== 'number' || typeof lat !== 'number' || isNaN(lng) || isNaN(lat)) {
+      console.log('❌ INVALID COORDINATES:', feature.id, 'lng:', lng, 'lat:', lat);
+      return false;
+    }
+    
+    const homeLng = filters.homeCoordinates.lon;
+    const homeLat = filters.homeCoordinates.lat;
+    
+    // Calculate distance using Haversine formula
+    const R = 6371; // Earth's radius in km
+    const dLat = (lat - homeLat) * Math.PI / 180;
+    const dLng = (lng - homeLng) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(homeLat * Math.PI / 180) * Math.cos(lat * Math.PI / 180) *
+              Math.sin(dLng/2) * Math.sin(dLng/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    const distance = R * c;
+    
+    // Check if within configured radius
+    const withinRadius = distance <= filterRadius;
+    if (withinRadius) {
+      console.log('✅ PROXIMITY MATCH:', feature.id, 'distance:', distance.toFixed(1) + 'km');
       return true;
+    } else {
+      console.log('❌ PROXIMITY REJECT:', feature.id, 'distance:', distance.toFixed(1) + 'km');
+      return false;
     }
-    
-    // PRIORITY 3: Fallback to text-based matching for any features missing both geometry and regionIds
-    const text = `${feature.properties?.location ?? ''} ${feature.properties?.description ?? ''} ${feature.properties?.title ?? ''}`.toLowerCase();
-    const textMatch = (targetRegion?.suburbs || []).some(suburb => text.includes(suburb.toLowerCase()));
-    
-    if (textMatch) {
-      console.log('✅ TEXT MATCH:', feature.id, 'text contains regional suburb');
-      return true;
-    }
-    
-    console.log('❌ NO MATCH:', feature.id, 'failed all filters');
-    return false;
   };
 
-  // Apply regional filtering for feed data
-  const regionalEventsData = targetRegionId ? allEventsData.filter(isInRegion) : [];
-  const regionalIncidentsData = targetRegionId ? allIncidentsData.filter(isInRegion) : [];
+  // Apply proximity-based filtering for feed data
+  const regionalEventsData = filters.homeCoordinates ? allEventsData.filter(isWithinProximity) : [];
+  const regionalIncidentsData = filters.homeCoordinates ? allIncidentsData.filter(isWithinProximity) : [];
 
   // All data for map display (shows everything)
   const allEvents = Array.isArray(allEventsData) ? allEventsData : [];
