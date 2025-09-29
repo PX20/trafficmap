@@ -236,6 +236,20 @@ class UnifiedIngestionEngine {
       .filter(incident => {
         if (!incident.geometry) return false; // Only include incidents with geometry
         
+        // CRITICAL BUG FIX: Skip incidents that are already properly stored in unified store
+        // This prevents new user reports from being overwritten with legacy system account
+        const alreadyInUnifiedStore = userReports.find(unified => 
+          unified.sourceId === incident.id && 
+          unified.source === 'user' &&
+          unified.userId && 
+          unified.userId !== 'legacy-system-account-001'
+        );
+        
+        if (alreadyInUnifiedStore) {
+          // Skip this incident - it's already properly stored with correct user attribution
+          return false;
+        }
+        
         // NOTE: Emergency incidents are handled by the Emergency Services pipeline,
         // so we don't need to filter them here - they won't be in the legacy user incidents table anyway
         
