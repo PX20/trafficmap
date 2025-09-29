@@ -215,7 +215,7 @@ export default function Home() {
     }
   }, [filters.homeLocation, filters.homeCoordinates, filters.homeBoundingBox, filters.locationFilter]);
 
-  const handleFilterChange = (key: keyof FilterState, value: boolean | string | { lat: number; lon: number } | [number, number, number, number] | undefined) => {
+  const handleFilterChange = (key: keyof FilterState, value: boolean | string | number | { lat: number; lon: number } | [number, number, number, number] | undefined) => {
     setFilters(prev => ({ ...prev, [key]: value }));
   };
 
