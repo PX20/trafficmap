@@ -216,6 +216,10 @@ export default function Home() {
   }, [filters.homeLocation, filters.homeCoordinates, filters.homeBoundingBox, filters.locationFilter]);
 
   const handleFilterChange = (key: keyof FilterState, value: boolean | string | number | { lat: number; lon: number } | [number, number, number, number] | undefined) => {
+    // DEBUG: Log radius changes to identify the bug
+    if (key === 'radius') {
+      console.log('🔧 RADIUS CHANGE DEBUG:', { key, value, currentRadius: filters.radius });
+    }
     setFilters(prev => ({ ...prev, [key]: value }));
   };
 
