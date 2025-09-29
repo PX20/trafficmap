@@ -775,66 +775,17 @@ class UnifiedIngestionEngine {
   }
 
   private computeRegionIds(lat: number, lng: number, props: any): string[] {
-    const regionIds: string[] = [];
-    // Import at top level - these functions are imported in the imports section
+    // SIMPLIFIED: Since we moved to proximity-based filtering, regionIds are optional
+    // Focus on coordinate validation and basic region assignment only
     
-    // Stage 1: Try coordinate-based match
-    let region = getRegionFromCoordinates(lat, lng);
-    
-    // Stage 2: For TMR incidents, use district mapping (most reliable for traffic data)
-    if (!region && props.road_summary?.district) {
-      const district = props.road_summary.district.toLowerCase();
-      
-      // Direct district to region mapping for TMR data (only map to available regions)
-      const districtToRegionMap: { [key: string]: string } = {
-        'metropolitan': 'brisbane',
-        'north coast': 'sunshine-coast',
-        'south coast': 'gold-coast'
-        // Note: Other districts (Central West, Northern, Far North, etc.) will use coordinate-based matching only
-      };
-      
-      const regionId = districtToRegionMap[district];
-      if (regionId) {
-        // Validate region exists
-        const validRegion = QLD_REGIONS.find((r: any) => r.id === regionId);
-        if (validRegion) {
-          regionIds.push(regionId);
-          return regionIds;
-        }
-      }
+    try {
+      // Basic coordinate-based region lookup (if available)
+      const region = getRegionFromCoordinates(lat, lng);
+      return region ? [region.id] : [];
+    } catch (error) {
+      console.warn('Error computing basic regionIds:', error);
+      return [];
     }
-    
-    // Stage 3: Try text-based locality matching
-    if (!region) {
-      const locality = props.road_summary?.locality || props.location || props.suburb || props.Locality || props.Location;
-      if (locality) {
-        region = findRegionBySuburb(locality);
-      }
-    }
-    
-    // Stage 4: If coordinate fails, try with text fallback to getRegionFromCoordinates
-    if (!region) {
-      const textFallback = props.location || props.suburb || props.Locality || props.Location || props.road_summary?.locality;
-      if (textFallback) {
-        region = getRegionFromCoordinates(lat, lng, textFallback);
-      }
-    }
-    
-    // Stage 5: If still null and targetRegionId is valid, use it as fallback
-    if (!region && props.targetRegionId) {
-      const validRegion = QLD_REGIONS.find((r: any) => r.id === props.targetRegionId);
-      if (validRegion) {
-        regionIds.push(props.targetRegionId);
-        return regionIds;
-      }
-    }
-    
-    // Return found region or empty array
-    if (region) {
-      regionIds.push(region.id);
-    }
-
-    return regionIds;
   }
 
   private getTMRSubcategory(props: any): string {
