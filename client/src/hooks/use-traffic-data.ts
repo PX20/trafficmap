@@ -112,7 +112,34 @@ export function useTrafficData(filters: FilterState): ProcessedTrafficData {
     
     // PRIORITY 1: Geometry-based filtering (if home coordinates available)
     if (filters.homeCoordinates && feature.geometry?.coordinates) {
-      const [lng, lat] = feature.geometry.coordinates;
+      // Extract coordinates from geometry using centroid data or proper geometry parsing
+      let lng, lat;
+      
+      // First try to use pre-computed centroid from properties
+      if (feature.properties?.centroidLng && feature.properties?.centroidLat) {
+        lng = feature.properties.centroidLng;
+        lat = feature.properties.centroidLat;
+      } else {
+        // Fallback to extracting from geometry
+        if (feature.geometry.type === 'Point') {
+          [lng, lat] = feature.geometry.coordinates;
+        } else if (feature.geometry.type === 'MultiPoint' && feature.geometry.coordinates[0]) {
+          [lng, lat] = feature.geometry.coordinates[0];
+        } else if (feature.geometry.type === 'MultiLineString' && feature.geometry.coordinates[0]?.[0]) {
+          [lng, lat] = feature.geometry.coordinates[0][0];
+        } else if (feature.geometry.type === 'LineString' && feature.geometry.coordinates[0]) {
+          [lng, lat] = feature.geometry.coordinates[0];
+        } else {
+          // Skip invalid geometry
+          return false;
+        }
+      }
+      
+      // Validate extracted coordinates
+      if (typeof lng !== 'number' || typeof lat !== 'number' || isNaN(lng) || isNaN(lat)) {
+        return false;
+      }
+      
       const homeLng = filters.homeCoordinates.lon;
       const homeLat = filters.homeCoordinates.lat;
       
