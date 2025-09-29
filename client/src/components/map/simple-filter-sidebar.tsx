@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ChevronDown, ChevronRight, Car, Shield, Users, MapPin, Flame, Zap, Trees, AlertTriangle, RefreshCw, Target, Heart, Clock, Eye } from "lucide-react";
@@ -14,7 +15,7 @@ import { useTrafficData } from "@/hooks/use-traffic-data";
 interface SimpleFilterSidebarProps {
   isOpen: boolean;
   filters: FilterState;
-  onFilterChange: (key: keyof FilterState, value: boolean | string | { lat: number; lon: number } | [number, number, number, number] | undefined) => void;
+  onFilterChange: (key: keyof FilterState, value: boolean | string | number | { lat: number; lon: number } | [number, number, number, number] | undefined) => void;
   onClose: () => void;
 }
 
@@ -349,6 +350,31 @@ export function SimpleFilterSidebar({ isOpen, filters, onFilterChange, onClose }
                 />
               </div>
               
+              {/* Radius Control */}
+              {filters.homeCoordinates && (
+                <div className="space-y-3">
+                  <div className="space-y-2">
+                    <Label className="text-xs text-muted-foreground">Search Radius:</Label>
+                    <div className="space-y-2">
+                      <Slider
+                        value={[filters.radius || 50]}
+                        onValueChange={(value) => onFilterChange('radius', value[0])}
+                        max={200}
+                        min={5}
+                        step={5}
+                        className="w-full"
+                        data-testid="slider-radius"
+                      />
+                      <div className="flex justify-between text-xs text-muted-foreground">
+                        <span>5km</span>
+                        <span className="font-medium text-foreground">{filters.radius || 50}km radius</span>
+                        <span>200km</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
               {filters.homeLocation && (
                 <div className="bg-muted/50 p-3 rounded-md">
                   <div className="text-sm text-foreground">
@@ -358,7 +384,7 @@ export function SimpleFilterSidebar({ isOpen, filters, onFilterChange, onClose }
                     {filters.homeLocation}
                   </div>
                   <div className="text-xs text-muted-foreground mt-1">
-                    Showing events from your region
+                    Showing events within {filters.radius || 50}km radius
                   </div>
                 </div>
               )}

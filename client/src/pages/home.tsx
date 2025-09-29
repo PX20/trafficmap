@@ -33,6 +33,7 @@ export interface FilterState {
   autoRefresh: boolean;
   // Distance filtering
   distanceFilter: 'all' | '5km' | '10km' | '25km';
+  radius?: number; // Custom radius in kilometers for proximity filtering
   // Location filtering
   locationFilter: boolean;
   homeLocation?: string;
@@ -42,7 +43,7 @@ export interface FilterState {
   showExpiredIncidents: boolean;
   agingSensitivity: 'normal' | 'extended' | 'disabled';
   // Dynamic category filters - any string key for category IDs
-  [key: string]: boolean | string | { lat: number; lon: number } | [number, number, number, number] | undefined;
+  [key: string]: boolean | string | number | { lat: number; lon: number } | [number, number, number, number] | undefined;
 }
 
 export default function Home() {
@@ -72,6 +73,7 @@ export default function Home() {
     // Auto-refresh and distance
     autoRefresh: true,
     distanceFilter: 'all',
+    radius: 50, // Default 50km radius for proximity filtering
     locationFilter: true,
     // Aging controls - hide expired incidents by default for clean map display
     showExpiredIncidents: false, // Hide expired incidents after aging duration
