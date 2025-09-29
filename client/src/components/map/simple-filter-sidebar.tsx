@@ -355,21 +355,24 @@ export function SimpleFilterSidebar({ isOpen, filters, onFilterChange, onClose }
                 <div className="space-y-3">
                   <div className="space-y-2">
                     <Label className="text-xs text-muted-foreground">Search Radius:</Label>
-                    <div className="space-y-2">
-                      <Slider
-                        value={[filters.radius || 50]}
-                        onValueChange={(value) => onFilterChange('radius', value[0])}
-                        max={200}
-                        min={5}
-                        step={5}
-                        className="w-full"
-                        data-testid="slider-radius"
-                      />
-                      <div className="flex justify-between text-xs text-muted-foreground">
-                        <span>5km</span>
-                        <span className="font-medium text-foreground">{filters.radius || 50}km radius</span>
-                        <span>200km</span>
-                      </div>
+                    <div className="grid grid-cols-4 gap-2">
+                      {[1, 2, 5, 10, 25, 50, 100, 200].map((radius) => (
+                        <Button
+                          key={radius}
+                          variant={filters.radius === radius ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => onFilterChange('radius', radius)}
+                          className="text-xs"
+                          data-testid={`button-radius-${radius}`}
+                        >
+                          {radius}km
+                        </Button>
+                      ))}
+                    </div>
+                    <div className="text-center">
+                      <span className="text-xs font-medium text-foreground">
+                        Current: {filters.radius || 50}km radius
+                      </span>
                     </div>
                   </div>
                 </div>
