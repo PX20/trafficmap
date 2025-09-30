@@ -10,6 +10,16 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### September 30, 2025 - Mobile UX Improvements for Incident Modal
+- **IMPLEMENTED**: Complete mobile UX redesign of incident detail modal based on architect recommendations
+- **Key Improvements**:
+  1. **Compact Header Design**: Combined category badges into single pill format (e.g., "Emergency Situations • Fire & Smoke"), moved official source attribution inline with title area to reduce vertical scrolling
+  2. **48px Touch Targets**: Updated all action buttons to h-12 (48px) minimum with increased spacing, including close button upgraded to h-11 w-11 (44px) for consistency
+  3. **Bottom Sheet Comments**: Redesigned comments section from nested card to bottom-sheet style with sticky header, eliminating scroll-within-scroll issues on mobile
+  4. **Tighter Mobile Layout**: Reduced padding on mobile (p-3) vs desktop (p-6), improved text contrast (text-gray-800 vs text-gray-700) for better readability
+- **Impact**: Modal now uses significantly less vertical space on mobile, all touch interactions meet accessibility standards, and comments section provides natural mobile-friendly flow
+- **Architect Review**: Passed - all targeted mobile UX goals achieved including header density, touch targets, comments flow, and responsive padding
+
 ### September 30, 2025 - Agency Account Auto-Initialization
 - **RESOLVED**: Production "User not found" errors for TMR/QFES incidents
 - **Root Cause**: Agency user accounts (tmr-agency-account-001, qfes-agency-account-001, etc.) existed in development but were missing from production database
