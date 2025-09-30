@@ -10,6 +10,14 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### September 30, 2025 - Agency Account Auto-Initialization
+- **RESOLVED**: Production "User not found" errors for TMR/QFES incidents
+- **Root Cause**: Agency user accounts (tmr-agency-account-001, qfes-agency-account-001, etc.) existed in development but were missing from production database
+- **Solution**: Created `initializeAgencyAccounts()` function in `server/init-agency-accounts.ts` that automatically creates all required system agency accounts on app startup if they don't exist
+- **Implementation**: Function is called at the start of `registerRoutes()` in `server/routes.ts`, ensuring agency accounts are ready before any API requests are processed
+- **Impact**: Production deployments now automatically initialize all agency accounts (TMR, QFES, QAS, QPS, Legacy System), fixing attribution display for all official incidents
+- **Technical Details**: System creates business-type user accounts with `isOfficialAgency: true` flag, allowing proper attribution display in both map markers and feed modals
+
 ### September 20, 2025 - Modal Consistency System Implemented
 - **RESOLVED**: Complete modal consistency between map markers and feed incidents 
 - **Key Fixes**: 
