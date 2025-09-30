@@ -12,6 +12,7 @@ import { ReporterAttribution } from "@/components/ReporterAttribution";
 import { InlineComments } from "@/components/inline-comments";
 import { getIncidentCategory, getIncidentSubcategory, getReporterUserId, getIncidentIconProps } from "@/lib/incident-utils";
 import { getIncidentTitle, getIncidentLocation } from "@/lib/incident-utils";
+import { getAgencyInfo } from "@/lib/agency-info";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -304,23 +305,51 @@ function IncidentDetailPage({ asModal = true, incidentId: propIncidentId }: Inci
 
         <CardContent className="space-y-6 p-6">
           {/* Reporter attribution for all incidents with attribution */}
-          {reporterUserId && (
-            <div className={`rounded-xl p-4 border-l-4 ${
-              source === 'user' ? 'bg-purple-50 border-purple-200' : 
-              source === 'emergency' ? 'bg-red-50 border-red-200' :
-              source === 'tmr' ? 'bg-orange-50 border-orange-200' :
-              'bg-gray-50 border-gray-200'
-            }`}>
-              <p className="text-sm font-medium text-gray-600 mb-3">
-                {source === 'user' ? 'Reported by' : 'Official Source'}
-              </p>
-              <ReporterAttribution 
-                userId={reporterUserId} 
-                variant="default"
-                showAccountType={source !== 'user'}
-              />
-            </div>
-          )}
+          {(() => {
+            // Check if this is an official agency source (TMR/Emergency)
+            const agencyInfo = getAgencyInfo(incident);
+            
+            if (agencyInfo) {
+              // Show official agency attribution
+              return (
+                <div className={`rounded-xl p-4 border-l-4 ${
+                  source === 'emergency' ? 'bg-red-50 border-red-200' :
+                  source === 'tmr' ? 'bg-orange-50 border-orange-200' :
+                  'bg-gray-50 border-gray-200'
+                }`}>
+                  <p className="text-sm font-medium text-gray-600 mb-3">
+                    Official Source
+                  </p>
+                  <div className="flex items-center gap-3">
+                    <Avatar className={`h-10 w-10 ${agencyInfo.color} text-white`}>
+                      <AvatarFallback className="bg-transparent text-white font-semibold">
+                        {agencyInfo.avatar}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="font-semibold text-gray-900">{agencyInfo.name}</p>
+                      <p className="text-xs text-gray-500">{agencyInfo.type}</p>
+                    </div>
+                  </div>
+                </div>
+              );
+            } else if (reporterUserId) {
+              // Show user attribution for community reports
+              return (
+                <div className="rounded-xl p-4 border-l-4 bg-purple-50 border-purple-200">
+                  <p className="text-sm font-medium text-gray-600 mb-3">
+                    Reported by
+                  </p>
+                  <ReporterAttribution 
+                    userId={reporterUserId} 
+                    variant="default"
+                    showAccountType={true}
+                  />
+                </div>
+              );
+            }
+            return null;
+          })()}
           
           {/* Photo Card - for user incidents with photos */}
           {(incident?.photoUrl || incident?.properties?.photoUrl) && (
