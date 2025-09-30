@@ -227,129 +227,102 @@ function IncidentDetailPage({ asModal = true, incidentId: propIncidentId }: Inci
 
   const content = (
     <div className="relative">
-      {/* Close Button */}
+      {/* Close Button - Pinned for centered content, 44px touch target */}
       <Button 
         variant="ghost" 
         size="sm" 
         onClick={handleClose}
-        className="absolute top-0 right-0 z-10"
+        className="absolute top-1 right-1 z-20 h-11 w-11 p-0 rounded-full hover:bg-gray-200"
         data-testid="close-incident-detail"
       >
-        <X className="h-4 w-4" />
+        <X className="h-5 w-5" />
       </Button>
 
       {/* Main Card */}
       <Card className="border-0 shadow-lg bg-gradient-to-br from-white via-gray-50/30 to-white">
-        <CardHeader className={`pb-4 rounded-t-lg ${
+        <CardHeader className={`pb-3 pt-4 px-3 md:px-6 rounded-t-lg ${
           source === 'emergency' ? 'bg-gradient-to-br from-red-50 to-red-100/50 border-red-200' :
           source === 'tmr' ? 'bg-gradient-to-br from-orange-50 to-orange-100/50 border-orange-200' :
           source === 'user' ? 'bg-gradient-to-br from-purple-50 to-purple-100/50 border-purple-200' :
           'bg-gradient-to-br from-gray-50 to-gray-100/50 border-gray-200'
         }`}>
           {/* Header Section */}
-          <div className="flex items-start gap-4">
+          <div className="flex items-start gap-3">
             {/* Incident Icon */}
-            <div className={`flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center shadow-lg ring-2 ${
+            <div className={`flex-shrink-0 w-11 h-11 md:w-12 md:h-12 rounded-xl flex items-center justify-center shadow-lg ring-2 ${
               source === 'emergency' ? 'bg-gradient-to-br from-red-500 to-red-600 ring-red-200' :
               source === 'tmr' ? 'bg-gradient-to-br from-orange-500 to-orange-600 ring-orange-200' :
               source === 'user' ? 'bg-gradient-to-br from-purple-500 to-purple-600 ring-purple-200' :
               'bg-gradient-to-br from-gray-500 to-gray-600 ring-gray-200'
             }`}>
-              <IconComponent className="h-6 w-6 text-white" />
+              <IconComponent className="h-5 w-5 md:h-6 md:w-6 text-white" />
             </div>
             
             {/* Title and Meta */}
-            <div className="flex-1 min-w-0">
-              <h1 className="text-xl font-bold text-gray-900 mb-2 leading-tight" data-testid="incident-title">
+            <div className="flex-1 min-w-0 space-y-2">
+              <h1 className="text-lg md:text-xl font-bold text-gray-900 leading-tight pr-8" data-testid="incident-title">
                 {title}
               </h1>
               
               {/* Location with icon */}
-              <div className="flex items-center gap-2 text-gray-600 mb-3">
-                <MapPin className="h-4 w-4" />
-                <span className="text-sm" data-testid="incident-location">{location}</span>
+              <div className="flex items-center gap-1.5 text-gray-700">
+                <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
+                <span className="text-sm font-medium" data-testid="incident-location">{location}</span>
               </div>
               
-              {/* Categories and Source */}
-              <div className="flex flex-wrap gap-2">
-                {category && (
-                  <Badge variant="secondary" className={`${
-                    source === 'emergency' ? 'bg-red-100 text-red-800 hover:bg-red-200' :
-                    source === 'tmr' ? 'bg-orange-100 text-orange-800 hover:bg-orange-200' :
-                    source === 'user' ? 'bg-purple-100 text-purple-800 hover:bg-purple-200' :
-                    'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                  } text-xs font-medium`}>
-                    {category}
-                  </Badge>
-                )}
-                {subcategory && (
-                  <Badge variant="outline" className="text-xs">
-                    {subcategory}
-                  </Badge>
-                )}
-                <Badge className={`text-xs font-medium ${
-                  source === 'emergency' ? 'bg-red-500 hover:bg-red-600' :
-                  source === 'tmr' ? 'bg-orange-500 hover:bg-orange-600' :
-                  source === 'user' ? 'bg-purple-500 hover:bg-purple-600' :
-                  'bg-gray-500 hover:bg-gray-600'
-                }`}>
-                  {source === 'emergency' ? 'Emergency Services' :
-                   source === 'tmr' ? 'TMR Traffic' :
-                   source === 'user' ? 'Community Report' :
-                   'Unknown Source'}
+              {/* Compact Category Badge - Combined categories into single pill */}
+              {category && (
+                <Badge variant="secondary" className={`${
+                  source === 'emergency' ? 'bg-red-100 text-red-800 hover:bg-red-200' :
+                  source === 'tmr' ? 'bg-orange-100 text-orange-800 hover:bg-orange-200' :
+                  source === 'user' ? 'bg-purple-100 text-purple-800 hover:bg-purple-200' :
+                  'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                } text-xs font-medium`}>
+                  {category}{subcategory ? ` • ${subcategory}` : ''}
                 </Badge>
-              </div>
+              )}
+              
+              {/* Inline Official Source Chip - Moved from separate section */}
+              {(() => {
+                const agencyInfo = getAgencyInfo(incident);
+                if (agencyInfo) {
+                  return (
+                    <div className="flex items-center gap-2 text-xs">
+                      <Avatar className={`h-6 w-6 ${agencyInfo.color} text-white`}>
+                        <AvatarFallback className="bg-transparent text-white text-[10px] font-semibold">
+                          {agencyInfo.avatar}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="font-semibold text-gray-900">{agencyInfo.name}</span>
+                    </div>
+                  );
+                } else if (reporterUserId) {
+                  return (
+                    <div className="text-xs text-gray-600">
+                      <span className="font-medium">Community Report</span>
+                    </div>
+                  );
+                }
+                return null;
+              })()}
             </div>
           </div>
         </CardHeader>
 
-        <CardContent className="space-y-6 p-6">
-          {/* Reporter attribution for all incidents with attribution */}
-          {(() => {
-            // Check if this is an official agency source (TMR/Emergency)
-            const agencyInfo = getAgencyInfo(incident);
-            
-            if (agencyInfo) {
-              // Show official agency attribution
-              return (
-                <div className={`rounded-xl p-4 border-l-4 ${
-                  source === 'emergency' ? 'bg-red-50 border-red-200' :
-                  source === 'tmr' ? 'bg-orange-50 border-orange-200' :
-                  'bg-gray-50 border-gray-200'
-                }`}>
-                  <p className="text-sm font-medium text-gray-600 mb-3">
-                    Official Source
-                  </p>
-                  <div className="flex items-center gap-3">
-                    <Avatar className={`h-10 w-10 ${agencyInfo.color} text-white`}>
-                      <AvatarFallback className="bg-transparent text-white font-semibold">
-                        {agencyInfo.avatar}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="font-semibold text-gray-900">{agencyInfo.name}</p>
-                      <p className="text-xs text-gray-500">{agencyInfo.type}</p>
-                    </div>
-                  </div>
-                </div>
-              );
-            } else if (reporterUserId) {
-              // Show user attribution for community reports
-              return (
-                <div className="rounded-xl p-4 border-l-4 bg-purple-50 border-purple-200">
-                  <p className="text-sm font-medium text-gray-600 mb-3">
-                    Reported by
-                  </p>
-                  <ReporterAttribution 
-                    userId={reporterUserId} 
-                    variant="default"
-                    showAccountType={true}
-                  />
-                </div>
-              );
-            }
-            return null;
-          })()}
+        <CardContent className="space-y-4 p-3 md:p-6">
+          {/* Reporter attribution - only show for user reports that need detailed attribution */}
+          {reporterUserId && !getAgencyInfo(incident) && (
+            <div className="rounded-xl p-3 md:p-4 border-l-4 bg-purple-50 border-purple-200">
+              <p className="text-xs md:text-sm font-medium text-gray-600 mb-2">
+                Reported by
+              </p>
+              <ReporterAttribution 
+                userId={reporterUserId} 
+                variant="default"
+                showAccountType={true}
+              />
+            </div>
+          )}
           
           {/* Photo Card - for user incidents with photos */}
           {(incident?.photoUrl || incident?.properties?.photoUrl) && (
@@ -372,12 +345,12 @@ function IncidentDetailPage({ asModal = true, incidentId: propIncidentId }: Inci
 
           {/* Description Card */}
           <Card className="border border-gray-200/60 shadow-sm">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 mb-3">
+            <CardContent className="p-3 md:p-4">
+              <div className="flex items-center gap-2 mb-2">
                 <AlertTriangle className="h-4 w-4 text-gray-500" />
-                <h3 className="font-semibold text-gray-900">Description</h3>
+                <h3 className="text-sm font-semibold text-gray-900">Description</h3>
               </div>
-              <p className="text-gray-700 leading-relaxed whitespace-pre-wrap" data-testid="incident-description">
+              <p className="text-sm md:text-base text-gray-800 leading-relaxed whitespace-pre-wrap" data-testid="incident-description">
                 {description}
               </p>
             </CardContent>
@@ -386,84 +359,86 @@ function IncidentDetailPage({ asModal = true, incidentId: propIncidentId }: Inci
           {/* Timestamp Card */}
           {timestamp && (
             <Card className="border border-gray-200/60 shadow-sm">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2 mb-2">
+              <CardContent className="p-3 md:p-4">
+                <div className="flex items-center gap-2 mb-1">
                   <Clock className="h-4 w-4 text-gray-500" />
-                  <h3 className="font-semibold text-gray-900">Time</h3>
+                  <h3 className="text-sm font-semibold text-gray-900">Time</h3>
                 </div>
-                <p className="text-gray-700">
+                <p className="text-sm md:text-base text-gray-800">
                   {new Date(timestamp).toLocaleString()}
                 </p>
               </CardContent>
             </Card>
           )}
           
-          {/* Social Interaction Bar */}
-          <Card className="border border-gray-200/60 shadow-sm">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  {/* Comments Button */}
+          {/* Social Interaction Bar - Sticky on mobile */}
+          <div className="sticky bottom-0 -mx-3 md:mx-0 md:static">
+            <Card className="border-t md:border border-gray-200/60 shadow-sm rounded-none md:rounded-lg">
+              <CardContent className="p-2 md:p-3">
+                <div className="flex items-center gap-2 md:gap-3">
+                  {/* Comments Button - 48px touch target */}
                   <Button 
                     variant="ghost" 
                     size="sm" 
-                    className={`flex items-center gap-1 transition-colors px-3 py-2 h-auto text-xs md:text-sm min-h-[44px] ${
+                    className={`flex-1 md:flex-none flex items-center justify-center gap-2 transition-colors px-4 py-3 h-12 text-sm font-medium ${
                       showComments 
-                        ? 'text-blue-500 hover:text-blue-600' 
-                        : 'hover:text-blue-500'
+                        ? 'text-blue-600 bg-blue-50 hover:bg-blue-100' 
+                        : 'hover:text-blue-600 hover:bg-blue-50'
                     }`}
                     onClick={handleCommentsToggle}
                     data-testid={`button-comments-${decodedId}`}
                   >
                     <MessageCircle className="w-4 h-4" />
-                    <span className="hidden sm:inline">Comments</span>
-                    <span className="text-muted-foreground">{commentsData?.count || 0}</span>
+                    <span>Comments</span>
+                    <span className="text-muted-foreground ml-1">({commentsData?.count || 0})</span>
                   </Button>
                   
-                  {/* Share Button */}
+                  {/* Share Button - 48px touch target */}
                   <Button 
                     variant="ghost" 
                     size="sm" 
-                    className="flex items-center gap-1 transition-colors px-3 py-2 h-auto text-xs md:text-sm min-h-[44px] hover:text-green-500"
+                    className="flex-1 md:flex-none flex items-center justify-center gap-2 transition-colors px-4 py-3 h-12 text-sm font-medium hover:text-green-600 hover:bg-green-50"
                     onClick={handleShareClick}
                     data-testid={`button-share-${decodedId}`}
                   >
                     <Share className="w-4 h-4" />
-                    <span className="hidden sm:inline">Share</span>
+                    <span>Share</span>
                   </Button>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
 
-          {/* Comments Section (conditionally shown) */}
+          {/* Comments Section - Bottom sheet style */}
           {showComments && (
-            <Card className="border border-blue-200/60 shadow-sm bg-blue-50/30">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between mb-4">
+            <div className="-mx-3 md:mx-0 bg-blue-50/50 border-t border-blue-200 md:rounded-lg md:border">
+              <div className="p-3 md:p-4 border-b border-blue-200 bg-white/80 backdrop-blur-sm sticky top-0 z-10">
+                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <MessageCircle className="h-4 w-4 text-blue-600" />
-                    <h3 className="font-semibold text-gray-900">Comments</h3>
+                    <h3 className="text-sm font-semibold text-gray-900">
+                      Comments ({commentsData?.count || 0})
+                    </h3>
                   </div>
-                  {/* Close button for mobile */}
+                  {/* Close button */}
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => setShowComments(false)}
-                    className="md:hidden"
+                    className="h-8 w-8 p-0"
                     data-testid="close-comments"
                   >
                     <X className="h-4 w-4" />
                   </Button>
                 </div>
-                <div className="mobile-safe-comments">
-                  <InlineComments 
-                    incident={incident} 
-                    onClose={() => setShowComments(false)}
-                  />
-                </div>
-              </CardContent>
-            </Card>
+              </div>
+              <div className="bg-white">
+                <InlineComments 
+                  incident={incident} 
+                  onClose={() => setShowComments(false)}
+                />
+              </div>
+            </div>
           )}
         </CardContent>
       </Card>
@@ -478,7 +453,7 @@ function IncidentDetailPage({ asModal = true, incidentId: propIncidentId }: Inci
           <DialogHeader className="sr-only">
             <DialogTitle>Incident Details</DialogTitle>
           </DialogHeader>
-          <div className="flex-1 overflow-y-auto p-6">
+          <div className="flex-1 overflow-y-auto p-3 md:p-6">
             {content}
           </div>
         </DialogContent>
@@ -487,7 +462,7 @@ function IncidentDetailPage({ asModal = true, incidentId: propIncidentId }: Inci
   }
   
   return (
-    <div className="container max-w-3xl mx-auto p-6">
+    <div className="container max-w-3xl mx-auto p-3 md:p-6">
       {content}
     </div>
   );
