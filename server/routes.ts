@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { isAuthenticated, setupAuth as setupReplitAuth } from "./replitAuth";
+import { initializeAgencyAccounts } from "./init-agency-accounts";
 import webpush from "web-push";
 import Stripe from "stripe";
 import { insertIncidentSchema, insertCommentSchema, insertConversationSchema, insertMessageSchema, insertNotificationSchema, insertIncidentCommentSchema, type SafeUser } from "@shared/schema";
@@ -438,6 +439,9 @@ const upload = secureUpload;
 
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Initialize agency user accounts on startup
+  await initializeAgencyAccounts(storage);
+  
   // Debug: log the path being used
   const assetsPath = path.resolve(process.cwd(), 'attached_assets');
   console.log('Serving static assets from:', assetsPath);
