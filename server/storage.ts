@@ -591,7 +591,7 @@ export class DatabaseStorage implements IStorage {
         id,
         userId: attribution.userId, // Override with resolved attribution
         properties: {
-          ...(incident.properties || {}),
+          ...((incident.properties as any) || {}),
           reporterId: attribution.reporterId, // Ensure reporterId in properties
           source: incident.source,
           userReported: !attribution.isSystemAccount
@@ -671,7 +671,7 @@ export class DatabaseStorage implements IStorage {
           sourceId,
           userId: attribution.userId, // Override with resolved attribution
           properties: {
-            ...(incident.properties || {}),
+            ...((incident.properties as any) || {}),
             reporterId: attribution.reporterId, // Ensure reporterId in properties
             source: source,
             userReported: !attribution.isSystemAccount
@@ -700,7 +700,7 @@ export class DatabaseStorage implements IStorage {
             verificationStatus: incident.verificationStatus,
             userId: attribution.userId, // Override with resolved attribution
             properties: {
-              ...(incident.properties || {}),
+              ...((incident.properties as any) || {}),
               reporterId: attribution.reporterId, // Ensure reporterId in properties
               source: source,
               userReported: !attribution.isSystemAccount
