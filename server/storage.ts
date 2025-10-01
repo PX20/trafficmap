@@ -801,6 +801,9 @@ export class DatabaseStorage implements IStorage {
         reporterId: incident.userId || (incident.properties as any)?.reporterId || undefined,
         // CRITICAL: Extract userReported flag from JSONB properties for proper classification
         userReported: (incident.properties as any)?.userReported || undefined,
+        // CRITICAL: Extract categoryId and subcategoryId from properties for icon mapping
+        categoryId: (incident.properties as any)?.categoryId || (incident.properties as any)?.category || undefined,
+        subcategoryId: (incident.properties as any)?.subcategoryId || (incident.properties as any)?.subcategory || undefined,
         originalProperties: incident.properties,
       },
       geometry: incident.geometry as any,

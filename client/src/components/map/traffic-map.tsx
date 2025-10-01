@@ -333,8 +333,10 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
           if (source === 'user') {
             // Community Posts - User-reported incidents
             const incidentType = properties?.incidentType;
+            const categoryId = properties?.categoryId;
             const category = properties?.category?.toLowerCase();
             
+            // First try incidentType, then fall back to categoryId mapping
             if (incidentType === 'traffic') {
               markerType = 'traffic';
               incidentCategory = 'traffic';
@@ -347,9 +349,40 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
             } else if (incidentType === 'wildlife') {
               markerType = 'wildlife';
               incidentCategory = 'wildlife';
-            } else if (category === 'pets') {
+            } else if (category === 'pets' || incidentType === 'pets') {
               markerType = 'pets';
               incidentCategory = 'community';
+            } else if (categoryId) {
+              // Use categoryId to determine icon when incidentType is not set
+              if (categoryId === '792759f4-1b98-4665-b14c-44a54e9969e9') {
+                // Safety & Crime
+                markerType = 'crime';
+                incidentCategory = 'crime';
+              } else if (categoryId === 'd03f47a9-10fb-4656-ae73-92e959d7566a') {
+                // Wildlife & Nature
+                markerType = 'wildlife';
+                incidentCategory = 'wildlife';
+              } else if (categoryId === '9b1d58d9-cfd1-4c31-93e9-754276a5f265') {
+                // Infrastructure & Hazards
+                markerType = 'traffic';
+                incidentCategory = 'traffic';
+              } else if (categoryId === '54d31da5-fc10-4ad2-8eca-04bac680e668') {
+                // Emergency Situations
+                markerType = 'emergency';
+                incidentCategory = 'emergency';
+              } else if (categoryId === '4ea3a6f0-c49e-4baf-9ca5-f074ca2811b0') {
+                // Pets
+                markerType = 'pets';
+                incidentCategory = 'pets';
+              } else if (categoryId === 'deaca906-3561-4f80-b79f-ed99561c3b04' || 
+                         categoryId === 'd1dfcd4e-48e9-4e58-9476-4782a2a132f3') {
+                // Community Issues or Lost & Found
+                markerType = 'community';
+                incidentCategory = 'community';
+              } else {
+                markerType = 'community';
+                incidentCategory = 'community';
+              }
             } else {
               // Infrastructure, generic user reports, and other types fall into community category
               // This includes "USER_REPORT", "User Report", and other community issues
@@ -376,8 +409,10 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
             if (isUserReported) {
               // Legacy user-reported incidents
               const incidentType = properties?.incidentType;
+              const categoryId = properties?.categoryId;
               const category = properties?.category?.toLowerCase();
               
+              // First try incidentType, then fall back to categoryId mapping
               if (incidentType === 'traffic') {
                 markerType = 'traffic';
                 incidentCategory = 'traffic';
@@ -390,9 +425,30 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
               } else if (incidentType === 'wildlife') {
                 markerType = 'wildlife';
                 incidentCategory = 'wildlife';
-              } else if (category === 'pets') {
+              } else if (category === 'pets' || incidentType === 'pets') {
                 markerType = 'pets';
                 incidentCategory = 'community';
+              } else if (categoryId) {
+                // Use categoryId to determine icon when incidentType is not set
+                if (categoryId === '792759f4-1b98-4665-b14c-44a54e9969e9') {
+                  markerType = 'crime';
+                  incidentCategory = 'crime';
+                } else if (categoryId === 'd03f47a9-10fb-4656-ae73-92e959d7566a') {
+                  markerType = 'wildlife';
+                  incidentCategory = 'wildlife';
+                } else if (categoryId === '9b1d58d9-cfd1-4c31-93e9-754276a5f265') {
+                  markerType = 'traffic';
+                  incidentCategory = 'traffic';
+                } else if (categoryId === '54d31da5-fc10-4ad2-8eca-04bac680e668') {
+                  markerType = 'emergency';
+                  incidentCategory = 'emergency';
+                } else if (categoryId === '4ea3a6f0-c49e-4baf-9ca5-f074ca2811b0') {
+                  markerType = 'pets';
+                  incidentCategory = 'pets';
+                } else {
+                  markerType = 'community';
+                  incidentCategory = 'community';
+                }
               } else {
                 markerType = 'community';
                 incidentCategory = 'community';
