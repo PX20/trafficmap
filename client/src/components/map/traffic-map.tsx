@@ -383,6 +383,30 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
                 markerType = 'community';
                 incidentCategory = 'community';
               }
+            } else if (category) {
+              // Fallback: Use category text name when categoryId is missing (for existing production data)
+              if (category === 'safety & crime') {
+                markerType = 'crime';
+                incidentCategory = 'crime';
+              } else if (category === 'wildlife & nature') {
+                markerType = 'wildlife';
+                incidentCategory = 'wildlife';
+              } else if (category === 'infrastructure & hazards') {
+                markerType = 'traffic';
+                incidentCategory = 'traffic';
+              } else if (category === 'emergency situations') {
+                markerType = 'emergency';
+                incidentCategory = 'emergency';
+              } else if (category === 'pets') {
+                markerType = 'pets';
+                incidentCategory = 'pets';
+              } else if (category === 'community issues' || category === 'lost & found') {
+                markerType = 'community';
+                incidentCategory = 'community';
+              } else {
+                markerType = 'community';
+                incidentCategory = 'community';
+              }
             } else {
               // Infrastructure, generic user reports, and other types fall into community category
               // This includes "USER_REPORT", "User Report", and other community issues
@@ -445,6 +469,30 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
                 } else if (categoryId === '4ea3a6f0-c49e-4baf-9ca5-f074ca2811b0') {
                   markerType = 'pets';
                   incidentCategory = 'pets';
+                } else {
+                  markerType = 'community';
+                  incidentCategory = 'community';
+                }
+              } else if (category) {
+                // Fallback: Use category text name when categoryId is missing (for existing production data)
+                if (category === 'safety & crime') {
+                  markerType = 'crime';
+                  incidentCategory = 'crime';
+                } else if (category === 'wildlife & nature') {
+                  markerType = 'wildlife';
+                  incidentCategory = 'wildlife';
+                } else if (category === 'infrastructure & hazards') {
+                  markerType = 'traffic';
+                  incidentCategory = 'traffic';
+                } else if (category === 'emergency situations') {
+                  markerType = 'emergency';
+                  incidentCategory = 'emergency';
+                } else if (category === 'pets') {
+                  markerType = 'pets';
+                  incidentCategory = 'pets';
+                } else if (category === 'community issues' || category === 'lost & found') {
+                  markerType = 'community';
+                  incidentCategory = 'community';
                 } else {
                   markerType = 'community';
                   incidentCategory = 'community';
