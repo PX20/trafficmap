@@ -6,7 +6,9 @@ import { isAuthenticated, setupAuth as setupReplitAuth } from "./replitAuth";
 import { initializeAgencyAccounts } from "./init-agency-accounts";
 import webpush from "web-push";
 import Stripe from "stripe";
-import { insertIncidentSchema, insertCommentSchema, insertConversationSchema, insertMessageSchema, insertNotificationSchema, insertIncidentCommentSchema, type SafeUser } from "@shared/schema";
+import { insertIncidentSchema, insertCommentSchema, insertConversationSchema, insertMessageSchema, insertNotificationSchema, insertIncidentCommentSchema, type SafeUser, categories, subcategories } from "@shared/schema";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 import { z } from "zod";
 import {
   ObjectStorageService,
@@ -86,11 +88,12 @@ async function seedCategoriesIfNeeded() {
   try {
     console.log("🌱 Checking categories and subcategories...");
     
-    // Get existing categories and subcategories for comparison
-    const existingCategories = await storage.getCategories();
+    // CRITICAL FIX: Get ALL categories from database (including inactive ones) to update them
+    // Don't use storage.getCategories() because it filters isActive=true, hiding broken categories
+    const existingCategories = await db.select().from(categories);
     const existingSubcategories = await storage.getSubcategories();
     
-    console.log(`📊 Found ${existingCategories.length} categories and ${existingSubcategories.length} subcategories`);
+    console.log(`📊 Found ${existingCategories.length} categories (including inactive) and ${existingSubcategories.length} subcategories`);
     
     // Main categories with hierarchy
     const categoryData = [
@@ -100,6 +103,7 @@ async function seedCategoriesIfNeeded() {
         icon: "shield",
         color: "#7c3aed", // purple
         order: 1,
+        isActive: true,
         subcategories: [
           { name: "Violence & Threats", description: "Physical violence, threats, intimidation", order: 1 },
           { name: "Theft & Property Crime", description: "Theft, burglary, property damage", order: 2 },
@@ -113,6 +117,7 @@ async function seedCategoriesIfNeeded() {
         icon: "construction",
         color: "#ea580c", // orange
         order: 2,
+        isActive: true,
         subcategories: [
           { name: "Road Hazards", description: "Fallen trees, debris, potholes, dangerous conditions", order: 1 },
           { name: "Utility Issues", description: "Power lines, water leaks, gas problems", order: 2 },
@@ -126,6 +131,7 @@ async function seedCategoriesIfNeeded() {
         icon: "siren",
         color: "#dc2626", // red
         order: 3,
+        isActive: true,
         subcategories: [
           { name: "Fire & Smoke", description: "Fires, smoke, burning structures or vegetation", order: 1 },
           { name: "Medical Emergencies", description: "Medical incidents in public spaces", order: 2 },
@@ -139,6 +145,7 @@ async function seedCategoriesIfNeeded() {
         icon: "leaf",
         color: "#16a34a", // green
         order: 4,
+        isActive: true,
         subcategories: [
           { name: "Dangerous Animals", description: "Snakes, aggressive animals, pest control", order: 1 },
           { name: "Animal Welfare", description: "Injured or distressed animals", order: 2 },
@@ -152,6 +159,7 @@ async function seedCategoriesIfNeeded() {
         icon: "users",
         color: "#2563eb", // blue
         order: 5,
+        isActive: true,
         subcategories: [
           { name: "Noise Complaints", description: "Excessive noise, loud parties, construction", order: 1 },
           { name: "Traffic Issues", description: "Dangerous driving, parking problems", order: 2 },
@@ -165,6 +173,7 @@ async function seedCategoriesIfNeeded() {
         icon: "heart",
         color: "#ec4899", // pink
         order: 6,
+        isActive: true,
         subcategories: [
           { name: "Missing Pets", description: "Lost or missing cats, dogs, and other pets", order: 1 },
           { name: "Found Pets", description: "Found animals looking for their owners", order: 2 }
@@ -176,6 +185,7 @@ async function seedCategoriesIfNeeded() {
         icon: "search",
         color: "#f59e0b", // amber
         order: 7,
+        isActive: true,
         subcategories: [
           { name: "Lost Items", description: "Lost keys, phones, wallets, jewelry, documents", order: 1 },
           { name: "Found Items", description: "Found personal belongings that need to be returned", order: 2 }
@@ -200,6 +210,14 @@ async function seedCategoriesIfNeeded() {
         categoryToUse = existingCategory;
         skippedCategories++;
         console.log(`✓ Category "${categoryInfo.name}" already exists`);
+        
+        // CRITICAL FIX: Update existing category if isActive is not true
+        if (existingCategory.isActive !== true) {
+          await db.update(categories)
+            .set({ isActive: true })
+            .where(eq(categories.id, existingCategory.id));
+          console.log(`  ⚡ Updated "${categoryInfo.name}" to set isActive=true`);
+        }
       } else {
         categoryToUse = await storage.createCategory(categoryInfo);
         createdCategories++;
