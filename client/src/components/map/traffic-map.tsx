@@ -672,7 +672,7 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
     }
     
     // Handle ESQ (Emergency Services Queensland) incidents
-    if (datasource === 'ESQ' || providedBy?.includes('Emergency') || getProperty(props, 'source') === 'ESQ') {
+    if (datasource === 'ESQ' || providedBy?.includes('Emergency') || getProperty(props, 'source') === 'ESQ' || getProperty(props, 'source') === 'emergency') {
       return '54d31da5-fc10-4ad2-8eca-04bac680e668'; // Emergency Situations
     }
     
