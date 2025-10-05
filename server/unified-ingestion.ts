@@ -859,12 +859,24 @@ class UnifiedIngestionEngine {
     const groupedType = props.GroupedType?.toLowerCase() || '';
     const incidentType = props.Incident_Type?.toLowerCase() || '';
     
-    // Check specific incident types FIRST (more specific than jurisdiction)
-    if (groupedType.includes('rescue') || groupedType.includes('medical')) {
+    // Check specific incident types FIRST (most specific)
+    if (groupedType.includes('power') || groupedType.includes('gas') || groupedType.includes('electric')) {
+      return 'Power/Gas Emergency';
+    }
+    if (groupedType.includes('storm') || groupedType.includes('flood') || groupedType.includes('weather')) {
+      return 'Storm/SES';
+    }
+    if (groupedType.includes('rescue') || (groupedType.includes('road') && groupedType.includes('crash'))) {
+      return 'Rescue Operation';
+    }
+    if (groupedType.includes('medical') || groupedType.includes('ambulance')) {
       return 'Medical Emergencies';
     }
     if (groupedType.includes('hazmat') || groupedType.includes('chemical')) {
       return 'Chemical/Hazmat';
+    }
+    if (groupedType.includes('fire')) {
+      return 'Fire & Smoke';
     }
     
     // Then check by jurisdiction/source (broader classification)
@@ -874,11 +886,11 @@ class UnifiedIngestionEngine {
     if (jurisdiction.includes('police') || incidentNumber.includes('qp') || groupedType.includes('police') || incidentType.includes('police')) {
       return 'Public Safety';
     }
-    if (jurisdiction.includes('fire') || incidentNumber.includes('qf') || groupedType.includes('fire')) {
+    if (jurisdiction.includes('fire') || incidentNumber.includes('qf')) {
       return 'Fire & Smoke';
     }
     if (jurisdiction.includes('ses')) {
-      return 'Chemical/Hazmat';
+      return 'Storm/SES';
     }
     
     return 'Emergency Response';
