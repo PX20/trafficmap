@@ -804,6 +804,11 @@ export class DatabaseStorage implements IStorage {
         // CRITICAL: Extract categoryId and subcategoryId from properties for icon mapping
         categoryId: (incident.properties as any)?.categoryId || (incident.properties as any)?.category || undefined,
         subcategoryId: (incident.properties as any)?.subcategoryId || (incident.properties as any)?.subcategory || undefined,
+        // CRITICAL: Extract QFES-specific fields for proper categorization display
+        GroupedType: (incident.properties as any)?.GroupedType || undefined,
+        Incident_Type: (incident.properties as any)?.Incident_Type || undefined,
+        Jurisdiction: (incident.properties as any)?.Jurisdiction || undefined,
+        Master_Incident_Number: (incident.properties as any)?.Master_Incident_Number || undefined,
         originalProperties: incident.properties,
       },
       geometry: incident.geometry as any,

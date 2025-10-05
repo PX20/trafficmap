@@ -423,15 +423,16 @@ class UnifiedIngestionEngine {
         const regionIds = this.computeRegionIds(centroid.lat, centroid.lng, props);
 
         const title = props.Master_Incident_Number || props.Incident_Number || 'Emergency Incident';
+        const description = `${props.GroupedType || 'Emergency incident'} in ${props.Locality || props.Location || 'Queensland'}. Status: ${props.CurrentStatus || 'Active'}. Vehicles: ${props.VehiclesOnScene || 0} on scene, ${props.VehiclesOnRoute || 0} en route.`;
         
         const incident: InsertUnifiedIncident = {
           source: 'emergency',
           sourceId: feature.id?.toString() || props.OBJECTID?.toString() || `emg-${Date.now()}`,
           title,
-          description: `${props.GroupedType || 'Emergency incident'} in ${props.Locality || props.Location || 'Queensland'}. Status: ${props.CurrentStatus || 'Active'}. Vehicles: ${props.VehiclesOnScene || 0} on scene, ${props.VehiclesOnRoute || 0} en route.`,
+          description,
           location: props.Locality ? `${props.Location}, ${props.Locality}` : (props.Location || 'Queensland'),
           category: '54d31da5-fc10-4ad2-8eca-04bac680e668', // Emergency Situations UUID from database
-          subcategory: this.getEmergencyCategory(props), // Move detailed classification to subcategory
+          subcategory: this.getEmergencyCategory({ ...props, description }), // Pass description for categorization
           severity: this.getEmergencySeverity(props),
           status: (props.CurrentStatus === 'Closed' || props.CurrentStatus === 'Resolved') ? 'resolved' : 'active',
           geometry,
