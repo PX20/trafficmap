@@ -230,29 +230,36 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
                              feature.properties?.last_updated || 
                              feature.properties?.firstSeenAt;
         
-        // Skip if no valid timestamp available
-        if (!referenceTime) {
-          console.warn('Traffic event missing timestamp data, skipping aging calculation:', feature.properties?.id);
-          return;
-        }
+        // Create default aging data for events without timestamps
+        let agingData = {
+          agePercentage: 0,
+          isVisible: true,
+          timeRemaining: Infinity,
+          shouldAutoHide: false
+        };
         
-        const agingData = calculateIncidentAging({
-          category: 'traffic',
-          source: 'traffic',
-          severity: feature.properties?.priority || feature.properties?.impact_type || 'medium',
-          status: feature.properties?.status || 'active',
-          lastUpdated: feature.properties?.last_updated || feature.properties?.published || referenceTime,
-          incidentTime: referenceTime,
-          properties: feature.properties
-        }, {
-          agingSensitivity: filters.agingSensitivity,
-          showExpiredIncidents: filters.showExpiredIncidents
-        });
-        
-        
-        // Skip events that should be hidden due to aging
-        if (!agingData.isVisible) {
-          return;
+        // Only calculate aging if we have a valid timestamp
+        if (referenceTime) {
+          agingData = calculateIncidentAging({
+            category: 'traffic',
+            source: 'traffic',
+            severity: feature.properties?.priority || feature.properties?.impact_type || 'medium',
+            status: feature.properties?.status || 'active',
+            lastUpdated: feature.properties?.last_updated || feature.properties?.published || referenceTime,
+            incidentTime: referenceTime,
+            properties: feature.properties
+          }, {
+            agingSensitivity: filters.agingSensitivity,
+            showExpiredIncidents: filters.showExpiredIncidents
+          });
+          
+          // Skip events that should be hidden due to aging
+          if (!agingData.isVisible) {
+            return;
+          }
+        } else {
+          // Show events without timestamps with a warning in console (but still display them)
+          console.warn('Traffic event missing timestamp data, showing with default styling:', feature.properties?.id);
         }
 
         if (feature.geometry) {
