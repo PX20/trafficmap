@@ -264,7 +264,75 @@ export function getIncidentIconProps(incident: any): { iconName: string, color: 
   }
   
   if (source === 'user') {
-    // User Reports - category-specific icons
+    // User Reports - Check SUBCATEGORY first for specific icons
+    const subcategory = incident.subcategory || incident.properties?.subcategory || '';
+    
+    // Subcategory-specific icons for community reports
+    switch (subcategory) {
+      // Safety & Crime subcategories
+      case 'Violence & Threats':
+        return { iconName: 'Shield', color: 'text-red-600' };
+      case 'Theft & Property Crime':
+        return { iconName: 'ShieldAlert', color: 'text-red-600' };
+      case 'Suspicious Activity':
+        return { iconName: 'Eye', color: 'text-orange-600' };
+      case 'Public Disturbances':
+        return { iconName: 'AlertTriangle', color: 'text-yellow-600' };
+      
+      // Infrastructure & Hazards subcategories
+      case 'Road Hazards':
+        return { iconName: 'Construction', color: 'text-orange-600' };
+      case 'Utility Issues':
+        return { iconName: 'Zap', color: 'text-yellow-600' };
+      case 'Building Problems':
+        return { iconName: 'Building', color: 'text-gray-600' };
+      case 'Environmental Hazards':
+        return { iconName: 'AlertTriangle', color: 'text-red-600' };
+      
+      // Emergency Situations subcategories
+      case 'Fire & Smoke':
+        return { iconName: 'Flame', color: 'text-red-600' };
+      case 'Medical Emergencies':
+        return { iconName: 'Heart', color: 'text-red-600' };
+      case 'Natural Disasters':
+        return { iconName: 'CloudLightning', color: 'text-blue-600' };
+      case 'Chemical/Hazmat':
+        return { iconName: 'AlertTriangle', color: 'text-purple-600' };
+      
+      // Wildlife & Nature subcategories
+      case 'Dangerous Animals':
+        return { iconName: 'Bug', color: 'text-red-600' };
+      case 'Animal Welfare':
+        return { iconName: 'Heart', color: 'text-green-600' };
+      case 'Environmental Issues':
+        return { iconName: 'Trees', color: 'text-green-600' };
+      case 'Pest Problems':
+        return { iconName: 'Bug', color: 'text-orange-600' };
+      
+      // Community Issues subcategories
+      case 'Noise Complaints':
+        return { iconName: 'Volume2', color: 'text-blue-600' };
+      case 'Traffic Issues':
+        return { iconName: 'Car', color: 'text-orange-600' };
+      case 'Public Space Problems':
+        return { iconName: 'MapPin', color: 'text-gray-600' };
+      case 'Events & Gatherings':
+        return { iconName: 'Users', color: 'text-blue-600' };
+      
+      // Pets subcategories
+      case 'Missing Pets':
+        return { iconName: 'Search', color: 'text-orange-600' };
+      case 'Found Pets':
+        return { iconName: 'CheckCircle', color: 'text-green-600' };
+      
+      // Lost & Found subcategories
+      case 'Lost Items':
+        return { iconName: 'Search', color: 'text-orange-600' };
+      case 'Found Items':
+        return { iconName: 'CheckCircle', color: 'text-green-600' };
+    }
+    
+    // Fall back to category-specific icons if no subcategory match
     const categoryId = incident.properties?.categoryId || incident.category;
     
     switch (categoryId) {
