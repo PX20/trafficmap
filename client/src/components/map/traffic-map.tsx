@@ -901,8 +901,21 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
           return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>`;
         case 'rescue':
         case 'ambulance':
-          // Car crash icon for rescue operations
-          return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4H3a2 2 0 0 0-2 2v3h9z"/><path d="M21 9h-2a2 2 0 0 0-2 2v1h4z"/><path d="M10 9h4v1h-4z"/><path d="M23 11v3a1 1 0 0 1-1 1h-2"/><path d="M1 14a1 1 0 0 0 1 1h2"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/><path d="M9.5 4L7 9m7.5-5L17 9"/></svg>`;
+          // Crash icon for rescue operations (two cars colliding)
+          return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 12 L6 12 L7 10 L9 10 L10 12 L12 12"/>
+            <circle cx="5" cy="14" r="1.5"/>
+            <circle cx="10" cy="14" r="1.5"/>
+            <path d="M7 10 L7 8 L9 8 L9 10"/>
+            <path d="M21 12 L18 12 L17 10 L15 10 L14 12 L12 12"/>
+            <circle cx="19" cy="14" r="1.5"/>
+            <circle cx="14" cy="14" r="1.5"/>
+            <path d="M17 10 L17 8 L15 8 L15 10"/>
+            <path d="M12 8 L11 6" stroke-width="2.5"/>
+            <path d="M12 8 L13 6" stroke-width="2.5"/>
+            <path d="M12 8 L10.5 7" stroke-width="2"/>
+            <path d="M12 8 L13.5 7" stroke-width="2"/>
+          </svg>`;
         case 'medical':
           // Heart icon for medical emergencies
           return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`;

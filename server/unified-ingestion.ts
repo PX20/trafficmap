@@ -858,11 +858,13 @@ class UnifiedIngestionEngine {
     const incidentNumber = props.Master_Incident_Number?.toLowerCase() || '';
     const groupedType = props.GroupedType?.toLowerCase() || '';
     const incidentType = props.Incident_Type?.toLowerCase() || '';
+    const description = props.description?.toLowerCase() || '';
     
     // Check specific incident types FIRST (most specific)
-    // IMPORTANT: Check for rescue/crash keywords in BOTH groupedType AND incidentType
-    if (groupedType.includes('rescue') || incidentType.includes('rescue') || 
-        groupedType.includes('crash') || incidentType.includes('crash') ||
+    // IMPORTANT: Check for rescue/crash keywords in groupedType, incidentType, AND description
+    if (groupedType.includes('rescue') || incidentType.includes('rescue') || description.includes('rescue') ||
+        groupedType.includes('crash') || incidentType.includes('crash') || description.includes('crash') ||
+        description.includes('road crash') || description.includes('road accident') ||
         (groupedType.includes('road') && (groupedType.includes('accident') || groupedType.includes('incident')))) {
       return 'Rescue Operation';
     }

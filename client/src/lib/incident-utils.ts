@@ -237,7 +237,7 @@ export function getIncidentIconProps(incident: any): { iconName: string, color: 
       case 'Fire & Smoke':
         return { iconName: 'Flame', color: 'text-red-600' };
       case 'Rescue Operation':
-        return { iconName: 'Ambulance', color: 'text-orange-600' };
+        return { iconName: 'Crash', color: 'text-orange-600' };
       case 'Medical Emergencies':
         return { iconName: 'Heart', color: 'text-green-600' };
       case 'Chemical/Hazmat':

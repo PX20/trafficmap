@@ -22,6 +22,7 @@ import { SponsoredPost } from "@/components/sponsored-post";
 import { getAgencyInfo, isUserReport } from "@/lib/agency-info";
 import { ReporterAttribution } from "@/components/ReporterAttribution";
 import { getReporterUserId, getIncidentIconProps } from "@/lib/incident-utils";
+import { CrashIcon } from "@/components/icons/CrashIcon";
 import { 
   MapPin, 
   Clock, 
@@ -442,6 +443,7 @@ export default function Feed() {
       case 'Heart': return <Heart className={iconClass} />;
       case 'Search': return <Search className={iconClass} />;
       case 'Flame': return <Flame className={iconClass} />;
+      case 'Crash': return <CrashIcon className={iconClass} />;
       case 'Ambulance': return <Ambulance className={iconClass} />;
       case 'CloudLightning': return <CloudLightning className={iconClass} />;
       case 'Siren': return <Siren className={iconClass} />;
