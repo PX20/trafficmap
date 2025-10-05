@@ -1,12 +1,13 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { MessageCircle, Heart, Send, X, Reply } from "lucide-react";
+import { MessageCircle, Heart, Send, X, Reply, Image as ImageIcon } from "lucide-react";
 import { getIncidentId } from "@/lib/incident-utils";
 
 interface InlineCommentsProps {
@@ -175,6 +176,10 @@ export function InlineComments({ incident, onClose }: InlineCommentsProps) {
   const [newComment, setNewComment] = useState("");
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyContent, setReplyContent] = useState("");
+  const [selectedPhotos, setSelectedPhotos] = useState<File[]>([]);
+  const [uploadedPhotoUrls, setUploadedPhotoUrls] = useState<string[]>([]);
+  const [isUploadingPhotos, setIsUploadingPhotos] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const incidentId = getIncidentId(incident);
 
@@ -191,18 +196,87 @@ export function InlineComments({ incident, onClose }: InlineCommentsProps) {
 
   const comments = commentsData?.comments || [];
 
+  // Photo upload handler
+  const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    
+    if (selectedPhotos.length + files.length > 3) {
+      toast({
+        title: "Too many photos",
+        description: "Maximum 3 photos allowed per comment",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Validate file sizes
+    const invalidFiles = files.filter(file => file.size > 5 * 1024 * 1024);
+    if (invalidFiles.length > 0) {
+      toast({
+        title: "File too large",
+        description: "Each photo must be less than 5MB",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setSelectedPhotos(prev => [...prev, ...files]);
+  };
+
+  const removePhoto = (index: number) => {
+    setSelectedPhotos(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const uploadPhotos = async () => {
+    if (selectedPhotos.length === 0) return [];
+    
+    setIsUploadingPhotos(true);
+    try {
+      const formData = new FormData();
+      selectedPhotos.forEach(photo => {
+        formData.append('photos', photo);
+      });
+      
+      const response = await fetch('/api/upload/comment-photos', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Photo upload failed');
+      }
+      
+      const data = await response.json();
+      return data.urls || [];
+    } catch (error: any) {
+      toast({
+        title: "Photo upload failed",
+        description: error.message || "Failed to upload photos",
+        variant: "destructive",
+      });
+      throw error;
+    } finally {
+      setIsUploadingPhotos(false);
+    }
+  };
+
   // Comment submission
   const createCommentMutation = useMutation({
-    mutationFn: async ({ content, parentCommentId }: { content: string; parentCommentId?: string }) => {
+    mutationFn: async ({ content, parentCommentId, photoUrls }: { content: string; parentCommentId?: string; photoUrls?: string[] }) => {
       return apiRequest("POST", `/api/incidents/${incidentId}/social/comments`, { 
         content, 
-        parentCommentId: parentCommentId || null 
+        parentCommentId: parentCommentId || null,
+        photoUrls: photoUrls || []
       });
     },
     onSuccess: () => {
       setNewComment("");
       setReplyContent("");
       setReplyingTo(null);
+      setSelectedPhotos([]);
+      setUploadedPhotoUrls([]);
       queryClient.invalidateQueries({ queryKey: [`/api/incidents/${incidentId}/social/comments`] });
       toast({
         title: "Comment posted",
@@ -218,7 +292,7 @@ export function InlineComments({ incident, onClose }: InlineCommentsProps) {
     },
   });
 
-  const handleSubmitComment = () => {
+  const handleSubmitComment = async () => {
     if (!isAuthenticated) {
       toast({
         title: "Please log in",
@@ -229,7 +303,20 @@ export function InlineComments({ incident, onClose }: InlineCommentsProps) {
     }
     
     if (!newComment.trim()) return;
-    createCommentMutation.mutate({ content: newComment.trim() });
+    
+    try {
+      // Upload photos first if any are selected
+      const photoUrls = await uploadPhotos();
+      
+      // Submit comment with photo URLs
+      createCommentMutation.mutate({ 
+        content: newComment.trim(),
+        photoUrls 
+      });
+    } catch (error) {
+      // Error already handled in uploadPhotos
+      return;
+    }
   };
 
   const handleSubmitReply = (parentCommentId: string) => {
@@ -339,7 +426,7 @@ export function InlineComments({ incident, onClose }: InlineCommentsProps) {
 
         {/* Comment Input */}
         <div className="flex gap-3">
-          <Avatar className="w-9 h-9 md:w-8 md:h-8 flex-shrink-0">
+          <Avatar className="w-9 h-9 md:w-8 md:h-8 flex-shrink-0 mt-1">
             {user?.profileImageUrl ? (
               <img src={user.profileImageUrl} alt={user?.displayName || 'You'} className="w-full h-full object-cover" />
             ) : (
@@ -349,39 +436,87 @@ export function InlineComments({ incident, onClose }: InlineCommentsProps) {
             )}
           </Avatar>
           <div className="flex-1">
-            <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
-              <div className="flex-1 relative">
-                <input
-                  type="text"
-                  placeholder={isAuthenticated ? "Write a comment..." : "Please log in to comment"}
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSubmitComment();
-                    }
-                  }}
-                  onClick={(e) => e.stopPropagation()}
-                  onFocus={(e) => e.stopPropagation()}
-                  disabled={!isAuthenticated || createCommentMutation.isPending}
-                  className="w-full px-3 py-3 md:px-3 md:py-2 text-sm md:text-base rounded-lg border border-border bg-background focus:ring-2 focus:ring-primary focus:border-transparent outline-none disabled:opacity-50 min-h-[44px] md:min-h-[40px] min-w-[140px]"
-                  data-testid="input-comment"
-                />
+            <div onClick={(e) => e.stopPropagation()}>
+              {/* Photo previews */}
+              {selectedPhotos.length > 0 && (
+                <div className="mb-2 flex gap-2 flex-wrap">
+                  {selectedPhotos.map((photo, index) => (
+                    <div key={index} className="relative group">
+                      <img 
+                        src={URL.createObjectURL(photo)} 
+                        alt={`Upload ${index + 1}`}
+                        className="w-20 h-20 object-cover rounded border border-border"
+                      />
+                      <button
+                        onClick={() => removePhoto(index)}
+                        className="absolute -top-2 -right-2 w-6 h-6 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                        data-testid={`button-remove-photo-${index}`}
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              
+              {/* Textarea and action buttons */}
+              <div className="flex gap-2 items-end">
+                <div className="flex-1">
+                  <Textarea
+                    placeholder={isAuthenticated ? "Write a comment..." : "Please log in to comment"}
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSubmitComment();
+                      }
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                    onFocus={(e) => e.stopPropagation()}
+                    disabled={!isAuthenticated || createCommentMutation.isPending || isUploadingPhotos}
+                    className="min-h-[100px] resize-none text-sm md:text-base"
+                    data-testid="input-comment"
+                  />
+                  
+                  {/* Photo upload button */}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handlePhotoSelect}
+                    className="hidden"
+                    data-testid="input-photo-upload"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={!isAuthenticated || selectedPhotos.length >= 3 || createCommentMutation.isPending || isUploadingPhotos}
+                    className="mt-2 h-8 text-xs text-muted-foreground hover:text-foreground"
+                    data-testid="button-add-photo"
+                  >
+                    <ImageIcon className="w-4 h-4 mr-1" />
+                    Add Photo {selectedPhotos.length > 0 && `(${selectedPhotos.length}/3)`}
+                  </Button>
+                </div>
+                
+                <Button
+                  onClick={handleSubmitComment}
+                  disabled={!isAuthenticated || !newComment.trim() || createCommentMutation.isPending || isUploadingPhotos}
+                  size="sm"
+                  className="h-12 w-12 md:h-10 md:w-10 px-0 min-h-[44px] md:min-h-[40px] mb-[2px]"
+                  data-testid="button-submit-comment"
+                >
+                  {createCommentMutation.isPending || isUploadingPhotos ? (
+                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <Send className="w-4 h-4" />
+                  )}
+                </Button>
               </div>
-              <Button
-                onClick={handleSubmitComment}
-                disabled={!isAuthenticated || !newComment.trim() || createCommentMutation.isPending}
-                size="sm"
-                className="h-12 w-12 md:h-10 md:w-10 px-0 min-h-[44px] md:min-h-[40px]"
-                data-testid="button-submit-comment"
-              >
-                {createCommentMutation.isPending ? (
-                  <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <Send className="w-4 h-4" />
-                )}
-              </Button>
             </div>
           </div>
         </div>
