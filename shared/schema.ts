@@ -966,12 +966,53 @@ export function resolveAttribution(
 }
 
 /**
- * Resolve emergency agency for incident attribution
- * All emergency incidents come from QFES API, so attribute to QFES
- * @param metadata - Incident properties from emergency services API (unused)
- * @returns QFES agency user ID
+ * Resolve emergency agency for incident attribution based on incident identifiers
+ * Examines incident IDs and metadata to determine correct agency (QFES, QAS, QPS)
+ * @param metadata - Incident properties from emergency services API
+ * @returns Specific agency user ID or LEGACY_SYSTEM for unknown agencies
  */
 function resolveEmergencyAgency(metadata: any = {}): SystemUserId {
-  // All emergency incidents come from QFES API data source
-  return SYSTEM_USER_IDS.QFES;
+  // Check Master_Incident_Number first (most reliable identifier)
+  const masterIncidentNumber = metadata.Master_Incident_Number || metadata.Incident_Number || '';
+  const incidentId = String(masterIncidentNumber).toUpperCase();
+  
+  // QFES incidents: Start with QF, QF4, QF5N, etc.
+  if (incidentId.startsWith('QF')) {
+    return SYSTEM_USER_IDS.QFES;
+  }
+  
+  // QAS incidents: Start with QAS
+  if (incidentId.startsWith('QAS')) {
+    return SYSTEM_USER_IDS.QAS;
+  }
+  
+  // QPS incidents: Start with QPS or QP
+  if (incidentId.startsWith('QPS') || incidentId.startsWith('QP')) {
+    return SYSTEM_USER_IDS.QPS;
+  }
+  
+  // Check title as fallback
+  const title = String(metadata.title || '').toLowerCase();
+  if (title.includes('fire') || title.includes('smoke') || title.includes('rescue')) {
+    return SYSTEM_USER_IDS.QFES;
+  }
+  if (title.includes('ambulance') || title.includes('medical')) {
+    return SYSTEM_USER_IDS.QAS;
+  }
+  if (title.includes('police')) {
+    return SYSTEM_USER_IDS.QPS;
+  }
+  
+  // Check GroupedType as secondary fallback
+  const groupedType = String(metadata.GroupedType || '').toLowerCase();
+  if (groupedType.includes('fire') || groupedType.includes('rescue')) {
+    return SYSTEM_USER_IDS.QFES;
+  }
+  if (groupedType.includes('medical') || groupedType.includes('ambulance')) {
+    return SYSTEM_USER_IDS.QAS;
+  }
+  
+  // Fallback to legacy system for incidents we can't classify
+  console.warn(`Unable to determine emergency agency for incident: ${incidentId || 'unknown'}. Using legacy system.`);
+  return SYSTEM_USER_IDS.LEGACY_SYSTEM;
 }
