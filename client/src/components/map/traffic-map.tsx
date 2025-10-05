@@ -182,23 +182,29 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
 
 
     // Unified timestamp helper to ensure consistent ordering with aging logic
-    const getTimestamp = (properties: any) => {
+    // Check root-level fields first (where TMR stores timestamps), then properties
+    const getTimestamp = (feature: any) => {
       const candidates = [
-        properties?.incidentTime,
-        properties?.updatedAt,
-        properties?.lastUpdated,
-        properties?.LastUpdate,
-        properties?.publishedAt,
-        properties?.firstSeenAt,
-        properties?.datetime,
-        properties?.occurredAt,
-        properties?.Response_Date,
-        properties?.duration?.start,
-        properties?.published,
-        properties?.last_updated,
-        properties?.updated_at,
-        properties?.createdAt,
-        properties?.created_at,
+        // Root-level fields (TMR events store timestamps here)
+        feature?.incidentTime,
+        feature?.lastUpdated,
+        feature?.publishedAt,
+        // Properties-level fields (other sources store timestamps here)
+        feature?.properties?.incidentTime,
+        feature?.properties?.updatedAt,
+        feature?.properties?.lastUpdated,
+        feature?.properties?.LastUpdate,
+        feature?.properties?.publishedAt,
+        feature?.properties?.firstSeenAt,
+        feature?.properties?.datetime,
+        feature?.properties?.occurredAt,
+        feature?.properties?.Response_Date,
+        feature?.properties?.duration?.start,
+        feature?.properties?.published,
+        feature?.properties?.last_updated,
+        feature?.properties?.updated_at,
+        feature?.properties?.createdAt,
+        feature?.properties?.created_at,
       ];
       
       for (const candidate of candidates) {
@@ -215,7 +221,7 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
     // Sort events by timestamp (oldest first, newest last) so newer markers appear on top
     if ((filteredEventsData as any)?.features) {
       const sortedEvents = [...(filteredEventsData as any).features].sort((a: any, b: any) => {
-        return getTimestamp(a.properties) - getTimestamp(b.properties);
+        return getTimestamp(a) - getTimestamp(b);
       });
       
       sortedEvents.forEach((feature: any) => {
