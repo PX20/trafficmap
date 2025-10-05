@@ -681,6 +681,116 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Comment photo upload endpoint - allows up to 3 photos
+  const commentPhotoUpload = multer({
+    storage: storage_multer,
+    limits: {
+      fileSize: MAX_FILE_SIZE, // 5MB per file
+      files: 3, // Max 3 photos per comment
+      fieldSize: 1024 * 1024,
+      fields: 10,
+    },
+    fileFilter: (req, file, cb) => {
+      if (!file.mimetype.startsWith('image/')) {
+        return cb(new Error('Only image files are allowed') as any, false);
+      }
+      if (!file.originalname || file.originalname.length > 255) {
+        return cb(new Error('Invalid filename') as any, false);
+      }
+      cb(null, true);
+    },
+  });
+
+  app.post('/api/upload/comment-photos', isAuthenticated, commentPhotoUpload.array('photos', 3), async (req: any, res) => {
+    try {
+      const userId = (req.user as any)?.claims?.sub || (req.user as any)?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+
+      if (!req.files || !Array.isArray(req.files) || req.files.length === 0) {
+        return res.status(400).json({ error: 'No photos provided' });
+      }
+
+      if (req.files.length > 3) {
+        return res.status(400).json({ error: 'Maximum 3 photos allowed per comment' });
+      }
+
+      // Validate each file
+      const uploadedUrls: string[] = [];
+      const objectStorageService = new ObjectStorageService();
+      const privateObjectDir = objectStorageService.getPrivateObjectDir();
+
+      for (const file of req.files) {
+        // Validate file size
+        if (file.size > MAX_FILE_SIZE) {
+          return res.status(413).json({ 
+            error: `File too large. Maximum size is ${Math.round(MAX_FILE_SIZE / 1024 / 1024)}MB` 
+          });
+        }
+
+        // Secure validation
+        const validation = await validateSecureImage(file.buffer, file.originalname);
+        if (!validation.isValid) {
+          return res.status(400).json({ error: validation.error });
+        }
+
+        // Process image - resize to max 1200px width, compress to JPEG
+        const processedBuffer = await sharp(file.buffer)
+          .resize(1200, 1200, {
+            fit: 'inside',
+            withoutEnlargement: true
+          })
+          .jpeg({ quality: 85, mozjpeg: true })
+          .toBuffer();
+
+        // Generate secure filename
+        const fileId = randomUUID();
+        const filename = `comment_photo_${fileId}.jpg`;
+        const fullPath = `${privateObjectDir}/comments/${filename}`;
+        
+        const { bucketName, objectName } = (() => {
+          const pathParts = fullPath.startsWith("/") ? fullPath.split("/") : `/${fullPath}`.split("/");
+          return {
+            bucketName: pathParts[1],
+            objectName: pathParts.slice(2).join("/")
+          };
+        })();
+
+        const bucket = objectStorageClient.bucket(bucketName);
+        const fileObj = bucket.file(objectName);
+        
+        await fileObj.save(processedBuffer, {
+          metadata: {
+            contentType: 'image/jpeg',
+            metadata: {
+              uploadedBy: userId,
+              uploadedAt: new Date().toISOString(),
+              processed: 'true',
+              type: 'comment_photo'
+            }
+          }
+        });
+
+        uploadedUrls.push(`/objects${fullPath}`);
+      }
+
+      res.json({
+        success: true,
+        urls: uploadedUrls,
+        count: uploadedUrls.length
+      });
+
+    } catch (error: unknown) {
+      console.error('Comment photo upload error:', error);
+      res.status(500).json({ 
+        error: 'Photo upload failed',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
   // Enhanced image compression endpoint with multiple sizes and WebP support
   app.get('/api/compress-image', async (req, res) => {
     const imagePath = req.query.path as string;
@@ -1927,7 +2037,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userId,
         parentCommentId: req.body.parentCommentId || null, // Support nested replies
         username: user.displayName || user.firstName || `User${userId.slice(0,4)}`,
-        content: req.body.content
+        content: req.body.content,
+        photoUrls: req.body.photoUrls || [] // Array of photo URLs from separate upload endpoint
       };
 
       // Basic validation
@@ -1937,6 +2048,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (validatedData.content.length > 1000) {
         return res.status(400).json({ message: "Comment too long" });
+      }
+
+      // Validate photoUrls array if provided
+      if (validatedData.photoUrls && validatedData.photoUrls.length > 3) {
+        return res.status(400).json({ message: "Maximum 3 photos allowed per comment" });
       }
 
       const comment = await storage.createIncidentComment(validatedData);
