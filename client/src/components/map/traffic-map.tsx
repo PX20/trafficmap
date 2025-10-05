@@ -435,42 +435,57 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
             incidentCategory = 'traffic';
           } else if (source === 'emergency') {
             // Government API Feed - Emergency Services (QFES)
-            // Use subcategory to determine specific icon type
-            const subcategory = feature.subcategory || properties?.subcategory || '';
+            // Check GroupedType FIRST for rescue/crash overrides
+            const groupedType = feature.GroupedType || properties?.GroupedType;
+            let groupedTypeMatch = false;
             
-            switch (subcategory) {
-              case 'Fire & Smoke':
-                markerType = 'fire';
-                incidentCategory = 'fire';
-                break;
-              case 'Rescue Operation':
+            if (groupedType) {
+              const type = String(groupedType).toLowerCase();
+              if (type.includes('rescue') || type.includes('crash')) {
                 markerType = 'rescue';
                 incidentCategory = 'emergency';
-                break;
-              case 'Medical Emergencies':
-                markerType = 'medical';
-                incidentCategory = 'emergency';
-                break;
-              case 'Chemical/Hazmat':
-                markerType = 'hazmat';
-                incidentCategory = 'emergency';
-                break;
-              case 'Power/Gas Emergency':
-                markerType = 'power';
-                incidentCategory = 'emergency';
-                break;
-              case 'Storm/SES':
-                markerType = 'storm';
-                incidentCategory = 'emergency';
-                break;
-              case 'Public Safety':
-                markerType = 'emergency';
-                incidentCategory = 'emergency';
-                break;
-              default:
-                // Generic emergency or unclassified QFES incident
-                markerType = 'siren';
-                incidentCategory = 'emergency';
+                groupedTypeMatch = true;
+              }
+            }
+            
+            // Fall back to subcategory if GroupedType didn't match
+            if (!groupedTypeMatch) {
+              const subcategory = feature.subcategory || properties?.subcategory || '';
+              
+              switch (subcategory) {
+                case 'Fire & Smoke':
+                  markerType = 'fire';
+                  incidentCategory = 'fire';
+                  break;
+                case 'Rescue Operation':
+                  markerType = 'rescue';
+                  incidentCategory = 'emergency';
+                  break;
+                case 'Medical Emergencies':
+                  markerType = 'medical';
+                  incidentCategory = 'emergency';
+                  break;
+                case 'Chemical/Hazmat':
+                  markerType = 'hazmat';
+                  incidentCategory = 'emergency';
+                  break;
+                case 'Power/Gas Emergency':
+                  markerType = 'power';
+                  incidentCategory = 'emergency';
+                  break;
+                case 'Storm/SES':
+                  markerType = 'storm';
+                  incidentCategory = 'emergency';
+                  break;
+                case 'Public Safety':
+                  markerType = 'emergency';
+                  incidentCategory = 'emergency';
+                  break;
+                default:
+                  // Generic emergency or unclassified QFES incident
+                  markerType = 'siren';
+                  incidentCategory = 'emergency';
+              }
             }
           } else {
             // Fallback for incidents without clear source (legacy data)
