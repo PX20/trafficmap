@@ -227,8 +227,11 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
       sortedEvents.forEach((feature: any) => {
         const eventType = getSafeString(feature.properties, 'event_type');
         
-        // Calculate aging for traffic events - use normalized timestamps from database
-        const referenceTime = feature.properties?.incidentTime || 
+        // Calculate aging for traffic events - check root-level fields first (TMR), then properties
+        const referenceTime = feature.incidentTime || 
+                             feature.lastUpdated || 
+                             feature.publishedAt ||
+                             feature.properties?.incidentTime || 
                              feature.properties?.lastUpdated || 
                              feature.properties?.publishedAt ||
                              feature.properties?.duration?.start || 
@@ -304,7 +307,7 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
             const agedColor = getAgedColor(originalColor, agingData.agePercentage);
             
             // Set z-index based on timestamp to ensure newest events appear on top
-            const timestamp = getTimestamp(feature.properties);
+            const timestamp = getTimestamp(feature);
             const zIndexOffset = Math.floor(timestamp / 1000); // Convert to reasonable z-index value
             
             const marker = L.marker(coords, {
@@ -329,7 +332,7 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
     // Sort incidents by timestamp (oldest first, newest last) so newer markers appear on top
     if ((filteredIncidentsData as any)?.features) {
       const sortedIncidents = [...(filteredIncidentsData as any).features].sort((a: any, b: any) => {
-        return getTimestamp(a.properties) - getTimestamp(b.properties);
+        return getTimestamp(a) - getTimestamp(b);
       });
       
       sortedIncidents.forEach((feature: any) => {
