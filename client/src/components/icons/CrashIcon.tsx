@@ -6,14 +6,24 @@ export const CrashIcon = ({ className = "w-5 h-5" }: CrashIconProps) => {
   return (
     <svg 
       viewBox="0 0 24 24" 
-      fill="currentColor"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
       className={className}
     >
-      {/* Car body - simplified silhouette */}
-      <path d="M18,11.5 h-2.5 l-1,-2 h-5 l-1,2 h-2.5 c-1,0 -1.5,0.5 -1.5,1.5 v3 c0,1 0.5,1.5 1.5,1.5 h1 c0,0.8 0.7,1.5 1.5,1.5 s1.5,-0.7 1.5,-1.5 h4 c0,0.8 0.7,1.5 1.5,1.5 s1.5,-0.7 1.5,-1.5 h1 c1,0 1.5,-0.5 1.5,-1.5 v-3 c0,-1 -0.5,-1.5 -1.5,-1.5 z M8,16.5 c-0.6,0 -1,-0.4 -1,-1 s0.4,-1 1,-1 s1,0.4 1,1 s-0.4,1 -1,1 z M16,16.5 c-0.6,0 -1,-0.4 -1,-1 s0.4,-1 1,-1 s1,0.4 1,1 s-0.4,1 -1,1 z M18,14 h-12 v-1.5 h12 v1.5 z" />
+      {/* Car silhouette */}
+      <path d="M7 17h2m6 0h2M5 17H3v-3c0-1 1-2 2-2h3l2-3h4l2 3h3c1 0 2 1 2 2v3h-2" />
+      <circle cx="7" cy="17" r="2" />
+      <circle cx="17" cy="17" r="2" />
       
-      {/* Collision impact star burst - upper left */}
-      <path d="M5,5 l0.7,1.5 l1.5,0.2 l-1.1,1 l0.3,1.5 l-1.4,-0.7 l-1.4,0.7 l0.3,-1.5 l-1.1,-1 l1.5,-0.2 z" />
+      {/* Impact burst lines radiating from center */}
+      <path d="M12 8L12 4" strokeWidth="2.5" />
+      <path d="M12 8L16 5" strokeWidth="2" />
+      <path d="M12 8L8 5" strokeWidth="2" />
+      <path d="M12 8L15 9" strokeWidth="1.5" />
+      <path d="M12 8L9 9" strokeWidth="1.5" />
     </svg>
   );
 };

@@ -916,10 +916,16 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
           return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>`;
         case 'rescue':
         case 'ambulance':
-          // Crash icon for rescue operations (car with collision symbol)
-          return `<svg width="16" height="16" viewBox="0 0 24 24" fill="${color}">
-            <path d="M18,11.5 h-2.5 l-1,-2 h-5 l-1,2 h-2.5 c-1,0 -1.5,0.5 -1.5,1.5 v3 c0,1 0.5,1.5 1.5,1.5 h1 c0,0.8 0.7,1.5 1.5,1.5 s1.5,-0.7 1.5,-1.5 h4 c0,0.8 0.7,1.5 1.5,1.5 s1.5,-0.7 1.5,-1.5 h1 c1,0 1.5,-0.5 1.5,-1.5 v-3 c0,-1 -0.5,-1.5 -1.5,-1.5 z M8,16.5 c-0.6,0 -1,-0.4 -1,-1 s0.4,-1 1,-1 s1,0.4 1,1 s-0.4,1 -1,1 z M16,16.5 c-0.6,0 -1,-0.4 -1,-1 s0.4,-1 1,-1 s1,0.4 1,1 s-0.4,1 -1,1 z M18,14 h-12 v-1.5 h12 v1.5 z"/>
-            <path d="M5,5 l0.7,1.5 l1.5,0.2 l-1.1,1 l0.3,1.5 l-1.4,-0.7 l-1.4,0.7 l0.3,-1.5 l-1.1,-1 l1.5,-0.2 z"/>
+          // Crash icon for rescue operations (car with impact burst)
+          return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M7 17h2m6 0h2M5 17H3v-3c0-1 1-2 2-2h3l2-3h4l2 3h3c1 0 2 1 2 2v3h-2"/>
+            <circle cx="7" cy="17" r="2"/>
+            <circle cx="17" cy="17" r="2"/>
+            <path d="M12 8L12 4" stroke-width="2.5"/>
+            <path d="M12 8L16 5" stroke-width="2"/>
+            <path d="M12 8L8 5" stroke-width="2"/>
+            <path d="M12 8L15 9" stroke-width="1.5"/>
+            <path d="M12 8L9 9" stroke-width="1.5"/>
           </svg>`;
         case 'medical':
           // Heart icon for medical emergencies
