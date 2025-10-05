@@ -229,7 +229,16 @@ export function getIncidentIconProps(incident: any): { iconName: string, color: 
   }
   
   if (source === 'emergency') {
-    // QFES Emergency Services - determine by subcategory
+    // QFES Emergency Services - check GroupedType FIRST for rescue/crash overrides
+    const groupedType = incident.GroupedType || incident.properties?.GroupedType;
+    if (groupedType) {
+      const type = String(groupedType).toLowerCase();
+      if (type.includes('rescue') || type.includes('crash')) {
+        return { iconName: 'Crash', color: 'text-orange-600' };
+      }
+    }
+    
+    // Fall back to subcategory-based icons
     const subcategory = incident.subcategory || incident.properties?.subcategory || '';
     
     // Category-specific icons for QFES incidents
