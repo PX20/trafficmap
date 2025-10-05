@@ -349,7 +349,7 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
           if (source === 'user') {
             // Community Posts - User-reported incidents
             const incidentType = properties?.incidentType;
-            const categoryId = properties?.categoryId;
+            const categoryId = properties?.categoryId || properties?.categoryUuid;
             const category = properties?.category?.toLowerCase();
             
             // First try incidentType, then fall back to categoryId mapping
@@ -494,7 +494,7 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
             if (isUserReported) {
               // Legacy user-reported incidents
               const incidentType = properties?.incidentType;
-              const categoryId = properties?.categoryId;
+              const categoryId = properties?.categoryId || properties?.categoryUuid;
               const category = properties?.category?.toLowerCase();
               
               // First try incidentType, then fall back to categoryId mapping
@@ -604,7 +604,7 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
             // Map category for aging calculation
             let agingCategory = 'community'; // default fallback
             if (source === 'user') {
-              const categoryId = properties?.categoryId;
+              const categoryId = properties?.categoryId || properties?.categoryUuid;
               if (categoryId === '792759f4-1b98-4665-b14c-44a54e9969e9') {
                 agingCategory = 'safety';
               } else if (categoryId === 'd03f47a9-10fb-4656-ae73-92e959d7566a') {
@@ -627,7 +627,7 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
               // Fallback for legacy data
               const isUserReported = properties?.userReported;
               if (isUserReported) {
-                const categoryId = properties?.categoryId;
+                const categoryId = properties?.categoryId || properties?.categoryUuid;
                 if (categoryId === '792759f4-1b98-4665-b14c-44a54e9969e9') {
                   agingCategory = 'safety';
                 } else if (categoryId === 'd03f47a9-10fb-4656-ae73-92e959d7566a') {

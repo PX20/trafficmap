@@ -773,48 +773,69 @@ export class DatabaseStorage implements IStorage {
     return this.convertIncidentsToGeoJSON(incidents);
   }
 
+  // Helper method to map category names to UUIDs for frontend icon matching
+  private getCategoryUuid(categoryName: string): string | undefined {
+    const categoryMap: Record<string, string> = {
+      'Safety & Crime': '792759f4-1b98-4665-b14c-44a54e9969e9',
+      'Infrastructure & Hazards': '9b1d58d9-cfd1-4c31-93e9-754276a5f265',
+      'Emergency Situations': '54d31da5-fc10-4ad2-8eca-04bac680e668',
+      'Wildlife & Nature': 'd03f47a9-10fb-4656-ae73-92e959d7566a',
+      'Community Issues': 'deaca906-3561-4f80-b79f-ed99561c3b04',
+      'Pets': '4ea3a6f0-c49e-4baf-9ca5-f074ca2811b0',
+      'Lost & Found': 'd1dfcd4e-48e9-4e58-9476-4782a2a132f3'
+    };
+    
+    return categoryMap[categoryName];
+  }
+
   // Helper method for GeoJSON conversion
   private convertIncidentsToGeoJSON(incidents: SelectUnifiedIncident[]): UnifiedIncidentsResponse {
-    const features: UnifiedFeature[] = incidents.map(incident => ({
-      type: "Feature",
-      id: incident.id,
-      source: incident.source, // CRITICAL: Expose source at top level for isUserReport() function
-      userId: incident.userId, // CRITICAL: Expose userId at top level for getReporterUserId() function
-      photoUrl: incident.photoUrl, // CRITICAL: Expose photoUrl at top level for display in modals
-      subcategory: incident.subcategory, // CRITICAL: Expose subcategory at top level for icon mapping
-      properties: {
+    const features: UnifiedFeature[] = incidents.map(incident => {
+      // Map category name to UUID for frontend icon matching
+      const categoryUuid = this.getCategoryUuid(incident.category);
+      
+      return {
+        type: "Feature",
         id: incident.id,
-        source: incident.source,
-        title: incident.title,
-        description: incident.description || undefined,
-        category: incident.category,
-        subcategory: incident.subcategory || undefined,
-        severity: incident.severity || "medium",
-        status: incident.status || "active",
-        location: incident.location || undefined,
-        incidentTime: incident.incidentTime?.toISOString(),
-        lastUpdated: incident.lastUpdated.toISOString(),
-        publishedAt: incident.publishedAt.toISOString(),
-        regionIds: incident.regionIds || [],
-        userId: incident.userId || undefined,
-        photoUrl: incident.photoUrl || undefined,
-        verificationStatus: incident.verificationStatus || undefined,
-        // CRITICAL: Extract reporterId from JSONB properties for user attribution - fixed to use userId directly
-        reporterId: incident.userId || (incident.properties as any)?.reporterId || undefined,
-        // CRITICAL: Extract userReported flag from JSONB properties for proper classification
-        userReported: (incident.properties as any)?.userReported || undefined,
-        // CRITICAL: Extract categoryId and subcategoryId from properties for icon mapping
-        categoryId: (incident.properties as any)?.categoryId || (incident.properties as any)?.category || undefined,
-        subcategoryId: (incident.properties as any)?.subcategoryId || (incident.properties as any)?.subcategory || undefined,
-        // CRITICAL: Extract QFES-specific fields for proper categorization display
-        GroupedType: (incident.properties as any)?.GroupedType || undefined,
-        Incident_Type: (incident.properties as any)?.Incident_Type || undefined,
-        Jurisdiction: (incident.properties as any)?.Jurisdiction || undefined,
-        Master_Incident_Number: (incident.properties as any)?.Master_Incident_Number || undefined,
-        originalProperties: incident.properties,
-      },
-      geometry: incident.geometry as any,
-    }));
+        source: incident.source, // CRITICAL: Expose source at top level for isUserReport() function
+        userId: incident.userId, // CRITICAL: Expose userId at top level for getReporterUserId() function
+        photoUrl: incident.photoUrl, // CRITICAL: Expose photoUrl at top level for display in modals
+        subcategory: incident.subcategory, // CRITICAL: Expose subcategory at top level for icon mapping
+        properties: {
+          id: incident.id,
+          source: incident.source,
+          title: incident.title,
+          description: incident.description || undefined,
+          category: incident.category,
+          categoryUuid: categoryUuid || incident.category, // CRITICAL: Include UUID for frontend icon matching
+          subcategory: incident.subcategory || undefined,
+          severity: incident.severity || "medium",
+          status: incident.status || "active",
+          location: incident.location || undefined,
+          incidentTime: incident.incidentTime?.toISOString(),
+          lastUpdated: incident.lastUpdated.toISOString(),
+          publishedAt: incident.publishedAt.toISOString(),
+          regionIds: incident.regionIds || [],
+          userId: incident.userId || undefined,
+          photoUrl: incident.photoUrl || undefined,
+          verificationStatus: incident.verificationStatus || undefined,
+          // CRITICAL: Extract reporterId from JSONB properties for user attribution - fixed to use userId directly
+          reporterId: incident.userId || (incident.properties as any)?.reporterId || undefined,
+          // CRITICAL: Extract userReported flag from JSONB properties for proper classification
+          userReported: (incident.properties as any)?.userReported || undefined,
+          // CRITICAL: Extract categoryId and subcategoryId from properties for icon mapping
+          categoryId: categoryUuid || (incident.properties as any)?.categoryId || (incident.properties as any)?.category || undefined,
+          subcategoryId: (incident.properties as any)?.subcategoryId || (incident.properties as any)?.subcategory || undefined,
+          // CRITICAL: Extract QFES-specific fields for proper categorization display
+          GroupedType: (incident.properties as any)?.GroupedType || undefined,
+          Incident_Type: (incident.properties as any)?.Incident_Type || undefined,
+          Jurisdiction: (incident.properties as any)?.Jurisdiction || undefined,
+          Master_Incident_Number: (incident.properties as any)?.Master_Incident_Number || undefined,
+          originalProperties: incident.properties,
+        },
+        geometry: incident.geometry as any,
+      };
+    });
 
     // Calculate metadata
     const sourceCounts = incidents.reduce((acc, incident) => {
