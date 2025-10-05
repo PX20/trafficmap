@@ -70,6 +70,29 @@ const Comment = ({
             </div>
             <p className="text-sm md:text-base text-foreground break-words leading-relaxed">{comment.content}</p>
             
+            {/* Photo attachments */}
+            {comment.photoUrls && comment.photoUrls.length > 0 && (
+              <div className={`mt-3 grid gap-2 ${
+                comment.photoUrls.length === 1 ? 'grid-cols-1' : 
+                comment.photoUrls.length === 2 ? 'grid-cols-2' : 
+                'grid-cols-2 md:grid-cols-3'
+              }`}>
+                {comment.photoUrls.map((url: string, index: number) => (
+                  <img 
+                    key={index}
+                    src={url} 
+                    alt={`Photo ${index + 1}`}
+                    className="w-full h-32 md:h-40 object-cover rounded border border-border cursor-pointer hover:opacity-90 transition-opacity"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      window.open(url, '_blank');
+                    }}
+                    data-testid={`img-comment-photo-${comment.id}-${index}`}
+                  />
+                ))}
+              </div>
+            )}
+            
             {/* Reply button */}
             {actualDepth < maxDepth && (
               <div className="mt-2 pt-2">
