@@ -860,16 +860,20 @@ class UnifiedIngestionEngine {
     const incidentType = props.Incident_Type?.toLowerCase() || '';
     
     // Check specific incident types FIRST (most specific)
+    // IMPORTANT: Check for rescue/crash keywords in BOTH groupedType AND incidentType
+    if (groupedType.includes('rescue') || incidentType.includes('rescue') || 
+        groupedType.includes('crash') || incidentType.includes('crash') ||
+        (groupedType.includes('road') && (groupedType.includes('accident') || groupedType.includes('incident')))) {
+      return 'Rescue Operation';
+    }
     if (groupedType.includes('power') || groupedType.includes('gas') || groupedType.includes('electric')) {
       return 'Power/Gas Emergency';
     }
     if (groupedType.includes('storm') || groupedType.includes('flood') || groupedType.includes('weather')) {
       return 'Storm/SES';
     }
-    if (groupedType.includes('rescue') || (groupedType.includes('road') && groupedType.includes('crash'))) {
-      return 'Rescue Operation';
-    }
-    if (groupedType.includes('medical') || groupedType.includes('ambulance')) {
+    // Only categorize as Medical if it explicitly mentions medical (not just ambulance jurisdiction)
+    if (groupedType.includes('medical') && !groupedType.includes('rescue') && !groupedType.includes('crash')) {
       return 'Medical Emergencies';
     }
     if (groupedType.includes('hazmat') || groupedType.includes('chemical')) {
@@ -880,7 +884,9 @@ class UnifiedIngestionEngine {
     }
     
     // Then check by jurisdiction/source (broader classification)
-    if (jurisdiction.includes('ambulance') || incidentNumber.includes('qa')) {
+    // IMPORTANT: Don't let ambulance jurisdiction override rescue operations
+    if ((jurisdiction.includes('ambulance') || incidentNumber.includes('qa')) && 
+        !groupedType.includes('rescue') && !groupedType.includes('crash')) {
       return 'Medical Emergencies';
     }
     if (jurisdiction.includes('police') || incidentNumber.includes('qp') || groupedType.includes('police') || incidentType.includes('police')) {
