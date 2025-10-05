@@ -834,7 +834,25 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
       // Emergency - blue for ESQ
       case 'emergency':
         return '#4f46e5'; // Blue - matches emergency filter icon
-      // QFES - red for fire services
+      // QFES Emergency Categories - category-specific colors
+      case 'fire':
+        return '#dc2626'; // Red - fire incidents
+      case 'rescue':
+      case 'ambulance':
+        return '#f97316'; // Orange - rescue operations
+      case 'medical':
+        return '#16a34a'; // Green - medical emergencies
+      case 'hazmat':
+        return '#eab308'; // Yellow - hazmat/chemical
+      case 'power':
+      case 'gas':
+        return '#a855f7'; // Purple - power/gas emergencies
+      case 'storm':
+      case 'ses':
+        return '#3b82f6'; // Blue - storm/SES
+      case 'siren':
+        return '#dc2626'; // Red - generic emergency response
+      // QFES fallback - red for fire services
       case 'qfes':
         return '#dc2626'; // Red - matches QFES fire services
       // Wildlife - green
