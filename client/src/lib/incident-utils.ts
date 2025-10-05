@@ -229,18 +229,29 @@ export function getIncidentIconProps(incident: any): { iconName: string, color: 
   }
   
   if (source === 'emergency') {
-    // Emergency Services - determine by incident type
-    const eventType = incident.properties?.Event_Type?.toLowerCase() || '';
-    const description = incident.properties?.description?.toLowerCase() || '';
+    // QFES Emergency Services - determine by subcategory
+    const subcategory = incident.subcategory || incident.properties?.subcategory || '';
     
-    if (eventType.includes('fire') || description.includes('fire')) {
-      return { iconName: 'Flame', color: 'text-red-600' };
-    } else if (eventType.includes('medical') || description.includes('medical')) {
-      return { iconName: 'Heart', color: 'text-green-600' };
-    } else if (eventType.includes('police') || description.includes('police')) {
-      return { iconName: 'Shield', color: 'text-blue-600' };
+    // Category-specific icons for QFES incidents
+    switch (subcategory) {
+      case 'Fire & Smoke':
+        return { iconName: 'Flame', color: 'text-red-600' };
+      case 'Rescue Operation':
+        return { iconName: 'Ambulance', color: 'text-orange-600' };
+      case 'Medical Emergencies':
+        return { iconName: 'Heart', color: 'text-green-600' };
+      case 'Chemical/Hazmat':
+        return { iconName: 'AlertTriangle', color: 'text-yellow-600' };
+      case 'Power/Gas Emergency':
+        return { iconName: 'Zap', color: 'text-purple-600' };
+      case 'Storm/SES':
+        return { iconName: 'CloudLightning', color: 'text-blue-600' };
+      case 'Public Safety':
+        return { iconName: 'Shield', color: 'text-blue-600' };
+      default:
+        // Default QFES icon for unclassified emergencies
+        return { iconName: 'Siren', color: 'text-red-600' };
     }
-    return { iconName: 'AlertTriangle', color: 'text-red-600' };
   }
   
   if (source === 'user') {
