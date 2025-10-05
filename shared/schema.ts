@@ -396,7 +396,8 @@ export const incidentComments = pgTable("incident_comments", {
   userId: varchar("user_id").notNull(), // References users.id
   parentCommentId: varchar("parent_comment_id"), // References incident_comments.id for nested replies
   content: text("content").notNull(), // Content validation in Zod schema
-  photoUrl: text("photo_url"), // Optional photo attachment
+  photoUrl: text("photo_url"), // Optional photo attachment (legacy single photo)
+  photoUrls: text("photo_urls").array().default([]), // Multiple photo attachments (up to 3)
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
@@ -601,7 +602,8 @@ export const insertIncidentCommentSchema = createInsertSchema(incidentComments).
   createdAt: true,
   updatedAt: true,
 }).extend({
-  content: z.string().min(1, "Comment cannot be empty").max(500, "Comment too long"),
+  content: z.string().min(1, "Comment cannot be empty").max(1000, "Comment too long"),
+  photoUrls: z.array(z.string().url()).max(3, "Maximum 3 photos per comment").optional(),
 });
 
 export type IncidentComment = typeof incidentComments.$inferSelect;
