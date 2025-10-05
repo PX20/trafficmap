@@ -442,7 +442,7 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
             if (groupedType) {
               const type = String(groupedType).toLowerCase();
               if (type.includes('rescue') || type.includes('crash')) {
-                markerType = 'rescue';
+                markerType = 'ambulance';
                 incidentCategory = 'emergency';
                 groupedTypeMatch = true;
               }
@@ -458,7 +458,7 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
                   incidentCategory = 'fire';
                   break;
                 case 'Rescue Operation':
-                  markerType = 'rescue';
+                  markerType = 'ambulance';
                   incidentCategory = 'emergency';
                   break;
                 case 'Medical Emergencies':
