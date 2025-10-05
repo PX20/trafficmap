@@ -901,8 +901,8 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
           return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>`;
         case 'rescue':
         case 'ambulance':
-          // Ambulance icon for rescue operations
-          return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 17h4"/><path d="M14 2v3a1 1 0 0 0 1 1h3"/><path d="M14 14h.01"/><path d="M18 11V8a1 1 0 0 0-1-1h-2V4a2 2 0 0 0-2-2h-6a2 2 0 0 0-2 2v3H3a1 1 0 0 0-1 1v3"/><path d="m2 14 3 3 3-3"/><circle cx="8" cy="17" r="2"/><circle cx="16" cy="17" r="2"/></svg>`;
+          // Car crash icon for rescue operations
+          return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4H3a2 2 0 0 0-2 2v3h9z"/><path d="M21 9h-2a2 2 0 0 0-2 2v1h4z"/><path d="M10 9h4v1h-4z"/><path d="M23 11v3a1 1 0 0 1-1 1h-2"/><path d="M1 14a1 1 0 0 0 1 1h2"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/><path d="M9.5 4L7 9m7.5-5L17 9"/></svg>`;
         case 'medical':
           // Heart icon for medical emergencies
           return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`;
