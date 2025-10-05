@@ -292,7 +292,8 @@ export function getIncidentIconProps(incident: any): { iconName: string, color: 
   
   if (source === 'user') {
     // User Reports - Check SUBCATEGORY first for specific icons
-    const subcategory = incident.subcategory || incident.properties?.subcategory || '';
+    const subcategoryId = incident.subcategory || incident.properties?.subcategory || '';
+    const subcategory = getIncidentSubcategory(incident); // Convert UUID to human name
     
     // Subcategory-specific icons for community reports
     switch (subcategory) {
