@@ -227,17 +227,6 @@ function IncidentDetailPage({ asModal = true, incidentId: propIncidentId }: Inci
 
   const content = (
     <div className="relative">
-      {/* Close Button - Pinned for centered content, 44px touch target */}
-      <Button 
-        variant="ghost" 
-        size="sm" 
-        onClick={handleClose}
-        className="absolute top-1 right-1 z-20 h-11 w-11 p-0 rounded-full hover:bg-gray-200"
-        data-testid="close-incident-detail"
-      >
-        <X className="h-5 w-5" />
-      </Button>
-
       {/* Main Card */}
       <Card className="border-0 shadow-lg bg-gradient-to-br from-white via-gray-50/30 to-white">
         <CardHeader className={`pb-3 pt-4 px-3 md:px-6 rounded-t-lg ${
