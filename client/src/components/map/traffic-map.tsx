@@ -529,8 +529,11 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
             }
           }
           
-          // Calculate aging for incidents - use real timestamps with broad fallback
-          const referenceTime = properties?.incidentTime || 
+          // Calculate aging for incidents - check root-level fields first, then properties
+          const referenceTime = feature.incidentTime || 
+                               feature.lastUpdated ||
+                               feature.publishedAt ||
+                               properties?.incidentTime || 
                                properties?.lastUpdated ||
                                properties?.updatedAt ||
                                properties?.createdAt ||
@@ -542,38 +545,20 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
                                properties?.updated_at || 
                                properties?.firstSeenAt;
           
-          // Skip if no valid timestamp available
+          // Create default aging data for incidents without timestamps
+          let agingData;
           if (!referenceTime) {
-            console.warn('Incident missing timestamp data, skipping aging calculation:', properties?.id);
-            return;
-          }
-          
-          // Map category for aging calculation
-          let agingCategory = 'community'; // default fallback
-          if (source === 'user') {
-            const categoryId = properties?.categoryId;
-            if (categoryId === '792759f4-1b98-4665-b14c-44a54e9969e9') {
-              agingCategory = 'safety';
-            } else if (categoryId === 'd03f47a9-10fb-4656-ae73-92e959d7566a') {
-              agingCategory = 'wildlife';
-            } else if (categoryId === '9b1d58d9-cfd1-4c31-93e9-754276a5f265') {
-              agingCategory = 'traffic';
-            } else if (categoryId === 'deaca906-3561-4f80-b79f-ed99561c3b04') {
-              agingCategory = 'community';
-            } else if (categoryId === 'd1dfcd4e-48e9-4e58-9476-4782a2a132f3') {
-              agingCategory = 'lost-found';
-            } else if (categoryId === '4ea3a6f0-c49e-4baf-9ca5-f074ca2811b0') {
-              agingCategory = 'pets';
-            }
-          } else if (source === 'tmr') {
-            agingCategory = 'traffic';
-          } else if (source === 'emergency') {
-            // Official emergency incidents - QFES vs other emergency
-            agingCategory = isQFESIncident(feature) ? 'fire' : 'emergency';
+            console.warn('Incident missing timestamp data, showing with default styling:', properties?.id);
+            agingData = {
+              agePercentage: 0,
+              isVisible: true,
+              timeRemaining: Infinity,
+              shouldAutoHide: false
+            };
           } else {
-            // Fallback for legacy data
-            const isUserReported = properties?.userReported;
-            if (isUserReported) {
+            // Map category for aging calculation
+            let agingCategory = 'community'; // default fallback
+            if (source === 'user') {
               const categoryId = properties?.categoryId;
               if (categoryId === '792759f4-1b98-4665-b14c-44a54e9969e9') {
                 agingCategory = 'safety';
@@ -588,38 +573,61 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
               } else if (categoryId === '4ea3a6f0-c49e-4baf-9ca5-f074ca2811b0') {
                 agingCategory = 'pets';
               }
-            } else {
+            } else if (source === 'tmr') {
+              agingCategory = 'traffic';
+            } else if (source === 'emergency') {
+              // Official emergency incidents - QFES vs other emergency
               agingCategory = isQFESIncident(feature) ? 'fire' : 'emergency';
+            } else {
+              // Fallback for legacy data
+              const isUserReported = properties?.userReported;
+              if (isUserReported) {
+                const categoryId = properties?.categoryId;
+                if (categoryId === '792759f4-1b98-4665-b14c-44a54e9969e9') {
+                  agingCategory = 'safety';
+                } else if (categoryId === 'd03f47a9-10fb-4656-ae73-92e959d7566a') {
+                  agingCategory = 'wildlife';
+                } else if (categoryId === '9b1d58d9-cfd1-4c31-93e9-754276a5f265') {
+                  agingCategory = 'traffic';
+                } else if (categoryId === 'deaca906-3561-4f80-b79f-ed99561c3b04') {
+                  agingCategory = 'community';
+                } else if (categoryId === 'd1dfcd4e-48e9-4e58-9476-4782a2a132f3') {
+                  agingCategory = 'lost-found';
+                } else if (categoryId === '4ea3a6f0-c49e-4baf-9ca5-f074ca2811b0') {
+                  agingCategory = 'pets';
+                }
+              } else {
+                agingCategory = isQFESIncident(feature) ? 'fire' : 'emergency';
+              }
             }
+            
+            // Determine source for aging calculation
+            let agingSource = 'emergency'; // default fallback
+            if (source === 'user') {
+              agingSource = 'user';
+            } else if (source === 'tmr') {
+              agingSource = 'tmr';
+            } else if (source === 'emergency') {
+              agingSource = isQFESIncident(feature) ? 'qfes' : 'emergency';
+            } else {
+              // Fallback for legacy data
+              const isUserReported = properties?.userReported;
+              agingSource = isUserReported ? 'user' : (isQFESIncident(feature) ? 'qfes' : 'emergency');
+            }
+            
+            agingData = calculateIncidentAging({
+              category: agingCategory,
+              source: agingSource,
+              severity: properties?.severity || properties?.priority || 'medium',
+              status: properties?.status || properties?.CurrentStatus || 'active',
+              lastUpdated: properties?.lastUpdated || properties?.LastUpdate || properties?.updated_at || referenceTime,
+              incidentTime: referenceTime,
+              properties: properties
+            }, {
+              agingSensitivity: filters.agingSensitivity,
+              showExpiredIncidents: filters.showExpiredIncidents
+            });
           }
-          
-          // Determine source for aging calculation
-          let agingSource = 'emergency'; // default fallback
-          if (source === 'user') {
-            agingSource = 'user';
-          } else if (source === 'tmr') {
-            agingSource = 'tmr';
-          } else if (source === 'emergency') {
-            agingSource = isQFESIncident(feature) ? 'qfes' : 'emergency';
-          } else {
-            // Fallback for legacy data
-            const isUserReported = properties?.userReported;
-            agingSource = isUserReported ? 'user' : (isQFESIncident(feature) ? 'qfes' : 'emergency');
-          }
-          
-          const agingData = calculateIncidentAging({
-            category: agingCategory,
-            source: agingSource,
-            severity: properties?.severity || properties?.priority || 'medium',
-            status: properties?.status || properties?.CurrentStatus || 'active',
-            lastUpdated: properties?.lastUpdated || properties?.LastUpdate || properties?.updated_at || referenceTime,
-            incidentTime: referenceTime,
-            properties: properties
-          }, {
-            agingSensitivity: filters.agingSensitivity,
-            showExpiredIncidents: filters.showExpiredIncidents
-          });
-          
           
           // Skip incidents that should be hidden due to aging
           if (!agingData.isVisible) {
@@ -640,7 +648,7 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
             const agedColor = getAgedColor(originalColor, agingData.agePercentage);
             
             // Set z-index based on timestamp to ensure newest incidents appear on top
-            const timestamp = getTimestamp(feature.properties);
+            const timestamp = getTimestamp(feature);
             const zIndexOffset = Math.floor(timestamp / 1000); // Convert to reasonable z-index value
             
             const marker = L.marker(coords, {
