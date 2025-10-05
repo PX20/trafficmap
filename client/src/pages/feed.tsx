@@ -44,7 +44,11 @@ import {
   Flame,
   Plus,
   Info,
-  MessageCircle
+  MessageCircle,
+  Heart,
+  Ambulance,
+  CloudLightning,
+  Siren
 } from "lucide-react";
 
 export default function Feed() {
@@ -435,9 +439,12 @@ export default function Feed() {
       case 'Zap': return <Zap className={iconClass} />;
       case 'Trees': return <Trees className={iconClass} />;
       case 'Users': return <Users className={iconClass} />;
-      case 'Heart': return <AlertTriangle className={iconClass} />;
+      case 'Heart': return <Heart className={iconClass} />;
       case 'Search': return <Search className={iconClass} />;
       case 'Flame': return <Flame className={iconClass} />;
+      case 'Ambulance': return <Ambulance className={iconClass} />;
+      case 'CloudLightning': return <CloudLightning className={iconClass} />;
+      case 'Siren': return <Siren className={iconClass} />;
       case 'AlertTriangle':
       default: return <AlertTriangle className={iconClass} />;
     }
