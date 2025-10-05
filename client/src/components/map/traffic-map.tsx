@@ -939,7 +939,14 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
           // Siren icon for general emergency response
           return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 12a5 5 0 0 1 5-5"/><path d="M17 12a5 5 0 0 0-5-5"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="M7.5 19.5 9 21"/><path d="m15 21 1.5-1.5"/><path d="M9 3 7.5 4.5"/><path d="m15 4.5L16.5 3"/><circle cx="12" cy="12" r="3"/></svg>`;
         case 'wildlife':
-          return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m17 14 3 3.3a1 1 0 0 1-.7 1.7H4.7a1 1 0 0 1-.7-1.7L7 14h-.3a1 1 0 0 1-.7-1.7L9 9h-.2A1 1 0 0 1 8 7.3L12 3l4 4.3a1 1 0 0 1-.8 1.7H15l3 3.3a1 1 0 0 1-.7 1.7H17z"/></svg>`;
+          // Paw print icon for wildlife
+          return `<svg width="16" height="16" viewBox="0 0 24 24" fill="${color}" stroke="none">
+            <ellipse cx="12" cy="16" rx="3.5" ry="4"/>
+            <ellipse cx="7" cy="11" rx="2" ry="2.5"/>
+            <ellipse cx="10.5" cy="8" rx="2" ry="2.5"/>
+            <ellipse cx="13.5" cy="8" rx="2" ry="2.5"/>
+            <ellipse cx="17" cy="11" rx="2" ry="2.5"/>
+          </svg>`;
         case 'community':
           return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m22 21-3-3m0 0-3-3m3 3 3 3m-3-3-3 3"/></svg>`;
         default:
