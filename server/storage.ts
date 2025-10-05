@@ -781,6 +781,7 @@ export class DatabaseStorage implements IStorage {
       source: incident.source, // CRITICAL: Expose source at top level for isUserReport() function
       userId: incident.userId, // CRITICAL: Expose userId at top level for getReporterUserId() function
       photoUrl: incident.photoUrl, // CRITICAL: Expose photoUrl at top level for display in modals
+      subcategory: incident.subcategory, // CRITICAL: Expose subcategory at top level for icon mapping
       properties: {
         id: incident.id,
         source: incident.source,

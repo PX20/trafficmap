@@ -98,16 +98,43 @@ const CATEGORY_MAPPINGS: Record<string, string> = {
 };
 
 const SUBCATEGORY_MAPPINGS: Record<string, string> = {
-  '1605bc8c-d0cc-4b56-9eb6-aaa6f008cdff': 'Dangerous Animals',
-  '9e7942dc-cfa9-44a5-8c4f-55efcaa6d915': 'Animal Welfare',
-  'a3f8e5b2-7c9d-4e1f-8a5b-2d7f9c6e8a4b': 'Environmental Issues',
-  'b7c8f6a9-3e5d-4f2a-9c1b-8e7a6d5f4c3b': 'Violence & Threats',
-  'c9d7e8f1-4a6b-5c3d-a2e9-7f8c6b5a4d3e': 'Theft & Property Crime',
-  'd1e9f2a3-5b7c-6d4e-b3f1-8a9d7c6b5e4f': 'Suspicious Activity',
-  'e2f1a4b5-6c8d-7e5f-c4a2-9b8e7d6c5f4a': 'Public Disturbances',
-  'f3a2b5c6-7d9e-8f6a-d5b3-ac9f8e7d6c5b': 'Road Hazards',
-  'a4b3c6d7-8e1f-9a7b-e6c4-bd1a9f8e7d6c': 'Missing Pets',
-  'b5c4d7e8-9f2a-ab8c-f7d5-ce2b1a9f8e7d': 'Found Pets'
+  // Safety & Crime
+  '97a99d33-f10a-4391-b22f-78631eff8805': 'Violence & Threats',
+  'e6a187d7-428b-47e6-a2d0-617db1963aee': 'Theft & Property Crime',
+  '7b1ba0b9-b9d5-437e-a106-886f96660f99': 'Suspicious Activity',
+  'e39e8d3f-4358-4a91-ac09-38dbb25d4832': 'Public Disturbances',
+  
+  // Infrastructure & Hazards
+  'ca42fc3b-9ac1-4054-a30e-c65650599d02': 'Road Hazards',
+  '83b09678-a090-4b08-8123-e316524a0d57': 'Utility Issues',
+  'd81dc944-8b65-4a14-96da-fc539e883249': 'Building Problems',
+  'e03aeb13-b061-4bf1-b524-2037fdfd948f': 'Environmental Hazards',
+  
+  // Emergency Situations
+  'c3980ed0-46b0-43df-b4d8-fa8a83ce9452': 'Fire & Smoke',
+  'e69d5194-4885-47a2-985e-3568e30833dd': 'Medical Emergencies',
+  'a6719ffd-b353-4dee-8969-dd917093285d': 'Natural Disasters',
+  '3f7adaca-dcf9-4151-88ae-324041a8da30': 'Chemical/Hazmat',
+  
+  // Wildlife & Nature
+  '819a1a14-e6f5-46e4-aefb-daa55e2c0342': 'Dangerous Animals',
+  '668fe7c1-401a-4aff-a388-903622651418': 'Animal Welfare',
+  '607f0066-5b11-4a06-ac14-5d136bafbcab': 'Environmental Issues',
+  '7fbd7375-6352-4b50-b067-19c66c99ba96': 'Pest Problems',
+  
+  // Community Issues
+  '7008ccc5-c376-4963-90f1-40023e943175': 'Noise Complaints',
+  '67871bf3-f8e6-4692-8ef3-d1169bf0ed46': 'Traffic Issues',
+  '8fc5a6e3-0333-45af-8199-adc37b7acaa9': 'Public Space Problems',
+  'f8667a02-8d21-4d85-b207-d6841da18c68': 'Events & Gatherings',
+  
+  // Pets
+  '3dc966d4-e732-4f91-8aa0-3fb00be77265': 'Missing Pets',
+  '2dd8cb36-fc5d-4c34-a40f-196fcf79320d': 'Found Pets',
+  
+  // Lost & Found
+  'e23ad345-970c-44bf-9aaa-708a88d23072': 'Lost Items',
+  '4c6da291-c786-4212-bc12-c77f16a5e016': 'Found Items'
 };
 
 export function getIncidentCategory(incident: any): string {
