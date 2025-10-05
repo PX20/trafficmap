@@ -434,13 +434,43 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
             markerType = 'traffic';
             incidentCategory = 'traffic';
           } else if (source === 'emergency') {
-            // Government API Feed - Emergency Services
-            if (isQFESIncident(feature)) {
-              markerType = 'qfes';
-              incidentCategory = 'fire';
-            } else {
-              markerType = 'emergency';
-              incidentCategory = 'emergency';
+            // Government API Feed - Emergency Services (QFES)
+            // Use subcategory to determine specific icon type
+            const subcategory = feature.subcategory || properties?.subcategory || '';
+            
+            switch (subcategory) {
+              case 'Fire & Smoke':
+                markerType = 'fire';
+                incidentCategory = 'fire';
+                break;
+              case 'Rescue Operation':
+                markerType = 'rescue';
+                incidentCategory = 'emergency';
+                break;
+              case 'Medical Emergencies':
+                markerType = 'medical';
+                incidentCategory = 'emergency';
+                break;
+              case 'Chemical/Hazmat':
+                markerType = 'hazmat';
+                incidentCategory = 'emergency';
+                break;
+              case 'Power/Gas Emergency':
+                markerType = 'power';
+                incidentCategory = 'emergency';
+                break;
+              case 'Storm/SES':
+                markerType = 'storm';
+                incidentCategory = 'emergency';
+                break;
+              case 'Public Safety':
+                markerType = 'emergency';
+                incidentCategory = 'emergency';
+                break;
+              default:
+                // Generic emergency or unclassified QFES incident
+                markerType = 'siren';
+                incidentCategory = 'emergency';
             }
           } else {
             // Fallback for incidents without clear source (legacy data)
