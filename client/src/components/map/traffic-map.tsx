@@ -535,23 +535,23 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
                   incidentCategory = 'community';
                 }
               } else if (category) {
-                // Fallback: Use category text name when categoryId is missing (for existing production data)
-                if (category === 'safety & crime') {
+                // Check if category contains UUID or text name
+                if (category === '792759f4-1b98-4665-b14c-44a54e9969e9' || category === 'safety & crime') {
                   markerType = 'crime';
                   incidentCategory = 'crime';
-                } else if (category === 'wildlife & nature') {
+                } else if (category === 'd03f47a9-10fb-4656-ae73-92e959d7566a' || category === 'wildlife & nature') {
                   markerType = 'wildlife';
                   incidentCategory = 'wildlife';
-                } else if (category === 'infrastructure & hazards') {
+                } else if (category === '9b1d58d9-cfd1-4c31-93e9-754276a5f265' || category === 'infrastructure & hazards') {
                   markerType = 'traffic';
                   incidentCategory = 'traffic';
-                } else if (category === 'emergency situations') {
+                } else if (category === '54d31da5-fc10-4ad2-8eca-04bac680e668' || category === 'emergency situations') {
                   markerType = 'emergency';
                   incidentCategory = 'emergency';
-                } else if (category === 'pets') {
+                } else if (category === '4ea3a6f0-c49e-4baf-9ca5-f074ca2811b0' || category === 'pets') {
                   markerType = 'pets';
                   incidentCategory = 'pets';
-                } else if (category === 'community issues' || category === 'lost & found') {
+                } else if (category === 'deaca906-3561-4f80-b79f-ed99561c3b04' || category === 'd1dfcd4e-48e9-4e58-9476-4782a2a132f3' || category === 'community issues' || category === 'lost & found') {
                   markerType = 'community';
                   incidentCategory = 'community';
                 } else {
