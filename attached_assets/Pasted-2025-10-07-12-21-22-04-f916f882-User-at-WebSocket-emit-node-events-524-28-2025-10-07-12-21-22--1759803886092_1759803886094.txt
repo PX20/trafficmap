@@ -1,0 +1,115 @@
+2025-10-07 12:21:22.04
+f916f882
+User
+at WebSocket.emit (node:events:524:28)
+2025-10-07 12:21:22.04
+f916f882
+User
+2025-10-07 12:21:22.04
+f916f882
+User
+Node.js v20.19.3
+2025-10-07 12:21:36.34
+f916f882
+User
+npm notice
+2025-10-07 12:21:36.34
+f916f882
+User
+npm notice New major version of npm available! 10.8.2 -> 11.6.1
+2025-10-07 12:21:36.34
+f916f882
+User
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.6.1
+2025-10-07 12:21:36.34
+f916f882
+User
+npm notice To update run: npm install -g npm@11.6.1
+2025-10-07 12:21:36.34
+f916f882
+User
+npm notice
+2025-10-07 12:21:37.64
+f916f882
+System
+command finished with error [npm run start]: exit status 1
+2025-10-07 12:22:13.94
+f916f882
+User
+> rest-express@1.0.0 start
+2025-10-07 12:22:13.94
+f916f882
+User
+> NODE_ENV=production node dist/index.js
+2025-10-07 12:23:38.05
+f916f882
+User
+Web push: VAPID keys not configured - push notifications disabled
+2025-10-07 12:23:38.06
+f916f882
+User
+🌍 Environment: production
+2025-10-07 12:23:38.06
+f916f882
+User
+✅ DATABASE_URL: configured
+2025-10-07 12:23:38.06
+f916f882
+User
+✅ SESSION_SECRET: configured
+2025-10-07 12:23:38.06
+f916f882
+User
+✅ STRIPE_SECRET_KEY: configured
+2025-10-07 12:23:38.06
+f916f882
+User
+⚠️ VAPID_PRIVATE_KEY: missing
+2025-10-07 12:23:38.06
+f916f882
+User
+[Agency Init] Checking system agency accounts...
+2025-10-07 12:23:38.34
+f916f882
+User
+🔗 Database connection established
+2025-10-07 12:23:38.56
+f916f882
+User
+[Agency Init] ✓ Transport and Main Roads account already exists
+2025-10-07 12:23:38.59
+f916f882
+User
+[Agency Init] ✓ Queensland Fire and Emergency Services account already exists
+2025-10-07 12:23:38.62
+f916f882
+User
+[Agency Init] ✓ Queensland Ambulance Service account already exists
+2025-10-07 12:23:38.64
+f916f882
+User
+[Agency Init] ✓ Queensland Police Service account already exists
+2025-10-07 12:23:38.67
+f916f882
+User
+[Agency Init] ✓ Legacy System Archive account already exists
+2025-10-07 12:23:38.67
+f916f882
+User
+[Agency Init] Complete: 5 existing, 0 created
+2025-10-07 12:23:38.67
+f916f882
+User
+Serving static assets from: /home/runner/workspace/attached_assets
+2025-10-07 12:23:38.67
+f916f882
+User
+Directory exists: true
+2025-10-07 12:23:39.16
+f916f882
+User
+✅ Using PostgreSQL session store for production
+2025-10-07 12:23:39.16
+f916f882
+User
+🔐 Session configuration: secure=true, sameSite=lax
