@@ -1,0 +1,112 @@
+2025-10-07 12:27:27.94
+2840228e
+User
+✓ Subcategory "Public Space Problems" already exists under "Community Issues"
+2025-10-07 12:27:27.94
+2840228e
+User
+✓ Subcategory "Events & Gatherings" already exists under "Community Issues"
+2025-10-07 12:27:27.94
+2840228e
+User
+✓ Category "Pets" already exists
+2025-10-07 12:27:27.94
+2840228e
+User
+✓ Subcategory "Missing Pets" already exists under "Pets"
+2025-10-07 12:27:27.94
+2840228e
+User
+✓ Subcategory "Found Pets" already exists under "Pets"
+2025-10-07 12:27:27.94
+2840228e
+User
+✓ Category "Lost & Found" already exists
+2025-10-07 12:27:27.94
+2840228e
+User
+✓ Subcategory "Lost Items" already exists under "Lost & Found"
+2025-10-07 12:27:27.94
+2840228e
+User
+✓ Subcategory "Found Items" already exists under "Lost & Found"
+2025-10-07 12:27:27.94
+2840228e
+User
+✅ Seeding complete: 0 new categories, 0 new subcategories (7 categories and 24 subcategories already existed)
+2025-10-07 12:27:27.94
+2840228e
+User
+Categories seeding completed: Seeding complete: 0 new categories, 0 new subcategories created
+2025-10-07 12:27:27.95
+2840228e
+User
+🚀 Initializing Unified Ingestion Pipeline...
+2025-10-07 12:27:27.95
+2840228e
+User
+🏗️ Created new UnifiedIngestionEngine singleton instance
+2025-10-07 12:27:27.95
+2840228e
+User
+🚀 Initializing Unified Ingestion Pipeline...
+2025-10-07 12:27:27.95
+2840228e
+User
+⏰ Next TMR Traffic Events ingestion scheduled in 0.1 minutes
+2025-10-07 12:27:27.95
+2840228e
+User
+⏰ Next Emergency Services ingestion scheduled in 0.3 minutes
+2025-10-07 12:27:27.95
+2840228e
+User
+⏰ Next User Reports ingestion scheduled in 0.5 minutes
+2025-10-07 12:27:27.95
+2840228e
+User
+✅ Unified Ingestion Pipeline initialized
+2025-10-07 12:27:27.95
+2840228e
+User
+🗺️ Spatial index rebuild started
+2025-10-07 12:27:27.95
+2840228e
+User
+✅ Unified Ingestion Pipeline initialized
+2025-10-07 12:27:28.06
+2840228e
+User
+2:27:27 AM [express] serving on port 5000
+2025-10-07 12:27:28.18
+2840228e
+User
+🔗 Database connection established
+2025-10-07 12:27:34.99
+2840228e
+User
+🔄 UNIFIED PIPELINE: Starting TMR Traffic Events ingestion cycle...
+2025-10-07 12:27:34.99
+2840228e
+User
+📡 API Request: TMR Traffic API v2
+2025-10-07 12:27:45.00
+2840228e
+User
+🔄 UNIFIED PIPELINE: Starting Emergency Services ingestion cycle...
+2025-10-07 12:27:45.00
+2840228e
+User
+📡 API Request: QLD Emergency Services
+2025-10-07 12:28:00.89
+2840228e
+User
+📊 TMR API Response structure: [ 'type', 'features', 'published', 'rights' ]
+2025-10-07 12:28:01.29
+2840228e
+User
+📊 TMR GeoJSON: 458 features
+2025-10-07 12:28:01.29
+2840228e
+User
+📊 TMR normalizer: Processing 458 events
