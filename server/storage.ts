@@ -238,8 +238,10 @@ export interface IStorage {
   
   // Category operations
   getCategories(): Promise<Category[]>;
+  getCategory(id: string): Promise<Category | undefined>;
   createCategory(category: InsertCategory): Promise<Category>;
   getSubcategories(categoryId?: string): Promise<Subcategory[]>;
+  getSubcategory(id: string): Promise<Subcategory | undefined>;
   createSubcategory(subcategory: InsertSubcategory): Promise<Subcategory>;
   incrementSubcategoryReportCount(subcategoryId: string): Promise<void>;
   
@@ -1297,6 +1299,14 @@ export class DatabaseStorage implements IStorage {
       .orderBy(categories.order);
   }
   
+  async getCategory(id: string): Promise<Category | undefined> {
+    const [category] = await db
+      .select()
+      .from(categories)
+      .where(eq(categories.id, id));
+    return category;
+  }
+  
   async createCategory(category: InsertCategory): Promise<Category> {
     const [created] = await db
       .insert(categories)
@@ -1322,6 +1332,14 @@ export class DatabaseStorage implements IStorage {
         .where(eq(subcategories.isActive, true))
         .orderBy(subcategories.order);
     }
+  }
+  
+  async getSubcategory(id: string): Promise<Subcategory | undefined> {
+    const [subcategory] = await db
+      .select()
+      .from(subcategories)
+      .where(eq(subcategories.id, id));
+    return subcategory;
   }
   
   async createSubcategory(subcategory: InsertSubcategory): Promise<Subcategory> {

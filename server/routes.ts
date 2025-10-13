@@ -1608,6 +1608,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await storage.getUser(userId);
       secureLogger.authDebug('User retrieved for incident', { hasUser: !!user });
       
+      // ✅ ENRICHMENT: Look up category and subcategory names from UUIDs
+      const category = await storage.getCategory(reportData.categoryId);
+      const subcategory = reportData.subcategoryId ? await storage.getSubcategory(reportData.subcategoryId) : null;
+      
+      if (!category) {
+        return res.status(400).json({ 
+          error: 'Invalid category ID',
+          code: 'INVALID_CATEGORY',
+          message: 'The selected category does not exist. Please refresh and try again.'
+        });
+      }
+      
+      if (reportData.subcategoryId && !subcategory) {
+        return res.status(400).json({ 
+          error: 'Invalid subcategory ID',
+          code: 'INVALID_SUBCATEGORY',
+          message: 'The selected subcategory does not exist. Please refresh and try again.'
+        });
+      }
+      
       // Increment subcategory report count for analytics
       if (reportData.subcategoryId) {
         await storage.incrementSubcategoryReportCount(reportData.subcategoryId);
@@ -1691,14 +1711,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const reporterUserId = userId; // We already have this from auth
         
         // Create properly normalized unified incident following exact schema from ingestion pipeline
+        // ✅ USE ENRICHED CATEGORY DATA: Store both human-readable names AND UUIDs
         const unifiedIncident = {
           source: 'user' as const,
           sourceId: newIncident.id,
           title: newIncident.title,
           description: newIncident.description || '',
           location: newIncident.location || '',
-          category: newIncident.categoryId || '',
-          subcategory: newIncident.subcategoryId || '',
+          category: category.name, // ✅ Human-readable name (e.g., "Pets")
+          subcategory: subcategory?.name || '', // ✅ Human-readable name (e.g., "Missing Pets")
+          categoryUuid: category.id, // ✅ UUID for icon mapping
+          subcategoryUuid: subcategory?.id || null, // ✅ UUID for filtering
           severity: 'medium' as const,
           status: 'active' as const,
           geometry: newIncident.geometry as any,
@@ -1716,7 +1739,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             title: newIncident.title,
             description: newIncident.description || '',
             location: newIncident.location,
-            category: newIncident.categoryId,
+            category: category.name, // ✅ Store name in properties for backward compat
+            categoryUuid: category.id, // ✅ Store UUID for icon lookups
             source: 'user',
             userReported: true,
             reporterId: reporterUserId
