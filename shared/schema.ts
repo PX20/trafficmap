@@ -44,7 +44,7 @@ export const unifiedIncidents = pgTable("unified_incidents", {
   properties: jsonb("properties").notNull().default('{}'), // Original properties from source
   
   // User-reported specific fields
-  userId: varchar("user_id"), // Only for user reports
+  userId: varchar("user_id").references(() => users.id), // Only for user reports - FK to users table
   photoUrl: text("photo_url"), // Only for user reports
   verificationStatus: varchar("verification_status", { enum: ["unverified", "community_verified", "official_verified"] }),
   
