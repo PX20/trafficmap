@@ -793,8 +793,9 @@ export class DatabaseStorage implements IStorage {
   // Helper method for GeoJSON conversion
   private convertIncidentsToGeoJSON(incidents: SelectUnifiedIncident[]): UnifiedIncidentsResponse {
     const features: UnifiedFeature[] = incidents.map(incident => {
-      // Map category name to UUID for frontend icon matching
-      const categoryUuid = this.getCategoryUuid(incident.category);
+      // Use database category_uuid field first, then fall back to name mapping
+      const categoryUuid = incident.categoryUuid || this.getCategoryUuid(incident.category);
+      const subcategoryUuid = incident.subcategoryUuid || undefined;
       
       return {
         type: "Feature",
@@ -809,8 +810,9 @@ export class DatabaseStorage implements IStorage {
           title: incident.title,
           description: incident.description || undefined,
           category: incident.category,
-          categoryUuid: categoryUuid || incident.category, // CRITICAL: Include UUID for frontend icon matching
+          categoryUuid: categoryUuid || incident.category, // CRITICAL: Include UUID for frontend icon matching (camelCase)
           subcategory: incident.subcategory || undefined,
+          subcategoryUuid: subcategoryUuid, // CRITICAL: Include subcategory UUID for frontend (camelCase)
           severity: incident.severity || "medium",
           status: incident.status || "active",
           location: incident.location || undefined,
@@ -825,9 +827,9 @@ export class DatabaseStorage implements IStorage {
           reporterId: incident.userId || (incident.properties as any)?.reporterId || undefined,
           // CRITICAL: Extract userReported flag from JSONB properties for proper classification
           userReported: (incident.properties as any)?.userReported || undefined,
-          // CRITICAL: Extract categoryId and subcategoryId from properties for icon mapping
+          // CRITICAL: Extract categoryId and subcategoryId from properties for icon mapping (backwards compat)
           categoryId: categoryUuid || (incident.properties as any)?.categoryId || (incident.properties as any)?.category || undefined,
-          subcategoryId: (incident.properties as any)?.subcategoryId || (incident.properties as any)?.subcategory || undefined,
+          subcategoryId: subcategoryUuid || (incident.properties as any)?.subcategoryId || (incident.properties as any)?.subcategory || undefined,
           // CRITICAL: Extract QFES-specific fields for proper categorization display
           GroupedType: (incident.properties as any)?.GroupedType || undefined,
           Incident_Type: (incident.properties as any)?.Incident_Type || undefined,
