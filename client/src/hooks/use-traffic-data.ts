@@ -125,17 +125,14 @@ export function useTrafficData(filters: FilterState): ProcessedTrafficData {
       } else if (feature.geometry.type === 'LineString' && feature.geometry.coordinates[0]) {
         [lng, lat] = feature.geometry.coordinates[0];
       } else {
-        console.log('❌ INVALID GEOMETRY:', feature.id, 'type:', feature.geometry.type);
         return false;
       }
     } else {
-      console.log('❌ NO COORDINATES:', feature.id, 'missing geometry');
       return false;
     }
     
     // Validate extracted coordinates
     if (typeof lng !== 'number' || typeof lat !== 'number' || isNaN(lng) || isNaN(lat)) {
-      console.log('❌ INVALID COORDINATES:', feature.id, 'lng:', lng, 'lat:', lat);
       return false;
     }
     
@@ -154,13 +151,7 @@ export function useTrafficData(filters: FilterState): ProcessedTrafficData {
     
     // Check if within configured radius
     const withinRadius = distance <= filterRadius;
-    if (withinRadius) {
-      console.log('✅ PROXIMITY MATCH:', feature.id, 'distance:', distance.toFixed(1) + 'km');
-      return true;
-    } else {
-      console.log('❌ PROXIMITY REJECT:', feature.id, 'distance:', distance.toFixed(1) + 'km');
-      return false;
-    }
+    return withinRadius;
   };
 
   // Apply proximity-based filtering for feed data
