@@ -7,6 +7,12 @@ import { sql } from 'drizzle-orm';
  * in the unified_incidents table from existing string values
  */
 
+// Helper to check if a string is a UUID
+function isUUID(str: string): boolean {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(str);
+}
+
 // Category name to UUID mapping (from categories table)
 const CATEGORY_UUID_MAP: Record<string, string> = {
   'Wildlife & Nature': 'd03f47a9-10fb-4656-ae73-92e959d7566a',
@@ -20,6 +26,19 @@ const CATEGORY_UUID_MAP: Record<string, string> = {
   'traffic': '9b1d58d9-39d4-4fb1-a9b8-e1b1f8e62f25', // Maps to Infrastructure & Hazards
   'fire': '54d31da5-fc10-4ad2-8eca-04bac680e668', // Maps to Emergency Situations
   'emergency': '54d31da5-fc10-4ad2-8eca-04bac680e668', // Maps to Emergency Situations
+};
+
+// Reverse mapping: UUID to human-readable name (for fixing corrupted data)
+const UUID_TO_CATEGORY_NAME: Record<string, string> = {
+  'd03f47a9-10fb-4656-ae73-92e959d7566a': 'Wildlife & Nature',
+  '792759f4-1b98-4665-b14c-44a54e9969e9': 'Safety & Crime',
+  '9b1d58d9-39d4-4fb1-a9b8-e1b1f8e62f25': 'Infrastructure & Hazards',
+  '54d31da5-fc10-4ad2-8eca-04bac680e668': 'Emergency Situations',
+  '4ea3a6f0-c3e6-4e88-a29f-dc61e4b8a0fd': 'Pets',
+  'deaca906-6b22-41ec-9dd3-89ad2a71aef1': 'Community Issues',
+  'd1dfcd4e-8cfe-4278-a51b-2b0b0e919f8a': 'Lost & Found',
+  // Handle wrong UUIDs from corrupted data
+  '4ea3a6f0-c49e-4baf-9ca5-f074ca2811b0': 'Pets', // Old/wrong Pets UUID
 };
 
 // Subcategory name to UUID mapping (from subcategories table)
@@ -84,13 +103,21 @@ export async function migrateUnifiedIncidents() {
       try {
         const updates: any = {};
         
-        // Map category to UUID if not already set
+        // Handle category field - could contain UUID or name
         if (!incident.categoryUuid && incident.category) {
-          const categoryUuid = CATEGORY_UUID_MAP[incident.category];
-          if (categoryUuid) {
-            updates.categoryUuid = categoryUuid;
+          if (isUUID(incident.category)) {
+            // Category field contains UUID (corrupted data) - fix it!
+            updates.categoryUuid = incident.category;
+            const categoryName = UUID_TO_CATEGORY_NAME[incident.category];
+            if (categoryName) {
+              updates.category = categoryName; // Fix the display name
+            }
           } else {
-            console.warn(`⚠️  No UUID mapping for category: ${incident.category} (incident: ${incident.id})`);
+            // Category field contains name - map to UUID
+            const categoryUuid = CATEGORY_UUID_MAP[incident.category];
+            if (categoryUuid) {
+              updates.categoryUuid = categoryUuid;
+            }
           }
         }
         
