@@ -20,8 +20,10 @@ export const unifiedIncidents = pgTable("unified_incidents", {
   title: text("title").notNull(),
   description: text("description"),
   location: text("location"), // Human-readable location
-  category: varchar("category").notNull(), // traffic, fire, medical, crime, etc.
-  subcategory: varchar("subcategory"), // congestion, accident, structure-fire, etc.
+  category: varchar("category").notNull(), // Human-readable category name for display
+  subcategory: varchar("subcategory"), // Human-readable subcategory name for display
+  categoryUuid: varchar("category_uuid"), // UUID reference to categories table for lookups/icons
+  subcategoryUuid: varchar("subcategory_uuid"), // UUID reference to subcategories table for filtering
   severity: varchar("severity", { enum: ["low", "medium", "high", "critical"] }).default("medium"),
   status: varchar("status", { enum: ["active", "resolved", "monitoring", "closed"] }).default("active"),
   
@@ -57,6 +59,9 @@ export const unifiedIncidents = pgTable("unified_incidents", {
   // Performance indexes
   index("idx_unified_source").on(table.source),
   index("idx_unified_category").on(table.category),
+  index("idx_unified_category_uuid").on(table.categoryUuid), // For icon lookups
+  index("idx_unified_subcategory_uuid").on(table.subcategoryUuid), // For filtering
+  index("idx_unified_user_id").on(table.userId), // For user-specific queries
   index("idx_unified_severity").on(table.severity),
   index("idx_unified_status").on(table.status),
   index("idx_unified_centroid").on(table.centroidLat, table.centroidLng),
@@ -572,6 +577,22 @@ export const reportsRelations = relations(reports, ({ one }) => ({
     fields: [reports.moderatorId],
     references: [users.id],
     relationName: 'moderator',
+  }),
+}));
+
+// Unified incidents relations
+export const unifiedIncidentsRelations = relations(unifiedIncidents, ({ one }) => ({
+  user: one(users, {
+    fields: [unifiedIncidents.userId],
+    references: [users.id],
+  }),
+  category: one(categories, {
+    fields: [unifiedIncidents.categoryUuid],
+    references: [categories.id],
+  }),
+  subcategory: one(subcategories, {
+    fields: [unifiedIncidents.subcategoryUuid],
+    references: [subcategories.id],
   }),
 }));
 
