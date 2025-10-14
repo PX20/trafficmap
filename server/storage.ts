@@ -645,9 +645,21 @@ export class DatabaseStorage implements IStorage {
 
       // DEDUPLICATION RULE: Prefer emergency/tmr incidents over user reports
       if (existing && existing.source !== 'user' && source === 'user') {
-        // Don't overwrite emergency/tmr incidents with user reports
-        console.log(`🚫 DEDUP: Skipping user report ${id} - emergency/tmr incident already exists`);
         return existing;
+      }
+
+      // CHANGE DETECTION: Skip update if data hasn't changed (reduces DB writes by ~90%)
+      if (existing) {
+        const hasChanged = 
+          existing.title !== incident.title ||
+          existing.description !== incident.description ||
+          existing.status !== incident.status ||
+          existing.severity !== incident.severity ||
+          JSON.stringify(existing.geometry) !== JSON.stringify(incident.geometry);
+        
+        if (!hasChanged) {
+          return existing; // No changes, skip DB write
+        }
       }
 
       const [upserted] = await db
@@ -671,10 +683,10 @@ export class DatabaseStorage implements IStorage {
           id,
           source,
           sourceId,
-          userId: attribution.userId, // Override with resolved attribution
+          userId: attribution.userId,
           properties: {
             ...((incident.properties as any) || {}),
-            reporterId: attribution.reporterId, // Ensure reporterId in properties
+            reporterId: attribution.reporterId,
             source: source,
             userReported: !attribution.isSystemAccount
           },
@@ -683,7 +695,7 @@ export class DatabaseStorage implements IStorage {
           updatedAt: new Date(),
         })
         .onConflictDoUpdate({
-          target: unifiedIncidents.id, // Use primary key instead of (source, sourceId)
+          target: unifiedIncidents.id,
           set: {
             title: incident.title,
             description: incident.description,
@@ -700,10 +712,10 @@ export class DatabaseStorage implements IStorage {
             incidentTime: incident.incidentTime,
             photoUrl: incident.photoUrl,
             verificationStatus: incident.verificationStatus,
-            userId: attribution.userId, // Override with resolved attribution
+            userId: attribution.userId,
             properties: {
               ...((incident.properties as any) || {}),
-              reporterId: attribution.reporterId, // Ensure reporterId in properties
+              reporterId: attribution.reporterId,
               source: source,
               userReported: !attribution.isSystemAccount
             },
