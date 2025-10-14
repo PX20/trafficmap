@@ -85,18 +85,21 @@ export function mapTMRCategory(tmrCategory: string): { uuid: string; name: strin
 export function mapTMRSubcategory(tmrSubcategory: string): { uuid: string; name: string } | null {
   const normalized = tmrSubcategory.toLowerCase().trim();
   
-  // Map TMR subcategories to Road Hazards (most appropriate)
-  // TMR subcategories include: road-closure, heavy-delays, moderate-delays, incident, roadwork
+  // Map ALL TMR subcategories to Road Hazards (most appropriate)
+  // TMR subcategories include: congestion, other, road-closure, heavy-delays, 
+  // moderate-delays, incident, roadwork, accident
   if (normalized.includes('road') || normalized.includes('closure') || 
       normalized.includes('delay') || normalized.includes('incident') || 
-      normalized.includes('roadwork') || normalized.includes('hazard')) {
+      normalized.includes('roadwork') || normalized.includes('hazard') ||
+      normalized.includes('congestion') || normalized.includes('other') ||
+      normalized.includes('accident')) {
     return {
       uuid: SUBCATEGORY_UUIDS.ROAD_HAZARDS,
       name: 'Road Hazards'
     };
   }
   
-  // Log unmapped TMR subcategory
+  // Log truly unmapped TMR subcategory (shouldn't happen with above coverage)
   if (normalized && normalized !== 'undefined' && normalized !== 'null') {
     logUnmappedCategory('tmr', 'traffic', normalized);
   }
