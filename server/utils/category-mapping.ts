@@ -96,6 +96,11 @@ export function mapTMRSubcategory(tmrSubcategory: string): { uuid: string; name:
     };
   }
   
+  // Log unmapped TMR subcategory
+  if (normalized && normalized !== 'undefined' && normalized !== 'null') {
+    logUnmappedCategory('tmr', 'traffic', normalized);
+  }
+  
   // Fallback to Road Hazards for any TMR event
   return {
     uuid: SUBCATEGORY_UUIDS.ROAD_HAZARDS,
@@ -160,6 +165,11 @@ export function mapEmergencySubcategory(emergencySubcategory: string): { uuid: s
       uuid: SUBCATEGORY_UUIDS.NATURAL_DISASTERS,
       name: 'Natural Disasters'
     };
+  }
+  
+  // Log unmapped emergency subcategory
+  if (normalized && normalized !== 'undefined' && normalized !== 'null') {
+    logUnmappedCategory('emergency', 'Emergency Situations', normalized);
   }
   
   // Default to Fire & Smoke for unknown emergency types
