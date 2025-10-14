@@ -93,6 +93,9 @@ export function useTrafficData(filters: FilterState, viewportBounds?: { southwes
   
   // PROXIMITY-BASED FILTERING: Use distance calculation as primary and only method
   const isWithinProximity = (feature: any) => {
+    // If distanceFilter is 'all', include everything
+    if (filters.distanceFilter === 'all') return true;
+    
     // Require home coordinates for filtering
     if (!filters.homeCoordinates) return false;
     
