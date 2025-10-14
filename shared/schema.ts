@@ -182,8 +182,6 @@ export const users = pgTable("users", {
   displayName: varchar("display_name"),
   profileImageUrl: varchar("profile_image_url"),
   bio: text("bio"),
-  homeSuburb: varchar("home_suburb"),
-  primarySuburb: varchar("primary_suburb"),
   verifiedResident: boolean("verified_resident").default(false),
   phoneNumber: varchar("phone_number"),
   reputationScore: integer("reputation_score").default(0),
@@ -192,6 +190,12 @@ export const users = pgTable("users", {
   allowDirectMessages: boolean("allow_direct_messages").default(true),
   termsAccepted: boolean("terms_accepted").default(false),
   termsAcceptedAt: timestamp("terms_accepted_at"),
+  // Location Preferences - Single source of truth for map and feed
+  preferredLocation: varchar("preferred_location"), // Suburb/area name (e.g., "Brisbane City")
+  preferredLocationLat: doublePrecision("preferred_location_lat"), // Latitude coordinate
+  preferredLocationLng: doublePrecision("preferred_location_lng"), // Longitude coordinate
+  preferredLocationBounds: jsonb("preferred_location_bounds"), // Bounding box {southwest: [lat,lng], northeast: [lat,lng]}
+  distanceFilter: varchar("distance_filter", { enum: ["all", "5km", "10km", "25km"] }).default("all"), // Proximity filter preference
   // Business account fields
   accountType: varchar("account_type", { enum: ["regular", "business"] }).default("regular"),
   businessName: varchar("business_name"),
