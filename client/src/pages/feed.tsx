@@ -126,73 +126,42 @@ export default function Feed() {
     }
   }, [subcategories]);
 
-  // Load saved filters from localStorage (sync with map)
+  // Load location preferences from user profile
   useEffect(() => {
-    const savedLocation = localStorage.getItem('homeLocation');
-    const savedCoordinates = localStorage.getItem('homeCoordinates'); 
-    const savedBoundingBox = localStorage.getItem('homeBoundingBox');
-    const locationFilterSetting = localStorage.getItem('locationFilter');
-    
-    if (savedLocation && savedCoordinates) {
-      try {
-        const coordinates = JSON.parse(savedCoordinates);
-        const boundingBox = savedBoundingBox ? JSON.parse(savedBoundingBox) : undefined;
-        setFilters(prev => ({
-          ...prev,
-          homeLocation: savedLocation,
-          homeCoordinates: coordinates,
-          homeBoundingBox: boundingBox,
-          locationFilter: locationFilterSetting ? locationFilterSetting === 'true' : true
-        }));
-      } catch (error) {
-        console.error('Failed to load saved location:', error);
-      }
-    }
-  }, []);
-
-  // Listen for filter changes from map page (sync with map)
-  useEffect(() => {
-    const handleLocationChange = (event: CustomEvent) => {
-      const { location, coordinates, boundingBox } = event.detail;
+    if (user?.preferredLocation && user?.preferredLocationLat && user?.preferredLocationLng) {
       setFilters(prev => ({
         ...prev,
-        homeLocation: location,
-        homeCoordinates: coordinates,
-        homeBoundingBox: boundingBox,
+        homeLocation: user.preferredLocation!,
+        homeCoordinates: { lat: user.preferredLocationLat!, lon: user.preferredLocationLng! },
+        homeBoundingBox: user.preferredLocationBounds as any,
+        distanceFilter: user.distanceFilter || 'all',
         locationFilter: true
       }));
-    };
-    
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'homeLocation') {
-        const savedLocation = localStorage.getItem('homeLocation');
-        const savedCoordinates = localStorage.getItem('homeCoordinates');
-        const savedBoundingBox = localStorage.getItem('homeBoundingBox');
-        
-        if (savedLocation && savedCoordinates) {
-          try {
-            const coordinates = JSON.parse(savedCoordinates);
-            const boundingBox = savedBoundingBox ? JSON.parse(savedBoundingBox) : undefined;
-            setFilters(prev => ({
-              ...prev,
-              homeLocation: savedLocation,
-              homeCoordinates: coordinates,
-              homeBoundingBox: boundingBox
-            }));
-          } catch (error) {
-            console.error('Failed to load updated location:', error);
-          }
+    }
+  }, [user]);
+
+  // Save distance filter preference to user profile when it changes
+  useEffect(() => {
+    if (user && filters.distanceFilter) {
+      // Save to API (debounced to avoid excessive calls)
+      const timeoutId = setTimeout(async () => {
+        try {
+          await fetch('/api/user/location-preferences', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+              distanceFilter: filters.distanceFilter
+            })
+          });
+        } catch (error) {
+          console.error('Failed to save distance preference:', error);
         }
-      }
-    };
-    
-    window.addEventListener('locationChanged', handleLocationChange as EventListener);
-    window.addEventListener('storage', handleStorageChange);
-    return () => {
-      window.removeEventListener('locationChanged', handleLocationChange as EventListener);
-      window.removeEventListener('storage', handleStorageChange);
-    };
-  }, []);
+      }, 500); // Debounce 500ms
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [filters.distanceFilter, user]);
 
   // Use the same traffic data hook as the map for consistent filtering
   // 🎯 UNIFIED PIPELINE: Use same data as map, then filter by location
@@ -212,12 +181,10 @@ export default function Feed() {
   useEffect(() => {
     if (filters.homeLocation) {
       setSelectedSuburb(filters.homeLocation);
-    } else if (user?.homeSuburb) {
-      setSelectedSuburb(user.homeSuburb);
-    } else if (user?.primarySuburb) {
-      setSelectedSuburb(user.primarySuburb);
+    } else if (user?.preferredLocation) {
+      setSelectedSuburb(user.preferredLocation);
     }
-  }, [filters.homeLocation, user?.homeSuburb, user?.primarySuburb]);
+  }, [filters.homeLocation, user?.preferredLocation]);
 
   const refreshMutation = useMutation({
     mutationFn: async () => {

@@ -129,62 +129,6 @@ export default function Home() {
     }
   }, [user]);
   
-  // Listen for location changes from other pages (custom events + storage events)
-  useEffect(() => {
-    const handleLocationChange = (event: CustomEvent) => {
-      const { location, coordinates, boundingBox } = event.detail;
-      setFilters(prev => ({
-        ...prev,
-        homeLocation: location,
-        homeCoordinates: coordinates,
-        homeBoundingBox: boundingBox,
-        locationFilter: true
-      }));
-    };
-    
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'homeLocation') {
-        const savedLocation = localStorage.getItem('homeLocation');
-        const savedCoordinates = localStorage.getItem('homeCoordinates');
-        const savedBoundingBox = localStorage.getItem('homeBoundingBox');
-        const locationFilterSetting = localStorage.getItem('locationFilter');
-        
-        if (savedLocation && savedCoordinates) {
-          try {
-            const coordinates = JSON.parse(savedCoordinates);
-            const boundingBox = savedBoundingBox ? JSON.parse(savedBoundingBox) : undefined;
-            setFilters(prev => ({
-              ...prev,
-              homeLocation: savedLocation,
-              homeCoordinates: coordinates,
-              homeBoundingBox: boundingBox,
-              // Auto-enable location filtering when home location exists (default to true)
-              locationFilter: locationFilterSetting ? locationFilterSetting === 'true' : true
-            }));
-          } catch (error) {
-            console.error('Failed to sync location from feed:', error);
-          }
-        } else {
-          // Location was cleared
-          setFilters(prev => ({
-            ...prev,
-            homeLocation: '',
-            homeCoordinates: undefined,
-            homeBoundingBox: undefined,
-            locationFilter: false
-          }));
-        }
-      }
-    };
-    
-    window.addEventListener('locationChanged', handleLocationChange as EventListener);
-    window.addEventListener('storage', handleStorageChange);
-    return () => {
-      window.removeEventListener('locationChanged', handleLocationChange as EventListener);
-      window.removeEventListener('storage', handleStorageChange);
-    };
-  }, []);
-  
   // Save location preferences to user profile when they change
   useEffect(() => {
     if (user && filters.homeLocation && filters.homeCoordinates) {
