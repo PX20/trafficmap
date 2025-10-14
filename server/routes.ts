@@ -976,15 +976,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Update user's home suburb
-  app.patch('/api/user/suburb', isAuthenticated, async (req: any, res) => {
+  // Update user's location preferences (replaces old suburb endpoint)
+  app.patch('/api/user/location-preferences', isAuthenticated, async (req: any, res) => {
     try {
-      const { homeSuburb } = z.object({
-        homeSuburb: z.string().min(1),
+      const preferences = z.object({
+        preferredLocation: z.string().optional(),
+        preferredLocationLat: z.number().optional(),
+        preferredLocationLng: z.number().optional(),
+        preferredLocationBounds: z.any().optional(), // JSONB field
+        distanceFilter: z.enum(['all', '5km', '10km', '25km']).optional(),
       }).parse(req.body);
 
       const userId = (req.user as any).claims.sub;
-      const updatedUser = await storage.updateUserSuburb(userId, homeSuburb);
+      const updatedUser = await storage.updateUserProfile(userId, preferences);
       
       if (!updatedUser) {
         return res.status(404).json({ message: "User not found" });
@@ -992,8 +996,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json(updatedUser);
     } catch (error) {
-      console.error("Error updating user suburb:", error);
-      res.status(500).json({ message: "Failed to update suburb" });
+      console.error("Error updating location preferences:", error);
+      res.status(500).json({ message: "Failed to update location preferences" });
     }
   });
 
@@ -3012,8 +3016,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         lastName: user.lastName,
         accountType: user.accountType,
         businessName: user.businessName,
-        homeSuburb: user.homeSuburb,
-        primarySuburb: user.primarySuburb
+        preferredLocation: user.preferredLocation,
+        preferredLocationLat: user.preferredLocationLat,
+        preferredLocationLng: user.preferredLocationLng,
+        distanceFilter: user.distanceFilter
       });
     } catch (error) {
       console.error("Error fetching user:", error);
