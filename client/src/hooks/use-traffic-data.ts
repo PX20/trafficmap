@@ -90,26 +90,10 @@ export function useTrafficData(filters: FilterState, viewportBounds?: { southwes
   const defaultRadius = 50; // Default 50km radius
   const filterRadius = typeof filters.radius === 'number' ? filters.radius : defaultRadius;
   
-  // Debug proximity filtering
-  console.log('🏠 HOME LOCATION:', filters.homeLocation, 'COORDINATES:', filters.homeCoordinates, 'RADIUS:', filterRadius + 'km');
-  
   // PROXIMITY-BASED FILTERING: Use distance calculation as primary and only method
   const isWithinProximity = (feature: any) => {
     // Require home coordinates for filtering
     if (!filters.homeCoordinates) return false;
-    
-    // Derive userReported status for debugging
-    const isUser = feature.properties?.source === 'user';
-    
-    // Debug user incidents
-    if (isUser) {
-      console.log('👤 USER INCIDENT:', {
-        id: feature.id,
-        title: feature.properties?.title,
-        location: feature.properties?.location,
-        hasCoordinates: !!feature.geometry?.coordinates
-      });
-    }
     
     // Extract coordinates from incident
     let lng, lat;
@@ -257,9 +241,6 @@ export function useTrafficData(filters: FilterState, viewportBounds?: { southwes
   // Feed will filter this data at the component level for personalization
   const unifiedEvents = allEvents;
   const unifiedIncidents = allIncidents;
-  
-  console.log('🔄 UNIFIED PIPELINE: Events:', unifiedEvents.length, 'Incidents:', unifiedIncidents.length);
-  console.log('📍 REGIONAL: Events:', regionalEvents.length, 'Incidents:', regionalIncidents.length);
 
   return {
     // UNIFIED: Both map and feed get the same source data

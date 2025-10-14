@@ -72,7 +72,6 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
   const eventsData = { features: filteredEvents || [] };
   const incidentsData = { features: filteredIncidents || [] };
   
-  console.log('🗺️ MAP: Rendering', filteredEvents?.length || 0, 'events,', filteredIncidents?.length || 0, 'incidents');
   const eventsLoading = false;
   const incidentsLoading = false;
 
