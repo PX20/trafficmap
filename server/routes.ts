@@ -456,9 +456,34 @@ const secureUpload = multer({
 const upload = secureUpload;
 
 
+// Server readiness flag
+let isServerReady = false;
+
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Initialize agency user accounts on startup
-  await initializeAgencyAccounts(storage);
+  // Readiness check middleware - prevent requests during initialization
+  app.use((req, res, next) => {
+    // Allow healthcheck even during initialization
+    if (req.path === '/healthz') {
+      return next();
+    }
+    
+    if (!isServerReady) {
+      return res.status(503).json({ 
+        error: 'Service Unavailable',
+        message: 'Server is initializing, please try again in a moment'
+      });
+    }
+    next();
+  });
+  
+  // Initialize agency user accounts on startup with error handling
+  try {
+    await initializeAgencyAccounts(storage);
+  } catch (error) {
+    console.error('⚠️ Warning: Agency account initialization failed:', error);
+    console.error('Server will continue, but some features may not work correctly');
+    // Don't crash - server can still function without this
+  }
   
   // Debug: log the path being used
   const assetsPath = path.resolve(process.cwd(), 'attached_assets');
@@ -935,11 +960,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Auth middleware
-  await setupAuth(app);
+  // Auth middleware with error handling
+  try {
+    await setupAuth(app);
+    console.log('✅ Session and auth middleware initialized');
+  } catch (error) {
+    console.error('❌ CRITICAL: Failed to initialize auth middleware:', error);
+    throw error; // Auth is critical - must crash if it fails
+  }
   
-  // Replit Auth routes (login, logout, callback)
-  await setupReplitAuth(app);
+  // Replit Auth routes (login, logout, callback) with error handling
+  try {
+    await setupReplitAuth(app);
+    console.log('✅ Replit OAuth initialized');
+  } catch (error) {
+    console.error('❌ CRITICAL: Failed to initialize Replit OAuth:', error);
+    throw error; // OAuth is critical - must crash if it fails
+  }
 
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
@@ -4147,11 +4184,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // REMOVED: Legacy background ingestion - replaced by unified ingestion pipeline
 
-  // Initialize unified ingestion pipeline for multi-source consolidation
-  console.log('🚀 Initializing Unified Ingestion Pipeline...');
-  const { unifiedIngestion } = await import('./unified-ingestion');
-  await unifiedIngestion.initialize();
-  console.log('✅ Unified Ingestion Pipeline initialized');
+  // Initialize unified ingestion pipeline for multi-source consolidation with error handling
+  try {
+    console.log('🚀 Initializing Unified Ingestion Pipeline...');
+    const { unifiedIngestion } = await import('./unified-ingestion');
+    await unifiedIngestion.initialize();
+    console.log('✅ Unified Ingestion Pipeline initialized');
+  } catch (error) {
+    console.error('⚠️ Warning: Unified ingestion pipeline initialization failed:', error);
+    console.error('Server will continue, but real-time data updates may not work');
+    // Don't crash - server can still serve existing data
+  }
+
+  // Mark server as ready to accept requests
+  isServerReady = true;
+  console.log('✅ Server initialization complete - ready to accept requests');
 
   const httpServer = createServer(app);
   return httpServer;
