@@ -198,10 +198,12 @@ export default function Feed() {
   const { events: allEvents, incidents: allIncidents, regionalEvents, regionalIncidents } = useTrafficData(filters);
   
   // Filter to user's region for personalized feed view
-  const feedEvents = filters.locationFilter ? regionalEvents : allEvents;
-  const feedIncidents = filters.locationFilter ? regionalIncidents : allIncidents;
+  // Only apply location filter if user has a home location set
+  const hasHomeLocation = !!filters.homeLocation;
+  const feedEvents = (filters.locationFilter && hasHomeLocation) ? regionalEvents : allEvents;
+  const feedIncidents = (filters.locationFilter && hasHomeLocation) ? regionalIncidents : allIncidents;
   
-  console.log('📱 FEED: Using', feedEvents.length, 'events,', feedIncidents.length, 'incidents (location filter:', filters.locationFilter + ')');
+  console.log('📱 FEED: Using', feedEvents.length, 'events,', feedIncidents.length, 'incidents (location filter:', filters.locationFilter, 'hasHomeLocation:', hasHomeLocation + ')');
 
   
   // Sync selected suburb with filter location
