@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ArrowLeft, X, MapPin, Clock, AlertTriangle, Shield, Car, Flame, Heart, Users, Construction, Trees, Search, Zap, MessageCircle, Share } from "lucide-react";
+import { ArrowLeft, X, MapPin, Clock, AlertTriangle, Shield, Car, Flame, Heart, Users, Construction, Trees, Search, Zap, MessageCircle, Share, Pencil, Trash } from "lucide-react";
 import { decodeIncidentId } from "@/lib/incident-utils";
 import { ReporterAttribution } from "@/components/ReporterAttribution";
 import { InlineComments } from "@/components/inline-comments";
@@ -38,6 +38,28 @@ function IncidentDetailPage({ asModal = true, incidentId: propIncidentId }: Inci
   
   // Decode the URL-encoded incident ID
   const decodedId = incidentId ? decodeIncidentId(incidentId) : null;
+  
+  // Delete mutation
+  const deleteIncidentMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await apiRequest("DELETE", `/api/unified-incidents/${id}`);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Incident Deleted",
+        description: "Your incident has been deleted successfully.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/unified"] });
+      handleClose();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Delete Failed",
+        description: error.message || "Failed to delete incident. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
   
   // Fetch unified incidents data
   const { data: unifiedData, isLoading } = useQuery({
@@ -194,6 +216,9 @@ function IncidentDetailPage({ asModal = true, incidentId: propIncidentId }: Inci
   const source = incident?.source || incident?.properties?.source || 'unknown';
   const isUserReport = source === 'user' || incident?.properties?.userReported;
   
+  // Check if current user is the incident creator
+  const isIncidentCreator = user && reporterUserId && user.id === reporterUserId;
+  
   // Extract description
   const description = incident?.properties?.description || 
                      incident?.properties?.Event_Type || 
@@ -249,9 +274,39 @@ function IncidentDetailPage({ asModal = true, incidentId: propIncidentId }: Inci
             
             {/* Title and Meta */}
             <div className="flex-1 min-w-0 space-y-2">
-              <h1 className="text-lg md:text-xl font-bold text-gray-900 leading-tight pr-8" data-testid="incident-title">
-                {title}
-              </h1>
+              <div className="flex items-start justify-between gap-2">
+                <h1 className="text-lg md:text-xl font-bold text-gray-900 leading-tight flex-1" data-testid="incident-title">
+                  {title}
+                </h1>
+                
+                {/* Edit and Delete buttons for incident creator */}
+                {isIncidentCreator && isUserReport && (
+                  <div className="flex gap-1.5">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setLocation(`/edit-incident/${incidentId}`)}
+                      className="h-8 px-2 hover:bg-purple-100 hover:text-purple-700"
+                      data-testid="button-edit-incident"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        if (confirm('Are you sure you want to delete this incident? This action cannot be undone.')) {
+                          deleteIncidentMutation.mutate(decodedId!);
+                        }
+                      }}
+                      className="h-8 px-2 hover:bg-red-100 hover:text-red-700"
+                      data-testid="button-delete-incident"
+                    >
+                      <Trash className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+              </div>
               
               {/* Location with icon */}
               <div className="flex items-center gap-1.5 text-gray-700">
