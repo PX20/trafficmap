@@ -37,17 +37,21 @@ export default function EditIncident({ params }: EditIncidentProps) {
   const [subcategories, setSubcategories] = useState<any[]>([]);
 
   const incidentId = params.id;
+  
+  // Decode the incident ID if it's URL-encoded
+  const decodedId = incidentId ? decodeURIComponent(incidentId) : null;
 
-  // Fetch existing incident data
-  const { data: incident, isLoading: incidentLoading } = useQuery({
-    queryKey: ['/api/incidents', incidentId],
-    queryFn: async () => {
-      const response = await fetch(`/api/incidents/${incidentId}`);
-      if (!response.ok) throw new Error('Failed to fetch incident');
-      return response.json();
-    },
-    enabled: !!incidentId
+  // Fetch unified incidents data and find the specific incident
+  const { data: unifiedData, isLoading: incidentLoading } = useQuery({
+    queryKey: ['/api/unified'],
+    staleTime: 1 * 60 * 1000, // 1 minute
   });
+  
+  // Find the incident by ID
+  const incident = (unifiedData as any)?.features?.find((feature: any) => {
+    if (!decodedId) return false;
+    return feature.id === decodedId || feature.properties?.id === decodedId;
+  }) || null;
 
   // Load categories and subcategories
   useEffect(() => {
