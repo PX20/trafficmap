@@ -106,7 +106,7 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
     );
 
     const map = L.map(mapRef.current, {
-      minZoom: 10, // Tighter restriction - roughly Queensland region level
+      minZoom: 11, // Performance optimization - prevents loading too many incidents at once
       maxZoom: 16, // Allow more detail for local areas
       maxBounds: queenslandBounds, // Restrict panning to Queensland
       maxBoundsViscosity: 1.0, // Firm boundary - no bouncing past limits
@@ -127,7 +127,7 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
     
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
       attribution: '© OpenStreetMap contributors, © CARTO',
-      minZoom: 10, // Match map's minimum zoom
+      minZoom: 11, // Match map's minimum zoom
       maxZoom: 16 // Match map's maximum zoom
     }).addTo(map);
 

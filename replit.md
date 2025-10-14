@@ -26,6 +26,7 @@ Preferred communication style: Simple, everyday language.
   4. **Change Detection**: Ingestion pipeline compares title/description/status/severity/geometry before updating, reducing DB writes by ~90%
   5. **Batched Ingestion**: Process incidents in batches of 10 to prevent pool exhaustion (was 341 parallel = 682 operations)
   6. **Client Optimization**: Removed excessive console.log statements and client-side proximity calculations
+  7. **Zoom Restrictions**: Set minimum zoom level to 11 to prevent loading excessive incidents from large geographic areas
   
 - **Impact**: System now scalable to 1000+ concurrent users with minimal database load and network bandwidth
 - **Technical Details**: 
