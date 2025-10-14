@@ -291,7 +291,7 @@ export default function Feed() {
   // Fetch ads for user's region
   const { data: ads = [] } = useQuery<any[]>({
     queryKey: ["/api/ads"],
-    enabled: !!user?.homeSuburb,
+    enabled: !!user?.preferredLocation,
   });
 
   // Combine all incidents before deduplication
