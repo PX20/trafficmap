@@ -18,6 +18,7 @@ import { storage } from "./storage";
 import { spatialLookup, computeGeocellForIncident } from "./spatial-lookup";
 import { generateUnifiedIncidentId, prepareUnifiedIncidentForInsert, type InsertUnifiedIncident } from "@shared/schema";
 import { getRegionFromCoordinates, findRegionBySuburb, QLD_REGIONS } from "./region-utils";
+import { mapTMRCategory, mapTMRSubcategory, mapEmergencyCategory, mapEmergencySubcategory } from "./utils/category-mapping";
 // Import retry logic - create local implementation if not exported
 const fetchWithRetry = async (url: string, options: { maxRetries: number; baseDelay: number; maxDelay: number }): Promise<Response> => {
   for (let attempt = 1; attempt <= options.maxRetries; attempt++) {
@@ -381,14 +382,21 @@ class UnifiedIngestionEngine {
         // Create unified incident
         const title = `${props.event_type || 'Traffic'} - ${props.event_subtype || 'Event'}`;
         
+        // Map TMR category and subcategory to UUIDs
+        const tmrCategory = mapTMRCategory('traffic');
+        const tmrSubcategoryText = this.getTMRSubcategory(props);
+        const tmrSubcategory = mapTMRSubcategory(tmrSubcategoryText);
+        
         const incident: InsertUnifiedIncident = {
           source: 'tmr',
           sourceId: feature.id?.toString() || props.id || `tmr-${Date.now()}`,
           title,
           description: [props.description, props.advice, props.information].filter(Boolean).join('. '),
           location: props.road_summary ? `${props.road_summary.road_name}, ${props.road_summary.locality}` : 'Queensland',
-          category: 'traffic',
-          subcategory: this.getTMRSubcategory(props),
+          category: tmrCategory.name,
+          subcategory: tmrSubcategory?.name || tmrSubcategoryText,
+          categoryUuid: tmrCategory.uuid,
+          subcategoryUuid: tmrSubcategory?.uuid || undefined,
           severity: this.getTMRSeverity(props),
           status: props.status === 'Published' ? 'active' : 'resolved',
           geometry,
@@ -425,14 +433,21 @@ class UnifiedIngestionEngine {
         const title = props.Master_Incident_Number || props.Incident_Number || 'Emergency Incident';
         const description = `${props.GroupedType || 'Emergency incident'} in ${props.Locality || props.Location || 'Queensland'}. Status: ${props.CurrentStatus || 'Active'}. Vehicles: ${props.VehiclesOnScene || 0} on scene, ${props.VehiclesOnRoute || 0} en route.`;
         
+        // Map Emergency category and subcategory to UUIDs
+        const emergencyCategory = mapEmergencyCategory('emergency');
+        const emergencySubcategoryText = this.getEmergencyCategory({ ...props, description });
+        const emergencySubcategory = mapEmergencySubcategory(emergencySubcategoryText);
+        
         const incident: InsertUnifiedIncident = {
           source: 'emergency',
           sourceId: feature.id?.toString() || props.OBJECTID?.toString() || `emg-${Date.now()}`,
           title,
           description,
           location: props.Locality ? `${props.Location}, ${props.Locality}` : (props.Location || 'Queensland'),
-          category: '54d31da5-fc10-4ad2-8eca-04bac680e668', // Emergency Situations UUID from database
-          subcategory: this.getEmergencyCategory({ ...props, description }), // Pass description for categorization
+          category: emergencyCategory.name,
+          subcategory: emergencySubcategory?.name || emergencySubcategoryText,
+          categoryUuid: emergencyCategory.uuid,
+          subcategoryUuid: emergencySubcategory?.uuid || undefined,
           severity: this.getEmergencySeverity(props),
           status: (props.CurrentStatus === 'Closed' || props.CurrentStatus === 'Resolved') ? 'resolved' : 'active',
           geometry,
