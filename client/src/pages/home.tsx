@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { navigateToIncident } from "@/lib/incident-utils";
+import { useAuth } from "@/hooks/useAuth";
 
 export interface FilterState {
   // Simplified source-based filters
@@ -48,6 +49,7 @@ export interface FilterState {
 
 export default function Home() {
   // Safety Monitor - Main Home Component
+  const { user } = useAuth();
   const isMobile = useIsMobile();
   const [sidebarOpen, setSidebarOpen] = useState(false); // Always start closed on mobile for better UX
   const [, setLocation] = useLocation();
@@ -113,30 +115,19 @@ export default function Home() {
     }
   }, [subcategories]);
   
-  // Load saved location from localStorage on startup
+  // Load location preferences from user profile on startup
   useEffect(() => {
-    const savedLocation = localStorage.getItem('homeLocation');
-    const savedCoordinates = localStorage.getItem('homeCoordinates'); 
-    const savedBoundingBox = localStorage.getItem('homeBoundingBox');
-    const locationFilterSetting = localStorage.getItem('locationFilter');
-    
-    if (savedLocation && savedCoordinates) {
-      try {
-        const coordinates = JSON.parse(savedCoordinates);
-        const boundingBox = savedBoundingBox ? JSON.parse(savedBoundingBox) : undefined;
-        setFilters(prev => ({
-          ...prev,
-          homeLocation: savedLocation,
-          homeCoordinates: coordinates,
-          homeBoundingBox: boundingBox,
-          // Auto-enable location filtering when home location exists (default to true)
-          locationFilter: locationFilterSetting ? locationFilterSetting === 'true' : true
-        }));
-      } catch (error) {
-        console.error('Failed to load saved location:', error);
-      }
+    if (user?.preferredLocation && user?.preferredLocationLat && user?.preferredLocationLng) {
+      setFilters(prev => ({
+        ...prev,
+        homeLocation: user.preferredLocation!,
+        homeCoordinates: { lat: user.preferredLocationLat!, lon: user.preferredLocationLng! },
+        homeBoundingBox: user.preferredLocationBounds as any,
+        distanceFilter: user.distanceFilter || 'all',
+        locationFilter: true
+      }));
     }
-  }, []);
+  }, [user]);
   
   // Listen for location changes from other pages (custom events + storage events)
   useEffect(() => {
@@ -194,26 +185,32 @@ export default function Home() {
     };
   }, []);
   
-  // Save location to localStorage when it changes and dispatch custom event
+  // Save location preferences to user profile when they change
   useEffect(() => {
-    if (filters.homeLocation && filters.homeCoordinates) {
-      localStorage.setItem('homeLocation', filters.homeLocation);
-      localStorage.setItem('homeCoordinates', JSON.stringify(filters.homeCoordinates));
-      localStorage.setItem('locationFilter', String(filters.locationFilter));
-      if (filters.homeBoundingBox) {
-        localStorage.setItem('homeBoundingBox', JSON.stringify(filters.homeBoundingBox));
-      }
-      
-      // Dispatch custom event to notify other pages of location change
-      window.dispatchEvent(new CustomEvent('locationChanged', {
-        detail: {
-          location: filters.homeLocation,
-          coordinates: filters.homeCoordinates,
-          boundingBox: filters.homeBoundingBox
+    if (user && filters.homeLocation && filters.homeCoordinates) {
+      // Save to API (debounced to avoid excessive calls)
+      const timeoutId = setTimeout(async () => {
+        try {
+          await fetch('/api/user/location-preferences', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+              preferredLocation: filters.homeLocation,
+              preferredLocationLat: filters.homeCoordinates.lat,
+              preferredLocationLng: filters.homeCoordinates.lon,
+              preferredLocationBounds: filters.homeBoundingBox,
+              distanceFilter: filters.distanceFilter
+            })
+          });
+        } catch (error) {
+          console.error('Failed to save location preferences:', error);
         }
-      }));
+      }, 500); // Debounce 500ms
+      
+      return () => clearTimeout(timeoutId);
     }
-  }, [filters.homeLocation, filters.homeCoordinates, filters.homeBoundingBox, filters.locationFilter]);
+  }, [filters.homeLocation, filters.homeCoordinates, filters.homeBoundingBox, filters.distanceFilter, user]);
 
   const handleFilterChange = (key: keyof FilterState, value: boolean | string | number | { lat: number; lon: number } | [number, number, number, number] | undefined) => {
     // DEBUG: Log radius changes to identify the bug
