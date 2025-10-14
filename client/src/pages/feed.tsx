@@ -24,6 +24,7 @@ import { getAgencyInfo, isUserReport } from "@/lib/agency-info";
 import { ReporterAttribution } from "@/components/ReporterAttribution";
 import { getReporterUserId, getIncidentIconProps } from "@/lib/incident-utils";
 import { CrashIcon } from "@/components/icons/CrashIcon";
+import { QuickProximityFilter } from "@/components/quick-proximity-filter";
 import { 
   MapPin, 
   Clock, 
@@ -635,47 +636,29 @@ export default function Feed() {
       <AppHeader onMenuToggle={() => {}} />
       
       <div className="max-w-2xl mx-auto px-4 pt-20 pb-6">
-        {/* Compact Header with Stats and Refresh */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">Safety Feed</h1>
+        {/* Compact Header with Stats, Proximity Filter, and Refresh */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">
+          <h1 className="text-2xl font-bold text-foreground">Safety Feed</h1>
+          
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <QuickProximityFilter
+              distanceFilter={filters.distanceFilter}
+              hasLocation={hasHomeLocation}
+              onDistanceChange={(distance) => setFilters(prev => ({ ...prev, distanceFilter: distance }))}
+              className="flex-1 sm:flex-initial"
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => refreshMutation.mutate()}
+              disabled={refreshMutation.isPending}
+              className="gap-2"
+              data-testid="button-refresh-incidents"
+            >
+              <RefreshCw className={`w-4 h-4 ${refreshMutation.isPending ? 'animate-spin' : ''}`} />
+              <span className="hidden sm:inline">{refreshMutation.isPending ? 'Refreshing...' : 'Refresh'}</span>
+            </Button>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => refreshMutation.mutate()}
-            disabled={refreshMutation.isPending}
-            className="gap-2"
-            data-testid="button-refresh-incidents"
-          >
-            <RefreshCw className={`w-4 h-4 ${refreshMutation.isPending ? 'animate-spin' : ''}`} />
-            {refreshMutation.isPending ? 'Refreshing...' : 'Refresh'}
-          </Button>
-        </div>
-
-        {/* Proximity Filter */}
-        <div className="mb-4">
-          <Select 
-            value={filters.distanceFilter || 'all'} 
-            onValueChange={(value) => {
-              const distanceValue = value as 'all' | '5km' | '10km' | '25km';
-              setFilters(prev => ({ 
-                ...prev, 
-                distanceFilter: distanceValue,
-                radius: value === 'all' ? undefined : parseInt(value.replace('km', ''))
-              }));
-            }}
-          >
-            <SelectTrigger className="w-full sm:w-[200px]" data-testid="select-distance-filter">
-              <SelectValue placeholder="Filter by distance" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Incidents</SelectItem>
-              <SelectItem value="5km">Within 5 km</SelectItem>
-              <SelectItem value="10km">Within 10 km</SelectItem>
-              <SelectItem value="25km">Within 25 km</SelectItem>
-            </SelectContent>
-          </Select>
         </div>
 
         {/* Loading State */}
