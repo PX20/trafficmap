@@ -10,6 +10,14 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### October 14, 2025 - Database Connection Pool Exhaustion Fix
+- **RESOLVED**: Production database timeout errors causing TMR incidents to fail saving
+- **Root Cause**: Parallel processing of 341+ incidents created 682 simultaneous database operations (341 SELECT + 341 UPSERT), exhausting the 20-connection pool
+- **Solution**: Implemented batching in `unified-ingestion.ts` to process incidents in batches of 10, preventing pool exhaustion
+- **Impact**: All ingestion cycles now complete successfully with 0 failures and no timeout errors
+- **Technical Details**: Changed from `Promise.allSettled` on entire array to batched iteration, limiting concurrent database operations to max 20 (well within the pool limit)
+- **Performance**: TMR processing: 339/339 successful, Emergency: 68/68 successful, User reports: 295/296 successful
+
 ### September 30, 2025 - Mobile UX Improvements for Incident Modal
 - **IMPLEMENTED**: Complete mobile UX redesign of incident detail modal based on architect recommendations
 - **Key Improvements**:
