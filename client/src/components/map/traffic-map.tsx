@@ -63,9 +63,10 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
   const mapInstanceRef = useRef<L.Map | null>(null);
   const markersRef = useRef<L.Marker[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [viewportBounds, setViewportBounds] = useState<{ southwest: [number, number], northeast: [number, number] } | undefined>();
 
-  // 🎯 UNIFIED PIPELINE: MAP shows filtered data based on user preferences
-  const { filteredEvents, filteredIncidents } = useTrafficData(filters);
+  // 🎯 OPTIMIZED: Fetch only viewport-visible incidents
+  const { filteredEvents, filteredIncidents } = useTrafficData(filters, viewportBounds);
   
   // Convert to expected format for backward compatibility  
   const eventsData = { features: filteredEvents || [] };
@@ -133,8 +134,8 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
 
     mapInstanceRef.current = map;
 
-    // Save map position and zoom when user moves or zooms the map
-    const saveMapState = () => {
+    // Save map position and update viewport bounds when user moves or zooms
+    const updateViewport = () => {
       if (mapInstanceRef.current) {
         const center = mapInstanceRef.current.getCenter();
         const zoom = mapInstanceRef.current.getZoom();
@@ -144,12 +145,22 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
           zoom: zoom
         };
         localStorage.setItem('qldSafetyMap_position', JSON.stringify(mapState));
+        
+        // OPTIMIZATION: Update viewport bounds for efficient data fetching
+        const bounds = mapInstanceRef.current.getBounds();
+        setViewportBounds({
+          southwest: [bounds.getSouth(), bounds.getWest()],
+          northeast: [bounds.getNorth(), bounds.getEast()]
+        });
       }
     };
 
-    // Add event listeners to save state on map interactions
-    map.on('moveend', saveMapState);
-    map.on('zoomend', saveMapState);
+    // Add event listeners
+    map.on('moveend', updateViewport);
+    map.on('zoomend', updateViewport);
+    
+    // Set initial viewport bounds
+    updateViewport();
 
     return () => {
       if (mapInstanceRef.current) {

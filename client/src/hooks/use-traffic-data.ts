@@ -39,17 +39,23 @@ const isQFESIncident = (incident: any) => {
          description.includes('smoke');
 };
 
-export function useTrafficData(filters: FilterState): ProcessedTrafficData {
-  // UNIFIED DATA PIPELINE: Single API call for all incident data
+export function useTrafficData(filters: FilterState, viewportBounds?: { southwest: [number, number], northeast: [number, number] }): ProcessedTrafficData {
+  // OPTIMIZED: Fetch only viewport-visible incidents instead of entire Queensland
   const { data: unifiedData } = useQuery({
-    queryKey: ["/api/unified"],
+    queryKey: ["/api/unified", viewportBounds],
     queryFn: async () => {
-      // Use fetch with extended timeout for large datasets
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 120000); // 2 minute timeout
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // Reduced to 30s
       
       try {
-        const response = await fetch('/api/unified', {
+        // Build query params for viewport filtering
+        const params = new URLSearchParams();
+        if (viewportBounds) {
+          params.set('southwest', `${viewportBounds.southwest[0]},${viewportBounds.southwest[1]}`);
+          params.set('northeast', `${viewportBounds.northeast[0]},${viewportBounds.northeast[1]}`);
+        }
+        
+        const response = await fetch(`/api/unified?${params.toString()}`, {
           credentials: 'include',
           signal: controller.signal,
         });
@@ -61,11 +67,9 @@ export function useTrafficData(filters: FilterState): ProcessedTrafficData {
         throw error;
       }
     },
-    select: (data: any) => {
-      console.log('🔄 UNIFIED PIPELINE: Events:', data?.features?.filter((f: any) => f.properties?.source === 'tmr')?.length || 0, 'Incidents:', data?.features?.length || 0);
-      return data || { type: 'FeatureCollection', features: [] };
-    },
-    refetchInterval: filters.autoRefresh ? 30000 : 60 * 1000, // Auto-refresh every 1 minute
+    select: (data: any) => data || { type: 'FeatureCollection', features: [] },
+    refetchInterval: filters.autoRefresh ? 30000 : 60 * 1000,
+    staleTime: 20000, // Cache for 20 seconds
   });
 
   // Extract and process all unified features
