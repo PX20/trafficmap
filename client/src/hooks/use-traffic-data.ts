@@ -40,12 +40,12 @@ const isQFESIncident = (incident: any) => {
 };
 
 export function useTrafficData(filters: FilterState, viewportBounds?: { southwest: [number, number], northeast: [number, number] }): ProcessedTrafficData {
-  // OPTIMIZED: Fetch only viewport-visible incidents instead of entire Queensland
+  // OPTIMIZED: Fetch only viewport-visible incidents - wait for bounds before fetching
   const { data: unifiedData } = useQuery({
     queryKey: ["/api/unified", viewportBounds],
     queryFn: async () => {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000); // Reduced to 30s
+      const timeoutId = setTimeout(() => controller.abort(), 30000);
       
       try {
         // Build query params for viewport filtering
@@ -68,8 +68,9 @@ export function useTrafficData(filters: FilterState, viewportBounds?: { southwes
       }
     },
     select: (data: any) => data || { type: 'FeatureCollection', features: [] },
+    enabled: !!viewportBounds, // CRITICAL: Only fetch when viewport bounds are available
     refetchInterval: filters.autoRefresh ? 30000 : 60 * 1000,
-    staleTime: 20000, // Cache for 20 seconds
+    staleTime: 20000,
   });
 
   // Extract and process all unified features
