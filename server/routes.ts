@@ -3305,24 +3305,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { uploadURL, type } = req.body;
       
+      console.log('Processing upload URL:', uploadURL);
+      
       if (!uploadURL) {
         return res.status(400).json({ error: "Upload URL is required" });
       }
       
       // Extract the object path from the upload URL
       const url = new URL(uploadURL);
+      console.log('Parsed URL pathname:', url.pathname);
+      
       const pathMatch = url.pathname.match(/^\/([^\/]+)\/(.+)$/);
       
       if (!pathMatch) {
-        return res.status(400).json({ error: "Invalid upload URL format" });
+        console.error('Invalid upload URL format. Expected /{bucket}/{path}, got:', url.pathname);
+        return res.status(400).json({ error: `Invalid upload URL format: ${url.pathname}` });
       }
       
       const bucketName = pathMatch[1];
       const fullObjectPath = pathMatch[2]; // e.g., ".private/uploads/uuid"
       
+      console.log('Bucket:', bucketName, 'Object path:', fullObjectPath);
+      
       // Extract just the part after .private/ for the viewing URL
       const privatePathMatch = fullObjectPath.match(/^\.private\/(.+)$/);
       if (!privatePathMatch) {
+        console.error('Object not in private directory:', fullObjectPath);
         return res.status(400).json({ error: "Object not in private directory" });
       }
       
@@ -3331,13 +3339,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create a viewing URL that goes through our server
       const viewURL = `/objects/${relativePath}`;
       
-      console.log(`Processed ${type} upload: ${uploadURL} -> ${viewURL}`);
-      console.log(`Full object path: ${fullObjectPath}, Relative path: ${relativePath}`);
+      console.log(`✅ Processed ${type} upload: ${uploadURL} -> ${viewURL}`);
       res.json({ viewURL });
       
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error processing upload:", error);
-      res.status(500).json({ error: "Failed to process upload" });
+      console.error("Error stack:", error.stack);
+      res.status(500).json({ error: `Failed to process upload: ${error.message}` });
     }
   });
 
