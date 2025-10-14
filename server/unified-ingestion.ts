@@ -635,12 +635,20 @@ class UnifiedIngestionEngine {
       // Normalize to unified schema
       const unifiedIncidents = source.normalizer(rawData);
       
-      // Upsert into unified store
-      const results = await Promise.allSettled(
-        unifiedIncidents.map(incident => 
-          storage.upsertUnifiedIncident(incident.source, incident.sourceId, incident)
-        )
-      );
+      // Upsert into unified store with batching to prevent pool exhaustion
+      // Process in batches of 10 to avoid exhausting the 20-connection pool
+      const BATCH_SIZE = 10;
+      const results: PromiseSettledResult<any>[] = [];
+      
+      for (let i = 0; i < unifiedIncidents.length; i += BATCH_SIZE) {
+        const batch = unifiedIncidents.slice(i, i + BATCH_SIZE);
+        const batchResults = await Promise.allSettled(
+          batch.map(incident => 
+            storage.upsertUnifiedIncident(incident.source, incident.sourceId, incident)
+          )
+        );
+        results.push(...batchResults);
+      }
 
       const successful = results.filter(r => r.status === 'fulfilled').length;
       const failed = results.filter(r => r.status === 'rejected').length;
