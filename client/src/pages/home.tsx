@@ -129,9 +129,9 @@ export default function Home() {
     }
   }, [user]);
   
-  // Save location preferences to user profile when they change
+  // Save location preferences to user profile when they change (including clearing)
   useEffect(() => {
-    if (user && filters.homeLocation && filters.homeCoordinates) {
+    if (user) {
       // Save to API (debounced to avoid excessive calls)
       const timeoutId = setTimeout(async () => {
         try {
@@ -140,11 +140,11 @@ export default function Home() {
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
             body: JSON.stringify({
-              preferredLocation: filters.homeLocation,
-              preferredLocationLat: filters.homeCoordinates.lat,
-              preferredLocationLng: filters.homeCoordinates.lon,
-              preferredLocationBounds: filters.homeBoundingBox,
-              distanceFilter: filters.distanceFilter
+              preferredLocation: filters.homeLocation || null,
+              preferredLocationLat: filters.homeCoordinates?.lat || null,
+              preferredLocationLng: filters.homeCoordinates?.lon || null,
+              preferredLocationBounds: filters.homeBoundingBox || null,
+              distanceFilter: filters.distanceFilter || 'all'
             })
           });
         } catch (error) {

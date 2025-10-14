@@ -10,6 +10,22 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### October 14, 2025 - Location Preferences Consolidation
+- **RESOLVED**: Eliminated duplicate location settings - users previously had to set location in both profile and preferences
+- **Changes Implemented**:
+  1. **Schema Update**: Removed duplicate `homeSuburb` and `primarySuburb` fields from users table
+  2. **New Unified Preferences**: Added `preferredLocation`, `preferredLocationLat`, `preferredLocationLng`, `preferredLocationBounds`, and `distanceFilter` to users table
+  3. **Backend API**: Created `/api/user/location-preferences` endpoint with support for saving and clearing preferences (accepts null values)
+  4. **Frontend Integration**: Both map and feed now load location/distance preferences from user profile on startup
+  5. **Auto-Persistence**: Preferences automatically save to database when changed (debounced 500ms)
+  6. **localStorage Removed**: Eliminated all localStorage-based location/distance management and custom event synchronization
+- **Impact**: Single source of truth for location and proximity preferences that persists across sessions and syncs between map and feed automatically
+- **Technical Details**: 
+  - Preferences are stored in user profile and loaded on component mount
+  - Distance filter changes save immediately via debounced API call
+  - Backend accepts null values to properly clear preferences
+  - No localStorage or cross-component event listeners needed
+
 ### October 14, 2025 - Production Scalability Optimization
 - **RESOLVED**: Critical scalability issues that would cause crashes with 100+ concurrent users
 - **Root Causes Identified**:

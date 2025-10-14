@@ -980,10 +980,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch('/api/user/location-preferences', isAuthenticated, async (req: any, res) => {
     try {
       const preferences = z.object({
-        preferredLocation: z.string().optional(),
-        preferredLocationLat: z.number().optional(),
-        preferredLocationLng: z.number().optional(),
-        preferredLocationBounds: z.any().optional(), // JSONB field
+        preferredLocation: z.string().nullable().optional(),
+        preferredLocationLat: z.number().nullable().optional(),
+        preferredLocationLng: z.number().nullable().optional(),
+        preferredLocationBounds: z.any().nullable().optional(), // JSONB field
         distanceFilter: z.enum(['all', '5km', '10km', '25km']).optional(),
       }).parse(req.body);
 
