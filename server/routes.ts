@@ -3879,8 +3879,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ============================================================================
   
   app.get('/api/unified', async (req, res) => {
-    console.log('🔍 Unified API endpoint called with query:', req.query);
-    
     try {
       const { 
         region, 
@@ -3894,43 +3892,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       let result;
 
-      console.log('📊 Getting unified incidents...');
-      
-      // Spatial filtering with bounding box
+      // OPTIMIZATION: Database-level spatial filtering instead of fetch-all-then-filter
       if (southwest && northeast) {
-        console.log('🗺️ Applying spatial filtering');
         const [swLat, swLng] = (southwest as string).split(',').map(Number);
         const [neLat, neLng] = (northeast as string).split(',').map(Number);
         
-        // Get all incidents first, then filter spatially in the result
-        // This is a temporary fix - we could optimize this later with a dedicated spatial GeoJSON method
-        result = await storage.getUnifiedIncidentsAsGeoJSON();
+        // Use database spatial query for efficiency
+        const incidents = await storage.getUnifiedIncidentsInArea(
+          [Math.min(swLat, neLat), Math.min(swLng, neLng)],
+          [Math.max(swLat, neLat), Math.max(swLng, neLng)]
+        );
         
-        // Filter features to only include those within the bounding box
-        result.features = result.features.filter(feature => {
-          if (!feature.geometry || feature.geometry.type !== 'Point') return false;
-          
-          const [lng, lat] = feature.geometry.coordinates as [number, number];
-          return (
-            lat >= Math.min(swLat, neLat) && 
-            lat <= Math.max(swLat, neLat) &&
-            lng >= Math.min(swLng, neLng) && 
-            lng <= Math.max(swLng, neLng)
-          );
-        });
+        // Convert to GeoJSON
+        result = {
+          type: 'FeatureCollection' as const,
+          features: incidents.map(inc => ({
+            type: 'Feature' as const,
+            id: inc.id,
+            geometry: inc.geometry as any,
+            properties: {
+              ...inc,
+              geometry: undefined
+            }
+          }))
+        };
       }
       // Regional filtering 
       else if (region) {
-        console.log('🌍 Applying regional filtering for:', region);
         result = await storage.getUnifiedIncidentsByRegionAsGeoJSON(region as string);
       }
-      // All unified incidents
+      // All unified incidents (use sparingly - viewport filtering preferred)
       else {
-        console.log('📋 Getting all unified incidents');
         result = await storage.getUnifiedIncidentsAsGeoJSON();
       }
-      
-      console.log('✅ Successfully retrieved incidents, features count:', result?.features?.length || 0);
 
       // Apply additional filters on the result
       if (category || source || statusFilter || since) {
@@ -3939,21 +3933,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         result.features = result.features.filter(feature => {
           const props = feature.properties;
           
-          // Category filter
           if (category && props.category !== category) return false;
-          
-          // Source filter
           if (source && props.source !== source) return false;
-          
-          // Status filter
           if (statusFilter && props.status !== statusFilter) return false;
-          
-          // Time filter
           if (sinceDate && new Date(props.lastUpdated) < sinceDate) return false;
           
           return true;
         });
       }
+
+      // Generate ETag for HTTP caching
+      const etag = `W/"${result.features.length}-${Date.now()}"`;
+      
+      // Check if client has current version
+      if (req.headers['if-none-match'] === etag) {
+        return res.status(304).end();
+      }
+
+      // Set cache headers
+      res.setHeader('ETag', etag);
+      res.setHeader('Cache-Control', 'public, max-age=30'); // 30 second cache
+      res.setHeader('Last-Modified', new Date().toUTCString());
 
       // Add response metadata
       const response = {
