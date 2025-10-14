@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Link, useLocation } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -683,6 +684,31 @@ export default function Feed() {
             <RefreshCw className={`w-4 h-4 ${refreshMutation.isPending ? 'animate-spin' : ''}`} />
             {refreshMutation.isPending ? 'Refreshing...' : 'Refresh'}
           </Button>
+        </div>
+
+        {/* Proximity Filter */}
+        <div className="mb-4">
+          <Select 
+            value={filters.distanceFilter || 'all'} 
+            onValueChange={(value) => {
+              const distanceValue = value as 'all' | '5km' | '10km' | '25km';
+              setFilters(prev => ({ 
+                ...prev, 
+                distanceFilter: distanceValue,
+                radius: value === 'all' ? undefined : parseInt(value.replace('km', ''))
+              }));
+            }}
+          >
+            <SelectTrigger className="w-full sm:w-[200px]" data-testid="select-distance-filter">
+              <SelectValue placeholder="Filter by distance" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Incidents</SelectItem>
+              <SelectItem value="5km">Within 5 km</SelectItem>
+              <SelectItem value="10km">Within 10 km</SelectItem>
+              <SelectItem value="25km">Within 25 km</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Loading State */}
