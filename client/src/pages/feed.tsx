@@ -195,7 +195,8 @@ export default function Feed() {
 
   // Use the same traffic data hook as the map for consistent filtering
   // 🎯 UNIFIED PIPELINE: Use same data as map, then filter by location
-  const { events: allEvents, incidents: allIncidents, regionalEvents, regionalIncidents } = useTrafficData(filters);
+  // Feed doesn't have viewport bounds, so allow fetch without them
+  const { events: allEvents, incidents: allIncidents, regionalEvents, regionalIncidents } = useTrafficData(filters, undefined, true);
   
   // Filter to user's region for personalized feed view
   // Only apply location filter if user has a home location set

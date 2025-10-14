@@ -39,8 +39,8 @@ const isQFESIncident = (incident: any) => {
          description.includes('smoke');
 };
 
-export function useTrafficData(filters: FilterState, viewportBounds?: { southwest: [number, number], northeast: [number, number] }): ProcessedTrafficData {
-  // OPTIMIZED: Fetch only viewport-visible incidents - wait for bounds before fetching
+export function useTrafficData(filters: FilterState, viewportBounds?: { southwest: [number, number], northeast: [number, number] }, allowFetchWithoutViewport: boolean = false): ProcessedTrafficData {
+  // OPTIMIZED: Fetch viewport-visible incidents for map, or all incidents for feed
   const { data: unifiedData } = useQuery({
     queryKey: ["/api/unified", viewportBounds],
     queryFn: async () => {
@@ -48,7 +48,7 @@ export function useTrafficData(filters: FilterState, viewportBounds?: { southwes
       const timeoutId = setTimeout(() => controller.abort(), 30000);
       
       try {
-        // Build query params for viewport filtering
+        // Build query params for viewport filtering (only if bounds provided)
         const params = new URLSearchParams();
         if (viewportBounds) {
           params.set('southwest', `${viewportBounds.southwest[0]},${viewportBounds.southwest[1]}`);
@@ -68,13 +68,21 @@ export function useTrafficData(filters: FilterState, viewportBounds?: { southwes
       }
     },
     select: (data: any) => data || { type: 'FeatureCollection', features: [] },
-    enabled: !!viewportBounds, // CRITICAL: Only fetch when viewport bounds are available
+    // Enable if viewport bounds available OR if caller allows fetch without viewport (feed page)
+    enabled: !!viewportBounds || allowFetchWithoutViewport,
     refetchInterval: filters.autoRefresh ? 30000 : 60 * 1000,
     staleTime: 20000,
   });
 
   // Extract and process all unified features
   const allFeatures = unifiedData?.features || [];
+  
+  console.log('🔍 RAW UNIFIED DATA:', {
+    hasUnifiedData: !!unifiedData,
+    featuresCount: allFeatures.length,
+    viewportBounds: viewportBounds ? 'provided' : 'not provided',
+    allowFetchWithoutViewport
+  });
   
   // Separate by source type for backward compatibility
   const allEventsData = allFeatures.filter((feature: any) => {
@@ -94,10 +102,16 @@ export function useTrafficData(filters: FilterState, viewportBounds?: { southwes
   // PROXIMITY-BASED FILTERING: Use distance calculation as primary and only method
   const isWithinProximity = (feature: any) => {
     // If distanceFilter is 'all', include everything
-    if (filters.distanceFilter === 'all') return true;
+    if (filters.distanceFilter === 'all') {
+      console.log('🔍 PROXIMITY CHECK: distanceFilter is "all", including all features');
+      return true;
+    }
     
     // Require home coordinates for filtering
-    if (!filters.homeCoordinates) return false;
+    if (!filters.homeCoordinates) {
+      console.log('🔍 PROXIMITY CHECK: No home coordinates, excluding feature');
+      return false;
+    }
     
     // Extract coordinates from incident
     let lng, lat;
@@ -146,9 +160,22 @@ export function useTrafficData(filters: FilterState, viewportBounds?: { southwes
     return withinRadius;
   };
 
+  // Debug: Log the data before filtering
+  console.log('🔍 BEFORE FILTERING:', {
+    allEventsCount: allEventsData.length,
+    allIncidentsCount: allIncidentsData.length,
+    hasHomeCoordinates: !!filters.homeCoordinates,
+    distanceFilter: filters.distanceFilter
+  });
+  
   // Apply proximity-based filtering for feed data
   const regionalEventsData = filters.homeCoordinates ? allEventsData.filter(isWithinProximity) : [];
   const regionalIncidentsData = filters.homeCoordinates ? allIncidentsData.filter(isWithinProximity) : [];
+  
+  console.log('🔍 AFTER FILTERING:', {
+    regionalEventsCount: regionalEventsData.length,
+    regionalIncidentsCount: regionalIncidentsData.length
+  });
 
   // All data for map display (shows everything)
   const allEvents = Array.isArray(allEventsData) ? allEventsData : [];
