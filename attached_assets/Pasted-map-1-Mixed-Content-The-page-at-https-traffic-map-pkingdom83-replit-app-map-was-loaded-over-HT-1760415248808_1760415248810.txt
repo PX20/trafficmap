@@ -1,0 +1,56 @@
+map:1  Mixed Content: The page at 'https://traffic-map-pkingdom83.replit.app/map' was loaded over HTTPS, but requested an insecure script 'http://replit.com.x.571a478b019880472d08fa10fc15fabffd58.43d75326.id.opendns.com/s/malware.opendns.com/?X-OpenDNS-Session=aa51dc5c0ccc5aad4_571a478b019880472d08fa10fc15fabffd58_9374f50211e17944b9861e38e88cecdf8228edc3_server=nginx-proxy-https-557851a1989c.iproxy.syd&url=https://replit.com/public/js/replit-dev-banner.js%3FX-OpenDNS-Session=_97989ddb0a85804a6209be102a4111116a9d9270f959_NVv6YkXF_&proxy=y&prefs=1597504&tagging=0x110004214C4001C10000070070000080039F7000102000000000'. This request has been blocked; the content must be served over HTTPS.
+index-0oi_QYlP.js:507  Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+(anonymous) @ index-0oi_QYlP.js:507
+kg @ index-0oi_QYlP.js:40
+hc @ index-0oi_QYlP.js:40
+OU @ index-0oi_QYlP.js:40
+ka @ index-0oi_QYlP.js:40
+tN @ index-0oi_QYlP.js:40
+va @ index-0oi_QYlP.js:38
+(anonymous) @ index-0oi_QYlP.js:40
+index-0oi_QYlP.js:507  Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+(anonymous) @ index-0oi_QYlP.js:507
+kg @ index-0oi_QYlP.js:40
+hc @ index-0oi_QYlP.js:40
+OU @ index-0oi_QYlP.js:40
+ka @ index-0oi_QYlP.js:40
+tN @ index-0oi_QYlP.js:40
+va @ index-0oi_QYlP.js:38
+(anonymous) @ index-0oi_QYlP.js:40
+index-0oi_QYlP.js:507  Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+(anonymous) @ index-0oi_QYlP.js:507
+kg @ index-0oi_QYlP.js:40
+hc @ index-0oi_QYlP.js:40
+OU @ index-0oi_QYlP.js:40
+ka @ index-0oi_QYlP.js:40
+tN @ index-0oi_QYlP.js:40
+va @ index-0oi_QYlP.js:38
+(anonymous) @ index-0oi_QYlP.js:40
+index-0oi_QYlP.js:507  Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+(anonymous) @ index-0oi_QYlP.js:507
+kg @ index-0oi_QYlP.js:40
+hc @ index-0oi_QYlP.js:40
+OU @ index-0oi_QYlP.js:40
+ka @ index-0oi_QYlP.js:40
+tN @ index-0oi_QYlP.js:40
+va @ index-0oi_QYlP.js:38
+(anonymous) @ index-0oi_QYlP.js:40
+index-0oi_QYlP.js:507  Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+(anonymous) @ index-0oi_QYlP.js:507
+kg @ index-0oi_QYlP.js:40
+hc @ index-0oi_QYlP.js:40
+OU @ index-0oi_QYlP.js:40
+ka @ index-0oi_QYlP.js:40
+tN @ index-0oi_QYlP.js:40
+va @ index-0oi_QYlP.js:38
+(anonymous) @ index-0oi_QYlP.js:40
+/incident/user%3Abad75270-a32d-456c-8efb-c1d42f50d508:1 [Intervention] Images loaded lazily and replaced with placeholders. Load events are deferred. See https://go.microsoft.com/fwlink/?linkid=2048113
+index-0oi_QYlP.js:507  Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+(anonymous) @ index-0oi_QYlP.js:507
+kg @ index-0oi_QYlP.js:40
+hc @ index-0oi_QYlP.js:40
+OU @ index-0oi_QYlP.js:40
+ka @ index-0oi_QYlP.js:40
+tN @ index-0oi_QYlP.js:40
+va @ index-0oi_QYlP.js:38
+(anonymous) @ index-0oi_QYlP.js:40

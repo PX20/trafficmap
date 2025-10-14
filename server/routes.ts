@@ -3341,21 +3341,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Serve uploaded photos (publicly accessible)
-  app.get("/objects/:objectPath(*)", async (req, res) => {
-    try {
-      const objectStorageService = new ObjectStorageService();
-      const objectFile = await objectStorageService.getObjectEntityFile(req.path);
-      await objectStorageService.downloadObject(objectFile, res);
-    } catch (error) {
-      console.error("Error serving object:", error);
-      if (error instanceof ObjectNotFoundError) {
-        return res.status(404).json({ error: "Photo not found" });
-      }
-      return res.status(500).json({ error: "Failed to serve photo" });
-    }
-  });
-
   // Push notification subscription endpoints
   app.post('/api/push/subscribe', isAuthenticated, async (req, res) => {
     try {

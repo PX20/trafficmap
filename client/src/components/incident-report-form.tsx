@@ -119,16 +119,46 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
     setIsPhotoUploading(true);
   };
 
-  const handlePhotoUploadComplete = (result: any) => {
+  const handlePhotoUploadComplete = async (result: any) => {
     setIsPhotoUploading(false);
     if (result.successful && result.successful.length > 0) {
-      const uploadedUrl = result.successful[0].uploadURL;
-      setUploadedPhotoUrl(uploadedUrl);
-      form.setValue("photoUrl", uploadedUrl);
-      toast({
-        title: "Photo Uploaded",
-        description: "Your photo has been uploaded successfully.",
-      });
+      const uploadURL = result.successful[0].uploadURL;
+      
+      try {
+        // Process the upload to get the proper viewing URL
+        const response = await fetch('/api/objects/process-upload', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            uploadURL,
+            type: 'incident-photo'
+          })
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to process upload');
+        }
+        
+        const data = await response.json();
+        const viewURL = data.viewURL;
+        
+        setUploadedPhotoUrl(viewURL);
+        form.setValue("photoUrl", viewURL);
+        toast({
+          title: "Photo Uploaded",
+          description: "Your photo has been uploaded successfully.",
+        });
+      } catch (error) {
+        console.error('Photo processing error:', error);
+        toast({
+          title: "Upload Processing Failed",
+          description: "Failed to process photo. Please try again.",
+          variant: "destructive",
+        });
+      }
     } else {
       toast({
         title: "Upload Failed",
