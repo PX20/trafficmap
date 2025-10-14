@@ -1,163 +1,65 @@
 # QLD Safety Monitor
 
 ## Overview
-
-QLD Safety Monitor is a comprehensive real-time safety and incident monitoring application for Queensland. The application provides live traffic events, emergency incidents, crime reports, suspicious behavior alerts, and traffic camera feeds across Queensland. It integrates with the official QLD Traffic API and QLD Emergency Services data feeds, while also supporting community-driven incident reporting through user authentication. Built as a full-stack web application, it features an interactive map interface with advanced filtering capabilities, allowing users to view and analyze safety conditions in real-time.
+QLD Safety Monitor is a real-time safety and incident monitoring application for Queensland. It provides live updates on traffic events, emergency incidents, crime reports, suspicious behavior alerts, and traffic camera feeds. The application integrates with official QLD Traffic and Emergency Services data feeds and supports community-driven incident reporting. It features a full-stack web application with an interactive map interface and advanced filtering capabilities to view and analyze safety conditions in real-time across Queensland.
 
 ## User Preferences
-
 Preferred communication style: Simple, everyday language.
-
-## Recent Changes
-
-### October 14, 2025 - Location Preferences Consolidation
-- **RESOLVED**: Eliminated duplicate location settings - users previously had to set location in both profile and preferences
-- **Changes Implemented**:
-  1. **Schema Update**: Removed duplicate `homeSuburb` and `primarySuburb` fields from users table
-  2. **New Unified Preferences**: Added `preferredLocation`, `preferredLocationLat`, `preferredLocationLng`, `preferredLocationBounds`, and `distanceFilter` to users table
-  3. **Backend API**: Created `/api/user/location-preferences` endpoint with support for saving and clearing preferences (accepts null values)
-  4. **Frontend Integration**: Both map and feed now load location/distance preferences from user profile on startup
-  5. **Auto-Persistence**: Preferences automatically save to database when changed (debounced 500ms)
-  6. **localStorage Removed**: Eliminated all localStorage-based location/distance management and custom event synchronization
-- **Impact**: Single source of truth for location and proximity preferences that persists across sessions and syncs between map and feed automatically
-- **Technical Details**: 
-  - Preferences are stored in user profile and loaded on component mount
-  - Distance filter changes save immediately via debounced API call
-  - Backend accepts null values to properly clear preferences
-  - No localStorage or cross-component event listeners needed
-
-### October 14, 2025 - Production Scalability Optimization
-- **RESOLVED**: Critical scalability issues that would cause crashes with 100+ concurrent users
-- **Root Causes Identified**:
-  1. Every user fetched entire Queensland dataset (all incidents) every 30-60 seconds
-  2. Client-side proximity filtering performed expensive calculations on full dataset
-  3. No HTTP caching - repeated identical responses transferred over network
-  4. Ingestion pipeline rewrote unchanged incidents every cycle
-  5. Database connection pool exhaustion from parallel upserts
-  
-- **Optimizations Implemented**:
-  1. **Viewport-Based Fetching**: Map now requests only visible incidents using geographic bounds, reducing payload size by 80-95%
-  2. **Database-Level Spatial Filtering**: `/api/unified` endpoint filters at database layer using `getUnifiedIncidentsInArea()` instead of fetch-all-then-filter
-  3. **HTTP Caching with ETags**: Added ETag, Cache-Control (30s), and Last-Modified headers with 304 Not Modified support
-  4. **Change Detection**: Ingestion pipeline compares title/description/status/severity/geometry before updating, reducing DB writes by ~90%
-  5. **Batched Ingestion**: Process incidents in batches of 10 to prevent pool exhaustion (was 341 parallel = 682 operations)
-  6. **Client Optimization**: Removed excessive console.log statements and client-side proximity calculations
-  7. **Zoom Restrictions**: Set minimum zoom level to 11 to prevent loading excessive incidents from large geographic areas
-  
-- **Impact**: System now scalable to 1000+ concurrent users with minimal database load and network bandwidth
-- **Technical Details**: 
-  - Viewport filtering: Only fetches incidents within map bounds (e.g., 50 incidents vs 700+ for full state)
-  - Query gated with `enabled: !!viewportBounds` to prevent initial full-state fetch
-  - ETag caching prevents redundant transfers when data unchanged
-  - Change detection skips DB writes for unchanged incidents (most TMR/QFES incidents are stable)
-
-### September 30, 2025 - Mobile UX Improvements for Incident Modal
-- **IMPLEMENTED**: Complete mobile UX redesign of incident detail modal based on architect recommendations
-- **Key Improvements**:
-  1. **Compact Header Design**: Combined category badges into single pill format (e.g., "Emergency Situations • Fire & Smoke"), moved official source attribution inline with title area to reduce vertical scrolling
-  2. **48px Touch Targets**: Updated all action buttons to h-12 (48px) minimum with increased spacing, including close button upgraded to h-11 w-11 (44px) for consistency
-  3. **Bottom Sheet Comments**: Redesigned comments section from nested card to bottom-sheet style with sticky header, eliminating scroll-within-scroll issues on mobile
-  4. **Tighter Mobile Layout**: Reduced padding on mobile (p-3) vs desktop (p-6), improved text contrast (text-gray-800 vs text-gray-700) for better readability
-- **Impact**: Modal now uses significantly less vertical space on mobile, all touch interactions meet accessibility standards, and comments section provides natural mobile-friendly flow
-- **Architect Review**: Passed - all targeted mobile UX goals achieved including header density, touch targets, comments flow, and responsive padding
-
-### September 30, 2025 - Agency Account Auto-Initialization
-- **RESOLVED**: Production "User not found" errors for TMR/QFES incidents
-- **Root Cause**: Agency user accounts (tmr-agency-account-001, qfes-agency-account-001, etc.) existed in development but were missing from production database
-- **Solution**: Created `initializeAgencyAccounts()` function in `server/init-agency-accounts.ts` that automatically creates all required system agency accounts on app startup if they don't exist
-- **Implementation**: Function is called at the start of `registerRoutes()` in `server/routes.ts`, ensuring agency accounts are ready before any API requests are processed
-- **Impact**: Production deployments now automatically initialize all agency accounts (TMR, QFES, QAS, QPS, Legacy System), fixing attribution display for all official incidents
-- **Technical Details**: System creates business-type user accounts with `isOfficialAgency: true` flag, allowing proper attribution display in both map markers and feed modals
-
-### September 20, 2025 - Modal Consistency System Implemented
-- **RESOLVED**: Complete modal consistency between map markers and feed incidents 
-- **Key Fixes**: 
-  1. **User Attribution Logic**: Created `getReporterUserId()` helper function and fixed `isIncidentCreator` to use correct userId field - users can now properly edit/delete their own reports
-  2. **Category Mapping**: Applied UUID-to-human mapping functions to both modals - categories now display as "Wildlife & Nature", "Safety & Crime" instead of ugly UUIDs
-  3. **UI Cleanup**: Hidden Status Updates section in feed modal for cleaner social media experience
-- **Impact**: Both map and feed modals now provide identical, user-friendly experiences with proper attribution and readable categories
-- **Architect Review**: Passed - modal consistency achieved across all interface components
-
-### September 18, 2025 - User Attribution System Fixed
-- **RESOLVED**: Fixed persistent "Anonymous" display issue for community reports
-- **Root Cause**: Database JSONB `properties` field contained correct `reporterId` values, but `convertIncidentsToGeoJSON` method wasn't extracting them for API responses
-- **Solution**: Added extraction of `reporterId` from database properties in storage layer: `reporterId: (incident.properties as any)?.reporterId || incident.userId || undefined`
-- **Impact**: Community reports now properly display actual user names instead of "Anonymous"
-- **Technical Details**: Issue was in storage.ts line 707 where properties transformation didn't include reporterId field extraction
 
 ## System Architecture
 
 ### Frontend Architecture
-The frontend is built using React with TypeScript and follows a modern component-based architecture:
-- **React Router**: Uses Wouter for lightweight client-side routing
-- **State Management**: Leverages TanStack Query for server state management and caching
-- **UI Framework**: Implements Shadcn/ui components built on Radix UI primitives
-- **Styling**: Uses Tailwind CSS with CSS custom properties for theming
-- **Map Integration**: Integrates Leaflet for interactive map functionality
-- **Build Tool**: Vite for fast development and optimized production builds
-
-The frontend follows a modular structure with separate concerns for UI components, business logic, and API interactions. Components are organized by feature (map-related components) and shared UI components.
+The frontend is built with React and TypeScript, following a component-based architecture. It uses Wouter for routing, TanStack Query for server state management, Shadcn/ui (built on Radix UI) for UI components, and Tailwind CSS for styling. Leaflet is integrated for interactive map functionality, and Vite is used for fast development and optimized builds. The structure is modular, separating UI components, business logic, and API interactions.
 
 ### Backend Architecture
-The backend is implemented as a Node.js Express server with TypeScript:
-- **API Framework**: Express.js with RESTful endpoints
-- **Data Storage**: Dual storage approach using both in-memory storage and PostgreSQL with Drizzle ORM
-- **External API Integration**: Integrates with the QLD Traffic API for real-time traffic data and QLD Emergency Services for incident data
-- **Development Integration**: Custom Vite integration for seamless development experience
-
-The server acts as a proxy and caching layer between the frontend and the QLD Traffic API, providing data transformation and local storage capabilities.
+The backend is a Node.js Express server written in TypeScript. It provides RESTful endpoints and acts as a proxy and caching layer for external APIs. It utilizes a dual storage approach with PostgreSQL and an in-memory fallback.
 
 ### Data Storage Solutions
-The application uses a flexible storage architecture:
-- **Primary Database**: PostgreSQL configured via Drizzle ORM with schema definitions for users, incidents, traffic events, and traffic cameras
-- **Fallback Storage**: In-memory storage implementation for development and testing
-- **Storage Interface**: Abstract storage interface allows switching between storage implementations
-- **Migration Support**: Drizzle Kit for database schema migrations
+The application employs a flexible storage architecture:
+- **Primary Database**: PostgreSQL via Drizzle ORM, with schema definitions for users, incidents, traffic events, and traffic cameras.
+- **Fallback Storage**: In-memory storage for development and testing.
+- An abstract storage interface allows for switching between implementations. Drizzle Kit handles database schema migrations.
 
 ### Authentication and Authorization
-Full user authentication and authorization system implemented with:
-- **Replit Auth Integration**: Secure OpenID Connect authentication using Replit's identity provider
-- **Session Management**: PostgreSQL-based session storage with automatic token refresh
-- **Community Reporting**: Authenticated users can report safety incidents and crimes
-- **User Profile System**: Complete user management with profile data and incident history
+The system includes a full user authentication and authorization system:
+- **Replit Auth Integration**: Secure OpenID Connect authentication using Replit's identity provider.
+- **Session Management**: PostgreSQL-based session storage with automatic token refresh.
+- **Community Reporting**: Authenticated users can report safety incidents.
+- **User Profile System**: Manages user data and incident history.
+- **Agency Accounts**: System automatically initializes official agency accounts (e.g., TMR, QFES) on startup to ensure proper incident attribution.
 
 ### Map and Visualization
-Interactive mapping solution using:
-- **Map Library**: Leaflet for map rendering and interaction
-- **Marker System**: Custom color-coded markers for traffic events, emergency incidents, crime reports, and suspicious activity alerts
-- **Advanced Filtering**: Real-time filtering by event category (traffic, crime, emergency), incident type, impact level, and time range
-- **Dual Data Sources**: Displays both official emergency data and community-reported incidents with source attribution
-- **Responsive Design**: Mobile-optimized interface with collapsible sidebar
+An interactive mapping solution is provided:
+- **Map Library**: Leaflet for rendering and interaction.
+- **Markers**: Custom color-coded markers for various event types (traffic, emergency, crime, suspicious activity).
+- **Filtering**: Real-time filtering by category, incident type, impact level, and time range.
+- **Data Sources**: Displays both official emergency data and community-reported incidents with source attribution.
+- **Responsiveness**: Mobile-optimized interface with a collapsible sidebar and improved modal UX for mobile (compact header, larger touch targets, bottom-sheet comments).
+- **Scalability**: Implements viewport-based fetching, database-level spatial filtering, HTTP caching with ETags, and change detection in the ingestion pipeline to optimize performance and reduce load.
 
 ## External Dependencies
 
 ### Third-Party APIs
-- **QLD Traffic API**: Primary data source for traffic events and camera feeds
-  - Endpoint: `https://api.qldtraffic.qld.gov.au`
-  - Provides GeoJSON formatted traffic data
-  - Supports both public and authenticated API access
-- **QLD Emergency Services API**: Real-time emergency incident data
-  - ArcGIS Feature Server providing current emergency incidents
-  - Includes incident details, emergency vehicle deployments, and response status
-  - Covers police, fire, and ambulance service incidents across Queensland
+- **QLD Traffic API**: Data source for traffic events and camera feeds (`https://api.qldtraffic.qld.gov.au`).
+- **QLD Emergency Services API**: Real-time emergency incident data via an ArcGIS Feature Server.
 
 ### Database Services
-- **PostgreSQL**: Primary database (configured via Drizzle)
-- **Neon Database**: Cloud PostgreSQL provider (based on connection string pattern)
+- **PostgreSQL**: Primary database.
+- **Neon Database**: Cloud PostgreSQL provider (via connection string).
 
 ### UI and Mapping Libraries
-- **Leaflet**: Open-source mapping library for interactive maps
-- **Radix UI**: Headless UI component primitives
-- **Shadcn/ui**: Pre-built component library based on Radix UI
-- **Tailwind CSS**: Utility-first CSS framework
+- **Leaflet**: Open-source mapping library.
+- **Radix UI**: Headless UI component primitives.
+- **Shadcn/ui**: Component library based on Radix UI.
+- **Tailwind CSS**: Utility-first CSS framework.
 
 ### Development and Build Tools
-- **Vite**: Frontend build tool and development server
-- **TanStack Query**: Data fetching and caching library
-- **Drizzle ORM**: TypeScript ORM for database operations
-- **TypeScript**: Type safety across the entire application
+- **Vite**: Frontend build tool and development server.
+- **TanStack Query**: Data fetching and caching library.
+- **Drizzle ORM**: TypeScript ORM.
+- **TypeScript**: For type safety.
 
 ### External Services Integration
-- **OpenStreetMap**: Tile provider for map base layers
-- **Google Fonts**: Web font delivery (Inter font family)
-- **Replit Integration**: Development environment integration with runtime error handling and cartographer plugin
+- **OpenStreetMap**: Tile provider for map base layers.
+- **Google Fonts**: Web font delivery (Inter).
+- **Replit Integration**: Development environment integration.
