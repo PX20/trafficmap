@@ -3924,7 +3924,301 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ============================================================================
-  // UNIFIED API ENDPOINT - Single endpoint for all consolidated incident data
+  // POSTS API - Single source of truth for community posts
+  // ============================================================================
+  
+  // Get all posts as GeoJSON (for feed and map)
+  app.get('/api/posts', async (req, res) => {
+    try {
+      const { 
+        category, 
+        status: statusFilter, 
+        southwest, 
+        northeast,
+        userId 
+      } = req.query;
+
+      let result;
+
+      // Spatial filtering for map viewport
+      if (southwest && northeast) {
+        const [swLat, swLng] = (southwest as string).split(',').map(Number);
+        const [neLat, neLng] = (northeast as string).split(',').map(Number);
+        
+        const postsInArea = await storage.getPostsInArea(
+          [Math.min(swLat, neLat), Math.min(swLng, neLng)],
+          [Math.max(swLat, neLat), Math.max(swLng, neLng)]
+        );
+        
+        // Convert to GeoJSON
+        result = {
+          type: 'FeatureCollection' as const,
+          features: postsInArea.map(post => ({
+            type: 'Feature' as const,
+            id: post.id,
+            geometry: post.geometry || (post.centroidLat && post.centroidLng ? {
+              type: 'Point',
+              coordinates: [post.centroidLng, post.centroidLat]
+            } : null),
+            properties: {
+              id: post.id,
+              title: post.title,
+              description: post.description,
+              location: post.location,
+              photoUrl: post.photoUrl,
+              categoryId: post.categoryId,
+              subcategoryId: post.subcategoryId,
+              status: post.status,
+              userId: post.userId,
+              reactionsCount: post.reactionsCount || 0,
+              commentsCount: post.commentsCount || 0,
+              createdAt: post.createdAt?.toISOString(),
+              updatedAt: post.updatedAt?.toISOString(),
+            }
+          }))
+        };
+      }
+      // User-specific posts
+      else if (userId) {
+        const userPosts = await storage.getPostsByUser(userId as string);
+        result = {
+          type: 'FeatureCollection' as const,
+          features: userPosts.map(post => ({
+            type: 'Feature' as const,
+            id: post.id,
+            geometry: post.geometry || (post.centroidLat && post.centroidLng ? {
+              type: 'Point',
+              coordinates: [post.centroidLng, post.centroidLat]
+            } : null),
+            properties: {
+              id: post.id,
+              title: post.title,
+              description: post.description,
+              location: post.location,
+              photoUrl: post.photoUrl,
+              categoryId: post.categoryId,
+              subcategoryId: post.subcategoryId,
+              status: post.status,
+              userId: post.userId,
+              reactionsCount: post.reactionsCount || 0,
+              commentsCount: post.commentsCount || 0,
+              createdAt: post.createdAt?.toISOString(),
+              updatedAt: post.updatedAt?.toISOString(),
+            }
+          }))
+        };
+      }
+      // All posts with enriched data
+      else {
+        result = await storage.getPostsAsGeoJSON();
+      }
+
+      // Apply additional filters
+      if (category || statusFilter) {
+        result.features = result.features.filter(feature => {
+          const props = feature.properties;
+          if (category && props.categoryId !== category && props.category !== category) return false;
+          if (statusFilter && props.status !== statusFilter) return false;
+          return true;
+        });
+      }
+
+      // Generate ETag for HTTP caching
+      const etag = `W/"posts-${result.features.length}-${Date.now()}"`;
+      
+      if (req.headers['if-none-match'] === etag) {
+        return res.status(304).end();
+      }
+
+      res.setHeader('ETag', etag);
+      res.setHeader('Cache-Control', 'public, max-age=30, stale-while-revalidate=60');
+      
+      res.json(result);
+    } catch (error) {
+      console.error('Error fetching posts:', error);
+      res.status(500).json({ 
+        error: 'Failed to fetch posts',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  // Get single post by ID
+  app.get('/api/posts/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const post = await storage.getPost(id);
+      
+      if (!post) {
+        return res.status(404).json({ error: 'Post not found' });
+      }
+
+      // Get category info
+      let category = null;
+      let subcategory = null;
+      if (post.categoryId) {
+        category = await storage.getCategory(post.categoryId);
+      }
+      if (post.subcategoryId) {
+        subcategory = await storage.getSubcategory(post.subcategoryId);
+      }
+
+      // Get user info
+      const user = await storage.getUser(post.userId);
+
+      res.json({
+        ...post,
+        category: category?.name,
+        categoryIcon: category?.icon,
+        categoryColor: category?.color,
+        subcategory: subcategory?.name,
+        userName: user?.displayName || `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'Anonymous',
+        userAvatar: user?.profileImageUrl,
+      });
+    } catch (error) {
+      console.error('Error fetching post:', error);
+      res.status(500).json({ error: 'Failed to fetch post' });
+    }
+  });
+
+  // Create new post (authenticated)
+  app.post('/api/posts', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id || req.user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ 
+          error: 'Authentication required',
+          code: 'AUTH_REQUIRED',
+          loginUrl: '/api/login'
+        });
+      }
+
+      const { 
+        title, 
+        description, 
+        location, 
+        categoryId, 
+        subcategoryId, 
+        photoUrl,
+        geometry,
+        centroidLat,
+        centroidLng
+      } = req.body;
+
+      if (!title || title.trim().length === 0) {
+        return res.status(400).json({ error: 'Title is required' });
+      }
+
+      const newPost = await storage.createPost({
+        userId,
+        title: title.trim(),
+        description: description?.trim(),
+        location: location?.trim(),
+        categoryId,
+        subcategoryId,
+        photoUrl,
+        geometry,
+        centroidLat,
+        centroidLng,
+        status: 'active',
+        properties: {}
+      });
+
+      // Get enriched post data to return
+      const user = await storage.getUser(userId);
+      let category = null;
+      let subcategory = null;
+      if (newPost.categoryId) {
+        category = await storage.getCategory(newPost.categoryId);
+      }
+      if (newPost.subcategoryId) {
+        subcategory = await storage.getSubcategory(newPost.subcategoryId);
+      }
+
+      res.status(201).json({
+        ...newPost,
+        category: category?.name,
+        categoryIcon: category?.icon,
+        categoryColor: category?.color,
+        subcategory: subcategory?.name,
+        userName: user?.displayName || `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'Anonymous',
+        userAvatar: user?.profileImageUrl,
+      });
+    } catch (error) {
+      console.error('Error creating post:', error);
+      res.status(500).json({ error: 'Failed to create post' });
+    }
+  });
+
+  // Update post (authenticated, own posts only)
+  app.put('/api/posts/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const userId = req.user?.id || req.user?.claims?.sub;
+
+      if (!userId) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+
+      const post = await storage.getPost(id);
+      if (!post) {
+        return res.status(404).json({ error: 'Post not found' });
+      }
+
+      if (post.userId !== userId) {
+        return res.status(403).json({ error: 'You can only edit your own posts' });
+      }
+
+      const { title, description, location, status } = req.body;
+
+      const updated = await storage.updatePost(id, {
+        title: title?.trim(),
+        description: description?.trim(),
+        location: location?.trim(),
+        status
+      });
+
+      res.json(updated);
+    } catch (error) {
+      console.error('Error updating post:', error);
+      res.status(500).json({ error: 'Failed to update post' });
+    }
+  });
+
+  // Delete post (authenticated, own posts only)
+  app.delete('/api/posts/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const userId = req.user?.id || req.user?.claims?.sub;
+
+      if (!userId) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+
+      const post = await storage.getPost(id);
+      if (!post) {
+        return res.status(404).json({ error: 'Post not found' });
+      }
+
+      if (post.userId !== userId) {
+        return res.status(403).json({ error: 'You can only delete your own posts' });
+      }
+
+      const success = await storage.deletePost(id);
+      if (!success) {
+        return res.status(500).json({ error: 'Failed to delete post' });
+      }
+
+      res.json({ success: true, message: 'Post deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting post:', error);
+      res.status(500).json({ error: 'Failed to delete post' });
+    }
+  });
+
+  // ============================================================================
+  // UNIFIED API ENDPOINT - LEGACY (use /api/posts instead)
   // ============================================================================
   
   app.get('/api/unified', async (req, res) => {

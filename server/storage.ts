@@ -632,8 +632,8 @@ export class DatabaseStorage implements IStorage {
     const allPosts = await this.getAllPosts();
     
     // Get category info for all posts
-    const categoryIds = [...new Set(allPosts.filter(p => p.categoryId).map(p => p.categoryId!))];
-    const subcategoryIds = [...new Set(allPosts.filter(p => p.subcategoryId).map(p => p.subcategoryId!))];
+    const categoryIds = Array.from(new Set(allPosts.filter(p => p.categoryId).map(p => p.categoryId!)));
+    const subcategoryIds = Array.from(new Set(allPosts.filter(p => p.subcategoryId).map(p => p.subcategoryId!)));
     
     const categoryMap = new Map<string, { name: string; icon?: string; color?: string }>();
     const subcategoryMap = new Map<string, { name: string }>();
@@ -649,7 +649,7 @@ export class DatabaseStorage implements IStorage {
     }
     
     // Get user info for attribution
-    const userIds = [...new Set(allPosts.map(p => p.userId))];
+    const userIds = Array.from(new Set(allPosts.map(p => p.userId)));
     const userMap = new Map<string, { firstName?: string | null; lastName?: string | null; displayName?: string | null }>();
     
     if (userIds.length > 0) {
