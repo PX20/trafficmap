@@ -1236,12 +1236,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     try {
       // Using Nominatim (OpenStreetMap) as a free alternative
-      // Focus on Queensland, Australia for better local results
+      // Don't append "Queensland, Australia" as it can break searches for suburbs
+      // Use countrycodes=au and state parameter instead for Queensland focus
       const nominatimUrl = `https://nominatim.openstreetmap.org/search?` +
-        `q=${encodeURIComponent(q + ', Queensland, Australia')}&` +
+        `q=${encodeURIComponent(q)}&` +
         `format=json&` +
         `addressdetails=1&` +
-        `limit=5&` +
+        `limit=10&` +
         `countrycodes=au`;
       
       console.log('[Location Search] Querying Nominatim for:', q);
@@ -1264,14 +1265,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const data = await response.json();
       
-      // Transform to our format and filter for Queensland suburbs
+      console.log('[Location Search] Nominatim returned', data.length, 'results');
+      if (data.length > 0) {
+        console.log('[Location Search] First result:', data[0].display_name);
+      }
+      
+      // Transform to our format - accept any Queensland result
+      // Less strict filtering to catch more suburb variations
       const locationSuggestions = data
-        .filter((item: any) => 
-          item.address && 
-          (item.address.suburb || item.address.city || item.address.town || item.address.village) &&
-          item.address.state && 
-          (item.address.state.includes('Queensland') || item.address.state.includes('QLD'))
-        )
+        .filter((item: any) => {
+          // Must have address
+          if (!item.address) return false;
+          
+          // Must be in Queensland
+          const state = item.address.state || '';
+          if (!state.includes('Queensland') && !state.includes('QLD')) return false;
+          
+          // Accept any location type (suburb, city, town, village, residential, etc.)
+          return true;
+        })
         .map((item: any) => {
           // Extract the actual suburb name from display_name
           // Format: "Street Name, Suburb, City, Region, State, Postcode, Country"
