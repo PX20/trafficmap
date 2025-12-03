@@ -1398,8 +1398,8 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
       const url = window.location.href;
       if (navigator.share) {
         navigator.share({
-          title: 'QLD Safety Monitor - Incident Alert',
-          text: `Check out this ${incidentType} incident on QLD Safety Monitor`,
+          title: 'Community Connect Australia - Incident Alert',
+          text: `Check out this ${incidentType} incident on Community Connect Australia`,
           url: url
         });
       } else {

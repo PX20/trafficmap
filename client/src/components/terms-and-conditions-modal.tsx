@@ -33,7 +33,7 @@ export function TermsAndConditionsModal({ isOpen, onAccept }: TermsAndConditions
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       toast({
         title: "Terms accepted",
-        description: "Welcome to QLD Safety Monitor! You can now use all features.",
+        description: "Welcome to Community Connect Australia! You can now use all features.",
       });
       onAccept();
     },
@@ -81,24 +81,24 @@ export function TermsAndConditionsModal({ isOpen, onAccept }: TermsAndConditions
 
         <div className="flex-1 p-6 overflow-hidden flex flex-col min-h-0 max-h-full">
           <div id="terms-description" className="sr-only">
-            Terms and Conditions document that must be read and accepted to use QLD Safety Monitor
+            Terms and Conditions document that must be read and accepted to use Community Connect Australia
           </div>
           <ScrollArea className="flex-1 pr-4 h-0 min-h-[200px] max-h-[60vh] md:max-h-[50vh]" onScrollCapture={() => setHasReadTerms(true)}>
             <div className="space-y-6 text-sm text-gray-700 leading-relaxed">
               <section>
                 <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
                   <Shield className="w-5 h-5 text-blue-600" />
-                  Welcome to QLD Safety Monitor
+                  Welcome to Community Connect Australia
                 </h3>
                 <p>
-                  By using QLD Safety Monitor, you agree to these terms and conditions. This platform helps Queensland residents stay informed about safety incidents, traffic events, and community safety updates.
+                  By using Community Connect Australia, you agree to these terms and conditions. This platform helps Australian residents stay informed about safety incidents, local updates, and community news in their neighbourhood.
                 </p>
               </section>
 
               <section>
                 <h4 className="font-semibold text-gray-900 mb-2">1. Acceptance of Terms</h4>
                 <p>
-                  By accessing or using QLD Safety Monitor, you acknowledge that you have read, understood, and agree to be bound by these terms and conditions.
+                  By accessing or using Community Connect Australia, you acknowledge that you have read, understood, and agree to be bound by these terms and conditions.
                 </p>
               </section>
 
@@ -143,7 +143,7 @@ export function TermsAndConditionsModal({ isOpen, onAccept }: TermsAndConditions
               <section>
                 <h4 className="font-semibold text-gray-900 mb-2">5. Emergency Situations</h4>
                 <p>
-                  <strong>Important:</strong> QLD Safety Monitor is not a replacement for emergency services. For immediate emergencies:
+                  <strong>Important:</strong> Community Connect Australia is not a replacement for emergency services. For immediate emergencies:
                 </p>
                 <ul className="space-y-2 ml-4 mt-2">
                   <li>• Call 000 for police, fire, or ambulance</li>
@@ -162,7 +162,7 @@ export function TermsAndConditionsModal({ isOpen, onAccept }: TermsAndConditions
               <section>
                 <h4 className="font-semibold text-gray-900 mb-2">7. Disclaimer</h4>
                 <p>
-                  QLD Safety Monitor provides information "as is" without warranties. We are not responsible for the accuracy of user-submitted content or any actions taken based on information from this platform.
+                  Community Connect Australia provides information "as is" without warranties. We are not responsible for the accuracy of user-submitted content or any actions taken based on information from this platform.
                 </p>
               </section>
 

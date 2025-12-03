@@ -58,7 +58,7 @@ export default function BusinessUpgrade() {
     onSuccess: () => {
       toast({
         title: "Business Account Created!",
-        description: "Welcome to QLD Safety Monitor Business. You can now create advertisements.",
+        description: "Welcome to Community Connect Australia Business. You can now create advertisements.",
       });
       queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
       setLocation('/business-dashboard');
@@ -111,7 +111,7 @@ export default function BusinessUpgrade() {
         </Link>
         <div>
           <h1 className="text-3xl font-bold">Upgrade to Business Account</h1>
-          <p className="text-gray-600">Join thousands of local businesses reaching Queensland customers</p>
+          <p className="text-gray-600">Join thousands of local businesses reaching Australian customers</p>
         </div>
       </div>
 

@@ -68,8 +68,8 @@ export default function AccountSetup() {
       toast({
         title: "Account Setup Complete!",
         description: accountType === 'business' 
-          ? "Welcome to QLD Safety Monitor Business. You can now create advertisements."
-          : "Welcome to QLD Safety Monitor! Your account is ready to use.",
+          ? "Welcome to Community Connect Australia Business. You can now create advertisements."
+          : "Welcome to Community Connect Australia! Your account is ready to use.",
       });
       queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
       setLocation('/');
@@ -136,7 +136,7 @@ export default function AccountSetup() {
                       <div>
                         <div className="font-semibold">Business Account</div>
                         <div className="text-sm text-gray-600">
-                          For businesses who want to advertise to local Queensland customers
+                          For businesses who want to advertise to local Australian customers
                         </div>
                       </div>
                     </div>
@@ -235,7 +235,7 @@ export default function AccountSetup() {
                 What you'll get:
               </h3>
               <ul className="text-sm text-blue-700 space-y-1">
-                <li>• Access to real-time safety information for Queensland</li>
+                <li>• Access to real-time safety information across Australia</li>
                 <li>• Community incident reporting and discussion</li>
                 <li>• Local traffic and emergency updates</li>
                 {accountType === 'business' && (
