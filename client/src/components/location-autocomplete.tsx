@@ -22,7 +22,6 @@ interface LocationAutocompleteProps {
   value: string;
   onChange: (location: string, coordinates?: { lat: number; lon: number }, boundingBox?: [number, number, number, number]) => void;
   onClear?: () => void;
-  onSelectComplete?: () => void;
   placeholder?: string;
   disabled?: boolean;
 }
@@ -30,8 +29,7 @@ interface LocationAutocompleteProps {
 export function LocationAutocomplete({ 
   value, 
   onChange, 
-  onClear,
-  onSelectComplete,
+  onClear, 
   placeholder = "Enter suburb or street name (no house numbers)...",
   disabled = false 
 }: LocationAutocompleteProps) {
@@ -157,8 +155,10 @@ export function LocationAutocomplete({
     setSuggestions([]);
     setShowSuggestions(false);
     
-    // Call onSelectComplete to allow parent to focus next field
-    onSelectComplete?.();
+    // Blur the input to prevent it from staying focused and re-triggering suggestions
+    if (textInputRef.current) {
+      textInputRef.current.blur();
+    }
     
     const boundingBox = suggestion.boundingbox ? [
       parseFloat(suggestion.boundingbox[0]), // min_lat

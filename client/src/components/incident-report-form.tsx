@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -73,7 +73,6 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation, entryPoin
   const [categories, setCategories] = useState<any[]>([]);
   const [subcategories, setSubcategories] = useState<any[]>([]);
   const [categoriesLoading, setCategoriesLoading] = useState(false);
-  const descriptionRef = useRef<HTMLTextAreaElement>(null);
   
   const config = entryPointConfig[entryPoint];
   const IconComponent = config.icon;
@@ -458,12 +457,6 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation, entryPoin
                   onClear={() => {
                     field.onChange("");
                   }}
-                  onSelectComplete={() => {
-                    // Focus the description field after location is selected
-                    setTimeout(() => {
-                      descriptionRef.current?.focus();
-                    }, 50);
-                  }}
                   placeholder="Enter address or landmark..."
                   disabled={false}
                 />
@@ -603,10 +596,6 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation, entryPoin
                 placeholder="Add more context..."
                 className="min-h-16"
                 {...field}
-                ref={(e) => {
-                  field.ref(e);
-                  (descriptionRef as React.MutableRefObject<HTMLTextAreaElement | null>).current = e;
-                }}
                 data-testid="textarea-incident-description"
               />
             </FormControl>
