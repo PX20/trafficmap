@@ -240,14 +240,14 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation, entryPoin
 
   const reportIncidentMutation = useMutation({
     mutationFn: async (data: ReportIncidentData) => {
-      await apiRequest("POST", "/api/incidents/report", data);
+      await apiRequest("POST", "/api/posts", data);
     },
     onSuccess: () => {
       toast({
         title: "Post Shared!",
         description: "Your post is now visible to the community.",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/unified"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/posts"] });
       form.reset();
       setUploadedPhotoUrl("");
       setSelectedCategoryId("");

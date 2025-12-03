@@ -42,55 +42,42 @@ function IncidentDetailPage({ asModal = true, incidentId: propIncidentId }: Inci
   // Delete mutation
   const deleteIncidentMutation = useMutation({
     mutationFn: async (id: string) => {
-      await apiRequest("DELETE", `/api/unified-incidents/${id}`);
+      await apiRequest("DELETE", `/api/posts/${id}`);
     },
     onSuccess: () => {
       toast({
-        title: "Incident Deleted",
-        description: "Your incident has been deleted successfully.",
+        title: "Post Deleted",
+        description: "Your post has been deleted successfully.",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/unified"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/posts"] });
       handleClose();
     },
     onError: (error: any) => {
       toast({
         title: "Delete Failed",
-        description: error.message || "Failed to delete incident. Please try again.",
+        description: error.message || "Failed to delete post. Please try again.",
         variant: "destructive",
       });
     },
   });
   
-  // Fetch unified incidents data
-  const { data: unifiedData, isLoading } = useQuery({
-    queryKey: ["/api/unified"],
+  // Fetch posts data
+  const { data: postsData, isLoading } = useQuery({
+    queryKey: ["/api/posts"],
     staleTime: 1 * 60 * 1000, // 1 minute
   });
   
-  // Find the specific incident by ID, handling prefixed IDs from navigateToIncident
-  const incident = (unifiedData as any)?.features?.find((feature: any) => {
+  // Find the specific post by ID
+  const incident = (postsData as any)?.features?.find((feature: any) => {
     if (!decodedId) return false;
     
-    // Direct ID match (works for all unified incident IDs: tmr:xxx, user:xxx, esq:xxx)
+    // Direct ID match
     if (feature.id === decodedId) {
       return true;
     }
     
     // Also check properties.id for backward compatibility
     if (feature.properties?.id === decodedId) {
-      return true;
-    }
-    
-    // Handle legacy prefixed emergency IDs (esq:xxx format)
-    if (decodedId.startsWith('esq:')) {
-      const esqId = decodedId.substring(4); // Remove "esq:" prefix
-      return feature.properties?.Master_Incident_Number === esqId ||
-             feature.properties?.Incident_Number === esqId ||
-             feature.properties?.IncidentNumber === esqId;
-    }
-    
-    // For user reports with reporterId
-    if (feature.properties?.reporterId === decodedId) {
       return true;
     }
     

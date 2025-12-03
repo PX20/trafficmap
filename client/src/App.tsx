@@ -56,17 +56,17 @@ function Router() {
   // Check if new user needs account setup
   const needsAccountSetup = user && !user.accountType;
 
-  // Preload unified incident data as soon as app starts
+  // Preload posts data as soon as app starts
   useEffect(() => {
-    // Start fetching unified data immediately for faster loading
+    // Start fetching posts data immediately for faster loading
     queryClient.prefetchQuery({
-      queryKey: ["/api/unified"],
+      queryKey: ["/api/posts"],
       queryFn: async () => {
-        const response = await fetch("/api/unified");
+        const response = await fetch("/api/posts");
         if (response.ok) return response.json();
         return null;
       },
-      staleTime: 1 * 60 * 1000, // 1 minute - unified data changes frequently
+      staleTime: 1 * 60 * 1000, // 1 minute - posts data changes frequently
     });
   }, []);
 

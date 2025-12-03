@@ -40,9 +40,9 @@ const isQFESIncident = (incident: any) => {
 };
 
 export function useTrafficData(filters: FilterState, viewportBounds?: { southwest: [number, number], northeast: [number, number] }, allowFetchWithoutViewport: boolean = false): ProcessedTrafficData {
-  // OPTIMIZED: Fetch viewport-visible incidents for map, or all incidents for feed
+  // OPTIMIZED: Fetch viewport-visible posts for map, or all posts for feed
   const { data: unifiedData } = useQuery({
-    queryKey: ["/api/unified", viewportBounds],
+    queryKey: ["/api/posts", viewportBounds],
     queryFn: async () => {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 30000);
@@ -55,12 +55,12 @@ export function useTrafficData(filters: FilterState, viewportBounds?: { southwes
           params.set('northeast', `${viewportBounds.northeast[0]},${viewportBounds.northeast[1]}`);
         }
         
-        const response = await fetch(`/api/unified?${params.toString()}`, {
+        const response = await fetch(`/api/posts?${params.toString()}`, {
           credentials: 'include',
           signal: controller.signal,
         });
         clearTimeout(timeoutId);
-        if (!response.ok) throw new Error('Failed to fetch unified incidents');
+        if (!response.ok) throw new Error('Failed to fetch posts');
         return response.json();
       } catch (error) {
         clearTimeout(timeoutId);

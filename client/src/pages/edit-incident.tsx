@@ -41,14 +41,14 @@ export default function EditIncident({ params }: EditIncidentProps) {
   // Decode the incident ID if it's URL-encoded
   const decodedId = incidentId ? decodeURIComponent(incidentId) : null;
 
-  // Fetch unified incidents data and find the specific incident
-  const { data: unifiedData, isLoading: incidentLoading } = useQuery({
-    queryKey: ['/api/unified'],
+  // Fetch posts data and find the specific post
+  const { data: postsData, isLoading: incidentLoading } = useQuery({
+    queryKey: ['/api/posts'],
     staleTime: 1 * 60 * 1000, // 1 minute
   });
   
-  // Find the incident by ID
-  const incident = (unifiedData as any)?.features?.find((feature: any) => {
+  // Find the post by ID
+  const incident = (postsData as any)?.features?.find((feature: any) => {
     if (!decodedId) return false;
     return feature.id === decodedId || feature.properties?.id === decodedId;
   }) || null;
@@ -118,17 +118,17 @@ export default function EditIncident({ params }: EditIncidentProps) {
 
   const updateIncidentMutation = useMutation({
     mutationFn: async (data: EditIncidentData) => {
-      const response = await apiRequest("PUT", `/api/unified-incidents/${incidentId}`, data);
-      if (!response.ok) throw new Error('Failed to update incident');
+      const response = await apiRequest("PUT", `/api/posts/${incidentId}`, data);
+      if (!response.ok) throw new Error('Failed to update post');
       return response.json();
     },
     onSuccess: () => {
       toast({
-        title: "Incident Updated! ✅",
-        description: "Your incident report has been updated successfully.",
+        title: "Post Updated!",
+        description: "Your post has been updated successfully.",
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/incidents'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/incidents', incidentId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/posts'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/posts', incidentId] });
       setLocation('/');
     },
     onError: (error: any) => {

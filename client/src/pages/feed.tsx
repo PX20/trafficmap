@@ -59,8 +59,8 @@ export default function Feed() {
     setReportFormOpen(true);
   };
 
-  const { data: unifiedData, isLoading, refetch } = useQuery({
-    queryKey: ["/api/unified"],
+  const { data: postsData, isLoading, refetch } = useQuery({
+    queryKey: ["/api/posts"],
     refetchInterval: 60000,
   });
 
@@ -70,11 +70,10 @@ export default function Feed() {
     select: (data: any) => data?.count || 0,
   });
 
-  const posts = (unifiedData as any)?.features
-    ?.filter((f: any) => f.properties?.source === "user")
+  const posts = (postsData as any)?.features
     ?.sort((a: any, b: any) => {
-      const dateA = new Date(a.properties?.incidentTime || a.properties?.createdAt || 0);
-      const dateB = new Date(b.properties?.incidentTime || b.properties?.createdAt || 0);
+      const dateA = new Date(a.properties?.createdAt || 0);
+      const dateB = new Date(b.properties?.createdAt || 0);
       return dateB.getTime() - dateA.getTime();
     }) || [];
 
@@ -426,7 +425,7 @@ export default function Feed() {
         isOpen={reportFormOpen}
         onClose={() => {
           setReportFormOpen(false);
-          queryClient.invalidateQueries({ queryKey: ["/api/unified"] });
+          queryClient.invalidateQueries({ queryKey: ["/api/posts"] });
         }}
         entryPoint={reportEntryPoint}
         initialLocation={user?.preferredLocation || undefined}

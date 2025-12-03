@@ -1,18 +1,21 @@
-export async function getUnifiedIncidents() {
-  const response = await fetch('/api/unified');
+export async function getPosts() {
+  const response = await fetch('/api/posts');
   if (!response.ok) {
-    throw new Error(`Failed to fetch unified incidents: ${response.statusText}`);
+    throw new Error(`Failed to fetch posts: ${response.statusText}`);
   }
   return response.json();
 }
 
-// Legacy function - now points to unified endpoint
-export async function getTrafficEvents() {
-  return getUnifiedIncidents();
+// Legacy functions - now point to posts endpoint
+export async function getUnifiedIncidents() {
+  return getPosts();
 }
 
-// Legacy function - now points to unified endpoint  
+export async function getTrafficEvents() {
+  return getPosts();
+}
+
 export async function getIncidents() {
-  return getUnifiedIncidents();
+  return getPosts();
 }
 
