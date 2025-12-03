@@ -102,3 +102,11 @@ waitForPort = 5000
 [agent]
 integrations = ["javascript_database:1.0.0", "javascript_stripe:1.0.0", "javascript_log_in_with_replit:1.0.0", "javascript_object_storage:1.0.0"]
 expertMode = true
+
+[objectStorage]
+defaultBucketID = "replit-objstore-55d8144d-8cc1-413a-8c77-426fdc37aa7f"
+
+[userenv]
+
+[userenv.shared]
+PRIVATE_OBJECT_DIR = "/CrispFluffyMicrokernel"
