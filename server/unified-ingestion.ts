@@ -83,31 +83,12 @@ class UnifiedIngestionEngine {
   }
 
   private registerSources() {
-    // TMR Traffic Events Source
-    this.sources.set('tmr-traffic', {
-      name: 'TMR Traffic Events',
-      type: 'tmr',
-      fetcher: this.fetchTMRTrafficEvents.bind(this),
-      normalizer: this.normalizeTMREvents.bind(this),
-      lastFetch: 0,
-      lastSuccess: 0,
-      errorCount: 0,
-      circuitOpen: false
-    });
-
-    // Emergency Services Source
-    this.sources.set('emergency-incidents', {
-      name: 'Emergency Services',
-      type: 'emergency',
-      fetcher: this.fetchEmergencyIncidents.bind(this),
-      normalizer: this.normalizeEmergencyIncidents.bind(this),
-      lastFetch: 0,
-      lastSuccess: 0,
-      errorCount: 0,
-      circuitOpen: false
-    });
+    // DISABLED: External API feeds removed for community-focused social experience
+    // TMR Traffic Events and Emergency Services sources have been disabled
+    // The app now focuses purely on user-generated community content
 
     // User Reports Source (database-based, no external API)
+    // This is the only active source - community-driven content
     this.sources.set('user-reports', {
       name: 'User Reports',
       type: 'user',

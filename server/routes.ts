@@ -3948,7 +3948,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             geometry: inc.geometry as any,
             properties: {
               ...inc,
-              geometry: undefined
+              geometry: undefined,
+              originalProperties: inc.originalProperties || {}
             }
           }))
         };
@@ -4179,6 +4180,169 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error deleting unified incident:', error);
       res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // ============================================================================
+  // POST REACTIONS API - Facebook-style likes/reactions
+  // ============================================================================
+
+  // Get reactions for a post
+  app.get('/api/reactions/:incidentId', async (req, res) => {
+    try {
+      const { incidentId } = req.params;
+      const reactions = await storage.getPostReactions(incidentId);
+      
+      // Count by type
+      const reactionCounts: Record<string, number> = {};
+      reactions.forEach((r: any) => {
+        reactionCounts[r.reactionType] = (reactionCounts[r.reactionType] || 0) + 1;
+      });
+
+      // Check if current user has reacted
+      let userReaction = null;
+      if (req.user) {
+        const userId = (req.user as any).id || (req.user as any).claims?.sub;
+        const userReact = reactions.find((r: any) => r.userId === userId);
+        userReaction = userReact?.reactionType || null;
+      }
+
+      res.json({
+        count: reactions.length,
+        reactions: reactionCounts,
+        userReaction
+      });
+    } catch (error) {
+      console.error('Error getting reactions:', error);
+      res.status(500).json({ error: 'Failed to get reactions' });
+    }
+  });
+
+  // Add or update reaction
+  app.post('/api/reactions/:incidentId', isAuthenticated, async (req: any, res) => {
+    try {
+      const { incidentId } = req.params;
+      const { reactionType } = req.body;
+      const userId = req.user?.id || req.user?.claims?.sub;
+
+      if (!userId) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+
+      if (reactionType === 'remove') {
+        await storage.removePostReaction(incidentId, userId);
+        return res.json({ success: true, removed: true });
+      }
+
+      const reaction = await storage.addPostReaction(incidentId, userId, reactionType || 'like');
+      res.json({ success: true, reaction });
+    } catch (error) {
+      console.error('Error adding reaction:', error);
+      res.status(500).json({ error: 'Failed to add reaction' });
+    }
+  });
+
+  // ============================================================================
+  // STORIES API - "Happening Now" time-limited posts
+  // ============================================================================
+
+  // Get active stories (not expired)
+  app.get('/api/stories', async (req, res) => {
+    try {
+      const stories = await storage.getActiveStories();
+      
+      // Check which stories current user has viewed
+      let userId = null;
+      if (req.user) {
+        userId = (req.user as any).id || (req.user as any).claims?.sub;
+      }
+
+      const storiesWithViewStatus = await Promise.all(stories.map(async (story: any) => {
+        const hasViewed = userId ? await storage.hasViewedStory(story.id, userId) : false;
+        const user = await storage.getUser(story.userId);
+        return {
+          ...story,
+          userName: user?.displayName || user?.firstName || 'Anonymous',
+          userAvatar: user?.profileImageUrl,
+          hasViewed
+        };
+      }));
+
+      res.json(storiesWithViewStatus);
+    } catch (error) {
+      console.error('Error getting stories:', error);
+      res.status(500).json({ error: 'Failed to get stories' });
+    }
+  });
+
+  // Create a new story
+  app.post('/api/stories', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id || req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+
+      const { content, photoUrl, location, locationLat, locationLng } = req.body;
+
+      if (!content && !photoUrl) {
+        return res.status(400).json({ error: 'Story must have content or a photo' });
+      }
+
+      // Stories expire after 24 hours
+      const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+      const story = await storage.createStory({
+        userId,
+        content,
+        photoUrl,
+        location,
+        locationLat,
+        locationLng,
+        expiresAt
+      });
+
+      res.json(story);
+    } catch (error) {
+      console.error('Error creating story:', error);
+      res.status(500).json({ error: 'Failed to create story' });
+    }
+  });
+
+  // Mark story as viewed
+  app.post('/api/stories/:storyId/view', isAuthenticated, async (req: any, res) => {
+    try {
+      const { storyId } = req.params;
+      const userId = req.user?.id || req.user?.claims?.sub;
+
+      if (!userId) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+
+      await storage.markStoryViewed(storyId, userId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error marking story viewed:', error);
+      res.status(500).json({ error: 'Failed to mark story as viewed' });
+    }
+  });
+
+  // ============================================================================
+  // NOTIFICATIONS COUNT API
+  // ============================================================================
+
+  app.get('/api/notifications/unread-count', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id || req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+
+      const count = await storage.getUnreadNotificationCount(userId);
+      res.json({ count });
+    } catch (error) {
+      console.error('Error getting unread count:', error);
+      res.status(500).json({ error: 'Failed to get unread count' });
     }
   });
 

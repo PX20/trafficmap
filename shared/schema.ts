@@ -416,6 +416,59 @@ export const incidentComments = pgTable("incident_comments", {
   index("idx_incident_comments_parent").on(table.parentCommentId),
 ]);
 
+// Post reactions (likes) - Facebook-style reactions on incidents
+export const postReactions = pgTable("post_reactions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  incidentId: varchar("incident_id").notNull(),
+  userId: varchar("user_id").notNull(),
+  reactionType: varchar("reaction_type", { enum: ["like", "love", "care", "wow", "sad", "angry"] }).default("like"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_post_reactions_incident").on(table.incidentId),
+  index("idx_post_reactions_user").on(table.userId),
+  unique("unique_user_incident_reaction").on(table.userId, table.incidentId),
+]);
+
+// Stories - "Happening Now" time-limited posts that expire after 24 hours
+export const stories = pgTable("stories", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  content: text("content"),
+  photoUrl: text("photo_url"),
+  location: varchar("location"),
+  locationLat: doublePrecision("location_lat"),
+  locationLng: doublePrecision("location_lng"),
+  viewCount: integer("view_count").default(0),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_stories_user").on(table.userId),
+  index("idx_stories_expires").on(table.expiresAt),
+  index("idx_stories_location").on(table.locationLat, table.locationLng),
+]);
+
+// Story views to track who has seen which stories
+export const storyViews = pgTable("story_views", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  storyId: varchar("story_id").notNull(),
+  userId: varchar("user_id").notNull(),
+  viewedAt: timestamp("viewed_at").defaultNow(),
+}, (table) => [
+  index("idx_story_views_story").on(table.storyId),
+  unique("unique_story_view").on(table.storyId, table.userId),
+]);
+
+// User badges for reputation system
+export const userBadges = pgTable("user_badges", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  badgeType: varchar("badge_type", { enum: ["newcomer", "contributor", "trusted", "expert", "moderator", "founding_member"] }).notNull(),
+  earnedAt: timestamp("earned_at").defaultNow(),
+}, (table) => [
+  index("idx_user_badges_user").on(table.userId),
+  unique("unique_user_badge").on(table.userId, table.badgeType),
+]);
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   comments: many(comments),
@@ -741,6 +794,12 @@ export type IncidentFollowUp = typeof incidentFollowUps.$inferSelect;
 export type InsertIncidentFollowUp = z.infer<typeof insertIncidentFollowUpSchema>;
 export type Report = typeof reports.$inferSelect;
 export type InsertReport = z.infer<typeof insertReportSchema>;
+
+// New social features types
+export type PostReaction = typeof postReactions.$inferSelect;
+export type Story = typeof stories.$inferSelect;
+export type StoryView = typeof storyViews.$inferSelect;
+export type UserBadge = typeof userBadges.$inferSelect;
 
 // Ad Campaigns table
 export const adCampaigns = pgTable("ad_campaigns", {

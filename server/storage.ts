@@ -15,6 +15,10 @@ import {
   subcategories,
   incidentFollowUps,
   reports,
+  postReactions,
+  stories,
+  storyViews,
+  userBadges,
   type User, 
   type UpsertUser,
   type InsertUser, 
@@ -54,6 +58,10 @@ import {
   type InsertAdView,
   type AdClick,
   type InsertAdClick,
+  type PostReaction,
+  type Story,
+  type StoryView,
+  type UserBadge,
   adCampaigns,
   adViews,
   adClicks,
@@ -1862,8 +1870,127 @@ export class DatabaseStorage implements IStorage {
     return (result.rowCount ?? 0) > 0;
   }
 
+  // ============================================================================
+  // POST REACTIONS - Facebook-style likes/reactions
+  // ============================================================================
 
+  async getPostReactions(incidentId: string): Promise<PostReaction[]> {
+    const result = await db
+      .select()
+      .from(postReactions)
+      .where(eq(postReactions.incidentId, incidentId));
+    return result;
+  }
 
+  async addPostReaction(incidentId: string, userId: string, reactionType: string): Promise<PostReaction> {
+    const existingReaction = await db
+      .select()
+      .from(postReactions)
+      .where(and(
+        eq(postReactions.incidentId, incidentId),
+        eq(postReactions.userId, userId)
+      ));
+
+    if (existingReaction.length > 0) {
+      const [updated] = await db
+        .update(postReactions)
+        .set({ reactionType: reactionType as any })
+        .where(eq(postReactions.id, existingReaction[0].id))
+        .returning();
+      return updated;
+    }
+
+    const [newReaction] = await db
+      .insert(postReactions)
+      .values({
+        incidentId,
+        userId,
+        reactionType: reactionType as any
+      })
+      .returning();
+    return newReaction;
+  }
+
+  async removePostReaction(incidentId: string, userId: string): Promise<boolean> {
+    const result = await db
+      .delete(postReactions)
+      .where(and(
+        eq(postReactions.incidentId, incidentId),
+        eq(postReactions.userId, userId)
+      ));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // ============================================================================
+  // STORIES - "Happening Now" time-limited posts
+  // ============================================================================
+
+  async getActiveStories(): Promise<Story[]> {
+    const now = new Date();
+    const result = await db
+      .select()
+      .from(stories)
+      .where(sql`${stories.expiresAt} > ${now}`)
+      .orderBy(desc(stories.createdAt));
+    return result;
+  }
+
+  async createStory(storyData: {
+    userId: string;
+    content?: string;
+    photoUrl?: string;
+    location?: string;
+    locationLat?: number;
+    locationLng?: number;
+    expiresAt: Date;
+  }): Promise<Story> {
+    const [newStory] = await db
+      .insert(stories)
+      .values(storyData)
+      .returning();
+    return newStory;
+  }
+
+  async hasViewedStory(storyId: string, userId: string): Promise<boolean> {
+    const result = await db
+      .select()
+      .from(storyViews)
+      .where(and(
+        eq(storyViews.storyId, storyId),
+        eq(storyViews.userId, userId)
+      ));
+    return result.length > 0;
+  }
+
+  async markStoryViewed(storyId: string, userId: string): Promise<void> {
+    const existing = await this.hasViewedStory(storyId, userId);
+    if (existing) return;
+
+    await db
+      .insert(storyViews)
+      .values({ storyId, userId })
+      .onConflictDoNothing();
+
+    await db
+      .update(stories)
+      .set({ viewCount: sql`${stories.viewCount} + 1` })
+      .where(eq(stories.id, storyId));
+  }
+
+  // ============================================================================
+  // NOTIFICATIONS
+  // ============================================================================
+
+  async getUnreadNotificationCount(userId: string): Promise<number> {
+    const result = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(notifications)
+      .where(and(
+        eq(notifications.userId, userId),
+        eq(notifications.isRead, false)
+      ));
+    return result[0]?.count || 0;
+  }
 
 }
 
