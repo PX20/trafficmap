@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Shield, Users, AlertTriangle, MapPin, User, Building } from "lucide-react";
+import { Shield, MessageCircle, MapPin, User, Building, Bell, Heart } from "lucide-react";
 import { insertUserSchema } from "@shared/schema";
 import { Redirect } from "wouter";
 import { LocationAutocomplete } from "@/components/location-autocomplete";
@@ -16,7 +16,6 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 
-// Form schemas
 const loginSchema = z.object({
   email: z.string().email("Valid email is required"),
   password: z.string().min(1, "Password is required"),
@@ -27,7 +26,7 @@ const registerSchema = insertUserSchema.pick({
   email: true,
   firstName: true,
   lastName: true,
-  homeSuburb: true,
+  preferredLocation: true,
   accountType: true,
   businessName: true,
   businessCategory: true,
@@ -38,7 +37,7 @@ const registerSchema = insertUserSchema.pick({
 }).extend({
   password: z.string().min(6, "Password must be at least 6 characters"),
   confirmPassword: z.string().min(1, "Please confirm your password"),
-  homeSuburb: z.string().min(1, "Home suburb is required"),
+  preferredLocation: z.string().min(1, "Home suburb is required"),
   accountType: z.enum(['regular', 'business']).default('regular'),
   businessName: z.string().optional(),
   businessCategory: z.string().optional(),
@@ -74,12 +73,10 @@ export default function AuthPage() {
   const { user, isLoading, loginMutation, registerMutation } = useAuth();
   const [activeTab, setActiveTab] = useState("login");
 
-  // Redirect if already logged in
   if (!isLoading && user) {
     return <Redirect to="/" />;
   }
 
-  // Login form
   const loginForm = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -88,7 +85,6 @@ export default function AuthPage() {
     },
   });
 
-  // Register form
   const registerForm = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
@@ -97,7 +93,7 @@ export default function AuthPage() {
       email: "",
       firstName: "",
       lastName: "",
-      homeSuburb: "",
+      preferredLocation: "",
       accountType: 'regular',
       businessName: "",
       businessCategory: "",
@@ -132,361 +128,364 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
-      <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-8 items-center">
-        {/* Hero Section */}
-        <div className="space-y-6 text-center lg:text-left">
-          <div className="space-y-2">
-            <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-white">
-              QLD Community Connect
-            </h1>
-            <p className="text-xl text-gray-600 dark:text-gray-300">
-              Stay informed and connected with your Queensland community
-            </p>
-          </div>
+    <div className="min-h-screen bg-background dark:bg-background">
+      <div className="flex flex-col lg:flex-row min-h-screen">
+        {/* Hero Section - Left Side */}
+        <div className="lg:w-1/2 bg-gradient-to-br from-primary/10 via-primary/5 to-background dark:from-primary/20 dark:via-primary/10 dark:to-background p-8 lg:p-16 flex flex-col justify-center">
+          <div className="max-w-lg mx-auto lg:mx-0">
+            <div className="mb-8">
+              <h1 className="text-3xl lg:text-4xl font-bold text-foreground mb-3">
+                Community Connect
+              </h1>
+              <p className="text-lg text-muted-foreground">
+                Your local community network for safety updates, lost & found, and neighbourhood news across Australia.
+              </p>
+            </div>
 
-          <div className="grid grid-cols-2 gap-4 mt-8">
-            <div className="flex items-center space-x-3 p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
-              <Shield className="h-8 w-8 text-blue-600" />
-              <div>
-                <h3 className="font-semibold text-gray-900 dark:text-white">Local Updates</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-300">Stay informed about your area</p>
+            <div className="space-y-4">
+              <div className="flex items-start gap-4 p-4 rounded-lg bg-card border">
+                <div className="p-2 rounded-full bg-primary/10">
+                  <Bell className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-medium text-foreground">Real-time Alerts</h3>
+                  <p className="text-sm text-muted-foreground">Get notified about incidents and updates in your area</p>
+                </div>
               </div>
-            </div>
-            <div className="flex items-center space-x-3 p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
-              <AlertTriangle className="h-8 w-8 text-orange-600" />
-              <div>
-                <h3 className="font-semibold text-gray-900 dark:text-white">Road Conditions</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-300">Current traffic updates</p>
+
+              <div className="flex items-start gap-4 p-4 rounded-lg bg-card border">
+                <div className="p-2 rounded-full bg-primary/10">
+                  <MessageCircle className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-medium text-foreground">Community Posts</h3>
+                  <p className="text-sm text-muted-foreground">Share and discover local updates from neighbours</p>
+                </div>
               </div>
-            </div>
-            <div className="flex items-center space-x-3 p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
-              <Users className="h-8 w-8 text-green-600" />
-              <div>
-                <h3 className="font-semibold text-gray-900 dark:text-white">Community Sharing</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-300">Neighbor updates and tips</p>
+
+              <div className="flex items-start gap-4 p-4 rounded-lg bg-card border">
+                <div className="p-2 rounded-full bg-primary/10">
+                  <Heart className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-medium text-foreground">Lost & Found</h3>
+                  <p className="text-sm text-muted-foreground">Help reunite pets and belongings with their owners</p>
+                </div>
               </div>
-            </div>
-            <div className="flex items-center space-x-3 p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
-              <MapPin className="h-8 w-8 text-purple-600" />
-              <div>
-                <h3 className="font-semibold text-gray-900 dark:text-white">Location Based</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-300">Suburb-level filtering</p>
+
+              <div className="flex items-start gap-4 p-4 rounded-lg bg-card border">
+                <div className="p-2 rounded-full bg-primary/10">
+                  <MapPin className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-medium text-foreground">Local Focus</h3>
+                  <p className="text-sm text-muted-foreground">See what matters most in your suburb and nearby areas</p>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Auth Forms */}
-        <div className="w-full max-w-md mx-auto">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login" data-testid="tab-login">Sign In</TabsTrigger>
-              <TabsTrigger value="register" data-testid="tab-register">Sign Up</TabsTrigger>
-            </TabsList>
+        {/* Auth Forms - Right Side */}
+        <div className="lg:w-1/2 p-8 lg:p-16 flex items-center justify-center bg-background">
+          <div className="w-full max-w-md">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-2 mb-6">
+                <TabsTrigger value="login" data-testid="tab-login">Sign In</TabsTrigger>
+                <TabsTrigger value="register" data-testid="tab-register">Sign Up</TabsTrigger>
+              </TabsList>
 
-            <TabsContent value="login">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Sign In</CardTitle>
-                  <CardDescription>
-                    Sign in to your account to stay connected with your community
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="login-email">Email</Label>
-                      <Input
-                        id="login-email"
-                        data-testid="input-login-email"
-                        type="email"
-                        {...loginForm.register("email")}
-                        placeholder="Enter your email"
-                      />
-                      {loginForm.formState.errors.email && (
-                        <p className="text-sm text-red-600" data-testid="error-login-email">
-                          {loginForm.formState.errors.email.message}
-                        </p>
-                      )}
-                    </div>
+              <TabsContent value="login">
+                <Card className="border-0 shadow-none lg:border lg:shadow-sm">
+                  <CardHeader className="px-0 lg:px-6">
+                    <CardTitle className="text-2xl">Welcome back</CardTitle>
+                    <CardDescription>
+                      Sign in to stay connected with your community
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="px-0 lg:px-6">
+                    <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="login-email">Email</Label>
+                        <Input
+                          id="login-email"
+                          data-testid="input-login-email"
+                          type="email"
+                          {...loginForm.register("email")}
+                          placeholder="you@example.com"
+                        />
+                        {loginForm.formState.errors.email && (
+                          <p className="text-sm text-destructive" data-testid="error-login-email">
+                            {loginForm.formState.errors.email.message}
+                          </p>
+                        )}
+                      </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="login-password">Password</Label>
-                      <Input
-                        id="login-password"
-                        data-testid="input-login-password"
-                        type="password"
-                        {...loginForm.register("password")}
-                        placeholder="Enter your password"
-                      />
-                      {loginForm.formState.errors.password && (
-                        <p className="text-sm text-red-600" data-testid="error-login-password">
-                          {loginForm.formState.errors.password.message}
-                        </p>
-                      )}
-                    </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="login-password">Password</Label>
+                        <Input
+                          id="login-password"
+                          data-testid="input-login-password"
+                          type="password"
+                          {...loginForm.register("password")}
+                          placeholder="Your password"
+                        />
+                        {loginForm.formState.errors.password && (
+                          <p className="text-sm text-destructive" data-testid="error-login-password">
+                            {loginForm.formState.errors.password.message}
+                          </p>
+                        )}
+                      </div>
 
-                    <Button
-                      type="submit"
-                      className="w-full"
-                      disabled={loginMutation.isPending}
-                      data-testid="button-login"
-                    >
-                      {loginMutation.isPending ? "Signing in..." : "Sign In"}
-                    </Button>
-                  </form>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="register">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Create Account</CardTitle>
-                  <CardDescription>
-                    Join the QLD Community Connect to share updates and stay informed
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
-                    {/* Account Type Selection */}
-                    <div className="space-y-3">
-                      <Label>Account Type</Label>
-                      <RadioGroup 
-                        value={registerForm.watch("accountType")} 
-                        onValueChange={(value: 'regular' | 'business') => registerForm.setValue("accountType", value)}
+                      <Button
+                        type="submit"
+                        className="w-full"
+                        disabled={loginMutation.isPending}
+                        data-testid="button-login"
                       >
-                        <div className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
-                          <RadioGroupItem value="regular" id="personal" />
-                          <Label htmlFor="personal" className="flex-1 cursor-pointer">
-                            <div className="flex items-center gap-3">
-                              <User className="w-5 h-5 text-blue-600" />
-                              <div>
-                                <div className="font-medium">Personal Account</div>
-                                <div className="text-sm text-gray-600">For individuals staying informed about local safety</div>
-                              </div>
-                            </div>
-                          </Label>
+                        {loginMutation.isPending ? "Signing in..." : "Sign In"}
+                      </Button>
+                    </form>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="register">
+                <Card className="border-0 shadow-none lg:border lg:shadow-sm">
+                  <CardHeader className="px-0 lg:px-6">
+                    <CardTitle className="text-2xl">Join your community</CardTitle>
+                    <CardDescription>
+                      Create an account to share updates and stay informed
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="px-0 lg:px-6">
+                    <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
+                      <div className="space-y-3">
+                        <Label>Account Type</Label>
+                        <RadioGroup 
+                          value={registerForm.watch("accountType")} 
+                          onValueChange={(value: 'regular' | 'business') => registerForm.setValue("accountType", value)}
+                          className="grid grid-cols-2 gap-3"
+                        >
+                          <div className={`flex items-center justify-center gap-2 p-3 border rounded-lg cursor-pointer transition-colors ${registerForm.watch("accountType") === 'regular' ? 'border-primary bg-primary/5' : 'hover:bg-muted'}`}>
+                            <RadioGroupItem value="regular" id="personal" className="sr-only" />
+                            <Label htmlFor="personal" className="flex items-center gap-2 cursor-pointer text-sm font-medium">
+                              <User className="w-4 h-4" />
+                              Personal
+                            </Label>
+                          </div>
+
+                          <div className={`flex items-center justify-center gap-2 p-3 border rounded-lg cursor-pointer transition-colors ${registerForm.watch("accountType") === 'business' ? 'border-primary bg-primary/5' : 'hover:bg-muted'}`}>
+                            <RadioGroupItem value="business" id="business" className="sr-only" />
+                            <Label htmlFor="business" className="flex items-center gap-2 cursor-pointer text-sm font-medium">
+                              <Building className="w-4 h-4" />
+                              Business
+                            </Label>
+                          </div>
+                        </RadioGroup>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-2">
+                          <Label htmlFor="register-firstName">First Name</Label>
+                          <Input
+                            id="register-firstName"
+                            data-testid="input-register-firstName"
+                            {...registerForm.register("firstName")}
+                            placeholder="First name"
+                          />
+                          {registerForm.formState.errors.firstName && (
+                            <p className="text-sm text-destructive" data-testid="error-register-firstName">
+                              {registerForm.formState.errors.firstName.message}
+                            </p>
+                          )}
                         </div>
 
-                        <div className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
-                          <RadioGroupItem value="business" id="business" />
-                          <Label htmlFor="business" className="flex-1 cursor-pointer">
-                            <div className="flex items-center gap-3">
-                              <Building className="w-5 h-5 text-green-600" />
-                              <div>
-                                <div className="font-medium">Business Account</div>
-                                <div className="text-sm text-gray-600">For businesses wanting to advertise to local customers</div>
-                              </div>
-                            </div>
-                          </Label>
+                        <div className="space-y-2">
+                          <Label htmlFor="register-lastName">Last Name</Label>
+                          <Input
+                            id="register-lastName"
+                            data-testid="input-register-lastName"
+                            {...registerForm.register("lastName")}
+                            placeholder="Last name"
+                          />
+                          {registerForm.formState.errors.lastName && (
+                            <p className="text-sm text-destructive" data-testid="error-register-lastName">
+                              {registerForm.formState.errors.lastName.message}
+                            </p>
+                          )}
                         </div>
-                      </RadioGroup>
-                    </div>
+                      </div>
 
-                    <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="register-firstName">
-                          {registerForm.watch("accountType") === 'business' ? 'Contact First Name' : 'First Name'}
-                        </Label>
+                        <Label htmlFor="register-email">Email</Label>
                         <Input
-                          id="register-firstName"
-                          data-testid="input-register-firstName"
-                          {...registerForm.register("firstName")}
-                          placeholder={registerForm.watch("accountType") === 'business' ? 'Contact first name' : 'First name'}
+                          id="register-email"
+                          data-testid="input-register-email"
+                          type="email"
+                          {...registerForm.register("email")}
+                          placeholder="you@example.com"
                         />
-                        {registerForm.formState.errors.firstName && (
-                          <p className="text-sm text-red-600" data-testid="error-register-firstName">
-                            {registerForm.formState.errors.firstName.message}
+                        {registerForm.formState.errors.email && (
+                          <p className="text-sm text-destructive" data-testid="error-register-email">
+                            {registerForm.formState.errors.email.message}
                           </p>
                         )}
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="register-lastName">
-                          {registerForm.watch("accountType") === 'business' ? 'Contact Last Name' : 'Last Name'}
-                        </Label>
-                        <Input
-                          id="register-lastName"
-                          data-testid="input-register-lastName"
-                          {...registerForm.register("lastName")}
-                          placeholder={registerForm.watch("accountType") === 'business' ? 'Contact last name' : 'Last name'}
+                        <Label htmlFor="register-preferredLocation">Your Suburb</Label>
+                        <LocationAutocomplete
+                          value={registerForm.watch("preferredLocation") || ""}
+                          onChange={(location) => registerForm.setValue("preferredLocation", location)}
+                          placeholder="Start typing your suburb..."
+                          data-testid="input-register-preferredLocation"
                         />
-                        {registerForm.formState.errors.lastName && (
-                          <p className="text-sm text-red-600" data-testid="error-register-lastName">
-                            {registerForm.formState.errors.lastName.message}
+                        {registerForm.formState.errors.preferredLocation && (
+                          <p className="text-sm text-destructive" data-testid="error-register-preferredLocation">
+                            {registerForm.formState.errors.preferredLocation.message}
                           </p>
                         )}
                       </div>
-                    </div>
 
+                      {registerForm.watch("accountType") === 'business' && (
+                        <div className="space-y-4 p-4 bg-muted/50 rounded-lg border">
+                          <h3 className="font-medium text-sm flex items-center gap-2">
+                            <Building className="w-4 h-4" />
+                            Business Details
+                          </h3>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="register-email">Email</Label>
-                      <Input
-                        id="register-email"
-                        data-testid="input-register-email"
-                        type="email"
-                        {...registerForm.register("email")}
-                        placeholder="Enter your email"
-                      />
-                      {registerForm.formState.errors.email && (
-                        <p className="text-sm text-red-600" data-testid="error-register-email">
-                          {registerForm.formState.errors.email.message}
-                        </p>
-                      )}
-                    </div>
+                          <div className="grid grid-cols-1 gap-3">
+                            <div className="space-y-2">
+                              <Label htmlFor="register-businessName">Business Name</Label>
+                              <Input
+                                id="register-businessName"
+                                data-testid="input-register-businessName"
+                                {...registerForm.register("businessName")}
+                                placeholder="Your Business Name"
+                              />
+                              {registerForm.formState.errors.businessName && (
+                                <p className="text-sm text-destructive" data-testid="error-register-businessName">
+                                  {registerForm.formState.errors.businessName.message}
+                                </p>
+                              )}
+                            </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="register-homeSuburb">Home Suburb</Label>
-                      <LocationAutocomplete
-                        value={registerForm.watch("homeSuburb")}
-                        onChange={(location) => registerForm.setValue("homeSuburb", location)}
-                        placeholder="Start typing your suburb, city, or postcode..."
-                        data-testid="input-register-homeSuburb"
-                      />
-                      {registerForm.formState.errors.homeSuburb && (
-                        <p className="text-sm text-red-600" data-testid="error-register-homeSuburb">
-                          {registerForm.formState.errors.homeSuburb.message}
-                        </p>
-                      )}
-                    </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="register-businessCategory">Category</Label>
+                              <Select value={registerForm.watch("businessCategory")} onValueChange={(value) => registerForm.setValue("businessCategory", value)}>
+                                <SelectTrigger data-testid="select-register-businessCategory">
+                                  <SelectValue placeholder="Select category" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {businessCategories.map((category) => (
+                                    <SelectItem key={category} value={category}>
+                                      {category}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              {registerForm.formState.errors.businessCategory && (
+                                <p className="text-sm text-destructive" data-testid="error-register-businessCategory">
+                                  {registerForm.formState.errors.businessCategory.message}
+                                </p>
+                              )}
+                            </div>
 
-                    {/* Business Details - Only show for business accounts */}
-                    {registerForm.watch("accountType") === 'business' && (
-                      <div className="space-y-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-                        <h3 className="font-medium text-green-800 flex items-center gap-2">
-                          <Building className="w-4 h-4" />
-                          Business Information
-                        </h3>
+                            <div className="space-y-2">
+                              <Label htmlFor="register-businessDescription">Description</Label>
+                              <Textarea
+                                id="register-businessDescription"
+                                data-testid="textarea-register-businessDescription"
+                                {...registerForm.register("businessDescription")}
+                                placeholder="Brief description..."
+                                rows={2}
+                              />
+                            </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="register-businessName">Business Name *</Label>
-                            <Input
-                              id="register-businessName"
-                              data-testid="input-register-businessName"
-                              {...registerForm.register("businessName")}
-                              placeholder="Your Business Name"
-                            />
-                            {registerForm.formState.errors.businessName && (
-                              <p className="text-sm text-red-600" data-testid="error-register-businessName">
-                                {registerForm.formState.errors.businessName.message}
-                              </p>
-                            )}
-                          </div>
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="space-y-2">
+                                <Label htmlFor="register-businessWebsite">Website</Label>
+                                <Input
+                                  id="register-businessWebsite"
+                                  data-testid="input-register-businessWebsite"
+                                  {...registerForm.register("businessWebsite")}
+                                  placeholder="https://..."
+                                />
+                              </div>
 
-                          <div className="space-y-2">
-                            <Label htmlFor="register-businessCategory">Business Category *</Label>
-                            <Select value={registerForm.watch("businessCategory")} onValueChange={(value) => registerForm.setValue("businessCategory", value)}>
-                              <SelectTrigger data-testid="select-register-businessCategory">
-                                <SelectValue placeholder="Select category" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {businessCategories.map((category) => (
-                                  <SelectItem key={category} value={category}>
-                                    {category}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            {registerForm.formState.errors.businessCategory && (
-                              <p className="text-sm text-red-600" data-testid="error-register-businessCategory">
-                                {registerForm.formState.errors.businessCategory.message}
-                              </p>
-                            )}
-                          </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="register-businessPhone">Phone</Label>
+                                <Input
+                                  id="register-businessPhone"
+                                  data-testid="input-register-businessPhone"
+                                  {...registerForm.register("businessPhone")}
+                                  placeholder="04XX XXX XXX"
+                                />
+                              </div>
+                            </div>
 
-                          <div className="md:col-span-2 space-y-2">
-                            <Label htmlFor="register-businessDescription">Business Description</Label>
-                            <Textarea
-                              id="register-businessDescription"
-                              data-testid="textarea-register-businessDescription"
-                              {...registerForm.register("businessDescription")}
-                              placeholder="Brief description of your business..."
-                              rows={3}
-                            />
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor="register-businessWebsite">Website URL</Label>
-                            <Input
-                              id="register-businessWebsite"
-                              data-testid="input-register-businessWebsite"
-                              {...registerForm.register("businessWebsite")}
-                              placeholder="https://yourwebsite.com"
-                            />
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor="register-businessPhone">Phone Number</Label>
-                            <Input
-                              id="register-businessPhone"
-                              data-testid="input-register-businessPhone"
-                              {...registerForm.register("businessPhone")}
-                              placeholder="(07) 1234 5678"
-                            />
-                          </div>
-
-                          <div className="md:col-span-2 space-y-2">
-                            <Label htmlFor="register-businessAddress">Business Address</Label>
-                            <LocationAutocomplete
-                              value={registerForm.watch("businessAddress")}
-                              onChange={(location) => registerForm.setValue("businessAddress", location)}
-                              placeholder="Enter your business address..."
-                              data-testid="input-register-businessAddress"
-                            />
+                            <div className="space-y-2">
+                              <Label htmlFor="register-businessAddress">Address</Label>
+                              <LocationAutocomplete
+                                value={registerForm.watch("businessAddress") || ""}
+                                onChange={(location) => registerForm.setValue("businessAddress", location)}
+                                placeholder="Business address..."
+                                data-testid="input-register-businessAddress"
+                              />
+                            </div>
                           </div>
                         </div>
+                      )}
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-2">
+                          <Label htmlFor="register-password">Password</Label>
+                          <Input
+                            id="register-password"
+                            data-testid="input-register-password"
+                            type="password"
+                            {...registerForm.register("password")}
+                            placeholder="Create password"
+                          />
+                          {registerForm.formState.errors.password && (
+                            <p className="text-sm text-destructive" data-testid="error-register-password">
+                              {registerForm.formState.errors.password.message}
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="register-confirmPassword">Confirm</Label>
+                          <Input
+                            id="register-confirmPassword"
+                            data-testid="input-register-confirmPassword"
+                            type="password"
+                            {...registerForm.register("confirmPassword")}
+                            placeholder="Confirm password"
+                          />
+                          {registerForm.formState.errors.confirmPassword && (
+                            <p className="text-sm text-destructive" data-testid="error-register-confirmPassword">
+                              {registerForm.formState.errors.confirmPassword.message}
+                            </p>
+                          )}
+                        </div>
                       </div>
-                    )}
 
-                    <div className="space-y-2">
-                      <Label htmlFor="register-password">Password</Label>
-                      <Input
-                        id="register-password"
-                        data-testid="input-register-password"
-                        type="password"
-                        {...registerForm.register("password")}
-                        placeholder="Create a password"
-                      />
-                      {registerForm.formState.errors.password && (
-                        <p className="text-sm text-red-600" data-testid="error-register-password">
-                          {registerForm.formState.errors.password.message}
-                        </p>
-                      )}
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="register-confirmPassword">Confirm Password</Label>
-                      <Input
-                        id="register-confirmPassword"
-                        data-testid="input-register-confirmPassword"
-                        type="password"
-                        {...registerForm.register("confirmPassword")}
-                        placeholder="Confirm your password"
-                      />
-                      {registerForm.formState.errors.confirmPassword && (
-                        <p className="text-sm text-red-600" data-testid="error-register-confirmPassword">
-                          {registerForm.formState.errors.confirmPassword.message}
-                        </p>
-                      )}
-                    </div>
-
-                    <Button
-                      type="submit"
-                      className="w-full"
-                      disabled={registerMutation.isPending}
-                      data-testid="button-register"
-                    >
-                      {registerMutation.isPending ? "Creating account..." : "Create Account"}
-                    </Button>
-                  </form>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
+                      <Button
+                        type="submit"
+                        className="w-full"
+                        disabled={registerMutation.isPending}
+                        data-testid="button-register"
+                      >
+                        {registerMutation.isPending ? "Creating account..." : "Create Account"}
+                      </Button>
+                    </form>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
+          </div>
         </div>
       </div>
     </div>
