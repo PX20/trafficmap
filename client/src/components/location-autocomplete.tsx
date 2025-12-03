@@ -43,16 +43,18 @@ export function LocationAutocomplete({
   const textInputRef = useRef<HTMLInputElement>(null);
 
   // Sync inputValue with external value changes (like GPS updates)
+  // Only sync if the external value is different AND we didn't just select something
   useEffect(() => {
-    setInputValue(value);
+    if (value !== inputValue && !justSelectedRef.current) {
+      setInputValue(value);
+    }
   }, [value]);
 
   // Debounce search - but skip if user just selected a suggestion
   useEffect(() => {
     // Skip search if user just selected a suggestion
     if (justSelectedRef.current) {
-      justSelectedRef.current = false;
-      return;
+      return; // Don't reset the flag here - let it persist until the next user input
     }
     
     const timer = setTimeout(() => {
@@ -178,6 +180,8 @@ export function LocationAutocomplete({
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Reset the selection flag when user types manually - allow searches again
+    justSelectedRef.current = false;
     setInputValue(e.target.value);
   };
 
