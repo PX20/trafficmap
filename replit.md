@@ -1,7 +1,7 @@
 # Community Connect Australia
 
 ## Overview
-Community Connect Australia is a real-time safety and incident monitoring application for Australia. It provides live updates on traffic events, emergency incidents, crime reports, suspicious behavior alerts, and traffic camera feeds. The application supports community-driven incident reporting across all Australian states and territories. It features a full-stack web application with an interactive map interface and advanced filtering capabilities to view and analyze safety conditions in real-time across Australia.
+Community Connect Australia is a Facebook-style community social network for safety and incident reporting across Australia. It provides community-driven posts for safety updates, crime reports, suspicious activity, lost/found items, and local community issues. The application features a full-stack web application with an interactive map interface and social features (reactions, comments) to view and engage with community posts in real-time.
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
@@ -12,13 +12,21 @@ Preferred communication style: Simple, everyday language.
 The frontend is built with React and TypeScript, following a component-based architecture. It uses Wouter for routing, TanStack Query for server state management, Shadcn/ui (built on Radix UI) for UI components, and Tailwind CSS for styling. Leaflet is integrated for interactive map functionality, and Vite is used for fast development and optimized builds. The structure is modular, separating UI components, business logic, and API interactions.
 
 ### Backend Architecture
-The backend is a Node.js Express server written in TypeScript. It provides RESTful endpoints and acts as a proxy and caching layer for external APIs. It utilizes a dual storage approach with PostgreSQL and an in-memory fallback.
+The backend is a Node.js Express server written in TypeScript. It provides RESTful endpoints for posts, categories, social interactions, and user management. It utilizes PostgreSQL for all data storage.
 
 ### Data Storage Solutions
-The application employs a flexible storage architecture:
-- **Primary Database**: PostgreSQL via Drizzle ORM, with schema definitions for users, incidents, traffic events, and traffic cameras.
-- **Fallback Storage**: In-memory storage for development and testing.
-- An abstract storage interface allows for switching between implementations. Drizzle Kit handles database schema migrations.
+The application uses PostgreSQL via Drizzle ORM with the following key tables:
+- **Posts Table**: Central data model for all community posts (schema: id, userId, title, description, location, geometry, centroidLat/Lng, categoryId, subcategoryId, photoUrl, status, timestamps)
+- **Categories & Subcategories**: Hierarchical categorization system for posts
+- **Users**: User accounts with profile data
+- **Comments & Reactions**: Social engagement features
+- **Notifications**: User notification system
+
+### Primary API Endpoint
+- **GET /api/posts**: Returns all posts in GeoJSON FeatureCollection format with enriched data (category info, user info, reaction counts)
+- **POST /api/posts**: Creates new posts with automatic location geocoding via Nominatim API
+- **PUT /api/posts/:id**: Updates existing posts (owner only)
+- **DELETE /api/posts/:id**: Deletes posts (owner only)
 
 ### Authentication and Authorization
 The system includes a full user authentication and authorization system:
