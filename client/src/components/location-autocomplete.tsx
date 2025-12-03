@@ -37,25 +37,28 @@ export function LocationAutocomplete({
   const [isLoading, setIsLoading] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [inputValue, setInputValue] = useState(value);
-  const [lastSelectedValue, setLastSelectedValue] = useState<string | null>(null);
   const { toast } = useToast();
   const containerRef = useRef<HTMLDivElement>(null);
+  
+  // Use a ref to track selection - this survives re-renders without triggering effects
+  const selectionLockRef = useRef(false);
+  const selectionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Sync inputValue with external value changes (like GPS updates)
   useEffect(() => {
-    // Don't sync if this is the value we just selected
-    if (value === lastSelectedValue) {
+    // Don't sync if we just made a selection
+    if (selectionLockRef.current) {
       return;
     }
     if (value !== inputValue) {
       setInputValue(value);
     }
-  }, [value, lastSelectedValue]);
+  }, [value]);
 
   // Debounce search
   useEffect(() => {
-    // Don't search if input matches what we just selected
-    if (inputValue === lastSelectedValue) {
+    // Don't search if selection is locked
+    if (selectionLockRef.current) {
       return;
     }
     
@@ -69,7 +72,7 @@ export function LocationAutocomplete({
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [inputValue, lastSelectedValue]);
+  }, [inputValue]);
 
   const searchLocation = async (query: string) => {
     setIsLoading(true);
@@ -155,8 +158,19 @@ export function LocationAutocomplete({
     
     const finalLocation = locationText.trim();
     
-    // Store the selected value to prevent re-searching for it
-    setLastSelectedValue(finalLocation);
+    // Lock selection to prevent any searches for a period
+    selectionLockRef.current = true;
+    
+    // Clear any existing timeout
+    if (selectionTimeoutRef.current) {
+      clearTimeout(selectionTimeoutRef.current);
+    }
+    
+    // Unlock after 1 second - enough time for all re-renders to settle
+    selectionTimeoutRef.current = setTimeout(() => {
+      selectionLockRef.current = false;
+    }, 1000);
+    
     setInputValue(finalLocation);
     setSuggestions([]);
     setShowSuggestions(false);
@@ -179,10 +193,23 @@ export function LocationAutocomplete({
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Clear the last selected value when user types - allow new searches
-    setLastSelectedValue(null);
+    // Clear the selection lock when user types - allow new searches
+    selectionLockRef.current = false;
+    if (selectionTimeoutRef.current) {
+      clearTimeout(selectionTimeoutRef.current);
+      selectionTimeoutRef.current = null;
+    }
     setInputValue(e.target.value);
   };
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (selectionTimeoutRef.current) {
+        clearTimeout(selectionTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Close suggestions when clicking outside
   useEffect(() => {
