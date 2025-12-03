@@ -38,13 +38,14 @@ export function LocationAutocomplete({
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [inputValue, setInputValue] = useState(value);
   const justSelectedRef = useRef(false);
+  const { toast } = useToast();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const textInputRef = useRef<HTMLInputElement>(null);
 
   // Sync inputValue with external value changes (like GPS updates)
   useEffect(() => {
     setInputValue(value);
   }, [value]);
-  const { toast } = useToast();
-  const inputRef = useRef<HTMLInputElement>(null);
 
   // Debounce search - but skip if user just selected a suggestion
   useEffect(() => {
@@ -155,8 +156,8 @@ export function LocationAutocomplete({
     setShowSuggestions(false);
     
     // Blur the input to prevent it from staying focused and re-triggering suggestions
-    if (inputRef.current) {
-      inputRef.current.blur();
+    if (textInputRef.current) {
+      textInputRef.current.blur();
     }
     
     const boundingBox = suggestion.boundingbox ? [
@@ -183,7 +184,7 @@ export function LocationAutocomplete({
   // Close suggestions when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (inputRef.current && !inputRef.current.contains(event.target as Node)) {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
         setShowSuggestions(false);
       }
     };
@@ -193,10 +194,11 @@ export function LocationAutocomplete({
   }, []);
 
   return (
-    <div className="relative" ref={inputRef}>
+    <div className="relative" ref={containerRef}>
       <div className="relative">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
+          ref={textInputRef}
           type="text"
           value={inputValue}
           onChange={handleInputChange}
