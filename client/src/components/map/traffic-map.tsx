@@ -400,10 +400,13 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
                 // Pets
                 markerType = 'pets';
                 incidentCategory = 'pets';
-              } else if (categoryId === '1f57674d-0cbd-47be-950f-3c94c4f14e41' || 
-                         categoryId === '10e3cad6-d03a-4101-99b0-91199b5f9928') {
-                // Community Issues or Lost & Found
+              } else if (categoryId === '1f57674d-0cbd-47be-950f-3c94c4f14e41') {
+                // Community Issues
                 markerType = 'community';
+                incidentCategory = 'community';
+              } else if (categoryId === '10e3cad6-d03a-4101-99b0-91199b5f9928') {
+                // Lost & Found
+                markerType = 'lostfound';
                 incidentCategory = 'community';
               } else {
                 markerType = 'community';
@@ -426,8 +429,11 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
               } else if (category === '3cbcb810-508f-4619-96c2-0357ca517cca' || category === 'pets') {
                 markerType = 'pets';
                 incidentCategory = 'pets';
-              } else if (category === '1f57674d-0cbd-47be-950f-3c94c4f14e41' || category === '10e3cad6-d03a-4101-99b0-91199b5f9928' || category === 'community issues' || category === 'lost & found') {
+              } else if (category === '1f57674d-0cbd-47be-950f-3c94c4f14e41' || category === 'community issues') {
                 markerType = 'community';
+                incidentCategory = 'community';
+              } else if (category === '10e3cad6-d03a-4101-99b0-91199b5f9928' || category === 'lost & found') {
+                markerType = 'lostfound';
                 incidentCategory = 'community';
               } else {
                 markerType = 'community';
@@ -561,8 +567,11 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
                 } else if (category === '3cbcb810-508f-4619-96c2-0357ca517cca' || category === 'pets') {
                   markerType = 'pets';
                   incidentCategory = 'pets';
-                } else if (category === '1f57674d-0cbd-47be-950f-3c94c4f14e41' || category === '10e3cad6-d03a-4101-99b0-91199b5f9928' || category === 'community issues' || category === 'lost & found') {
+                } else if (category === '1f57674d-0cbd-47be-950f-3c94c4f14e41' || category === 'community issues') {
                   markerType = 'community';
+                  incidentCategory = 'community';
+                } else if (category === '10e3cad6-d03a-4101-99b0-91199b5f9928' || category === 'lost & found') {
+                  markerType = 'lostfound';
                   incidentCategory = 'community';
                 } else {
                   markerType = 'community';
@@ -886,6 +895,9 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
       // Community issues - teal
       case 'community':
         return '#0d9488'; // Teal - distinct from completion grey
+      // Lost & Found - amber/gold
+      case 'lostfound':
+        return '#d97706'; // Amber - matches database color for search/find
       // Default
       default:
         return '#6b7280'; // Gray
@@ -914,9 +926,17 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
         case 'crime':
           return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg>`;
         case 'suspicious':
-          return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>`;
+          // Eye icon for suspicious activity (watching/surveillance)
+          return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>`;
         case 'pets':
-          return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`;
+          // Paw print icon for pets (natural animal association)
+          return `<svg width="16" height="16" viewBox="0 0 24 24" fill="${color}" stroke="none">
+            <ellipse cx="12" cy="16" rx="3.5" ry="4"/>
+            <ellipse cx="7" cy="11" rx="2" ry="2.5"/>
+            <ellipse cx="10.5" cy="8" rx="2" ry="2.5"/>
+            <ellipse cx="13.5" cy="8" rx="2" ry="2.5"/>
+            <ellipse cx="17" cy="11" rx="2" ry="2.5"/>
+          </svg>`;
         case 'emergency':
           return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`;
         // QFES Emergency Categories - specific icons
@@ -932,8 +952,8 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
             <path d="M6.2 8.8l-1.3-2.5 2.5 1.3 1.3-2.5 1.3 2.5 2.5-1.3-1.3 2.5 2.5 1.3-2.5 1.3 1.3 2.5-2.5-1.3-1.3 2.5-1.3-2.5-2.5 1.3 1.3-2.5z"/>
           </svg>`;
         case 'medical':
-          // Heart icon for medical emergencies
-          return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`;
+          // Medical cross/plus icon for medical emergencies
+          return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2h8v6h6v8h-6v6H8v-6H2v-8h6V2z"/></svg>`;
         case 'hazmat':
           // Alert triangle for hazmat/chemical
           return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>`;
@@ -949,16 +969,14 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
           // Siren icon for general emergency response
           return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 12a5 5 0 0 1 5-5"/><path d="M17 12a5 5 0 0 0-5-5"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="M7.5 19.5 9 21"/><path d="m15 21 1.5-1.5"/><path d="M9 3 7.5 4.5"/><path d="m15 4.5L16.5 3"/><circle cx="12" cy="12" r="3"/></svg>`;
         case 'wildlife':
-          // Paw print icon for wildlife
-          return `<svg width="16" height="16" viewBox="0 0 24 24" fill="${color}" stroke="none">
-            <ellipse cx="12" cy="16" rx="3.5" ry="4"/>
-            <ellipse cx="7" cy="11" rx="2" ry="2.5"/>
-            <ellipse cx="10.5" cy="8" rx="2" ry="2.5"/>
-            <ellipse cx="13.5" cy="8" rx="2" ry="2.5"/>
-            <ellipse cx="17" cy="11" rx="2" ry="2.5"/>
-          </svg>`;
+          // Leaf icon for wildlife/nature (matches database icon)
+          return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>`;
         case 'community':
-          return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m22 21-3-3m0 0-3-3m3 3 3 3m-3-3-3 3"/></svg>`;
+          // Megaphone icon for community announcements
+          return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 11 18-5v12L3 13v-2z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>`;
+        case 'lostfound':
+          // Magnifying glass with question mark for lost & found
+          return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/><path d="M11 8a2 2 0 0 0-2 2"/><path d="M11 14h.01"/></svg>`;
         default:
           return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M12 8v8"/><path d="m8 12 4 4 4-4"/></svg>`;
       }
