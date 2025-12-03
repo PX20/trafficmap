@@ -112,7 +112,7 @@ export function LocationAutocomplete({
     let street = parts[0];
     const suburb = suggestion.address.suburb || suggestion.address.city;
     const postcode = suggestion.address.postcode;
-    const state = suggestion.address.state || 'QLD';
+    const state = suggestion.address.state || '';
     
     // PRIVACY PROTECTION: Strip house numbers and specific addresses
     if (street) {
@@ -242,7 +242,9 @@ export function LocationAutocomplete({
                     })()}
                   </div>
                   <div className="text-xs text-muted-foreground truncate">
-                    {suggestion.address.postcode ? `${suggestion.address.postcode}, QLD` : 'QLD'}
+                    {suggestion.address.postcode && suggestion.address.state 
+                      ? `${suggestion.address.postcode}, ${suggestion.address.state}`
+                      : suggestion.address.state || 'Australia'}
                   </div>
                 </div>
               </div>
