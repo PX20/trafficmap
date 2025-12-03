@@ -4101,13 +4101,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
         categoryId, 
         subcategoryId, 
         photoUrl,
-        geometry,
-        centroidLat,
-        centroidLng
+        geometry: providedGeometry,
+        centroidLat: providedLat,
+        centroidLng: providedLng
       } = req.body;
 
       if (!title || title.trim().length === 0) {
         return res.status(400).json({ error: 'Title is required' });
+      }
+
+      // Geocode location if coordinates not provided
+      let centroidLat = providedLat;
+      let centroidLng = providedLng;
+      let geometry = providedGeometry;
+
+      if (location && (!centroidLat || !centroidLng)) {
+        try {
+          // Use Nominatim API to geocode the location (Australia-focused)
+          const searchParams = new URLSearchParams({
+            q: location,
+            format: 'json',
+            limit: '1',
+            countrycodes: 'au'
+          });
+          
+          const geocodeResponse = await fetch(
+            `https://nominatim.openstreetmap.org/search?${searchParams}`,
+            {
+              headers: {
+                'User-Agent': 'CommunityConnectAustralia/1.0'
+              }
+            }
+          );
+          
+          if (geocodeResponse.ok) {
+            const results = await geocodeResponse.json();
+            if (results && results.length > 0) {
+              const result = results[0];
+              centroidLat = parseFloat(result.lat);
+              centroidLng = parseFloat(result.lon);
+              
+              // Create Point geometry
+              geometry = {
+                type: 'Point',
+                coordinates: [centroidLng, centroidLat]
+              };
+              
+              console.log(`Geocoded "${location}" to [${centroidLat}, ${centroidLng}]`);
+            } else {
+              console.log(`No geocode results for "${location}"`);
+            }
+          }
+        } catch (geocodeError) {
+          console.error('Geocoding error:', geocodeError);
+          // Continue without coordinates - post will still be created
+        }
       }
 
       const newPost = await storage.createPost({
