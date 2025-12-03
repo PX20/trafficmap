@@ -1237,24 +1237,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Using Nominatim (OpenStreetMap) as a free alternative
       // Focus on Queensland, Australia for better local results
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?` +
+      const nominatimUrl = `https://nominatim.openstreetmap.org/search?` +
         `q=${encodeURIComponent(q + ', Queensland, Australia')}&` +
         `format=json&` +
         `addressdetails=1&` +
         `limit=5&` +
-        `countrycodes=au&` +
-        `bounded=1&` +
-        `viewbox=138.0,-29.0,154.0,-9.0`, // Queensland bounding box
-        {
-          headers: {
-            'User-Agent': 'QLD Safety Monitor (contact: support@example.com)'
-          }
+        `countrycodes=au`;
+      
+      console.log('[Location Search] Querying Nominatim for:', q);
+      
+      const response = await fetch(nominatimUrl, {
+        headers: {
+          'User-Agent': 'QLDCommunityConnect/1.0 (Queensland Safety Monitor Application)',
+          'Accept': 'application/json',
+          'Accept-Language': 'en'
         }
-      );
+      });
+
+      console.log('[Location Search] Nominatim response status:', response.status, response.statusText);
 
       if (!response.ok) {
-        throw new Error('Geocoding request failed');
+        const errorText = await response.text();
+        console.error('[Location Search] Nominatim error response:', errorText);
+        throw new Error(`Geocoding request failed: ${response.status} ${response.statusText}`);
       }
 
       const data = await response.json();
