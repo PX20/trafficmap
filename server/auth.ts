@@ -220,8 +220,14 @@ export function setupAuth(app: Express) {
         const { password, ...userWithoutPassword } = user;
         res.status(201).json(userWithoutPassword);
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Registration error:", error);
+      console.error("Registration error details:", {
+        message: error?.message,
+        code: error?.code,
+        detail: error?.detail,
+        stack: error?.stack
+      });
       res.status(500).json({ error: "Internal server error" });
     }
   });
