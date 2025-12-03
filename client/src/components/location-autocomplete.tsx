@@ -154,6 +154,11 @@ export function LocationAutocomplete({
     setSuggestions([]);
     setShowSuggestions(false);
     
+    // Blur the input to prevent it from staying focused and re-triggering suggestions
+    if (inputRef.current) {
+      inputRef.current.blur();
+    }
+    
     const boundingBox = suggestion.boundingbox ? [
       parseFloat(suggestion.boundingbox[0]), // min_lat
       parseFloat(suggestion.boundingbox[1]), // max_lat  
