@@ -5,80 +5,128 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 // ============================================================================
-// UNIFIED INCIDENT SCHEMA - Single source of truth for all incident types
+// POSTS TABLE - Single source of truth for all community posts
+// Used for both feed display and map plotting
 // ============================================================================
 
-// Unified incident storage - replaces complex separate flows
-export const unifiedIncidents = pgTable("unified_incidents", {
-  id: varchar("id").primaryKey(), // Composite ID: source:sourceId (generated in app layer)
+export const posts = pgTable("posts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   
-  // Source identification
-  source: varchar("source", { enum: ["tmr", "emergency", "user"] }).notNull(),
-  sourceId: varchar("source_id").notNull(), // Original ID from source system
+  // User who created the post
+  userId: varchar("user_id").notNull(),
   
-  // Core incident data
+  // Core post content
   title: text("title").notNull(),
   description: text("description"),
-  location: text("location"), // Human-readable location
-  category: varchar("category").notNull(), // Human-readable category name for display
-  subcategory: varchar("subcategory"), // Human-readable subcategory name for display
-  categoryUuid: varchar("category_uuid"), // UUID reference to categories table for lookups/icons
-  subcategoryUuid: varchar("subcategory_uuid"), // UUID reference to subcategories table for filtering
-  severity: varchar("severity", { enum: ["low", "medium", "high", "critical"] }).default("medium"),
-  status: varchar("status", { enum: ["active", "resolved", "monitoring", "closed"] }).default("active"),
+  location: text("location"), // Human-readable location text
+  photoUrl: text("photo_url"), // Optional photo attachment
   
-  // Spatial data
-  geometry: jsonb("geometry").notNull(), // Original GeoJSON geometry
-  centroidLat: doublePrecision("centroid_lat").notNull(), // Computed centroid for fast lookups
-  centroidLng: doublePrecision("centroid_lng").notNull(),
-  regionIds: text("region_ids").array().default([]), // Pre-computed region assignments
-  geocell: varchar("geocell"), // Spatial grid cell for fast regional queries
+  // Category system
+  categoryId: varchar("category_id"), // FK to categories table
+  subcategoryId: varchar("subcategory_id"), // FK to subcategories table
   
-  // Temporal data
-  incidentTime: timestamp("incident_time"), // When incident actually occurred
-  lastUpdated: timestamp("last_updated").notNull().defaultNow(),
-  publishedAt: timestamp("published_at").notNull().defaultNow(),
-  expiresAt: timestamp("expires_at"), // For auto-cleanup of old incidents
+  // Spatial data for map display
+  geometry: jsonb("geometry"), // GeoJSON Point for map plotting
+  centroidLat: doublePrecision("centroid_lat"), // Latitude for fast queries
+  centroidLng: doublePrecision("centroid_lng"), // Longitude for fast queries
   
-  // Source-specific data
-  properties: jsonb("properties").notNull().default('{}'), // Original properties from source
+  // Post status
+  status: varchar("status", { enum: ["active", "resolved", "closed"] }).default("active"),
   
-  // User-reported specific fields
-  userId: varchar("user_id").references(() => users.id), // Only for user reports - FK to users table
-  photoUrl: text("photo_url"), // Only for user reports
-  verificationStatus: varchar("verification_status", { enum: ["unverified", "community_verified", "official_verified"] }),
+  // Social engagement counters (denormalized for performance)
+  reactionsCount: integer("reactions_count").default(0),
+  commentsCount: integer("comments_count").default(0),
   
-  // System fields
+  // Timestamps
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-  version: integer("version").default(1), // For optimistic concurrency
-}, (table) => [
-  // Uniqueness constraint to prevent ID collisions
-  unique("unique_source_sourceid").on(table.source, table.sourceId),
   
+  // Optional metadata
+  properties: jsonb("properties").default('{}'), // For extensibility
+}, (table) => [
   // Performance indexes
+  index("idx_posts_user").on(table.userId),
+  index("idx_posts_category").on(table.categoryId),
+  index("idx_posts_subcategory").on(table.subcategoryId),
+  index("idx_posts_status").on(table.status),
+  index("idx_posts_centroid").on(table.centroidLat, table.centroidLng),
+  index("idx_posts_created").on(table.createdAt.desc()),
+]);
+
+// Posts Zod Schemas
+export const insertPostSchema = createInsertSchema(posts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  reactionsCount: true,
+  commentsCount: true,
+}).extend({
+  title: z.string().min(1, "Title is required"),
+  userId: z.string().min(1, "User ID is required"),
+  status: z.enum(["active", "resolved", "closed"]).default("active"),
+});
+
+export type InsertPost = z.infer<typeof insertPostSchema>;
+export type SelectPost = typeof posts.$inferSelect;
+
+// ============================================================================
+// LEGACY: Unified Incidents (deprecated - use posts table instead)
+// Keeping for backward compatibility during migration
+// ============================================================================
+
+// Unified incident storage - DEPRECATED: Use posts table instead
+export const unifiedIncidents = pgTable("unified_incidents", {
+  id: varchar("id").primaryKey(),
+  source: varchar("source", { enum: ["tmr", "emergency", "user"] }).notNull(),
+  sourceId: varchar("source_id").notNull(),
+  title: text("title").notNull(),
+  description: text("description"),
+  location: text("location"),
+  category: varchar("category").notNull(),
+  subcategory: varchar("subcategory"),
+  categoryUuid: varchar("category_uuid"),
+  subcategoryUuid: varchar("subcategory_uuid"),
+  severity: varchar("severity", { enum: ["low", "medium", "high", "critical"] }).default("medium"),
+  status: varchar("status", { enum: ["active", "resolved", "monitoring", "closed"] }).default("active"),
+  geometry: jsonb("geometry").notNull(),
+  centroidLat: doublePrecision("centroid_lat").notNull(),
+  centroidLng: doublePrecision("centroid_lng").notNull(),
+  regionIds: text("region_ids").array().default([]),
+  geocell: varchar("geocell"),
+  incidentTime: timestamp("incident_time"),
+  lastUpdated: timestamp("last_updated").notNull().defaultNow(),
+  publishedAt: timestamp("published_at").notNull().defaultNow(),
+  expiresAt: timestamp("expires_at"),
+  properties: jsonb("properties").notNull().default('{}'),
+  userId: varchar("user_id"),
+  photoUrl: text("photo_url"),
+  verificationStatus: varchar("verification_status", { enum: ["unverified", "community_verified", "official_verified"] }),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  version: integer("version").default(1),
+}, (table) => [
+  unique("unique_source_sourceid").on(table.source, table.sourceId),
   index("idx_unified_source").on(table.source),
   index("idx_unified_category").on(table.category),
-  index("idx_unified_category_uuid").on(table.categoryUuid), // For icon lookups
-  index("idx_unified_subcategory_uuid").on(table.subcategoryUuid), // For filtering
-  index("idx_unified_user_id").on(table.userId), // For user-specific queries
+  index("idx_unified_category_uuid").on(table.categoryUuid),
+  index("idx_unified_subcategory_uuid").on(table.subcategoryUuid),
+  index("idx_unified_user_id").on(table.userId),
   index("idx_unified_severity").on(table.severity),
   index("idx_unified_status").on(table.status),
   index("idx_unified_centroid").on(table.centroidLat, table.centroidLng),
   index("idx_unified_geocell").on(table.geocell),
-  index("idx_unified_region").using("gin", table.regionIds), // GIN index for array queries
+  index("idx_unified_region").using("gin", table.regionIds),
   index("idx_unified_time").on(table.incidentTime),
   index("idx_unified_updated").on(table.lastUpdated),
 ]);
 
-// Unified Incidents Zod Schemas
+// Legacy types for backward compatibility
 export const insertUnifiedIncidentSchema = createInsertSchema(unifiedIncidents).omit({
-  id: true, // Auto-generated from source + sourceId
+  id: true,
   createdAt: true,
   updatedAt: true,
   version: true,
 }).extend({
-  // Custom validation rules
   source: z.enum(["tmr", "emergency", "user"]),
   sourceId: z.string().min(1, "Source ID is required"),
   severity: z.enum(["low", "medium", "high", "critical"]).default("medium"),
@@ -90,18 +138,14 @@ export const insertUnifiedIncidentSchema = createInsertSchema(unifiedIncidents).
   regionIds: z.array(z.string()).default([]),
 });
 
-// Select schema is just the table inference - no need for separate schema
-// export const selectUnifiedIncidentSchema = createInsertSchema(unifiedIncidents);
-
 export type InsertUnifiedIncident = z.infer<typeof insertUnifiedIncidentSchema>;
 export type SelectUnifiedIncident = typeof unifiedIncidents.$inferSelect;
 
-// Helper function to generate composite IDs for unified incidents
+// Legacy helper functions
 export function generateUnifiedIncidentId(source: "tmr" | "emergency" | "user", sourceId: string): string {
   return `${source}:${sourceId}`;
 }
 
-// Helper function to validate unified incident data before insert
 export function prepareUnifiedIncidentForInsert(data: InsertUnifiedIncident): InsertUnifiedIncident & { id: string } {
   const id = generateUnifiedIncidentId(data.source, data.sourceId);
   return {
