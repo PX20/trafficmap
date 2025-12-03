@@ -13,8 +13,9 @@ import {
   Clock,
   Heart,
   Frown,
-  AlertCircle,
-  Smile
+  AlertTriangle,
+  Laugh,
+  HeartHandshake
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { queryClient } from "@/lib/queryClient";
@@ -36,13 +37,13 @@ interface PostCardProps {
   onCommentClick?: () => void;
 }
 
-const reactionEmojis = [
-  { type: "like", emoji: "👍", label: "Like" },
-  { type: "love", emoji: "❤️", label: "Love" },
-  { type: "care", emoji: "🤗", label: "Care" },
-  { type: "wow", emoji: "😮", label: "Wow" },
-  { type: "sad", emoji: "😢", label: "Sad" },
-  { type: "angry", emoji: "😠", label: "Angry" },
+const reactionTypes = [
+  { type: "like", icon: ThumbsUp, label: "Like", color: "text-blue-500" },
+  { type: "love", icon: Heart, label: "Love", color: "text-red-500" },
+  { type: "care", icon: HeartHandshake, label: "Care", color: "text-orange-500" },
+  { type: "wow", icon: Laugh, label: "Wow", color: "text-yellow-500" },
+  { type: "sad", icon: Frown, label: "Sad", color: "text-purple-500" },
+  { type: "angry", icon: AlertTriangle, label: "Angry", color: "text-red-600" },
 ];
 
 export function PostCard({ post, onCommentClick }: PostCardProps) {
@@ -199,17 +200,17 @@ export function PostCard({ post, onCommentClick }: PostCardProps) {
 
         {/* Reaction & Comment Counts */}
         {(totalReactions > 0 || commentCount > 0) && (
-          <div className="flex items-center justify-between px-3 py-2 text-sm text-gray-500">
+          <div className="flex items-center justify-between px-3 py-2 text-sm text-muted-foreground">
             <div className="flex items-center gap-1">
               {totalReactions > 0 && (
                 <>
                   <div className="flex -space-x-1">
-                    <span className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center text-[10px]">
-                      👍
+                    <span className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
+                      <ThumbsUp className="w-3 h-3 text-white" />
                     </span>
                     {reactionData?.reactions?.love && (
-                      <span className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-[10px]">
-                        ❤️
+                      <span className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
+                        <Heart className="w-3 h-3 text-white" />
                       </span>
                     )}
                   </div>
@@ -238,21 +239,24 @@ export function PostCard({ post, onCommentClick }: PostCardProps) {
                   variant="ghost"
                   className={cn(
                     "flex-1 gap-2 h-10 rounded-none",
-                    userReaction && "text-blue-600"
+                    userReaction && reactionTypes.find(r => r.type === userReaction)?.color
                   )}
                   onMouseEnter={() => setShowReactions(true)}
                   onClick={() => handleReaction(userReaction ? "remove" : "like")}
+                  data-testid="button-like"
                 >
                   {userReaction ? (
-                    <span className="text-lg">
-                      {reactionEmojis.find(r => r.type === userReaction)?.emoji || "👍"}
-                    </span>
+                    (() => {
+                      const reaction = reactionTypes.find(r => r.type === userReaction);
+                      const Icon = reaction?.icon || ThumbsUp;
+                      return <Icon className="w-5 h-5" />;
+                    })()
                   ) : (
                     <ThumbsUp className="w-5 h-5" />
                   )}
                   <span className="text-sm font-medium">
                     {userReaction 
-                      ? reactionEmojis.find(r => r.type === userReaction)?.label || "Like"
+                      ? reactionTypes.find(r => r.type === userReaction)?.label || "Like"
                       : "Like"
                     }
                   </span>
@@ -263,16 +267,23 @@ export function PostCard({ post, onCommentClick }: PostCardProps) {
                 side="top"
                 onMouseLeave={() => setShowReactions(false)}
               >
-                {reactionEmojis.map((reaction) => (
-                  <button
-                    key={reaction.type}
-                    onClick={() => handleReaction(reaction.type)}
-                    className="text-2xl hover:scale-125 transition-transform p-1 rounded-full hover:bg-gray-100"
-                    title={reaction.label}
-                  >
-                    {reaction.emoji}
-                  </button>
-                ))}
+                {reactionTypes.map((reaction) => {
+                  const Icon = reaction.icon;
+                  return (
+                    <button
+                      key={reaction.type}
+                      onClick={() => handleReaction(reaction.type)}
+                      className={cn(
+                        "p-2 rounded-full hover:bg-muted transition-all hover:scale-110",
+                        reaction.color
+                      )}
+                      title={reaction.label}
+                      data-testid={`button-reaction-${reaction.type}`}
+                    >
+                      <Icon className="w-5 h-5" />
+                    </button>
+                  );
+                })}
               </PopoverContent>
             </Popover>
 
