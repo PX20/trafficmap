@@ -4,12 +4,14 @@ import { Badge } from "@/components/ui/badge";
 import { useReporter } from "@/hooks/useReporter";
 import { User, Building2, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Link } from "wouter";
 
 interface ReporterAttributionProps {
   userId: string | null | undefined;
   className?: string;
   variant?: "default" | "compact" | "minimal";
   showAccountType?: boolean;
+  clickable?: boolean;
 }
 
 /**
@@ -25,7 +27,8 @@ export function ReporterAttribution({
   userId, 
   className, 
   variant = "default", 
-  showAccountType = false 
+  showAccountType = false,
+  clickable = true
 }: ReporterAttributionProps) {
   const { user, loading, error } = useReporter(userId);
 
@@ -119,9 +122,13 @@ export function ReporterAttribution({
   // Check if this is an official agency account
   const isOfficialAgency = user.isOfficialAgency || userId.startsWith('agency:');
 
-  return (
+  const content = (
     <div 
-      className={cn("flex items-center gap-2", className)}
+      className={cn(
+        "flex items-center gap-2", 
+        clickable && "cursor-pointer hover:opacity-80 transition-opacity",
+        className
+      )}
       data-testid={`reporter-attribution-${userId}`}
     >
       <Avatar className={cn(
@@ -152,7 +159,8 @@ export function ReporterAttribution({
           <span 
             className={cn(
               "font-medium truncate",
-              variant === "compact" ? "text-xs" : "text-sm"
+              variant === "compact" ? "text-xs" : "text-sm",
+              clickable && "hover:underline"
             )}
             data-testid={`reporter-name-${userId}`}
           >
@@ -187,4 +195,15 @@ export function ReporterAttribution({
       )}
     </div>
   );
+
+  // Wrap in Link if clickable and userId exists
+  if (clickable && userId) {
+    return (
+      <Link href={`/users/${userId}`} data-testid={`reporter-link-${userId}`}>
+        {content}
+      </Link>
+    );
+  }
+
+  return content;
 }
