@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -365,9 +365,9 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation, entryPoin
     !!subcategoryValue,
   ].filter(Boolean).length;
 
-  // Photo Section Component
-  const PhotoSection = () => (
-    <div className={`p-4 ${entryPoint === "photo" ? "bg-green-50 dark:bg-green-900/10 border-l-4 border-green-500" : "bg-muted/30"}`}>
+  // Photo Section - memoized to prevent re-renders
+  const photoSection = useMemo(() => (
+    <div key="photo-section" className={`p-4 ${entryPoint === "photo" ? "bg-green-50 dark:bg-green-900/10 border-l-4 border-green-500" : "bg-muted/30"}`}>
       <div className="flex items-center gap-2 mb-3">
         <Camera className="w-5 h-5 text-green-600 dark:text-green-400" />
         <span className="font-medium">Photo</span>
@@ -431,11 +431,11 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation, entryPoin
         )}
       />
     </div>
-  );
+  ), [entryPoint, hasPhoto, uploadedPhotoUrl, form.control]);
 
-  // Location Section Component  
-  const LocationSection = () => (
-    <div className={`p-4 ${entryPoint === "location" ? "bg-red-50 dark:bg-red-900/10 border-l-4 border-red-500" : "bg-muted/30"}`}>
+  // Location Section - memoized to prevent re-renders
+  const locationSection = useMemo(() => (
+    <div key="location-section" className={`p-4 ${entryPoint === "location" ? "bg-red-50 dark:bg-red-900/10 border-l-4 border-red-500" : "bg-muted/30"}`}>
       <div className="flex items-center gap-2 mb-3">
         <MapPin className="w-5 h-5 text-red-600 dark:text-red-400" />
         <span className="font-medium">Location</span>
@@ -487,11 +487,11 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation, entryPoin
         )}
       />
     </div>
-  );
+  ), [entryPoint, locationValue, isGettingLocation, form.control]);
 
-  // Details Section Component
-  const DetailsSection = () => (
-    <div className={`p-4 space-y-4 ${entryPoint === "post" ? "bg-primary/5 border-l-4 border-primary" : "bg-muted/30"}`}>
+  // Details Section - memoized to prevent re-renders
+  const detailsSection = useMemo(() => (
+    <div key="details-section" className={`p-4 space-y-4 ${entryPoint === "post" ? "bg-primary/5 border-l-4 border-primary" : "bg-muted/30"}`}>
       <div className="flex items-center gap-2">
         <PenSquare className="w-5 h-5 text-primary" />
         <span className="font-medium">Post Details</span>
@@ -629,7 +629,7 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation, entryPoin
         )}
       />
     </div>
-  );
+  ), [entryPoint, selectedCategoryId, categories, subcategories, categoriesLoading, form.control]);
 
   // Render sections in order based on entry point
   const renderSections = () => {
@@ -637,26 +637,26 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation, entryPoin
       case "photo":
         return (
           <>
-            <PhotoSection />
-            <LocationSection />
-            <DetailsSection />
+            {photoSection}
+            {locationSection}
+            {detailsSection}
           </>
         );
       case "location":
         return (
           <>
-            <LocationSection />
-            <DetailsSection />
-            <PhotoSection />
+            {locationSection}
+            {detailsSection}
+            {photoSection}
           </>
         );
       case "post":
       default:
         return (
           <>
-            <DetailsSection />
-            <LocationSection />
-            <PhotoSection />
+            {detailsSection}
+            {locationSection}
+            {photoSection}
           </>
         );
     }
