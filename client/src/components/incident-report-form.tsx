@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,13 +9,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Navigation } from "lucide-react";
+import { Navigation, Camera, Upload, Image, CheckCircle, MapPin, PenSquare, X } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { LocationAutocomplete } from "@/components/location-autocomplete";
 import { ObjectUploader } from "@/components/ObjectUploader";
-import { Camera, Upload, Image, CheckCircle } from "lucide-react";
 
 const reportIncidentSchema = z.object({
   categoryId: z.string().min(1, "Category is required"),
@@ -29,24 +29,66 @@ const reportIncidentSchema = z.object({
 
 type ReportIncidentData = z.infer<typeof reportIncidentSchema>;
 
+export type EntryPoint = "photo" | "location" | "post";
+
 interface IncidentReportFormProps {
   isOpen: boolean;
   onClose: () => void;
   initialLocation?: string;
+  entryPoint?: EntryPoint;
 }
 
-export function IncidentReportForm({ isOpen, onClose, initialLocation }: IncidentReportFormProps) {
+const entryPointConfig = {
+  photo: {
+    icon: Camera,
+    label: "Share Photo",
+    color: "bg-green-500",
+    description: "Add a photo and share what you've seen",
+  },
+  location: {
+    icon: MapPin,
+    label: "Report Location",
+    color: "bg-red-500",
+    description: "Report something at a specific location",
+  },
+  post: {
+    icon: PenSquare,
+    label: "Create Post",
+    color: "bg-primary",
+    description: "Share what's happening in your area",
+  },
+};
+
+export function IncidentReportForm({ isOpen, onClose, initialLocation, entryPoint = "post" }: IncidentReportFormProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [uploadedPhotoUrl, setUploadedPhotoUrl] = useState<string>("");
   const [isPhotoUploading, setIsPhotoUploading] = useState(false);
+  const [hasAutoTriggeredGPS, setHasAutoTriggeredGPS] = useState(false);
+  const [lastEntryPoint, setLastEntryPoint] = useState<EntryPoint>(entryPoint);
   
   // Simple state for categories and subcategories
   const [categories, setCategories] = useState<any[]>([]);
   const [subcategories, setSubcategories] = useState<any[]>([]);
   const [categoriesLoading, setCategoriesLoading] = useState(false);
+  
+  const config = entryPointConfig[entryPoint];
+  const IconComponent = config.icon;
+  
+  const form = useForm<ReportIncidentData>({
+    resolver: zodResolver(reportIncidentSchema),
+    defaultValues: {
+      categoryId: "",
+      subcategoryId: "",
+      title: "",
+      description: "",
+      location: initialLocation || "",
+      policeNotified: "unsure",
+      photoUrl: "",
+    },
+  });
   
   // Load categories when modal opens
   useEffect(() => {
@@ -54,6 +96,39 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
       loadCategories();
     }
   }, [isOpen]);
+  
+  // Handle entry point changes and modal open/close
+  useEffect(() => {
+    if (isOpen) {
+      // Reset GPS trigger if entry point changed
+      if (entryPoint !== lastEntryPoint) {
+        setHasAutoTriggeredGPS(false);
+        setLastEntryPoint(entryPoint);
+      }
+      
+      // Focus title input when entry point is "post"
+      if (entryPoint === "post") {
+        setTimeout(() => {
+          form.setFocus("title");
+        }, 100);
+      }
+      
+      // Auto-trigger GPS when entry point is "location"
+      if (entryPoint === "location" && !hasAutoTriggeredGPS) {
+        setHasAutoTriggeredGPS(true);
+        // Prefill with initialLocation if available
+        if (initialLocation && !form.getValues("location")) {
+          form.setValue("location", initialLocation);
+        }
+        setTimeout(() => {
+          handleGetCurrentLocation();
+        }, 300);
+      }
+    } else {
+      // Reset when modal closes
+      setHasAutoTriggeredGPS(false);
+    }
+  }, [isOpen, entryPoint]);
   
   // Load subcategories when category changes
   useEffect(() => {
@@ -63,6 +138,15 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
       setSubcategories([]);
     }
   }, [selectedCategoryId]);
+
+  // Reset form when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      form.reset();
+      setUploadedPhotoUrl("");
+      setSelectedCategoryId("");
+    }
+  }, [isOpen]);
   
   const loadCategories = async () => {
     try {
@@ -91,19 +175,6 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
       setSubcategories([]);
     }
   };
-  
-  const form = useForm<ReportIncidentData>({
-    resolver: zodResolver(reportIncidentSchema),
-    defaultValues: {
-      categoryId: "",
-      subcategoryId: "",
-      title: "",
-      description: "",
-      location: initialLocation || "",
-      policeNotified: "unsure",
-      photoUrl: "",
-    },
-  });
 
   // Photo upload functions
   const handleGetUploadParameters = async () => {
@@ -125,7 +196,6 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
       const uploadURL = result.successful[0].uploadURL;
       
       try {
-        // Process the upload to get the proper viewing URL
         const response = await fetch('/api/objects/process-upload', {
           method: 'POST',
           headers: {
@@ -174,29 +244,31 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
     },
     onSuccess: () => {
       toast({
-        title: "Report Submitted! ✅",
-        description: "Your incident will appear on the map shortly. Thank you for keeping the community informed.",
+        title: "Post Shared!",
+        description: "Your post is now visible to the community.",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/unified"] });
       form.reset();
+      setUploadedPhotoUrl("");
+      setSelectedCategoryId("");
       onClose();
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
         toast({
           title: "Login Required",
-          description: "You need to be logged in to report incidents. Redirecting to login...",
+          description: "You need to be logged in to share posts. Redirecting to login...",
           variant: "destructive",
         });
         setTimeout(() => {
           window.location.href = "/api/login";
-        }, 1500); // Give users time to read the message
+        }, 1500);
         return;
       }
       
       toast({
-        title: "Report Failed",
-        description: error instanceof Error ? error.message : "Failed to submit incident report. Please try again.",
+        title: "Post Failed",
+        description: error instanceof Error ? error.message : "Failed to share post. Please try again.",
         variant: "destructive",
       });
     },
@@ -225,13 +297,11 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
       const lat = position.coords.latitude;
       const lon = position.coords.longitude;
 
-      // Try to get readable address
       try {
         const response = await fetch(`/api/location/reverse?lat=${lat}&lon=${lon}`);
         if (response.ok) {
           const data = await response.json();
           
-          // Build address string with street name and suburb
           const parts = [];
           if (data.road) parts.push(data.road);
           if (data.suburb) parts.push(data.suburb);
@@ -248,7 +318,6 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
           throw new Error('Address lookup failed');
         }
       } catch (error) {
-        // Fallback to coordinates
         const coords = `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
         form.setValue('location', coords);
         toast({
@@ -260,9 +329,9 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
       let errorMessage = "Unable to get your location.";
       
       if ((error as GeolocationPositionError).code === 1) {
-        errorMessage = "Location access denied. Please enable location services and allow access in your browser.";
+        errorMessage = "Location access denied. Please enable location services.";
       } else if ((error as GeolocationPositionError).code === 2) {
-        errorMessage = "Location unavailable. Please check your GPS connection.";
+        errorMessage = "Location unavailable. Please check your GPS.";
       } else if ((error as GeolocationPositionError).code === 3) {
         errorMessage = "Location request timed out. Please try again.";
       }
@@ -281,332 +350,376 @@ export function IncidentReportForm({ isOpen, onClose, initialLocation }: Inciden
     reportIncidentMutation.mutate(data);
   };
 
-  return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[95vw] sm:max-w-lg lg:max-w-xl max-h-[90vh] flex flex-col">
-        <DialogHeader className="flex-shrink-0">
-          <DialogTitle>Share Community Information</DialogTitle>
-          <DialogDescription>
-            Share local information, observations, or community updates to help keep neighbors informed and connected.
-          </DialogDescription>
-        </DialogHeader>
-        
-        <div className="flex-1 overflow-y-auto px-4 sm:px-6">
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            {/* Category Selection */}
-            <FormField
-              control={form.control}
-              name="categoryId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Category</FormLabel>
-                  <Select 
-                    value={field.value}
-                    onValueChange={(value) => {
-                      field.onChange(value);
-                      setSelectedCategoryId(value);
-                      form.setValue("subcategoryId", ""); // Reset subcategory when category changes
-                    }}
-                  >
-                    <FormControl>
-                      <SelectTrigger data-testid="select-category">
-                        <SelectValue placeholder="Choose a category" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent position="popper" sideOffset={4} className="z-[9999]" side="bottom" align="start">
-                      {categoriesLoading ? (
-                        <div className="px-2 py-2 text-sm text-gray-500">Loading categories...</div>
-                      ) : categories.length > 0 ? (
-                        categories.map((category: any) => (
-                          <SelectItem key={category.id} value={category.id}>
-                            {category.name}
-                          </SelectItem>
-                        ))
-                      ) : (
-                        <div className="px-2 py-2 text-sm text-gray-500">No categories available</div>
-                      )}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            {/* Subcategory Selection - Only show when category is selected */}
-            {selectedCategoryId && (
-              <FormField
-                control={form.control}
-                name="subcategoryId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Specific Type</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <FormControl>
-                        <SelectTrigger data-testid="select-subcategory">
-                          <SelectValue placeholder="Choose specific type" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent position="popper" sideOffset={4} className="z-[9999]" side="bottom" align="start">
-                        {(subcategories as any[]).map((subcategory: any) => (
-                          <SelectItem key={subcategory.id} value={subcategory.id}>
-                            <div className="flex flex-col">
-                              <span className="font-medium">{subcategory.name}</span>
-                              {subcategory.description && (
-                                <span className="text-xs text-muted-foreground">
-                                  {subcategory.description}
-                                </span>
-                              )}
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
+  // Watch form values for preview
+  const locationValue = form.watch("location");
+  const titleValue = form.watch("title");
+  const categoryValue = form.watch("categoryId");
+  const subcategoryValue = form.watch("subcategoryId");
+  const hasPhoto = !!uploadedPhotoUrl;
+  
+  // Count required fields completed
+  const completedRequired = [
+    !!locationValue,
+    !!titleValue,
+    !!categoryValue,
+    !!subcategoryValue,
+  ].filter(Boolean).length;
 
-            <FormField
-              control={form.control}
-              name="title"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Title</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Brief description of what you want to share"
-                      {...field}
-                      data-testid="input-incident-title"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="location"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Location</FormLabel>
-                  <FormControl>
-                    <div className="flex gap-2">
-                      <div className="flex-1">
-                        <LocationAutocomplete
-                          value={field.value}
-                          onChange={(location) => {
-                            field.onChange(location);
-                          }}
-                          onClear={() => {
-                            field.onChange("");
-                          }}
-                          placeholder="Enter street address, intersection, or landmark..."
-                          disabled={false}
-                        />
-                      </div>
+  // Photo Section Component
+  const PhotoSection = () => (
+    <div className={`p-4 ${entryPoint === "photo" ? "bg-green-50 dark:bg-green-900/10 border-l-4 border-green-500" : "bg-muted/30"}`}>
+      <div className="flex items-center gap-2 mb-3">
+        <Camera className="w-5 h-5 text-green-600 dark:text-green-400" />
+        <span className="font-medium">Photo</span>
+        {hasPhoto && <Badge variant="secondary" className="text-xs">Added</Badge>}
+      </div>
+      <FormField
+        control={form.control}
+        name="photoUrl"
+        render={({ field }) => (
+          <FormItem>
+            <FormControl>
+              <div className="space-y-3">
+                {uploadedPhotoUrl ? (
+                  <div className="relative">
+                    <div className="relative overflow-hidden rounded-xl border border-border">
+                      <img
+                        src={uploadedPhotoUrl}
+                        alt="Uploaded photo"
+                        className="w-full h-32 object-cover"
+                        data-testid="img-uploaded-photo"
+                      />
                       <Button
                         type="button"
-                        onClick={handleGetCurrentLocation}
-                        disabled={isGettingLocation}
+                        variant="secondary"
                         size="sm"
-                        variant="outline"
-                        className="flex items-center gap-1 px-2 sm:px-3 flex-shrink-0"
-                        data-testid="button-use-gps-location"
+                        onClick={() => {
+                          setUploadedPhotoUrl("");
+                          form.setValue("photoUrl", "");
+                        }}
+                        className="absolute top-2 right-2"
+                        data-testid="button-remove-photo"
                       >
-                        {isGettingLocation ? (
-                          <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                        ) : (
-                          <>
-                            <Navigation className="w-4 h-4" />
-                            <span className="text-xs hidden sm:inline">GPS</span>
-                          </>
-                        )}
+                        <X className="w-4 h-4 mr-1" />
+                        Remove
                       </Button>
                     </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="policeNotified"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Have authorities been notified? (if applicable)</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger data-testid="select-police-notified">
-                        <SelectValue placeholder="Select option" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent position="popper" sideOffset={4} className="z-[9999]" side="bottom" align="start">
-                      <SelectItem value="yes">Yes - Authorities have been notified</SelectItem>
-                      <SelectItem value="no">No - Authorities haven't been contacted yet</SelectItem>
-                      <SelectItem value="not_needed">Not applicable - No authorities needed</SelectItem>
-                      <SelectItem value="unsure">Unsure - Not sure if authorities are needed</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Additional Details (Optional)</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Provide additional context, details, or helpful information for the community..."
-                      className="min-h-20"
-                      {...field}
-                      data-testid="textarea-incident-description"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Modern Photo Upload Section */}
-            <FormField
-              control={form.control}
-              name="photoUrl"
-              render={({ field }) => (
-                <FormItem className="space-y-3">
-                  <FormLabel className="text-base font-semibold text-gray-900 flex items-center gap-2">
-                    <div className="p-1.5 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg">
-                      <Image className="w-4 h-4 text-white" />
-                    </div>
-                    Add Photo (Optional)
-                  </FormLabel>
-                  <FormControl>
-                    <div className="space-y-4">
-                      {uploadedPhotoUrl ? (
-                        <div className="relative group">
-                          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 shadow-sm">
-                            <img
-                              src={uploadedPhotoUrl}
-                              alt="Uploaded photo"
-                              className="w-full h-48 object-cover"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
-                            <div className="absolute top-3 right-3 flex gap-2">
-                              <div className="p-1.5 bg-green-500 rounded-full">
-                                <CheckCircle className="w-4 h-4 text-white" />
-                              </div>
-                            </div>
-                          </div>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setUploadedPhotoUrl("");
-                              form.setValue("photoUrl", "");
-                            }}
-                            className="absolute bottom-3 right-3 bg-white/90 backdrop-blur-sm hover:bg-white border-gray-200 hover:border-gray-300 shadow-sm"
-                          >
-                            Remove Photo
-                          </Button>
-                        </div>
-                      ) : (
-                        <div className="space-y-3">
-                          <div className="border-2 border-dashed border-blue-300 rounded-2xl p-8 text-center bg-gradient-to-br from-blue-50/50 via-white to-purple-50/50 hover:from-blue-100/60 hover:via-white hover:to-purple-100/60 transition-all duration-300 hover:border-blue-400 hover:shadow-lg">
-                            <div className="space-y-4">
-                              <div className="flex justify-center">
-                                <div className="relative">
-                                  <div className="p-4 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl transition-all duration-300 shadow-lg">
-                                    <Upload className="w-8 h-8 text-white" />
-                                  </div>
-                                  <div className="absolute -top-1 -right-1 p-1 bg-white rounded-full shadow-sm">
-                                    <Camera className="w-4 h-4 text-gray-600" />
-                                  </div>
-                                </div>
-                              </div>
-                              
-                              <div className="space-y-2">
-                                <h4 className="text-lg font-semibold text-gray-900">
-                                  Add Photo
-                                </h4>
-                                <p className="text-gray-600">
-                                  Choose an image to help share information
-                                </p>
-                                <div className="flex items-center justify-center gap-4 pt-2">
-                                  <div className="px-3 py-1 bg-white/60 rounded-full border border-gray-200 text-xs text-gray-500">
-                                    JPG, PNG, GIF
-                                  </div>
-                                  <div className="px-3 py-1 bg-white/60 rounded-full border border-gray-200 text-xs text-gray-500">
-                                    Max 5MB
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                          
-                          <ObjectUploader
-                            maxNumberOfFiles={1}
-                            maxFileSize={5242880}
-                            onGetUploadParameters={handleGetUploadParameters}
-                            onStart={handlePhotoUploadStart}
-                            onComplete={handlePhotoUploadComplete}
-                            buttonClassName="w-full py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium rounded-xl shadow-md hover:shadow-lg transition-all duration-200"
-                          >
-                            <div className="flex items-center justify-center gap-2">
-                              <Camera className="w-5 h-5" />
-                              Choose Photo
-                            </div>
-                          </ObjectUploader>
-                        </div>
-                      )}
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-gray-200">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={onClose}
-                className="flex-1 sm:flex-none px-6 py-3 border-gray-300 hover:border-gray-400 hover:bg-gray-50"
-                data-testid="button-cancel-report"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={reportIncidentMutation.isPending || isPhotoUploading}
-                className="flex-1 px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                data-testid="button-submit-report"
-              >
-                {reportIncidentMutation.isPending ? (
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Submitting Report...
-                  </div>
-                ) : isPhotoUploading ? (
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Uploading Photo...
                   </div>
                 ) : (
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4" />
-                    Share Information
+                  <div className="border-2 border-dashed border-border rounded-xl p-4 text-center bg-background">
+                    <Upload className="w-6 h-6 text-muted-foreground mx-auto mb-2" />
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Add a photo (optional)
+                    </p>
+                    <ObjectUploader
+                      maxNumberOfFiles={1}
+                      maxFileSize={5242880}
+                      onGetUploadParameters={handleGetUploadParameters}
+                      onStart={handlePhotoUploadStart}
+                      onComplete={handlePhotoUploadComplete}
+                      buttonClassName="inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium text-sm"
+                    >
+                      <Camera className="w-4 h-4" />
+                      Choose Photo
+                    </ObjectUploader>
                   </div>
                 )}
-              </Button>
+              </div>
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+    </div>
+  );
+
+  // Location Section Component  
+  const LocationSection = () => (
+    <div className={`p-4 ${entryPoint === "location" ? "bg-red-50 dark:bg-red-900/10 border-l-4 border-red-500" : "bg-muted/30"}`}>
+      <div className="flex items-center gap-2 mb-3">
+        <MapPin className="w-5 h-5 text-red-600 dark:text-red-400" />
+        <span className="font-medium">Location</span>
+        <span className="text-xs text-destructive">*required</span>
+        {locationValue && <Badge variant="secondary" className="text-xs ml-auto">Set</Badge>}
+      </div>
+      <FormField
+        control={form.control}
+        name="location"
+        render={({ field }) => (
+          <FormItem>
+            <FormControl>
+              <div className="space-y-2">
+                <LocationAutocomplete
+                  value={field.value}
+                  onChange={(location) => {
+                    field.onChange(location);
+                  }}
+                  onClear={() => {
+                    field.onChange("");
+                  }}
+                  placeholder="Enter address or landmark..."
+                  disabled={false}
+                />
+                <Button
+                  type="button"
+                  onClick={handleGetCurrentLocation}
+                  disabled={isGettingLocation}
+                  variant="outline"
+                  className="w-full gap-2"
+                  data-testid="button-use-gps-location"
+                >
+                  {isGettingLocation ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                      Finding your location...
+                    </>
+                  ) : (
+                    <>
+                      <Navigation className="w-4 h-4" />
+                      Use My Current Location
+                    </>
+                  )}
+                </Button>
+              </div>
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+    </div>
+  );
+
+  // Details Section Component
+  const DetailsSection = () => (
+    <div className={`p-4 space-y-4 ${entryPoint === "post" ? "bg-primary/5 border-l-4 border-primary" : "bg-muted/30"}`}>
+      <div className="flex items-center gap-2">
+        <PenSquare className="w-5 h-5 text-primary" />
+        <span className="font-medium">Post Details</span>
+        <span className="text-xs text-destructive">*required</span>
+      </div>
+      
+      {/* Title */}
+      <FormField
+        control={form.control}
+        name="title"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>What's happening?</FormLabel>
+            <FormControl>
+              <Input
+                placeholder="Brief description..."
+                {...field}
+                data-testid="input-incident-title"
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      {/* Category Selection */}
+      <FormField
+        control={form.control}
+        name="categoryId"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Category</FormLabel>
+            <Select 
+              value={field.value}
+              onValueChange={(value) => {
+                field.onChange(value);
+                setSelectedCategoryId(value);
+                form.setValue("subcategoryId", "");
+              }}
+            >
+              <FormControl>
+                <SelectTrigger data-testid="select-category">
+                  <SelectValue placeholder="Choose a category" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent position="popper" sideOffset={4} className="z-[9999]" side="bottom" align="start">
+                {categoriesLoading ? (
+                  <div className="px-2 py-2 text-sm text-muted-foreground">Loading...</div>
+                ) : categories.length > 0 ? (
+                  categories.map((category: any) => (
+                    <SelectItem key={category.id} value={category.id}>
+                      {category.name}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <div className="px-2 py-2 text-sm text-muted-foreground">No categories</div>
+                )}
+              </SelectContent>
+            </Select>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      
+      {/* Subcategory Selection */}
+      {selectedCategoryId && (
+        <FormField
+          control={form.control}
+          name="subcategoryId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Type</FormLabel>
+              <Select value={field.value} onValueChange={field.onChange}>
+                <FormControl>
+                  <SelectTrigger data-testid="select-subcategory">
+                    <SelectValue placeholder="Choose type" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent position="popper" sideOffset={4} className="z-[9999]" side="bottom" align="start">
+                  {(subcategories as any[]).map((subcategory: any) => (
+                    <SelectItem key={subcategory.id} value={subcategory.id}>
+                      {subcategory.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      )}
+
+      {/* Description */}
+      <FormField
+        control={form.control}
+        name="description"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Additional Details (Optional)</FormLabel>
+            <FormControl>
+              <Textarea
+                placeholder="Add more context..."
+                className="min-h-16"
+                {...field}
+                data-testid="textarea-incident-description"
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      {/* Police Notified */}
+      <FormField
+        control={form.control}
+        name="policeNotified"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Authorities notified? (if applicable)</FormLabel>
+            <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <FormControl>
+                <SelectTrigger data-testid="select-police-notified">
+                  <SelectValue placeholder="Select option" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent position="popper" sideOffset={4} className="z-[9999]" side="bottom" align="start">
+                <SelectItem value="yes">Yes - Authorities notified</SelectItem>
+                <SelectItem value="no">No - Not yet contacted</SelectItem>
+                <SelectItem value="not_needed">Not applicable</SelectItem>
+                <SelectItem value="unsure">Unsure</SelectItem>
+              </SelectContent>
+            </Select>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+    </div>
+  );
+
+  // Render sections in order based on entry point
+  const renderSections = () => {
+    switch (entryPoint) {
+      case "photo":
+        return (
+          <>
+            <PhotoSection />
+            <LocationSection />
+            <DetailsSection />
+          </>
+        );
+      case "location":
+        return (
+          <>
+            <LocationSection />
+            <DetailsSection />
+            <PhotoSection />
+          </>
+        );
+      case "post":
+      default:
+        return (
+          <>
+            <DetailsSection />
+            <LocationSection />
+            <PhotoSection />
+          </>
+        );
+    }
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="w-[95vw] sm:max-w-lg lg:max-w-xl max-h-[90vh] flex flex-col p-0">
+        {/* Custom Header with Entry Point Indicator */}
+        <div className="flex-shrink-0 p-4 pb-3 border-b border-border">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <div className={`p-1.5 rounded-lg ${config.color}`}>
+                <IconComponent className="w-4 h-4 text-white" />
+              </div>
+              <DialogTitle className="text-lg">{config.label}</DialogTitle>
             </div>
+            <Badge variant={completedRequired === 4 ? "default" : "secondary"} className="text-xs">
+              {completedRequired}/4 required
+            </Badge>
+          </div>
+          <DialogDescription className="text-sm">
+            {config.description}
+          </DialogDescription>
+        </div>
+        
+        <div className="flex-1 overflow-y-auto">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-0 divide-y divide-border">
+              {renderSections()}
+
+              {/* Submit Buttons */}
+              <div className="flex gap-3 p-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={onClose}
+                  className="flex-1"
+                  data-testid="button-cancel-report"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={reportIncidentMutation.isPending || isPhotoUploading}
+                  className="flex-1"
+                  data-testid="button-submit-report"
+                >
+                  {reportIncidentMutation.isPending ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Sharing...
+                    </div>
+                  ) : isPhotoUploading ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Uploading...
+                    </div>
+                  ) : (
+                    "Share Post"
+                  )}
+                </Button>
+              </div>
             </form>
           </Form>
         </div>

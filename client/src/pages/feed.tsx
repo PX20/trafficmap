@@ -5,7 +5,7 @@ import { useLocation } from "wouter";
 import { MobileNav } from "@/components/mobile-nav";
 import { StoriesBar } from "@/components/stories-bar";
 import { PostCard } from "@/components/post-card";
-import { IncidentReportForm } from "@/components/incident-report-form";
+import { IncidentReportForm, type EntryPoint } from "@/components/incident-report-form";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
@@ -49,9 +49,15 @@ export default function Feed() {
   const isMobile = useIsMobile();
   const [, setLocation] = useLocation();
   const [reportFormOpen, setReportFormOpen] = useState(false);
+  const [reportEntryPoint, setReportEntryPoint] = useState<EntryPoint>("post");
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [viewMode, setViewMode] = useState<'feed' | 'map'>('feed');
   const [menuOpen, setMenuOpen] = useState(false);
+
+  const openReportForm = (entryPoint: EntryPoint) => {
+    setReportEntryPoint(entryPoint);
+    setReportFormOpen(true);
+  };
 
   const { data: unifiedData, isLoading, refetch } = useQuery({
     queryKey: ["/api/unified"],
@@ -299,7 +305,7 @@ export default function Feed() {
                 </AvatarFallback>
               </Avatar>
               <button
-                onClick={() => setReportFormOpen(true)}
+                onClick={() => openReportForm("post")}
                 className="flex-1 bg-muted hover:bg-muted/80 rounded-full px-4 py-2.5 text-left text-muted-foreground transition-colors"
                 data-testid="button-create-post"
               >
@@ -310,7 +316,7 @@ export default function Feed() {
               <Button
                 variant="ghost"
                 className="flex-1 gap-2"
-                onClick={() => setReportFormOpen(true)}
+                onClick={() => openReportForm("photo")}
                 data-testid="button-add-photo"
               >
                 <Camera className="w-5 h-5 text-green-500" />
@@ -319,7 +325,7 @@ export default function Feed() {
               <Button
                 variant="ghost"
                 className="flex-1 gap-2"
-                onClick={() => setReportFormOpen(true)}
+                onClick={() => openReportForm("location")}
                 data-testid="button-add-location"
               >
                 <MapPinned className="w-5 h-5 text-red-500" />
@@ -328,7 +334,7 @@ export default function Feed() {
               <Button
                 variant="ghost"
                 className="flex-1 gap-2"
-                onClick={() => setReportFormOpen(true)}
+                onClick={() => openReportForm("post")}
                 data-testid="button-write-post"
               >
                 <PenSquare className="w-5 h-5 text-primary" />
@@ -396,7 +402,7 @@ export default function Feed() {
               <p className="text-muted-foreground mb-4">
                 Be the first to share what's happening in your neighborhood!
               </p>
-              <Button onClick={() => setReportFormOpen(true)} data-testid="button-first-post">
+              <Button onClick={() => openReportForm("post")} data-testid="button-first-post">
                 Create a Post
               </Button>
             </Card>
@@ -422,6 +428,8 @@ export default function Feed() {
           setReportFormOpen(false);
           queryClient.invalidateQueries({ queryKey: ["/api/unified"] });
         }}
+        entryPoint={reportEntryPoint}
+        initialLocation={user?.preferredLocation || undefined}
       />
     </div>
   );
