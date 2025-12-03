@@ -1,0 +1,67 @@
+neighbour-app--pkingdom83.replit.app/:24  Tracking Prevention blocked access to storage for https://unpkg.com/leaflet@1.9.4/dist/leaflet.css.
+neighbour-app--pkingdom83.replit.app/:24  Tracking Prevention blocked access to storage for https://unpkg.com/leaflet@1.9.4/dist/leaflet.css.
+neighbour-app--pkingdom83.replit.app/:24  Tracking Prevention blocked access to storage for https://unpkg.com/leaflet@1.9.4/dist/leaflet.css.
+neighbour-app--pkingdom83.replit.app/:24  Tracking Prevention blocked access to storage for https://unpkg.com/leaflet@1.9.4/dist/leaflet.css.
+neighbour-app--pkingdom83.replit.app/:1  Mixed Content: The page at 'https://neighbour-app--pkingdom83.replit.app/' was loaded over HTTPS, but requested an insecure script 'http://replit.com.x.ef134e0e05644046cc0bf480e4ead3b7eafc.43d7532e.id.opendns.com/s/malware.opendns.com/?X-OpenDNS-Session=aa51dc5c0ccc5aad4_ef134e0e05644046cc0bf480e4ead3b7eafc_ed4d57ce88ff5358bd2bceeaf6b0141421e6325b_server=nginx-proxy-https-c1dad7695701.iproxy.syd&url=https://replit.com/public/js/replit-dev-banner.js%3FX-OpenDNS-Session=_b69ed3e00293504d560bfbd07efc24e085329270f94f_8HwUkcuJ_&proxy=y&prefs=1597504&tagging=0x110004214C4001C10000070070000080039F7000102000000000'. This request has been blocked; the content must be served over HTTPS.
+index-D5uGd4NG.js:478   GET https://neighbour-app--pkingdom83.replit.app/api/auth/user 401 (Unauthorized)
+queryFn @ index-D5uGd4NG.js:478
+i @ index-D5uGd4NG.js:48
+C @ index-D5uGd4NG.js:48
+start @ index-D5uGd4NG.js:48
+fetch @ index-D5uGd4NG.js:48
+ld @ index-D5uGd4NG.js:48
+onSubscribe @ index-D5uGd4NG.js:48
+subscribe @ index-D5uGd4NG.js:48
+(anonymous) @ index-D5uGd4NG.js:48
+fA @ index-D5uGd4NG.js:38
+Rg @ index-D5uGd4NG.js:40
+lc @ index-D5uGd4NG.js:40
+sS @ index-D5uGd4NG.js:40
+ia @ index-D5uGd4NG.js:38
+uz @ index-D5uGd4NG.js:40
+_a @ index-D5uGd4NG.js:40
+WA @ index-D5uGd4NG.js:40
+E @ index-D5uGd4NG.js:25
+q @ index-D5uGd4NG.js:25
+index-D5uGd4NG.js:562   GET https://neighbour-app--pkingdom83.replit.app/api/posts 500 (Internal Server Error)
+queryFn @ index-D5uGd4NG.js:562
+i @ index-D5uGd4NG.js:48
+C @ index-D5uGd4NG.js:48
+start @ index-D5uGd4NG.js:48
+fetch @ index-D5uGd4NG.js:48
+fetchQuery @ index-D5uGd4NG.js:48
+prefetchQuery @ index-D5uGd4NG.js:48
+(anonymous) @ index-D5uGd4NG.js:562
+Rg @ index-D5uGd4NG.js:40
+lc @ index-D5uGd4NG.js:40
+sS @ index-D5uGd4NG.js:40
+ia @ index-D5uGd4NG.js:38
+uz @ index-D5uGd4NG.js:40
+_a @ index-D5uGd4NG.js:40
+WA @ index-D5uGd4NG.js:40
+E @ index-D5uGd4NG.js:25
+q @ index-D5uGd4NG.js:25
+index-D5uGd4NG.js:48   POST https://neighbour-app--pkingdom83.replit.app/api/register 500 (Internal Server Error)
+Nn @ index-D5uGd4NG.js:48
+mutationFn @ index-D5uGd4NG.js:478
+fn @ index-D5uGd4NG.js:48
+C @ index-D5uGd4NG.js:48
+start @ index-D5uGd4NG.js:48
+execute @ index-D5uGd4NG.js:48
+await in execute
+mutate @ index-D5uGd4NG.js:48
+(anonymous) @ index-D5uGd4NG.js:48
+f @ index-D5uGd4NG.js:562
+(anonymous) @ index-D5uGd4NG.js:537
+await in (anonymous)
+k8 @ index-D5uGd4NG.js:37
+A8 @ index-D5uGd4NG.js:37
+M8 @ index-D5uGd4NG.js:37
+PN @ index-D5uGd4NG.js:37
+YE @ index-D5uGd4NG.js:37
+(anonymous) @ index-D5uGd4NG.js:37
+mw @ index-D5uGd4NG.js:40
+wE @ index-D5uGd4NG.js:37
+xv @ index-D5uGd4NG.js:37
+Vb @ index-D5uGd4NG.js:37
+G8 @ index-D5uGd4NG.js:37
