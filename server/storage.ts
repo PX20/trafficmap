@@ -19,6 +19,7 @@ import {
   stories,
   storyViews,
   userBadges,
+  posts,
   type User, 
   type UpsertUser,
   type InsertUser, 
@@ -62,6 +63,8 @@ import {
   type Story,
   type StoryView,
   type UserBadge,
+  type SelectPost,
+  type InsertPost,
   adCampaigns,
   adViews,
   adClicks,
@@ -137,7 +140,27 @@ export interface IStorage {
   acceptUserTerms(id: string): Promise<User | undefined>;
   
   // ============================================================================
-  // UNIFIED INCIDENT OPERATIONS - Single source for all incident types
+  // POSTS OPERATIONS - Single source of truth for community posts
+  // ============================================================================
+  
+  // Post CRUD
+  getAllPosts(): Promise<SelectPost[]>;
+  getPost(id: string): Promise<SelectPost | undefined>;
+  getPostsByUser(userId: string): Promise<SelectPost[]>;
+  getPostsByCategory(categoryId: string): Promise<SelectPost[]>;
+  createPost(post: InsertPost): Promise<SelectPost>;
+  updatePost(id: string, post: Partial<SelectPost>): Promise<SelectPost | undefined>;
+  deletePost(id: string): Promise<boolean>;
+  
+  // Spatial queries for posts
+  getPostsInArea(southWest: [number, number], northEast: [number, number]): Promise<SelectPost[]>;
+  getActivePosts(): Promise<SelectPost[]>;
+  
+  // GeoJSON for map display
+  getPostsAsGeoJSON(): Promise<{ type: 'FeatureCollection'; features: any[] }>;
+  
+  // ============================================================================
+  // UNIFIED INCIDENT OPERATIONS - LEGACY (use Posts instead)
   // ============================================================================
   
   // Unified incident management
@@ -525,7 +548,161 @@ export class DatabaseStorage implements IStorage {
   }
 
   // ============================================================================
-  // UNIFIED INCIDENT OPERATIONS - Single source for all incident types
+  // POSTS OPERATIONS - Single source of truth for community posts
+  // ============================================================================
+
+  async getAllPosts(): Promise<SelectPost[]> {
+    return await db.select().from(posts).orderBy(desc(posts.createdAt));
+  }
+
+  async getPost(id: string): Promise<SelectPost | undefined> {
+    const [post] = await db.select().from(posts).where(eq(posts.id, id));
+    return post;
+  }
+
+  async getPostsByUser(userId: string): Promise<SelectPost[]> {
+    return await db
+      .select()
+      .from(posts)
+      .where(eq(posts.userId, userId))
+      .orderBy(desc(posts.createdAt));
+  }
+
+  async getPostsByCategory(categoryId: string): Promise<SelectPost[]> {
+    return await db
+      .select()
+      .from(posts)
+      .where(eq(posts.categoryId, categoryId))
+      .orderBy(desc(posts.createdAt));
+  }
+
+  async createPost(post: InsertPost): Promise<SelectPost> {
+    const [newPost] = await db
+      .insert(posts)
+      .values({
+        ...post,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .returning();
+    return newPost;
+  }
+
+  async updatePost(id: string, post: Partial<SelectPost>): Promise<SelectPost | undefined> {
+    const [updated] = await db
+      .update(posts)
+      .set({ ...post, updatedAt: new Date() })
+      .where(eq(posts.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deletePost(id: string): Promise<boolean> {
+    const result = await db.delete(posts).where(eq(posts.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  async getPostsInArea(southWest: [number, number], northEast: [number, number]): Promise<SelectPost[]> {
+    const [swLat, swLng] = southWest;
+    const [neLat, neLng] = northEast;
+    
+    return await db
+      .select()
+      .from(posts)
+      .where(
+        and(
+          sql`${posts.centroidLat} >= ${swLat}`,
+          sql`${posts.centroidLat} <= ${neLat}`,
+          sql`${posts.centroidLng} >= ${swLng}`,
+          sql`${posts.centroidLng} <= ${neLng}`
+        )
+      )
+      .orderBy(desc(posts.createdAt));
+  }
+
+  async getActivePosts(): Promise<SelectPost[]> {
+    return await db
+      .select()
+      .from(posts)
+      .where(eq(posts.status, 'active'))
+      .orderBy(desc(posts.createdAt));
+  }
+
+  async getPostsAsGeoJSON(): Promise<{ type: 'FeatureCollection'; features: any[] }> {
+    const allPosts = await this.getAllPosts();
+    
+    // Get category info for all posts
+    const categoryIds = [...new Set(allPosts.filter(p => p.categoryId).map(p => p.categoryId!))];
+    const subcategoryIds = [...new Set(allPosts.filter(p => p.subcategoryId).map(p => p.subcategoryId!))];
+    
+    const categoryMap = new Map<string, { name: string; icon?: string; color?: string }>();
+    const subcategoryMap = new Map<string, { name: string }>();
+    
+    if (categoryIds.length > 0) {
+      const cats = await db.select().from(categories).where(inArray(categories.id, categoryIds));
+      cats.forEach(c => categoryMap.set(c.id, { name: c.name, icon: c.icon ?? undefined, color: c.color ?? undefined }));
+    }
+    
+    if (subcategoryIds.length > 0) {
+      const subs = await db.select().from(subcategories).where(inArray(subcategories.id, subcategoryIds));
+      subs.forEach(s => subcategoryMap.set(s.id, { name: s.name }));
+    }
+    
+    // Get user info for attribution
+    const userIds = [...new Set(allPosts.map(p => p.userId))];
+    const userMap = new Map<string, { firstName?: string | null; lastName?: string | null; displayName?: string | null }>();
+    
+    if (userIds.length > 0) {
+      const usersData = await db.select({
+        id: users.id,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        displayName: users.displayName
+      }).from(users).where(inArray(users.id, userIds));
+      usersData.forEach(u => userMap.set(u.id, u));
+    }
+    
+    const features = allPosts.map(post => {
+      const cat = post.categoryId ? categoryMap.get(post.categoryId) : null;
+      const subcat = post.subcategoryId ? subcategoryMap.get(post.subcategoryId) : null;
+      const user = userMap.get(post.userId);
+      
+      return {
+        type: 'Feature' as const,
+        id: post.id,
+        geometry: post.geometry || (post.centroidLat && post.centroidLng ? {
+          type: 'Point',
+          coordinates: [post.centroidLng, post.centroidLat]
+        } : null),
+        properties: {
+          id: post.id,
+          title: post.title,
+          description: post.description,
+          location: post.location,
+          photoUrl: post.photoUrl,
+          category: cat?.name || 'General',
+          categoryIcon: cat?.icon,
+          categoryColor: cat?.color,
+          subcategory: subcat?.name,
+          status: post.status,
+          userId: post.userId,
+          userName: user?.displayName || `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'Anonymous',
+          reactionsCount: post.reactionsCount || 0,
+          commentsCount: post.commentsCount || 0,
+          createdAt: post.createdAt?.toISOString(),
+          updatedAt: post.updatedAt?.toISOString(),
+        }
+      };
+    });
+    
+    return {
+      type: 'FeatureCollection',
+      features
+    };
+  }
+
+  // ============================================================================
+  // UNIFIED INCIDENT OPERATIONS - LEGACY (use Posts instead)
   // ============================================================================
 
   async getAllUnifiedIncidents(): Promise<SelectUnifiedIncident[]> {
