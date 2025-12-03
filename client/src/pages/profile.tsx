@@ -11,6 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { ObjectUploader } from "@/components/ObjectUploader";
+import { LocationAutocomplete } from "@/components/location-autocomplete";
 import { ArrowLeft, MapPin, Shield, Users, Phone, UserCheck, Camera } from "lucide-react";
 import { Link } from "wouter";
 
@@ -24,6 +25,9 @@ export default function Profile() {
     firstName: user?.firstName || "",
     lastName: user?.lastName || "",
     preferredLocation: user?.preferredLocation || "",
+    preferredLocationLat: user?.preferredLocationLat || null as number | null,
+    preferredLocationLng: user?.preferredLocationLng || null as number | null,
+    preferredLocationBounds: user?.preferredLocationBounds || null as [number, number, number, number] | null,
     phoneNumber: user?.phoneNumber || "",
     bio: user?.bio || "",
     // Business fields
@@ -122,6 +126,9 @@ export default function Profile() {
       firstName: user?.firstName || "",
       lastName: user?.lastName || "",
       preferredLocation: user?.preferredLocation || "",
+      preferredLocationLat: user?.preferredLocationLat || null,
+      preferredLocationLng: user?.preferredLocationLng || null,
+      preferredLocationBounds: user?.preferredLocationBounds || null,
       phoneNumber: user?.phoneNumber || "",
       bio: user?.bio || "",
       // Business fields
@@ -133,6 +140,30 @@ export default function Profile() {
       businessAddress: user?.businessAddress || ""
     });
     setIsEditing(false);
+  };
+  
+  const handleLocationChange = (
+    location: string, 
+    coordinates?: { lat: number; lon: number },
+    boundingBox?: [number, number, number, number]
+  ) => {
+    setFormData(prev => ({
+      ...prev,
+      preferredLocation: location,
+      preferredLocationLat: coordinates?.lat || null,
+      preferredLocationLng: coordinates?.lon || null,
+      preferredLocationBounds: boundingBox || null
+    }));
+  };
+  
+  const handleLocationClear = () => {
+    setFormData(prev => ({
+      ...prev,
+      preferredLocation: "",
+      preferredLocationLat: null,
+      preferredLocationLng: null,
+      preferredLocationBounds: null
+    }));
   };
 
   if (!user) {
@@ -242,12 +273,14 @@ export default function Profile() {
                     
                     <div>
                       <Label htmlFor="preferredLocation">Your Location</Label>
-                      <Input
-                        id="preferredLocation"
+                      <p className="text-xs text-muted-foreground mb-2">
+                        Search for your suburb or city to filter posts near you
+                      </p>
+                      <LocationAutocomplete
                         value={formData.preferredLocation}
-                        onChange={(e) => setFormData(prev => ({ ...prev, preferredLocation: e.target.value }))}
-                        placeholder="e.g., Brisbane, Sydney, Melbourne"
-                        data-testid="input-location"
+                        onChange={handleLocationChange}
+                        onClear={handleLocationClear}
+                        placeholder="Search for your suburb or city..."
                       />
                     </div>
                     
