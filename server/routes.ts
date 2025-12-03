@@ -3967,6 +3967,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               location: post.location,
               photoUrl: post.photoUrl,
               categoryId: post.categoryId,
+              categoryUuid: post.categoryId,
               subcategoryId: post.subcategoryId,
               status: post.status,
               userId: post.userId,
@@ -3974,6 +3975,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
               commentsCount: post.commentsCount || 0,
               createdAt: post.createdAt?.toISOString(),
               updatedAt: post.updatedAt?.toISOString(),
+              centroidLat: post.centroidLat,
+              centroidLng: post.centroidLng,
+              source: 'user' as const,
+              userReported: true,
             }
           }))
         };
@@ -3997,6 +4002,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               location: post.location,
               photoUrl: post.photoUrl,
               categoryId: post.categoryId,
+              categoryUuid: post.categoryId,
               subcategoryId: post.subcategoryId,
               status: post.status,
               userId: post.userId,
@@ -4004,6 +4010,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
               commentsCount: post.commentsCount || 0,
               createdAt: post.createdAt?.toISOString(),
               updatedAt: post.updatedAt?.toISOString(),
+              centroidLat: post.centroidLat,
+              centroidLng: post.centroidLng,
+              source: 'user' as const,
+              userReported: true,
             }
           }))
         };

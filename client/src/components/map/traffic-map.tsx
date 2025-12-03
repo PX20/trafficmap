@@ -380,28 +380,28 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
               incidentCategory = 'community';
             } else if (categoryId) {
               // Use categoryId to determine icon when incidentType is not set
-              if (categoryId === '792759f4-1b98-4665-b14c-44a54e9969e9') {
+              if (categoryId === 'fdff3a2e-a031-4909-936b-875affbc69ba') {
                 // Safety & Crime
                 markerType = 'crime';
                 incidentCategory = 'crime';
-              } else if (categoryId === 'd03f47a9-10fb-4656-ae73-92e959d7566a') {
+              } else if (categoryId === '6cfdf282-1f8d-44c8-9661-24b73a88a834') {
                 // Wildlife & Nature
                 markerType = 'wildlife';
                 incidentCategory = 'wildlife';
-              } else if (categoryId === '9b1d58d9-cfd1-4c31-93e9-754276a5f265') {
+              } else if (categoryId === 'dca6e799-6d6b-420b-9ed2-d63fc16594d3') {
                 // Infrastructure & Hazards
                 markerType = 'traffic';
                 incidentCategory = 'traffic';
-              } else if (categoryId === '54d31da5-fc10-4ad2-8eca-04bac680e668') {
+              } else if (categoryId === '4e2fb550-3288-45f7-8e0f-dcc2e18783bb') {
                 // Emergency Situations
                 markerType = 'emergency';
                 incidentCategory = 'emergency';
-              } else if (categoryId === '4ea3a6f0-c49e-4baf-9ca5-f074ca2811b0') {
+              } else if (categoryId === '3cbcb810-508f-4619-96c2-0357ca517cca') {
                 // Pets
                 markerType = 'pets';
                 incidentCategory = 'pets';
-              } else if (categoryId === 'deaca906-3561-4f80-b79f-ed99561c3b04' || 
-                         categoryId === 'd1dfcd4e-48e9-4e58-9476-4782a2a132f3') {
+              } else if (categoryId === '1f57674d-0cbd-47be-950f-3c94c4f14e41' || 
+                         categoryId === '10e3cad6-d03a-4101-99b0-91199b5f9928') {
                 // Community Issues or Lost & Found
                 markerType = 'community';
                 incidentCategory = 'community';
@@ -411,22 +411,22 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
               }
             } else if (category) {
               // Check if category contains UUID or text name
-              if (category === '792759f4-1b98-4665-b14c-44a54e9969e9' || category === 'safety & crime') {
+              if (category === 'fdff3a2e-a031-4909-936b-875affbc69ba' || category === 'safety & crime') {
                 markerType = 'crime';
                 incidentCategory = 'crime';
-              } else if (category === 'd03f47a9-10fb-4656-ae73-92e959d7566a' || category === 'wildlife & nature') {
+              } else if (category === '6cfdf282-1f8d-44c8-9661-24b73a88a834' || category === 'wildlife & nature') {
                 markerType = 'wildlife';
                 incidentCategory = 'wildlife';
-              } else if (category === '9b1d58d9-cfd1-4c31-93e9-754276a5f265' || category === 'infrastructure & hazards') {
+              } else if (category === 'dca6e799-6d6b-420b-9ed2-d63fc16594d3' || category === 'infrastructure & hazards') {
                 markerType = 'traffic';
                 incidentCategory = 'traffic';
-              } else if (category === '54d31da5-fc10-4ad2-8eca-04bac680e668' || category === 'emergency situations') {
+              } else if (category === '4e2fb550-3288-45f7-8e0f-dcc2e18783bb' || category === 'emergency situations') {
                 markerType = 'emergency';
                 incidentCategory = 'emergency';
-              } else if (category === '4ea3a6f0-c49e-4baf-9ca5-f074ca2811b0' || category === 'pets') {
+              } else if (category === '3cbcb810-508f-4619-96c2-0357ca517cca' || category === 'pets') {
                 markerType = 'pets';
                 incidentCategory = 'pets';
-              } else if (category === 'deaca906-3561-4f80-b79f-ed99561c3b04' || category === 'd1dfcd4e-48e9-4e58-9476-4782a2a132f3' || category === 'community issues' || category === 'lost & found') {
+              } else if (category === '1f57674d-0cbd-47be-950f-3c94c4f14e41' || category === '10e3cad6-d03a-4101-99b0-91199b5f9928' || category === 'community issues' || category === 'lost & found') {
                 markerType = 'community';
                 incidentCategory = 'community';
               } else {
@@ -525,19 +525,19 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
                 incidentCategory = 'community';
               } else if (categoryId) {
                 // Use categoryId to determine icon when incidentType is not set
-                if (categoryId === '792759f4-1b98-4665-b14c-44a54e9969e9') {
+                if (categoryId === 'fdff3a2e-a031-4909-936b-875affbc69ba') {
                   markerType = 'crime';
                   incidentCategory = 'crime';
-                } else if (categoryId === 'd03f47a9-10fb-4656-ae73-92e959d7566a') {
+                } else if (categoryId === '6cfdf282-1f8d-44c8-9661-24b73a88a834') {
                   markerType = 'wildlife';
                   incidentCategory = 'wildlife';
-                } else if (categoryId === '9b1d58d9-cfd1-4c31-93e9-754276a5f265') {
+                } else if (categoryId === 'dca6e799-6d6b-420b-9ed2-d63fc16594d3') {
                   markerType = 'traffic';
                   incidentCategory = 'traffic';
-                } else if (categoryId === '54d31da5-fc10-4ad2-8eca-04bac680e668') {
+                } else if (categoryId === '4e2fb550-3288-45f7-8e0f-dcc2e18783bb') {
                   markerType = 'emergency';
                   incidentCategory = 'emergency';
-                } else if (categoryId === '4ea3a6f0-c49e-4baf-9ca5-f074ca2811b0') {
+                } else if (categoryId === '3cbcb810-508f-4619-96c2-0357ca517cca') {
                   markerType = 'pets';
                   incidentCategory = 'pets';
                 } else {
@@ -546,22 +546,22 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
                 }
               } else if (category) {
                 // Check if category contains UUID or text name
-                if (category === '792759f4-1b98-4665-b14c-44a54e9969e9' || category === 'safety & crime') {
+                if (category === 'fdff3a2e-a031-4909-936b-875affbc69ba' || category === 'safety & crime') {
                   markerType = 'crime';
                   incidentCategory = 'crime';
-                } else if (category === 'd03f47a9-10fb-4656-ae73-92e959d7566a' || category === 'wildlife & nature') {
+                } else if (category === '6cfdf282-1f8d-44c8-9661-24b73a88a834' || category === 'wildlife & nature') {
                   markerType = 'wildlife';
                   incidentCategory = 'wildlife';
-                } else if (category === '9b1d58d9-cfd1-4c31-93e9-754276a5f265' || category === 'infrastructure & hazards') {
+                } else if (category === 'dca6e799-6d6b-420b-9ed2-d63fc16594d3' || category === 'infrastructure & hazards') {
                   markerType = 'traffic';
                   incidentCategory = 'traffic';
-                } else if (category === '54d31da5-fc10-4ad2-8eca-04bac680e668' || category === 'emergency situations') {
+                } else if (category === '4e2fb550-3288-45f7-8e0f-dcc2e18783bb' || category === 'emergency situations') {
                   markerType = 'emergency';
                   incidentCategory = 'emergency';
-                } else if (category === '4ea3a6f0-c49e-4baf-9ca5-f074ca2811b0' || category === 'pets') {
+                } else if (category === '3cbcb810-508f-4619-96c2-0357ca517cca' || category === 'pets') {
                   markerType = 'pets';
                   incidentCategory = 'pets';
-                } else if (category === 'deaca906-3561-4f80-b79f-ed99561c3b04' || category === 'd1dfcd4e-48e9-4e58-9476-4782a2a132f3' || category === 'community issues' || category === 'lost & found') {
+                } else if (category === '1f57674d-0cbd-47be-950f-3c94c4f14e41' || category === '10e3cad6-d03a-4101-99b0-91199b5f9928' || category === 'community issues' || category === 'lost & found') {
                   markerType = 'community';
                   incidentCategory = 'community';
                 } else {
@@ -615,17 +615,17 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
             let agingCategory = 'community'; // default fallback
             if (source === 'user') {
               const categoryId = properties?.categoryId || properties?.categoryUuid;
-              if (categoryId === '792759f4-1b98-4665-b14c-44a54e9969e9') {
+              if (categoryId === 'fdff3a2e-a031-4909-936b-875affbc69ba') {
                 agingCategory = 'safety';
-              } else if (categoryId === 'd03f47a9-10fb-4656-ae73-92e959d7566a') {
+              } else if (categoryId === '6cfdf282-1f8d-44c8-9661-24b73a88a834') {
                 agingCategory = 'wildlife';
-              } else if (categoryId === '9b1d58d9-cfd1-4c31-93e9-754276a5f265') {
+              } else if (categoryId === 'dca6e799-6d6b-420b-9ed2-d63fc16594d3') {
                 agingCategory = 'traffic';
-              } else if (categoryId === 'deaca906-3561-4f80-b79f-ed99561c3b04') {
+              } else if (categoryId === '1f57674d-0cbd-47be-950f-3c94c4f14e41') {
                 agingCategory = 'community';
-              } else if (categoryId === 'd1dfcd4e-48e9-4e58-9476-4782a2a132f3') {
+              } else if (categoryId === '10e3cad6-d03a-4101-99b0-91199b5f9928') {
                 agingCategory = 'lost-found';
-              } else if (categoryId === '4ea3a6f0-c49e-4baf-9ca5-f074ca2811b0') {
+              } else if (categoryId === '3cbcb810-508f-4619-96c2-0357ca517cca') {
                 agingCategory = 'pets';
               }
             } else if (source === 'tmr') {
@@ -638,17 +638,17 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
               const isUserReported = properties?.userReported;
               if (isUserReported) {
                 const categoryId = properties?.categoryId || properties?.categoryUuid;
-                if (categoryId === '792759f4-1b98-4665-b14c-44a54e9969e9') {
+                if (categoryId === 'fdff3a2e-a031-4909-936b-875affbc69ba') {
                   agingCategory = 'safety';
-                } else if (categoryId === 'd03f47a9-10fb-4656-ae73-92e959d7566a') {
+                } else if (categoryId === '6cfdf282-1f8d-44c8-9661-24b73a88a834') {
                   agingCategory = 'wildlife';
-                } else if (categoryId === '9b1d58d9-cfd1-4c31-93e9-754276a5f265') {
+                } else if (categoryId === 'dca6e799-6d6b-420b-9ed2-d63fc16594d3') {
                   agingCategory = 'traffic';
-                } else if (categoryId === 'deaca906-3561-4f80-b79f-ed99561c3b04') {
+                } else if (categoryId === '1f57674d-0cbd-47be-950f-3c94c4f14e41') {
                   agingCategory = 'community';
-                } else if (categoryId === 'd1dfcd4e-48e9-4e58-9476-4782a2a132f3') {
+                } else if (categoryId === '10e3cad6-d03a-4101-99b0-91199b5f9928') {
                   agingCategory = 'lost-found';
-                } else if (categoryId === '4ea3a6f0-c49e-4baf-9ca5-f074ca2811b0') {
+                } else if (categoryId === '3cbcb810-508f-4619-96c2-0357ca517cca') {
                   agingCategory = 'pets';
                 }
               } else {
@@ -741,7 +741,7 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
       if (eventTypeLower === 'crash' || eventTypeLower === 'hazard' || 
           eventTypeLower === 'roadworks' || eventTypeLower === 'special_event' ||
           eventTypeLower === 'special event') {
-        return '9b1d58d9-cfd1-4c31-93e9-754276a5f265'; // Infrastructure & Hazards
+        return 'dca6e799-6d6b-420b-9ed2-d63fc16594d3'; // Infrastructure & Hazards
       }
     }
     
@@ -752,17 +752,17 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
     
     // Handle ESQ (Emergency Services Queensland) incidents
     if (datasource === 'ESQ' || providedBy?.includes('Emergency') || getProperty(props, 'source') === 'ESQ' || getProperty(props, 'source') === 'emergency') {
-      return '54d31da5-fc10-4ad2-8eca-04bac680e668'; // Emergency Situations
+      return '4e2fb550-3288-45f7-8e0f-dcc2e18783bb'; // Emergency Situations
     }
     
     // Handle TMR (Transport and Main Roads) incidents  
     if (datasource === 'TMR' || datasource === 'EPS' || providedBy?.includes('Transport') || providedBy?.includes('Main Roads') || getProperty(props, 'source') === 'TMR') {
-      return '9b1d58d9-cfd1-4c31-93e9-754276a5f265'; // Infrastructure & Hazards
+      return 'dca6e799-6d6b-420b-9ed2-d63fc16594d3'; // Infrastructure & Hazards
     }
     
     // Handle QPS (Queensland Police Service) incidents
     if (datasource === 'QPS' || providedBy?.includes('Police') || getProperty(props, 'source') === 'QPS') {
-      return '792759f4-1b98-4665-b14c-44a54e9969e9'; // Safety & Crime
+      return 'fdff3a2e-a031-4909-936b-875affbc69ba'; // Safety & Crime
     }
     
     // For QFES incidents, categorize based on GroupedType and other properties
@@ -779,7 +779,7 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
         description.includes('theft') ||
         description.includes('crime') ||
         title.includes('police')) {
-      return '792759f4-1b98-4665-b14c-44a54e9969e9'; // Safety & Crime
+      return 'fdff3a2e-a031-4909-936b-875affbc69ba'; // Safety & Crime
     }
     
     // Emergency Situations - Fire, Medical, Ambulance, Rescue
@@ -797,7 +797,7 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
         title.includes('fire') ||
         title.includes('medical') ||
         title.includes('rescue')) {
-      return '54d31da5-fc10-4ad2-8eca-04bac680e668'; // Emergency Situations
+      return '4e2fb550-3288-45f7-8e0f-dcc2e18783bb'; // Emergency Situations
     }
     
     // Infrastructure & Hazards - Road hazards, infrastructure issues, traffic
@@ -808,7 +808,7 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
         title.includes('hazard') ||
         title.includes('infrastructure') ||
         title.includes('road')) {
-      return '9b1d58d9-cfd1-4c31-93e9-754276a5f265'; // Infrastructure & Hazards
+      return 'dca6e799-6d6b-420b-9ed2-d63fc16594d3'; // Infrastructure & Hazards
     }
     
     // Wildlife & Nature - Animal related incidents
@@ -818,11 +818,11 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
         description.includes('wildlife') ||
         title.includes('animal') ||
         title.includes('wildlife')) {
-      return 'd03f47a9-10fb-4656-ae73-92e959d7566a'; // Wildlife & Nature
+      return '6cfdf282-1f8d-44c8-9661-24b73a88a834'; // Wildlife & Nature
     }
     
     // Default to Community Issues for uncategorized incidents
-    return 'deaca906-3561-4f80-b79f-ed99561c3b04'; // Community Issues
+    return '1f57674d-0cbd-47be-950f-3c94c4f14e41'; // Community Issues
   };
 
   const getMarkerColor = (markerType: string, properties?: any) => {

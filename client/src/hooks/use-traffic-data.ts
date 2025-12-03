@@ -196,27 +196,27 @@ export function useTrafficData(filters: FilterState, viewportBounds?: { southwes
   const qfesIncidentsCount = regionalQfesIncidents.length;
   const userSafetyCrime = regionalIncidents.filter((i: any) => {
     const categoryUuid = i.properties?.categoryUuid || i.properties?.categoryId;
-    return i.properties?.userReported && categoryUuid === '792759f4-1b98-4665-b14c-44a54e9969e9';
+    return i.properties?.userReported && categoryUuid === 'fdff3a2e-a031-4909-936b-875affbc69ba';
   }).length;
   const userWildlife = regionalIncidents.filter((i: any) => {
     const categoryUuid = i.properties?.categoryUuid || i.properties?.categoryId;
-    return i.properties?.userReported && categoryUuid === 'd03f47a9-10fb-4656-ae73-92e959d7566a';
+    return i.properties?.userReported && categoryUuid === '6cfdf282-1f8d-44c8-9661-24b73a88a834';
   }).length;
   const userCommunity = regionalIncidents.filter((i: any) => {
     const categoryUuid = i.properties?.categoryUuid || i.properties?.categoryId;
-    return i.properties?.userReported && categoryUuid === 'deaca906-3561-4f80-b79f-ed99561c3b04';
+    return i.properties?.userReported && categoryUuid === '1f57674d-0cbd-47be-950f-3c94c4f14e41';
   }).length;
   const userTraffic = regionalIncidents.filter((i: any) => {
     const categoryUuid = i.properties?.categoryUuid || i.properties?.categoryId;
-    return i.properties?.userReported && categoryUuid === '9b1d58d9-cfd1-4c31-93e9-754276a5f265';
+    return i.properties?.userReported && categoryUuid === 'dca6e799-6d6b-420b-9ed2-d63fc16594d3';
   }).length;
   const userLostFound = regionalIncidents.filter((i: any) => {
     const categoryUuid = i.properties?.categoryUuid || i.properties?.categoryId;
-    return i.properties?.userReported && categoryUuid === 'd1dfcd4e-48e9-4e58-9476-4782a2a132f3';
+    return i.properties?.userReported && categoryUuid === '10e3cad6-d03a-4101-99b0-91199b5f9928';
   }).length;
   const userPets = regionalIncidents.filter((i: any) => {
     const categoryUuid = i.properties?.categoryUuid || i.properties?.categoryId;
-    return i.properties?.userReported && categoryUuid === '4ea3a6f0-c49e-4baf-9ca5-f074ca2811b0';
+    return i.properties?.userReported && categoryUuid === '3cbcb810-508f-4619-96c2-0357ca517cca';
   }).length;
   
   const counts = {
@@ -241,18 +241,20 @@ export function useTrafficData(filters: FilterState, viewportBounds?: { southwes
     if (isUserReported) {
       const categoryUuid = incident.properties?.categoryUuid || incident.properties?.categoryId;
       
-      if (categoryUuid === '792759f4-1b98-4665-b14c-44a54e9969e9') { // Safety & Crime
+      if (categoryUuid === 'fdff3a2e-a031-4909-936b-875affbc69ba') { // Safety & Crime
         return filters.showUserSafetyCrime === true;
-      } else if (categoryUuid === 'd03f47a9-10fb-4656-ae73-92e959d7566a') { // Wildlife & Nature
+      } else if (categoryUuid === '6cfdf282-1f8d-44c8-9661-24b73a88a834') { // Wildlife & Nature
         return filters.showUserWildlife === true;
-      } else if (categoryUuid === '9b1d58d9-cfd1-4c31-93e9-754276a5f265') { // Infrastructure & Hazards (Traffic)
+      } else if (categoryUuid === 'dca6e799-6d6b-420b-9ed2-d63fc16594d3') { // Infrastructure & Hazards (Traffic)
         return filters.showUserTraffic === true;
-      } else if (categoryUuid === 'deaca906-3561-4f80-b79f-ed99561c3b04') { // Community Issues
+      } else if (categoryUuid === '1f57674d-0cbd-47be-950f-3c94c4f14e41') { // Community Issues
         return filters.showUserCommunity === true;
-      } else if (categoryUuid === 'd1dfcd4e-48e9-4e58-9476-4782a2a132f3') { // Lost & Found
+      } else if (categoryUuid === '10e3cad6-d03a-4101-99b0-91199b5f9928') { // Lost & Found
         return filters.showUserLostFound === true;
-      } else if (categoryUuid === '4ea3a6f0-c49e-4baf-9ca5-f074ca2811b0') { // Pets
+      } else if (categoryUuid === '3cbcb810-508f-4619-96c2-0357ca517cca') { // Pets
         return filters.showUserPets === true;
+      } else if (categoryUuid === '4e2fb550-3288-45f7-8e0f-dcc2e18783bb') { // Emergency Situations
+        return filters.showIncidents === true;
       } else {
         // Fallback for unknown categories - show with community issues
         return filters.showUserCommunity === true;
