@@ -71,7 +71,10 @@ export function useTrafficData(filters: FilterState, viewportBounds?: { southwes
     // Enable if viewport bounds available OR if caller allows fetch without viewport (feed page)
     enabled: !!viewportBounds || allowFetchWithoutViewport,
     refetchInterval: filters.autoRefresh ? 30000 : 60 * 1000,
-    staleTime: 20000,
+    staleTime: 30000,
+    gcTime: 60000,
+    refetchOnWindowFocus: false,
+    placeholderData: (previousData: any) => previousData,
   });
 
   // Extract and process all unified features

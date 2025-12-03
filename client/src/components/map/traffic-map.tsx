@@ -61,7 +61,8 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
   
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
-  const markersRef = useRef<L.Marker[]>([]);
+  const markersRef = useRef<Map<string, L.Marker>>(new Map());
+  const viewportDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [viewportBounds, setViewportBounds] = useState<{ southwest: [number, number], northeast: [number, number] } | undefined>();
 
@@ -134,6 +135,7 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
     mapInstanceRef.current = map;
 
     // Save map position and update viewport bounds when user moves or zooms
+    // DEBOUNCED to prevent rapid refetches during pan/zoom animations
     const updateViewport = () => {
       if (mapInstanceRef.current) {
         const center = mapInstanceRef.current.getCenter();
@@ -145,12 +147,21 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
         };
         localStorage.setItem('qldSafetyMap_position', JSON.stringify(mapState));
         
-        // OPTIMIZATION: Update viewport bounds for efficient data fetching
-        const bounds = mapInstanceRef.current.getBounds();
-        setViewportBounds({
-          southwest: [bounds.getSouth(), bounds.getWest()],
-          northeast: [bounds.getNorth(), bounds.getEast()]
-        });
+        // Clear any pending debounce
+        if (viewportDebounceRef.current) {
+          clearTimeout(viewportDebounceRef.current);
+        }
+        
+        // Debounce viewport bounds update to prevent flicker during pan/zoom
+        viewportDebounceRef.current = setTimeout(() => {
+          if (mapInstanceRef.current) {
+            const bounds = mapInstanceRef.current.getBounds();
+            setViewportBounds({
+              southwest: [bounds.getSouth(), bounds.getWest()],
+              northeast: [bounds.getNorth(), bounds.getEast()]
+            });
+          }
+        }, 200);
       }
     };
 
@@ -158,8 +169,14 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
     map.on('moveend', updateViewport);
     map.on('zoomend', updateViewport);
     
-    // Set initial viewport bounds
-    updateViewport();
+    // Set initial viewport bounds immediately (no debounce for first load)
+    if (mapInstanceRef.current) {
+      const bounds = mapInstanceRef.current.getBounds();
+      setViewportBounds({
+        southwest: [bounds.getSouth(), bounds.getWest()],
+        northeast: [bounds.getNorth(), bounds.getEast()]
+      });
+    }
 
     return () => {
       if (mapInstanceRef.current) {
@@ -175,16 +192,12 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
   }, [incidentsLoading]);
 
   // Update markers when data or filters change
+  // Uses keyed diffing to only add/remove changed markers (prevents flicker)
   useEffect(() => {
     if (!mapInstanceRef.current) return;
 
-    // Clear existing markers
-    markersRef.current.forEach(marker => {
-      mapInstanceRef.current?.removeLayer(marker);
-    });
-    markersRef.current = [];
-
-    const newMarkers: L.Marker[] = [];
+    // Track which marker IDs are in the current data
+    const currentMarkerIds = new Set<string>();
     
     // Events are already filtered by region on the backend when homeLocation is set
     let filteredEventsData = eventsData;
@@ -330,8 +343,15 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
               onEventSelect(feature);
             });
 
-            marker.addTo(mapInstanceRef.current!);
-            newMarkers.push(marker);
+            // Generate stable ID for this marker
+            const markerId = `event-${feature.properties?.id || feature.properties?.guid || feature.properties?.eventId || JSON.stringify(coords)}`;
+            currentMarkerIds.add(markerId);
+            
+            // Only add marker if it doesn't already exist
+            if (!markersRef.current.has(markerId)) {
+              marker.addTo(mapInstanceRef.current!);
+              markersRef.current.set(markerId, marker);
+            }
           }
         }
       });
@@ -725,14 +745,27 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
               onEventSelect(feature);
             });
 
-            marker.addTo(mapInstanceRef.current!);
-            newMarkers.push(marker);
+            // Generate stable ID for this marker
+            const markerId = `incident-${feature.properties?.id || feature.properties?.incidentId || feature.properties?.guid || JSON.stringify(coords)}`;
+            currentMarkerIds.add(markerId);
+            
+            // Only add marker if it doesn't already exist
+            if (!markersRef.current.has(markerId)) {
+              marker.addTo(mapInstanceRef.current!);
+              markersRef.current.set(markerId, marker);
+            }
           }
         }
       });
     }
 
-    markersRef.current = newMarkers;
+    // Remove markers that are no longer in the current data set
+    markersRef.current.forEach((marker, markerId) => {
+      if (!currentMarkerIds.has(markerId)) {
+        mapInstanceRef.current?.removeLayer(marker);
+        markersRef.current.delete(markerId);
+      }
+    });
   }, [eventsData, incidentsData, filters]);
 
   // Incident categorization function
