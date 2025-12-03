@@ -277,6 +277,7 @@ async function signObjectURL({
     method,
     expires_at: new Date(Date.now() + ttlSec * 1000).toISOString(),
   };
+  console.log("[Object Storage] Signing URL request:", JSON.stringify(request, null, 2));
   const response = await fetch(
     `${REPLIT_SIDECAR_ENDPOINT}/object-storage/signed-object-url`,
     {
@@ -288,9 +289,11 @@ async function signObjectURL({
     }
   );
   if (!response.ok) {
+    const errorText = await response.text();
+    console.error("[Object Storage] Error response:", response.status, errorText);
     throw new Error(
       `Failed to sign object URL, errorcode: ${response.status}, ` +
-        `make sure you're running on Replit`
+        `make sure you're running on Replit. Details: ${errorText}`
     );
   }
 
