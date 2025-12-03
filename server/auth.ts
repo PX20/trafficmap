@@ -176,7 +176,8 @@ export function setupAuth(app: Express) {
         email, 
         firstName, 
         lastName, 
-        homeSuburb, 
+        homeSuburb,
+        preferredLocation,
         accountType,
         businessName,
         businessDescription,
@@ -197,7 +198,7 @@ export function setupAuth(app: Express) {
         email: email.toLowerCase(),
         firstName,
         lastName,
-        homeSuburb,
+        preferredLocation: preferredLocation || homeSuburb,
         accountType: accountType || 'regular'
       };
 
