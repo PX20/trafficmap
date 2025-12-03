@@ -37,6 +37,7 @@ export function LocationAutocomplete({
   const [isLoading, setIsLoading] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [inputValue, setInputValue] = useState(value);
+  const justSelectedRef = useRef(false);
 
   // Sync inputValue with external value changes (like GPS updates)
   useEffect(() => {
@@ -45,8 +46,14 @@ export function LocationAutocomplete({
   const { toast } = useToast();
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Debounce search
+  // Debounce search - but skip if user just selected a suggestion
   useEffect(() => {
+    // Skip search if user just selected a suggestion
+    if (justSelectedRef.current) {
+      justSelectedRef.current = false;
+      return;
+    }
+    
     const timer = setTimeout(() => {
       if (inputValue.trim().length > 2) {
         searchLocation(inputValue);
@@ -141,7 +148,10 @@ export function LocationAutocomplete({
       locationText += `, ${state}`;
     }
     
+    // Set flag to prevent search from triggering after selection
+    justSelectedRef.current = true;
     setInputValue(locationText.trim());
+    setSuggestions([]);
     setShowSuggestions(false);
     
     const boundingBox = suggestion.boundingbox ? [
