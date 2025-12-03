@@ -37,24 +37,26 @@ export function LocationAutocomplete({
   const [isLoading, setIsLoading] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [inputValue, setInputValue] = useState(value);
-  const justSelectedRef = useRef(false);
+  const [lastSelectedValue, setLastSelectedValue] = useState<string | null>(null);
   const { toast } = useToast();
   const containerRef = useRef<HTMLDivElement>(null);
-  const textInputRef = useRef<HTMLInputElement>(null);
 
   // Sync inputValue with external value changes (like GPS updates)
-  // Only sync if the external value is different AND we didn't just select something
   useEffect(() => {
-    if (value !== inputValue && !justSelectedRef.current) {
+    // Don't sync if this is the value we just selected
+    if (value === lastSelectedValue) {
+      return;
+    }
+    if (value !== inputValue) {
       setInputValue(value);
     }
-  }, [value]);
+  }, [value, lastSelectedValue]);
 
-  // Debounce search - but skip if user just selected a suggestion
+  // Debounce search
   useEffect(() => {
-    // Skip search if user just selected a suggestion
-    if (justSelectedRef.current) {
-      return; // Don't reset the flag here - let it persist until the next user input
+    // Don't search if input matches what we just selected
+    if (inputValue === lastSelectedValue) {
+      return;
     }
     
     const timer = setTimeout(() => {
@@ -67,7 +69,7 @@ export function LocationAutocomplete({
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [inputValue]);
+  }, [inputValue, lastSelectedValue]);
 
   const searchLocation = async (query: string) => {
     setIsLoading(true);
@@ -151,16 +153,13 @@ export function LocationAutocomplete({
       locationText += `, ${state}`;
     }
     
-    // Set flag to prevent search from triggering after selection
-    justSelectedRef.current = true;
-    setInputValue(locationText.trim());
+    const finalLocation = locationText.trim();
+    
+    // Store the selected value to prevent re-searching for it
+    setLastSelectedValue(finalLocation);
+    setInputValue(finalLocation);
     setSuggestions([]);
     setShowSuggestions(false);
-    
-    // Blur the input to prevent it from staying focused and re-triggering suggestions
-    if (textInputRef.current) {
-      textInputRef.current.blur();
-    }
     
     const boundingBox = suggestion.boundingbox ? [
       parseFloat(suggestion.boundingbox[0]), // min_lat
@@ -180,8 +179,8 @@ export function LocationAutocomplete({
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Reset the selection flag when user types manually - allow searches again
-    justSelectedRef.current = false;
+    // Clear the last selected value when user types - allow new searches
+    setLastSelectedValue(null);
     setInputValue(e.target.value);
   };
 
@@ -202,7 +201,6 @@ export function LocationAutocomplete({
       <div className="relative">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
-          ref={textInputRef}
           type="text"
           value={inputValue}
           onChange={handleInputChange}
