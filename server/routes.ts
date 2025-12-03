@@ -3382,21 +3382,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const bucketName = pathMatch[1];
-      const fullObjectPath = pathMatch[2]; // e.g., ".private/uploads/uuid"
+      const fullObjectPath = pathMatch[2]; // e.g., "uploads/uuid"
       
       console.log('Bucket:', bucketName, 'Object path:', fullObjectPath);
       
-      // Extract just the part after .private/ for the viewing URL
-      const privatePathMatch = fullObjectPath.match(/^\.private\/(.+)$/);
-      if (!privatePathMatch) {
-        console.error('Object not in private directory:', fullObjectPath);
-        return res.status(400).json({ error: "Object not in private directory" });
+      // The object path should be in uploads/ directory
+      if (!fullObjectPath.startsWith('uploads/')) {
+        console.error('Object not in uploads directory:', fullObjectPath);
+        return res.status(400).json({ error: "Object not in uploads directory" });
       }
       
-      const relativePath = privatePathMatch[1]; // e.g., "uploads/uuid"
-      
       // Create a viewing URL that goes through our server
-      const viewURL = `/objects/${relativePath}`;
+      const viewURL = `/objects/${fullObjectPath}`;
       
       console.log(`✅ Processed ${type} upload: ${uploadURL} -> ${viewURL}`);
       res.json({ viewURL });
