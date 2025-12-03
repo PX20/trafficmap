@@ -40,14 +40,15 @@ export function LocationAutocomplete({
   const { toast } = useToast();
   const containerRef = useRef<HTMLDivElement>(null);
   
-  // Use a ref to track selection - this survives re-renders without triggering effects
-  const selectionLockRef = useRef(false);
+  // Track if user has actively typed in the input (not just initial value or programmatic changes)
+  const userHasTypedRef = useRef(false);
   const selectionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isLockedRef = useRef(false);
 
   // Sync inputValue with external value changes (like GPS updates)
   useEffect(() => {
-    // Don't sync if we just made a selection
-    if (selectionLockRef.current) {
+    // Don't sync if locked after selection
+    if (isLockedRef.current) {
       return;
     }
     if (value !== inputValue) {
@@ -55,10 +56,15 @@ export function LocationAutocomplete({
     }
   }, [value]);
 
-  // Debounce search
+  // Debounce search - only if user has actively typed
   useEffect(() => {
-    // Don't search if selection is locked
-    if (selectionLockRef.current) {
+    // Don't search if user hasn't typed yet (initial mount or programmatic value)
+    if (!userHasTypedRef.current) {
+      return;
+    }
+    
+    // Don't search if locked after selection
+    if (isLockedRef.current) {
       return;
     }
     
@@ -158,18 +164,14 @@ export function LocationAutocomplete({
     
     const finalLocation = locationText.trim();
     
-    // Lock selection to prevent any searches for a period
-    selectionLockRef.current = true;
+    // Lock to prevent any searches after selection
+    isLockedRef.current = true;
+    userHasTypedRef.current = false; // Reset typing flag - user selected, not typed
     
     // Clear any existing timeout
     if (selectionTimeoutRef.current) {
       clearTimeout(selectionTimeoutRef.current);
     }
-    
-    // Unlock after 1 second - enough time for all re-renders to settle
-    selectionTimeoutRef.current = setTimeout(() => {
-      selectionLockRef.current = false;
-    }, 1000);
     
     setInputValue(finalLocation);
     setSuggestions([]);
@@ -193,8 +195,9 @@ export function LocationAutocomplete({
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Clear the selection lock when user types - allow new searches
-    selectionLockRef.current = false;
+    // User is actively typing - enable searches
+    userHasTypedRef.current = true;
+    isLockedRef.current = false;
     if (selectionTimeoutRef.current) {
       clearTimeout(selectionTimeoutRef.current);
       selectionTimeoutRef.current = null;
