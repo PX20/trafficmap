@@ -317,8 +317,7 @@ export class DatabaseStorage implements IStorage {
       firstName: 'Sarah',
       lastName: 'Mitchell',
       profileImageUrl: null,
-      homeSuburb: 'Caloundra',
-      primarySuburb: 'Caloundra',
+      preferredLocation: 'Caloundra',
       accountType: 'business',
       businessName: 'Sunshine Coast Coffee Co.',
       businessCategory: 'Restaurant & Food',
@@ -354,8 +353,7 @@ export class DatabaseStorage implements IStorage {
       firstName: 'Admin',
       lastName: 'User',
       profileImageUrl: null,
-      homeSuburb: 'Brisbane',
-      primarySuburb: 'Brisbane',
+      preferredLocation: 'Brisbane',
       accountType: 'regular',
       role: 'admin',
       termsAccepted: true,
@@ -424,10 +422,10 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  async updateUserSuburb(id: string, homeSuburb: string): Promise<User | undefined> {
+  async updateUserSuburb(id: string, preferredLocation: string): Promise<User | undefined> {
     const [updated] = await db
       .update(users)
-      .set({ homeSuburb, updatedAt: new Date() })
+      .set({ preferredLocation, updatedAt: new Date() })
       .where(eq(users.id, id))
       .returning();
     return updated;
@@ -1000,7 +998,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUsersBySuburb(suburb: string): Promise<User[]> {
-    return await db.select().from(users).where(eq(users.primarySuburb, suburb));
+    return await db.select().from(users).where(eq(users.preferredLocation, suburb));
   }
 
   async getUsersByIds(userIds: string[]): Promise<User[]> {
@@ -1822,6 +1820,7 @@ export class DatabaseStorage implements IStorage {
         incidentId: incidentComments.incidentId,
         parentCommentId: incidentComments.parentCommentId,
         photoUrl: incidentComments.photoUrl,
+        photoUrls: incidentComments.photoUrls,
         user: {
           id: users.id,
           displayName: users.displayName,
@@ -1975,21 +1974,6 @@ export class DatabaseStorage implements IStorage {
       .update(stories)
       .set({ viewCount: sql`${stories.viewCount} + 1` })
       .where(eq(stories.id, storyId));
-  }
-
-  // ============================================================================
-  // NOTIFICATIONS
-  // ============================================================================
-
-  async getUnreadNotificationCount(userId: string): Promise<number> {
-    const result = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(notifications)
-      .where(and(
-        eq(notifications.userId, userId),
-        eq(notifications.isRead, false)
-      ));
-    return result[0]?.count || 0;
   }
 
 }

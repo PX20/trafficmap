@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useLocation } from "wouter";
@@ -10,6 +10,15 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { 
   Bell, 
@@ -19,26 +28,37 @@ import {
   Settings,
   RefreshCw,
   PenSquare,
-  Image,
   Camera,
-  MapPinned
+  MapPinned,
+  Menu,
+  User,
+  LogOut,
+  Map,
+  List,
+  ChevronRight,
+  Shield,
+  HelpCircle,
+  Heart,
+  Bookmark
 } from "lucide-react";
 import { Link } from "wouter";
 import { queryClient } from "@/lib/queryClient";
 
 export default function Feed() {
-  const { user } = useAuth();
+  const { user, logoutMutation } = useAuth();
   const isMobile = useIsMobile();
   const [, setLocation] = useLocation();
   const [reportFormOpen, setReportFormOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [viewMode, setViewMode] = useState<'feed' | 'map'>('feed');
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const { data: unifiedData, isLoading, refetch } = useQuery({
     queryKey: ["/api/unified"],
     refetchInterval: 60000,
   });
 
-  const { data: unreadCount = 0 } = useQuery<{ count: number }>({
+  const { data: unreadCount = 0 } = useQuery<number>({
     queryKey: ["/api/notifications/unread-count"],
     enabled: !!user,
     select: (data: any) => data?.count || 0,
@@ -62,28 +82,206 @@ export default function Feed() {
     setLocation(`/incident/${postId}`);
   };
 
+  const handleLogout = () => {
+    logoutMutation.mutate(undefined, {
+      onSuccess: () => {
+        setLocation("/");
+      }
+    });
+  };
+
+  const menuItems = [
+    { icon: User, label: "My Profile", href: "/profile" },
+    { icon: MapPin, label: "My Location", href: "/location" },
+    { icon: Bookmark, label: "Saved Posts", href: "/saved" },
+    { icon: Heart, label: "My Reactions", href: "/reactions" },
+    { icon: Settings, label: "Preferences", href: "/settings" },
+    { icon: Shield, label: "Privacy", href: "/privacy" },
+    { icon: HelpCircle, label: "Help & Support", href: "/help" },
+  ];
+
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-background dark:bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm">
+      <header className="sticky top-0 z-50 bg-card dark:bg-card border-b border-border shadow-sm">
         <div className="max-w-2xl mx-auto px-4">
-          <div className="flex items-center justify-between h-14">
-            <h1 className="text-xl font-bold text-blue-600">
+          <div className="flex items-center justify-between h-14 gap-2">
+            {/* Left: Hamburger Menu */}
+            <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
+              <SheetTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="rounded-full"
+                  data-testid="button-menu"
+                >
+                  <Menu className="w-5 h-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-80 p-0">
+                <SheetHeader className="p-4 border-b border-border">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="w-12 h-12">
+                      {user?.profileImageUrl && <AvatarImage src={user.profileImageUrl} />}
+                      <AvatarFallback className="bg-primary/10 text-primary">
+                        {user?.displayName?.charAt(0) || user?.firstName?.charAt(0) || "?"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <SheetTitle className="text-left truncate">
+                        {user?.displayName || `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || "Guest"}
+                      </SheetTitle>
+                      <p className="text-sm text-muted-foreground truncate">
+                        {user?.email || "Not logged in"}
+                      </p>
+                    </div>
+                  </div>
+                </SheetHeader>
+                
+                {/* Location Section */}
+                <div className="p-4 border-b border-border">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <MapPin className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">Your Location</span>
+                    </div>
+                    <Link href="/location" onClick={() => setMenuOpen(false)}>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="text-primary"
+                        data-testid="button-change-location-menu"
+                      >
+                        Change
+                      </Button>
+                    </Link>
+                  </div>
+                  <p className="mt-1 font-medium" data-testid="text-current-location">
+                    {user?.preferredLocation || "Not set"}
+                  </p>
+                </div>
+
+                {/* Menu Items */}
+                <nav className="p-2">
+                  {menuItems.map((item) => (
+                    <Link 
+                      key={item.href} 
+                      href={item.href}
+                      onClick={() => setMenuOpen(false)}
+                      data-testid={`link-menu-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
+                    >
+                      <div className="flex items-center justify-between px-3 py-3 rounded-lg hover-elevate cursor-pointer">
+                        <div className="flex items-center gap-3">
+                          <item.icon className="w-5 h-5 text-muted-foreground" />
+                          <span className="font-medium">{item.label}</span>
+                        </div>
+                        <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                      </div>
+                    </Link>
+                  ))}
+                </nav>
+
+                <Separator className="my-2" />
+
+                {/* Logout */}
+                {user && (
+                  <div className="p-2">
+                    <button
+                      onClick={() => {
+                        handleLogout();
+                        setMenuOpen(false);
+                      }}
+                      className="flex items-center gap-3 w-full px-3 py-3 rounded-lg hover-elevate text-destructive"
+                      data-testid="button-logout"
+                    >
+                      <LogOut className="w-5 h-5" />
+                      <span className="font-medium">Log Out</span>
+                    </button>
+                  </div>
+                )}
+
+                {!user && (
+                  <div className="p-4">
+                    <Link href="/login" onClick={() => setMenuOpen(false)}>
+                      <Button className="w-full" data-testid="button-login">
+                        Log In
+                      </Button>
+                    </Link>
+                  </div>
+                )}
+              </SheetContent>
+            </Sheet>
+
+            {/* Center: App Title */}
+            <h1 className="text-xl font-bold text-primary flex-1 text-center">
               Neighbourhood
             </h1>
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" className="rounded-full bg-gray-100">
-                <Search className="w-5 h-5 text-gray-600" />
-              </Button>
+
+            {/* Right: Actions */}
+            <div className="flex items-center gap-1">
+              {/* Notification Bell */}
+              <Link href="/notifications">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="rounded-full relative"
+                  data-testid="button-notifications"
+                >
+                  <Bell className="w-5 h-5" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-xs font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
+                      {unreadCount > 99 ? '99+' : unreadCount}
+                    </span>
+                  )}
+                </Button>
+              </Link>
+
+              {/* Messages */}
               <Link href="/messages">
-                <Button variant="ghost" size="icon" className="rounded-full bg-gray-100 relative">
-                  <MessageCircle className="w-5 h-5 text-gray-600" />
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="rounded-full"
+                  data-testid="button-messages"
+                >
+                  <MessageCircle className="w-5 h-5" />
                 </Button>
               </Link>
             </div>
           </div>
         </div>
       </header>
+
+      {/* Feed/Map Toggle */}
+      <div className="sticky top-14 z-40 bg-card dark:bg-card border-b border-border">
+        <div className="max-w-2xl mx-auto px-4">
+          <div className="flex items-center justify-center gap-1 py-2">
+            <Button
+              variant={viewMode === 'feed' ? 'default' : 'ghost'}
+              size="sm"
+              className="flex-1 max-w-32 gap-2"
+              onClick={() => setViewMode('feed')}
+              data-testid="button-view-feed"
+            >
+              <List className="w-4 h-4" />
+              Feed
+            </Button>
+            <Button
+              variant={viewMode === 'map' ? 'default' : 'ghost'}
+              size="sm"
+              className="flex-1 max-w-32 gap-2"
+              onClick={() => {
+                setViewMode('map');
+                setLocation('/map');
+              }}
+              data-testid="button-view-map"
+            >
+              <Map className="w-4 h-4" />
+              Map
+            </Button>
+          </div>
+        </div>
+      </div>
 
       {/* Main Content */}
       <main className="max-w-2xl mx-auto pb-20">
@@ -96,40 +294,44 @@ export default function Feed() {
             <div className="flex items-center gap-3">
               <Avatar className="w-10 h-10">
                 {user?.profileImageUrl && <AvatarImage src={user.profileImageUrl} />}
-                <AvatarFallback className="bg-blue-100 text-blue-600">
+                <AvatarFallback className="bg-primary/10 text-primary">
                   {user?.displayName?.charAt(0) || user?.firstName?.charAt(0) || "?"}
                 </AvatarFallback>
               </Avatar>
               <button
                 onClick={() => setReportFormOpen(true)}
-                className="flex-1 bg-gray-100 hover:bg-gray-200 rounded-full px-4 py-2.5 text-left text-gray-500 transition-colors"
+                className="flex-1 bg-muted hover:bg-muted/80 rounded-full px-4 py-2.5 text-left text-muted-foreground transition-colors"
+                data-testid="button-create-post"
               >
                 What's happening in your area?
               </button>
             </div>
-            <div className="flex items-center justify-around mt-3 pt-3 border-t border-gray-100">
+            <div className="flex items-center justify-around mt-3 pt-3 border-t border-border">
               <Button
                 variant="ghost"
-                className="flex-1 gap-2 text-gray-600 hover:bg-gray-50"
+                className="flex-1 gap-2"
                 onClick={() => setReportFormOpen(true)}
+                data-testid="button-add-photo"
               >
                 <Camera className="w-5 h-5 text-green-500" />
                 <span className="text-sm">Photo</span>
               </Button>
               <Button
                 variant="ghost"
-                className="flex-1 gap-2 text-gray-600 hover:bg-gray-50"
+                className="flex-1 gap-2"
                 onClick={() => setReportFormOpen(true)}
+                data-testid="button-add-location"
               >
                 <MapPinned className="w-5 h-5 text-red-500" />
                 <span className="text-sm">Location</span>
               </Button>
               <Button
                 variant="ghost"
-                className="flex-1 gap-2 text-gray-600 hover:bg-gray-50"
+                className="flex-1 gap-2"
                 onClick={() => setReportFormOpen(true)}
+                data-testid="button-write-post"
               >
-                <PenSquare className="w-5 h-5 text-blue-500" />
+                <PenSquare className="w-5 h-5 text-primary" />
                 <span className="text-sm">Post</span>
               </Button>
             </div>
@@ -139,12 +341,12 @@ export default function Feed() {
         {/* Location Filter */}
         {user?.preferredLocation && (
           <div className="px-4 py-2 flex items-center gap-2">
-            <MapPin className="w-4 h-4 text-gray-500" />
-            <span className="text-sm text-gray-600">
-              Showing posts near <strong>{user.preferredLocation}</strong>
+            <MapPin className="w-4 h-4 text-muted-foreground" />
+            <span className="text-sm text-muted-foreground">
+              Showing posts near <strong className="text-foreground">{user.preferredLocation}</strong>
             </span>
-            <Link href="/profile">
-              <button className="text-sm text-blue-600 hover:underline ml-auto">
+            <Link href="/location">
+              <button className="text-sm text-primary hover:underline ml-auto" data-testid="button-change-location">
                 Change
               </button>
             </Link>
@@ -159,6 +361,7 @@ export default function Feed() {
             className="w-full gap-2"
             onClick={handleRefresh}
             disabled={isRefreshing}
+            data-testid="button-refresh-feed"
           >
             <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
             {isRefreshing ? "Refreshing..." : "Refresh Feed"}
@@ -184,16 +387,16 @@ export default function Feed() {
             ))
           ) : posts.length === 0 ? (
             <Card className="mx-4 p-8 text-center border-0 rounded-lg">
-              <div className="text-gray-400 mb-4">
+              <div className="text-muted-foreground mb-4">
                 <MessageCircle className="w-16 h-16 mx-auto mb-4 opacity-50" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-700 mb-2">
+              <h3 className="text-lg font-semibold mb-2">
                 No posts yet
               </h3>
-              <p className="text-gray-500 mb-4">
+              <p className="text-muted-foreground mb-4">
                 Be the first to share what's happening in your neighborhood!
               </p>
-              <Button onClick={() => setReportFormOpen(true)}>
+              <Button onClick={() => setReportFormOpen(true)} data-testid="button-first-post">
                 Create a Post
               </Button>
             </Card>
