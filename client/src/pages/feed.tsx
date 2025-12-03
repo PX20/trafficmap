@@ -150,7 +150,7 @@ export default function Feed() {
                       <MapPin className="w-4 h-4 text-muted-foreground" />
                       <span className="text-sm text-muted-foreground">Your Location</span>
                     </div>
-                    <Link href="/location" onClick={() => setMenuOpen(false)}>
+                    <Link href="/profile" onClick={() => setMenuOpen(false)}>
                       <Button 
                         variant="ghost" 
                         size="sm" 
@@ -350,7 +350,7 @@ export default function Feed() {
             <span className="text-sm text-muted-foreground">
               Showing posts near <strong className="text-foreground">{user.preferredLocation}</strong>
             </span>
-            <Link href="/location">
+            <Link href="/profile">
               <button className="text-sm text-primary hover:underline ml-auto" data-testid="button-change-location">
                 Change
               </button>

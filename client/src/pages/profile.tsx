@@ -23,7 +23,7 @@ export default function Profile() {
   const [formData, setFormData] = useState({
     firstName: user?.firstName || "",
     lastName: user?.lastName || "",
-    primarySuburb: user?.primarySuburb || "",
+    preferredLocation: user?.preferredLocation || "",
     phoneNumber: user?.phoneNumber || "",
     bio: user?.bio || "",
     // Business fields
@@ -121,7 +121,7 @@ export default function Profile() {
     setFormData({
       firstName: user?.firstName || "",
       lastName: user?.lastName || "",
-      primarySuburb: user?.primarySuburb || "",
+      preferredLocation: user?.preferredLocation || "",
       phoneNumber: user?.phoneNumber || "",
       bio: user?.bio || "",
       // Business fields
@@ -195,10 +195,10 @@ export default function Profile() {
                           </Badge>
                         </div>
                       </CardDescription>
-                      {user.primarySuburb && (
+                      {user.preferredLocation && (
                         <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
                           <MapPin className="w-3 h-3 flex-shrink-0" />
-                          <span className="truncate" data-testid="text-user-suburb">{user.primarySuburb}</span>
+                          <span className="truncate" data-testid="text-user-location">{user.preferredLocation}</span>
                         </div>
                       )}
                     </div>
@@ -241,13 +241,13 @@ export default function Profile() {
                     </div>
                     
                     <div>
-                      <Label htmlFor="primarySuburb">Primary Suburb</Label>
+                      <Label htmlFor="preferredLocation">Your Location</Label>
                       <Input
-                        id="primarySuburb"
-                        value={formData.primarySuburb}
-                        onChange={(e) => setFormData(prev => ({ ...prev, primarySuburb: e.target.value }))}
-                        placeholder="e.g., Brisbane, Fortitude Valley"
-                        data-testid="input-suburb"
+                        id="preferredLocation"
+                        value={formData.preferredLocation}
+                        onChange={(e) => setFormData(prev => ({ ...prev, preferredLocation: e.target.value }))}
+                        placeholder="e.g., Brisbane, Sydney, Melbourne"
+                        data-testid="input-location"
                       />
                     </div>
                     
