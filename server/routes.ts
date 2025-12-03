@@ -2709,7 +2709,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Enhanced user profile routes
   app.put('/api/user/profile', isAuthenticated, async (req, res) => {
     try {
-      const userId = (req.user as any)?.claims?.sub;
+      const userId = (req.user as any)?.claims?.sub || (req.user as any)?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
       const profileData = req.body;
       
       const updatedUser = await storage.updateUserProfile(userId, profileData);
@@ -2727,7 +2730,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Business account upgrade endpoint
   app.post('/api/users/upgrade-to-business', isAuthenticated, async (req, res) => {
     try {
-      const userId = (req.user as any)?.claims?.sub;
+      const userId = (req.user as any)?.claims?.sub || (req.user as any)?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
       
       const businessData = z.object({
         businessName: z.string().min(1, "Business name is required"),
