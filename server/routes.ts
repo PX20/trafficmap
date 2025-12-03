@@ -1270,16 +1270,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log('[Location Search] First result:', data[0].display_name);
       }
       
-      // Transform to our format - accept any Queensland result
-      // Less strict filtering to catch more suburb variations
+      // Transform to our format - accept any Australian result
       const locationSuggestions = data
         .filter((item: any) => {
           // Must have address
           if (!item.address) return false;
           
-          // Must be in Queensland
-          const state = item.address.state || '';
-          if (!state.includes('Queensland') && !state.includes('QLD')) return false;
+          // Must be in Australia (already filtered by countrycodes=au, but double-check)
+          const country = item.address.country || item.address.country_code || '';
+          if (!country.toLowerCase().includes('australia') && country.toLowerCase() !== 'au') return false;
           
           // Accept any location type (suburb, city, town, village, residential, etc.)
           return true;

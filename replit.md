@@ -1,7 +1,7 @@
-# QLD Safety Monitor
+# Community Connect Australia
 
 ## Overview
-QLD Safety Monitor is a real-time safety and incident monitoring application for Queensland. It provides live updates on traffic events, emergency incidents, crime reports, suspicious behavior alerts, and traffic camera feeds. The application integrates with official QLD Traffic and Emergency Services data feeds and supports community-driven incident reporting. It features a full-stack web application with an interactive map interface and advanced filtering capabilities to view and analyze safety conditions in real-time across Queensland.
+Community Connect Australia is a real-time safety and incident monitoring application for Australia. It provides live updates on traffic events, emergency incidents, crime reports, suspicious behavior alerts, and traffic camera feeds. The application supports community-driven incident reporting across all Australian states and territories. It features a full-stack web application with an interactive map interface and advanced filtering capabilities to view and analyze safety conditions in real-time across Australia.
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
