@@ -105,6 +105,7 @@ export function usePushNotifications() {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({
           subscription: {
             endpoint: subscription.endpoint,
@@ -157,6 +158,7 @@ export function usePushNotifications() {
           headers: {
             'Content-Type': 'application/json',
           },
+          credentials: 'include',
           body: JSON.stringify({
             endpoint: subscription.endpoint
           })
