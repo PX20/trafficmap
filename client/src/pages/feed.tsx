@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useLocation } from "wouter";
@@ -19,6 +19,14 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { 
   Bell, 
@@ -39,10 +47,14 @@ import {
   Shield,
   HelpCircle,
   Heart,
-  Bookmark
+  Bookmark,
+  ChevronDown
 } from "lucide-react";
 import { Link } from "wouter";
 import { queryClient } from "@/lib/queryClient";
+import { calculateDistance, type Coordinates } from "@/lib/location-utils";
+
+type DistanceFilter = 'all' | '5km' | '10km' | '25km';
 
 export default function Feed() {
   const { user, logoutMutation } = useAuth();
@@ -53,6 +65,19 @@ export default function Feed() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [viewMode, setViewMode] = useState<'feed' | 'map'>('feed');
   const [menuOpen, setMenuOpen] = useState(false);
+  const [distanceFilter, setDistanceFilter] = useState<DistanceFilter>('all');
+
+  const userLocation = useMemo((): Coordinates | null => {
+    if (user?.preferredLocationLat && user?.preferredLocationLng) {
+      return {
+        lat: user.preferredLocationLat,
+        lon: user.preferredLocationLng
+      };
+    }
+    return null;
+  }, [user?.preferredLocationLat, user?.preferredLocationLng]);
+
+  const hasLocation = !!userLocation && !!user?.preferredLocation;
 
   const openReportForm = (entryPoint: EntryPoint) => {
     setReportEntryPoint(entryPoint);
@@ -70,12 +95,52 @@ export default function Feed() {
     select: (data: any) => data?.count || 0,
   });
 
-  const posts = (postsData as any)?.features
+  const allPosts = (postsData as any)?.features
     ?.sort((a: any, b: any) => {
       const dateA = new Date(a.properties?.createdAt || 0);
       const dateB = new Date(b.properties?.createdAt || 0);
       return dateB.getTime() - dateA.getTime();
     }) || [];
+
+  const posts = useMemo(() => {
+    if (distanceFilter === 'all' || !userLocation) {
+      return allPosts;
+    }
+
+    const maxDistance = parseInt(distanceFilter.replace('km', ''));
+    
+    return allPosts.filter((post: any) => {
+      const coords = post.geometry?.coordinates;
+      if (!coords || coords.length < 2) return false;
+      
+      const postLocation: Coordinates = {
+        lat: coords[1],
+        lon: coords[0]
+      };
+      
+      const distance = calculateDistance(userLocation, postLocation);
+      return distance <= maxDistance;
+    });
+  }, [allPosts, distanceFilter, userLocation]);
+
+  const handleDistanceChange = async (newDistance: DistanceFilter) => {
+    setDistanceFilter(newDistance);
+    
+    if (user) {
+      try {
+        await fetch('/api/user/location-preferences', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            distanceFilter: newDistance
+          })
+        });
+      } catch (error) {
+        console.error('Failed to save distance preference:', error);
+      }
+    }
+  };
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
