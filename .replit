@@ -110,3 +110,4 @@ defaultBucketID = "replit-objstore-55d8144d-8cc1-413a-8c77-426fdc37aa7f"
 
 [userenv.shared]
 PRIVATE_OBJECT_DIR = "/replit-objstore-55d8144d-8cc1-413a-8c77-426fdc37aa7f"
+VITE_VAPID_PUBLIC_KEY = "BFTgkj9iurSuFDoN2TG3qdJRagjgLc98PEvx-Ofath6_r6khTzrBY1x1HJUfNTZ9jP9OGcNKTFdRwcdYZeb2cOA"
