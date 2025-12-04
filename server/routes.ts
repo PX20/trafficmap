@@ -63,12 +63,12 @@ const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SEC
 // In production, generate proper VAPID keys with: npx web-push generate-vapid-keys
 try {
   // Only configure if proper VAPID keys are available
-  const publicKey = process.env.VAPID_PUBLIC_KEY || 'BNXnNJlwtD-_OLQ_8YE3WRe3dXHO_-ZI2sGE7zJyR5eKjsEMAp0diFzOl1ZUgQzfOjm4Cf8PSQ7c1-oIqY2GsHw';
+  const publicKey = process.env.VAPID_PUBLIC_KEY;
   const privateKey = process.env.VAPID_PRIVATE_KEY;
   
-  if (privateKey && privateKey.length > 20) {
+  if (publicKey && privateKey && privateKey.length > 20) {
     webpush.setVapidDetails(
-      'mailto:support@example.com',
+      'mailto:support@communityconnect.com.au',
       publicKey,
       privateKey
     );

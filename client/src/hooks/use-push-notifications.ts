@@ -87,13 +87,16 @@ export function usePushNotifications() {
       // Wait for service worker to be ready
       await navigator.serviceWorker.ready;
 
+      // Get VAPID public key from environment
+      const vapidPublicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+      if (!vapidPublicKey) {
+        throw new Error('VAPID public key not configured');
+      }
+
       // Get or create push subscription
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(
-          // Using a placeholder VAPID key - in production this should be from environment
-          'BNXnNJlwtD-_OLQ_8YE3WRe3dXHO_-ZI2sGE7zJyR5eKjsEMAp0diFzOl1ZUgQzfOjm4Cf8PSQ7c1-oIqY2GsHw'
-        )
+        applicationServerKey: urlBase64ToUint8Array(vapidPublicKey)
       });
 
       // Send subscription to backend
@@ -192,7 +195,7 @@ export function usePushNotifications() {
 }
 
 // Helper functions
-function urlBase64ToUint8Array(base64String: string): Uint8Array {
+function urlBase64ToUint8Array(base64String: string): Uint8Array<ArrayBuffer> {
   const padding = '='.repeat((4 - base64String.length % 4) % 4);
   const base64 = (base64String + padding)
     .replace(/-/g, '+')
@@ -204,7 +207,7 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
   for (let i = 0; i < rawData.length; ++i) {
     outputArray[i] = rawData.charCodeAt(i);
   }
-  return outputArray;
+  return outputArray as Uint8Array<ArrayBuffer>;
 }
 
 function arrayBufferToBase64(buffer: ArrayBuffer): string {
