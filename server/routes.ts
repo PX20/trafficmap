@@ -2321,11 +2321,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
                       uploadedAt: new Date().toISOString(),
                     }
                   },
-                  public: true,
                 });
                 
-                const publicUrl = `https://storage.googleapis.com/${bucketName}/${objectName}`;
-                uploadedPhotoUrls.push(publicUrl);
+                // Generate signed URL for viewing (valid for 7 days)
+                const [signedUrl] = await file.getSignedUrl({
+                  action: 'read',
+                  expires: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
+                });
+                uploadedPhotoUrls.push(signedUrl);
               } catch (uploadError) {
                 console.error('Error uploading base64 photo:', uploadError);
               }
