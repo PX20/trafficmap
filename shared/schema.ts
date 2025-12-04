@@ -431,6 +431,27 @@ export const notifications = pgTable("notifications", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Push notification subscriptions for web push
+export const pushSubscriptions = pgTable("push_subscriptions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  endpoint: text("endpoint").notNull(),
+  p256dh: text("p256dh").notNull(), // Public key for encryption
+  auth: text("auth").notNull(), // Auth secret for encryption
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_push_subscriptions_user").on(table.userId),
+  unique("unique_push_endpoint").on(table.endpoint),
+]);
+
+export type InsertPushSubscription = {
+  userId: string;
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+};
+export type SelectPushSubscription = typeof pushSubscriptions.$inferSelect;
+
 // Reports system for user-generated content moderation
 export const reports = pgTable("reports", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),

@@ -512,7 +512,7 @@ async function broadcastPostNotifications(
       eligibleUsers.push(user.id);
     }
 
-    // Create notifications for eligible users
+    // Create in-app notifications for eligible users
     for (const userId of eligibleUsers) {
       await storage.createNotification({
         userId,
@@ -523,6 +523,51 @@ async function broadcastPostNotifications(
         entityType: 'post',
         fromUserId: post.userId,
       });
+    }
+
+    // Send actual push notifications to users with subscriptions
+    if (eligibleUsers.length > 0) {
+      const subscriptions = await storage.getPushSubscriptionsForUsers(eligibleUsers);
+      
+      const notificationPayload = JSON.stringify({
+        title: 'New Post Nearby',
+        body: `${posterName} posted: ${post.title}`,
+        tag: `post-${post.id}`,
+        url: `/feed?highlight=${post.id}`,
+        incidentId: post.id,
+      });
+      
+      let pushSuccessCount = 0;
+      let pushFailCount = 0;
+      
+      for (const sub of subscriptions) {
+        try {
+          await webpush.sendNotification(
+            {
+              endpoint: sub.endpoint,
+              keys: {
+                p256dh: sub.p256dh,
+                auth: sub.auth,
+              },
+            },
+            notificationPayload
+          );
+          pushSuccessCount++;
+        } catch (pushError: any) {
+          pushFailCount++;
+          // If subscription is invalid (410 Gone or 404), remove it
+          if (pushError.statusCode === 410 || pushError.statusCode === 404) {
+            console.log(`🗑️ Removing invalid push subscription for user ${sub.userId}`);
+            await storage.removePushSubscription(sub.endpoint);
+          } else {
+            console.error(`Push notification failed for user ${sub.userId}:`, pushError.message);
+          }
+        }
+      }
+      
+      if (pushSuccessCount > 0 || pushFailCount > 0) {
+        console.log(`📱 Push notifications: ${pushSuccessCount} sent, ${pushFailCount} failed`);
+      }
     }
 
     console.log(`📢 Sent notifications to ${eligibleUsers.length} users for post ${post.id}`);
@@ -3670,19 +3715,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/push/subscribe', isAuthenticated, async (req, res) => {
     try {
       const { subscription } = req.body;
-      const userId = (req.user as any)?.claims?.sub;
+      const userId = (req.user as any)?.claims?.sub || (req.user as any)?.id;
 
       if (!subscription || !userId) {
         return res.status(400).json({ error: 'Invalid subscription data' });
       }
 
-      // Save subscription to storage (you may want to add a subscriptions table)
-      // For now, we'll store in user preferences or a simple in-memory store
-      secureLogger.authDebug('Push subscription registered', {
-        hasUserId: !!userId,
-        hasSubscription: !!subscription
+      // Extract keys from the subscription
+      const { endpoint, keys } = subscription;
+      if (!endpoint || !keys?.p256dh || !keys?.auth) {
+        return res.status(400).json({ error: 'Invalid subscription format - missing endpoint or keys' });
+      }
+
+      // Save subscription to database
+      await storage.savePushSubscription({
+        userId,
+        endpoint,
+        p256dh: keys.p256dh,
+        auth: keys.auth,
       });
       
+      console.log(`✅ Push subscription saved for user ${userId}`);
       res.json({ success: true });
     } catch (error) {
       console.error('Error saving push subscription:', error);
@@ -3693,18 +3746,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/push/unsubscribe', isAuthenticated, async (req, res) => {
     try {
       const { endpoint } = req.body;
-      const userId = (req.user as any)?.claims?.sub;
+      const userId = (req.user as any)?.claims?.sub || (req.user as any)?.id;
 
       if (!endpoint || !userId) {
         return res.status(400).json({ error: 'Invalid unsubscribe data' });
       }
 
-      // Remove subscription from storage
-      secureLogger.authDebug('Push subscription removed', {
-        hasUserId: !!userId,
-        hasEndpoint: !!endpoint
-      });
+      // Remove subscription from database
+      await storage.removePushSubscription(endpoint);
       
+      console.log(`✅ Push subscription removed for user ${userId}`);
       res.json({ success: true });
     } catch (error) {
       console.error('Error removing push subscription:', error);

@@ -11,6 +11,7 @@ import {
   conversations,
   messages,
   notifications,
+  pushSubscriptions,
   categories,
   subcategories,
   incidentFollowUps,
@@ -267,6 +268,11 @@ export interface IStorage {
   createNotification(notification: InsertNotification): Promise<Notification>;
   markNotificationAsRead(notificationId: string, userId: string): Promise<void>;
   markAllNotificationsAsRead(userId: string): Promise<void>;
+  
+  // Push subscription operations
+  savePushSubscription(subscription: { userId: string; endpoint: string; p256dh: string; auth: string }): Promise<void>;
+  removePushSubscription(endpoint: string): Promise<void>;
+  getPushSubscriptionsForUsers(userIds: string[]): Promise<Array<{ userId: string; endpoint: string; p256dh: string; auth: string }>>;
   
   // Category operations
   getCategories(): Promise<Category[]>;
@@ -1506,6 +1512,43 @@ export class DatabaseStorage implements IStorage {
       .update(notifications)
       .set({ isRead: true })
       .where(eq(notifications.userId, userId));
+  }
+  
+  // Push subscription operations
+  async savePushSubscription(subscription: { userId: string; endpoint: string; p256dh: string; auth: string }): Promise<void> {
+    await db
+      .insert(pushSubscriptions)
+      .values(subscription)
+      .onConflictDoUpdate({
+        target: pushSubscriptions.endpoint,
+        set: {
+          userId: subscription.userId,
+          p256dh: subscription.p256dh,
+          auth: subscription.auth,
+        },
+      });
+  }
+  
+  async removePushSubscription(endpoint: string): Promise<void> {
+    await db
+      .delete(pushSubscriptions)
+      .where(eq(pushSubscriptions.endpoint, endpoint));
+  }
+  
+  async getPushSubscriptionsForUsers(userIds: string[]): Promise<Array<{ userId: string; endpoint: string; p256dh: string; auth: string }>> {
+    if (userIds.length === 0) return [];
+    
+    const subscriptions = await db
+      .select({
+        userId: pushSubscriptions.userId,
+        endpoint: pushSubscriptions.endpoint,
+        p256dh: pushSubscriptions.p256dh,
+        auth: pushSubscriptions.auth,
+      })
+      .from(pushSubscriptions)
+      .where(inArray(pushSubscriptions.userId, userIds));
+    
+    return subscriptions;
   }
   
   // Category operations
