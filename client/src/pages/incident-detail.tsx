@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ArrowLeft, X, MapPin, Clock, AlertTriangle, Shield, Car, Flame, Heart, Users, Construction, Trees, Search, Zap, MessageCircle, Share, Pencil, Trash } from "lucide-react";
+import { ArrowLeft, X, MapPin, Clock, AlertTriangle, Shield, ShieldAlert, Car, Flame, Heart, Users, Construction, Trees, Search, Zap, MessageCircle, Share, Pencil, Trash, Timer, CarFront, CloudLightning, Siren, Eye, Building, Bug, Volume2, CheckCircle, PawPrint } from "lucide-react";
 import { decodeIncidentId } from "@/lib/incident-utils";
 import { ReporterAttribution } from "@/components/ReporterAttribution";
 import { InlineComments } from "@/components/inline-comments";
@@ -218,19 +218,31 @@ function IncidentDetailPage({ asModal = true, incidentId: propIncidentId }: Inci
                    incident?.properties?.publishedAt ||
                    incident?.properties?.createdAt;
   
-  // Helper function to get the appropriate icon
+  // Helper function to get the appropriate icon - matches map marker icons
   const getIcon = (iconName: string) => {
     const iconMap: { [key: string]: any } = {
       'Car': Car,
       'AlertTriangle': AlertTriangle,
       'Shield': Shield,
+      'ShieldAlert': ShieldAlert,
       'Flame': Flame,
       'Heart': Heart,
       'Users': Users,
       'Construction': Construction,
       'Trees': Trees,
       'Search': Search,
-      'Zap': Zap
+      'Zap': Zap,
+      'Timer': Timer,
+      'Crash': CarFront,
+      'CloudLightning': CloudLightning,
+      'Siren': Siren,
+      'Eye': Eye,
+      'Building': Building,
+      'Bug': Bug,
+      'Volume2': Volume2,
+      'MapPin': MapPin,
+      'CheckCircle': CheckCircle,
+      'PawPrint': PawPrint
     };
     return iconMap[iconName] || AlertTriangle;
   };

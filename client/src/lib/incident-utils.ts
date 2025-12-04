@@ -349,9 +349,9 @@ export function getIncidentIconProps(incident: any): { iconName: string, color: 
       
       // Pets subcategories
       case 'Missing Pets':
-        return { iconName: 'Search', color: 'text-orange-600' };
+        return { iconName: 'PawPrint', color: 'text-pink-600' };
       case 'Found Pets':
-        return { iconName: 'CheckCircle', color: 'text-green-600' };
+        return { iconName: 'PawPrint', color: 'text-green-600' };
       
       // Lost & Found subcategories
       case 'Lost Items':
@@ -375,7 +375,7 @@ export function getIncidentIconProps(incident: any): { iconName: string, color: 
       case '0c3251ec-e3aa-4bef-8c17-960d73f8cbdc': // Community Issues
         return { iconName: 'Users', color: 'text-blue-600' };
       case '1f45d947-a688-4fa7-b8bd-e80c9f91a4d9': // Pets
-        return { iconName: 'Heart', color: 'text-pink-600' };
+        return { iconName: 'PawPrint', color: 'text-pink-600' };
       case '796a25d1-58b1-444e-8520-7ed8a169b5ad': // Lost & Found
         return { iconName: 'Search', color: 'text-indigo-600' };
       default:
