@@ -86,55 +86,55 @@ export function getIncidentLocation(incident: any): string {
   return 'Location not specified';
 }
 
-// Category UUID to human name mappings based on server category seeding
+// Category UUID to human name mappings based on actual database UUIDs
 const CATEGORY_MAPPINGS: Record<string, string> = {
-  '792759f4-1b98-4665-b14c-44a54e9969e9': 'Safety & Crime',
-  '9b1d58d9-cfd1-4c31-93e9-754276a5f265': 'Infrastructure & Hazards',
-  '54d31da5-fc10-4ad2-8eca-04bac680e668': 'Emergency Situations',
-  'd03f47a9-10fb-4656-ae73-92e959d7566a': 'Wildlife & Nature',
-  'deaca906-3561-4f80-b79f-ed99561c3b04': 'Community Issues',
-  '4ea3a6f0-c49e-4baf-9ca5-f074ca2811b0': 'Pets',
-  'd1dfcd4e-48e9-4e58-9476-4782a2a132f3': 'Lost & Found'
+  '5e39584c-de45-45d6-ae4b-a0fb048a70f1': 'Safety & Crime',
+  'ec2f7fc1-ffe3-4efb-bd42-ab1a2645325e': 'Infrastructure & Hazards',
+  '0a250604-2cd7-4a7c-8d98-5567c403e514': 'Emergency Situations',
+  '84218599-712d-49c3-8458-7a9153519e5d': 'Wildlife & Nature',
+  '0c3251ec-e3aa-4bef-8c17-960d73f8cbdc': 'Community Issues',
+  '1f45d947-a688-4fa7-b8bd-e80c9f91a4d9': 'Pets',
+  '796a25d1-58b1-444e-8520-7ed8a169b5ad': 'Lost & Found'
 };
 
 const SUBCATEGORY_MAPPINGS: Record<string, string> = {
   // Safety & Crime
-  '97a99d33-f10a-4391-b22f-78631eff8805': 'Violence & Threats',
-  'e6a187d7-428b-47e6-a2d0-617db1963aee': 'Theft & Property Crime',
-  '7b1ba0b9-b9d5-437e-a106-886f96660f99': 'Suspicious Activity',
-  'e39e8d3f-4358-4a91-ac09-38dbb25d4832': 'Public Disturbances',
+  '4bf4f9e3-8b4e-4ed7-87f2-df13d92ad598': 'Violence & Threats',
+  '14e7c586-54b0-48f7-900a-efe0465afce2': 'Theft & Property Crime',
+  'bdf75914-8a51-449c-b63e-905eb36b9ce2': 'Suspicious Activity',
+  '782d8d63-6877-4a7f-ac6c-097188c5645c': 'Public Disturbances',
   
   // Infrastructure & Hazards
-  'ca42fc3b-9ac1-4054-a30e-c65650599d02': 'Road Hazards',
-  '83b09678-a090-4b08-8123-e316524a0d57': 'Utility Issues',
-  'd81dc944-8b65-4a14-96da-fc539e883249': 'Building Problems',
-  'e03aeb13-b061-4bf1-b524-2037fdfd948f': 'Environmental Hazards',
+  '7282c862-0977-472d-a795-b33355fc04a8': 'Road Hazards',
+  '32284643-ea49-4b2c-a23a-2a18da14f7d8': 'Utility Issues',
+  'a0b701b9-9ed4-4ef9-897f-0cf9d348b3ac': 'Building Problems',
+  '72426b0d-b297-4d64-af14-627c4562336a': 'Environmental Hazards',
   
   // Emergency Situations
-  'c3980ed0-46b0-43df-b4d8-fa8a83ce9452': 'Fire & Smoke',
-  'e69d5194-4885-47a2-985e-3568e30833dd': 'Medical Emergencies',
-  'a6719ffd-b353-4dee-8969-dd917093285d': 'Natural Disasters',
-  '3f7adaca-dcf9-4151-88ae-324041a8da30': 'Chemical/Hazmat',
+  '8f4abb73-e944-48c3-98c7-5c96b4f6e57e': 'Fire & Smoke',
+  'd10959cd-6da7-4a9a-bc9e-0f27c346b30e': 'Medical Emergencies',
+  '4f2ae0bc-65e8-4e76-a045-6ce97f83afda': 'Natural Disasters',
+  '1287eadf-5a31-496d-8233-8e879b4ba99d': 'Chemical/Hazmat',
   
   // Wildlife & Nature
-  '819a1a14-e6f5-46e4-aefb-daa55e2c0342': 'Dangerous Animals',
-  '668fe7c1-401a-4aff-a388-903622651418': 'Animal Welfare',
-  '607f0066-5b11-4a06-ac14-5d136bafbcab': 'Environmental Issues',
-  '7fbd7375-6352-4b50-b067-19c66c99ba96': 'Pest Problems',
+  'bbdb5e60-3582-4c33-96c7-3899df86615c': 'Dangerous Animals',
+  '3380e790-e3f5-47b8-8409-79523c922720': 'Animal Welfare',
+  '017aa46f-1a36-4db4-9d51-87f2bca35442': 'Environmental Issues',
+  'be8839dc-58c9-4713-9f5e-aa4fca26ea81': 'Pest Problems',
   
   // Community Issues
-  '7008ccc5-c376-4963-90f1-40023e943175': 'Noise Complaints',
-  '67871bf3-f8e6-4692-8ef3-d1169bf0ed46': 'Traffic Issues',
-  '8fc5a6e3-0333-45af-8199-adc37b7acaa9': 'Public Space Problems',
-  'f8667a02-8d21-4d85-b207-d6841da18c68': 'Events & Gatherings',
+  '55c207c9-1e65-4541-9d4d-3c1f48d04c79': 'Noise Complaints',
+  '374a4c8c-7c56-4963-b14b-736e461eafcd': 'Traffic Issues',
+  '8538f32a-4128-4535-9ae3-66eb2b5f3ca7': 'Public Space Problems',
+  'd8af0a90-a3af-4842-a211-772463cbe2e7': 'Events & Gatherings',
   
   // Pets
-  '3dc966d4-e732-4f91-8aa0-3fb00be77265': 'Missing Pets',
-  '2dd8cb36-fc5d-4c34-a40f-196fcf79320d': 'Found Pets',
+  '717add8e-7168-4de2-bd06-acb57ac9884d': 'Missing Pets',
+  '13745b7c-cdda-40af-a133-d600882ee2d1': 'Found Pets',
   
   // Lost & Found
-  'e23ad345-970c-44bf-9aaa-708a88d23072': 'Lost Items',
-  '4c6da291-c786-4212-bc12-c77f16a5e016': 'Found Items'
+  '2183c2b4-36cb-4de8-8a6c-36106c0cf426': 'Lost Items',
+  'b48cbcb0-5971-44f5-b277-4a0eb06fd52b': 'Found Items'
 };
 
 export function getIncidentCategory(incident: any): string {
@@ -364,19 +364,19 @@ export function getIncidentIconProps(incident: any): { iconName: string, color: 
     const categoryId = incident.properties?.categoryId || incident.category;
     
     switch (categoryId) {
-      case '792759f4-1b98-4665-b14c-44a54e9969e9': // Safety & Crime
+      case '5e39584c-de45-45d6-ae4b-a0fb048a70f1': // Safety & Crime
         return { iconName: 'Shield', color: 'text-red-600' };
-      case '9b1d58d9-cfd1-4c31-93e9-754276a5f265': // Infrastructure & Hazards  
+      case 'ec2f7fc1-ffe3-4efb-bd42-ab1a2645325e': // Infrastructure & Hazards  
         return { iconName: 'Construction', color: 'text-yellow-600' };
-      case '54d31da5-fc10-4ad2-8eca-04bac680e668': // Emergency Situations
+      case '0a250604-2cd7-4a7c-8d98-5567c403e514': // Emergency Situations
         return { iconName: 'Zap', color: 'text-red-500' };
-      case 'd03f47a9-10fb-4656-ae73-92e959d7566a': // Wildlife & Nature
+      case '84218599-712d-49c3-8458-7a9153519e5d': // Wildlife & Nature
         return { iconName: 'Trees', color: 'text-green-600' };
-      case 'deaca906-3561-4f80-b79f-ed99561c3b04': // Community Issues
+      case '0c3251ec-e3aa-4bef-8c17-960d73f8cbdc': // Community Issues
         return { iconName: 'Users', color: 'text-blue-600' };
-      case '4ea3a6f0-c49e-4baf-9ca5-f074ca2811b0': // Pets
+      case '1f45d947-a688-4fa7-b8bd-e80c9f91a4d9': // Pets
         return { iconName: 'Heart', color: 'text-pink-600' };
-      case 'd1dfcd4e-48e9-4e58-9476-4782a2a132f3': // Lost & Found
+      case '796a25d1-58b1-444e-8520-7ed8a169b5ad': // Lost & Found
         return { iconName: 'Search', color: 'text-indigo-600' };
       default:
         return { iconName: 'Users', color: 'text-purple-600' }; // Default for user reports
