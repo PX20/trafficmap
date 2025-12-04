@@ -1114,6 +1114,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found" });
       }
       
+      // Clear user cache so next auth request gets fresh data with location
+      if ((app as any).clearUserCache) {
+        (app as any).clearUserCache(userId);
+      }
+      
       res.json(updatedUser);
     } catch (error) {
       console.error("Error updating location preferences:", error);
