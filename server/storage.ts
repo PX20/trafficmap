@@ -672,9 +672,15 @@ export class DatabaseStorage implements IStorage {
       const subcat = post.subcategoryId ? subcategoryMap.get(post.subcategoryId) : null;
       const user = userMap.get(post.userId);
       
+      // Determine source from post properties (supports TMR, emergency, user sources)
+      const postProps = post.properties as any || {};
+      const source = postProps.source || 'user';
+      const isUserReported = source === 'user';
+      
       return {
         type: 'Feature' as const,
         id: post.id,
+        source: source,
         geometry: post.geometry || (post.centroidLat && post.centroidLng ? {
           type: 'Point',
           coordinates: [post.centroidLng, post.centroidLat]
@@ -702,8 +708,10 @@ export class DatabaseStorage implements IStorage {
           updatedAt: post.updatedAt?.toISOString(),
           centroidLat: post.centroidLat,
           centroidLng: post.centroidLng,
-          source: 'user' as const,
-          userReported: true,
+          source: source,
+          userReported: isUserReported,
+          iconType: postProps.iconType || undefined,
+          ...postProps,
         }
       };
     });

@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { isAuthenticated, setupAuth as setupReplitAuth } from "./replitAuth";
 import { initializeAgencyAccounts } from "./init-agency-accounts";
+import { startTMRPostsIngestion } from "./tmr-posts-ingestion";
 import webpush from "web-push";
 import Stripe from "stripe";
 import { insertIncidentSchema, insertCommentSchema, insertConversationSchema, insertMessageSchema, insertNotificationSchema, insertIncidentCommentSchema, type SafeUser, categories, subcategories } from "@shared/schema";
@@ -554,6 +555,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   } catch (error) {
     console.error('⚠️ Warning: Agency account initialization failed:', error);
     console.error('Server will continue, but some features may not work correctly');
+    // Don't crash - server can still function without this
+  }
+  
+  // Start TMR traffic posts ingestion (5-minute polling)
+  try {
+    startTMRPostsIngestion();
+    console.log('✅ TMR Posts Ingestion service started');
+  } catch (error) {
+    console.error('⚠️ Warning: TMR Posts Ingestion failed to start:', error);
     // Don't crash - server can still function without this
   }
   
