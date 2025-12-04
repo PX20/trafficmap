@@ -12,7 +12,9 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { ObjectUploader } from "@/components/ObjectUploader";
 import { LocationAutocomplete } from "@/components/location-autocomplete";
-import { ArrowLeft, MapPin, Shield, Users, Phone, UserCheck, Camera } from "lucide-react";
+import { ArrowLeft, MapPin, Shield, Users, Phone, UserCheck, Camera, Bell, Check } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 
 export default function Profile() {
@@ -96,6 +98,81 @@ export default function Profile() {
       });
     },
   });
+
+  // Fetch categories for notification preferences
+  const { data: categoriesData } = useQuery({
+    queryKey: ["/api/categories"],
+  });
+  const categories = (categoriesData as any[]) || [];
+
+  // Notification preferences mutation
+  const updateNotificationsMutation = useMutation({
+    mutationFn: async (prefs: { 
+      notificationsEnabled?: boolean; 
+      notificationCategories?: string[] | null;
+      notificationRadius?: string;
+    }) => {
+      const response = await fetch("/api/user/notification-preferences", {
+        method: "PATCH",
+        body: JSON.stringify(prefs),
+        headers: { "Content-Type": "application/json" },
+        credentials: "include"
+      });
+      if (!response.ok) throw new Error('Failed to update notification preferences');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      toast({
+        title: "Notifications updated",
+        description: "Your notification preferences have been saved.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Update failed",
+        description: "Failed to update notification preferences.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleToggleNotifications = (enabled: boolean) => {
+    updateNotificationsMutation.mutate({ notificationsEnabled: enabled });
+  };
+
+  const handleToggleCategory = (categoryId: string) => {
+    const currentCategories = (user?.notificationCategories as string[]) || [];
+    let newCategories: string[] | null;
+    
+    if (currentCategories.length === 0) {
+      // Currently receiving all - switch to all except this one
+      newCategories = categories
+        .filter((c: any) => c.id !== categoryId)
+        .map((c: any) => c.id);
+    } else if (currentCategories.includes(categoryId)) {
+      // Remove this category
+      newCategories = currentCategories.filter(id => id !== categoryId);
+      if (newCategories.length === 0) {
+        newCategories = null; // Back to all
+      }
+    } else {
+      // Add this category
+      newCategories = [...currentCategories, categoryId];
+    }
+    
+    updateNotificationsMutation.mutate({ notificationCategories: newCategories });
+  };
+
+  const handleRadiusChange = (radius: string) => {
+    updateNotificationsMutation.mutate({ notificationRadius: radius });
+  };
+
+  const isCategoryEnabled = (categoryId: string): boolean => {
+    const currentCategories = (user?.notificationCategories as string[]) || [];
+    if (currentCategories.length === 0) return true; // All enabled
+    return currentCategories.includes(categoryId);
+  };
 
   const handleGetUploadParameters = async () => {
     const response = await fetch("/api/objects/upload", {
@@ -521,6 +598,89 @@ export default function Profile() {
                     Public
                   </span>
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* Notification Settings */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Bell className="w-4 h-4" />
+                  Notifications
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Master Toggle */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-sm font-medium">Enable Notifications</span>
+                    <p className="text-xs text-muted-foreground">Receive alerts for nearby posts</p>
+                  </div>
+                  <Switch
+                    checked={user.notificationsEnabled !== false}
+                    onCheckedChange={handleToggleNotifications}
+                    data-testid="switch-notifications-enabled"
+                  />
+                </div>
+
+                {user.notificationsEnabled !== false && (
+                  <>
+                    <Separator />
+                    
+                    {/* Proximity Radius */}
+                    <div>
+                      <span className="text-sm font-medium block mb-2">Notification Radius</span>
+                      <p className="text-xs text-muted-foreground mb-2">
+                        Only notify for posts within this distance
+                      </p>
+                      <div className="flex flex-wrap gap-1">
+                        {['1km', '2km', '5km', '10km', '25km', '50km'].map((radius) => (
+                          <Button
+                            key={radius}
+                            variant={user.notificationRadius === radius ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => handleRadiusChange(radius)}
+                            data-testid={`button-radius-${radius}`}
+                          >
+                            {radius}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <Separator />
+
+                    {/* Category Selection */}
+                    <div>
+                      <span className="text-sm font-medium block mb-2">Categories</span>
+                      <p className="text-xs text-muted-foreground mb-2">
+                        Choose which types of posts to be notified about
+                      </p>
+                      <div className="space-y-2">
+                        {categories.map((category: any) => (
+                          <button
+                            key={category.id}
+                            onClick={() => handleToggleCategory(category.id)}
+                            className={`w-full flex items-center justify-between p-2 rounded-md text-sm transition-colors ${
+                              isCategoryEnabled(category.id)
+                                ? 'bg-primary/10 text-foreground'
+                                : 'bg-muted/50 text-muted-foreground'
+                            }`}
+                            data-testid={`button-category-${category.id}`}
+                          >
+                            <span>{category.name}</span>
+                            {isCategoryEnabled(category.id) && (
+                              <Check className="w-4 h-4 text-primary" />
+                            )}
+                          </button>
+                        ))}
+                        {categories.length === 0 && (
+                          <p className="text-xs text-muted-foreground">Loading categories...</p>
+                        )}
+                      </div>
+                    </div>
+                  </>
+                )}
               </CardContent>
             </Card>
 

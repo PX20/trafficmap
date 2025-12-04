@@ -459,6 +459,78 @@ const upload = secureUpload;
 // Server readiness flag
 let isServerReady = false;
 
+// Haversine distance calculation in km
+function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371; // Earth's radius in km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+// Broadcast notifications to eligible users when a new post is created
+async function broadcastPostNotifications(
+  post: { id: string; title: string; categoryId: string | null; centroidLat: number | null; centroidLng: number | null; userId: string },
+  posterName: string
+): Promise<void> {
+  try {
+    // Get all users with notifications enabled
+    const allUsers = await storage.getAllUsers();
+    const eligibleUsers: string[] = [];
+
+    for (const user of allUsers) {
+      // Skip the post creator
+      if (user.id === post.userId) continue;
+      
+      // Skip users with notifications disabled
+      if (user.notificationsEnabled === false) continue;
+      
+      // Check category preference
+      const userCategories = (user.notificationCategories as string[]) || [];
+      if (userCategories.length > 0 && post.categoryId) {
+        if (!userCategories.includes(post.categoryId)) continue;
+      }
+      
+      // Check proximity preference
+      if (post.centroidLat && post.centroidLng && user.preferredLocationLat && user.preferredLocationLng) {
+        const radiusStr = user.notificationRadius || '10km';
+        const radiusKm = parseInt(radiusStr.replace('km', ''));
+        const distance = calculateDistanceKm(
+          user.preferredLocationLat,
+          user.preferredLocationLng,
+          post.centroidLat,
+          post.centroidLng
+        );
+        
+        if (distance > radiusKm) continue;
+      }
+      
+      eligibleUsers.push(user.id);
+    }
+
+    // Create notifications for eligible users
+    for (const userId of eligibleUsers) {
+      await storage.createNotification({
+        userId,
+        type: 'new_post',
+        title: 'New Post Nearby',
+        message: `${posterName} posted: ${post.title}`,
+        entityId: post.id,
+        entityType: 'post',
+        fromUserId: post.userId,
+      });
+    }
+
+    console.log(`📢 Sent notifications to ${eligibleUsers.length} users for post ${post.id}`);
+  } catch (error) {
+    console.error('Error broadcasting post notifications:', error);
+    // Don't throw - notification failure shouldn't block post creation
+  }
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Readiness check middleware - prevent requests during initialization
   app.use((req, res, next) => {
@@ -4225,13 +4297,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         subcategory = await storage.getSubcategory(newPost.subcategoryId);
       }
 
+      const posterName = user?.displayName || `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'Anonymous';
+
+      // Broadcast notifications to eligible users (async, non-blocking)
+      broadcastPostNotifications(
+        {
+          id: newPost.id,
+          title: newPost.title,
+          categoryId: newPost.categoryId,
+          centroidLat: newPost.centroidLat,
+          centroidLng: newPost.centroidLng,
+          userId: newPost.userId
+        },
+        posterName
+      );
+
       res.status(201).json({
         ...newPost,
         category: category?.name,
         categoryIcon: category?.icon,
         categoryColor: category?.color,
         subcategory: subcategory?.name,
-        userName: user?.displayName || `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'Anonymous',
+        userName: posterName,
         userAvatar: user?.profileImageUrl,
       });
     } catch (error) {
