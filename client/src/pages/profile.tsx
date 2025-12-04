@@ -105,6 +105,16 @@ export default function Profile() {
   });
   const categories = (categoriesData as any[]) || [];
 
+  // Local state for optimistic UI updates
+  const [localNotificationsEnabled, setLocalNotificationsEnabled] = useState<boolean | null>(null);
+  const [localNotificationCategories, setLocalNotificationCategories] = useState<string[] | null>(null);
+  const [localNotificationRadius, setLocalNotificationRadius] = useState<string | null>(null);
+
+  // Get effective values (local state takes precedence for immediate UI feedback)
+  const effectiveNotificationsEnabled = localNotificationsEnabled ?? user?.notificationsEnabled ?? true;
+  const effectiveNotificationCategories = localNotificationCategories ?? (user?.notificationCategories as string[]) ?? [];
+  const effectiveNotificationRadius = localNotificationRadius ?? user?.notificationRadius ?? '10km';
+
   // Notification preferences mutation
   const updateNotificationsMutation = useMutation({
     mutationFn: async (prefs: { 
@@ -123,12 +133,16 @@ export default function Profile() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-      toast({
-        title: "Notifications updated",
-        description: "Your notification preferences have been saved.",
-      });
+      // Clear local state after successful server update
+      setLocalNotificationsEnabled(null);
+      setLocalNotificationCategories(null);
+      setLocalNotificationRadius(null);
     },
     onError: () => {
+      // Revert local state on error
+      setLocalNotificationsEnabled(null);
+      setLocalNotificationCategories(null);
+      setLocalNotificationRadius(null);
       toast({
         title: "Update failed",
         description: "Failed to update notification preferences.",
@@ -138,12 +152,13 @@ export default function Profile() {
   });
 
   const handleToggleNotifications = (enabled: boolean) => {
+    setLocalNotificationsEnabled(enabled);
     updateNotificationsMutation.mutate({ notificationsEnabled: enabled });
   };
 
   const handleToggleCategory = (categoryId: string) => {
-    const currentCategories = (user?.notificationCategories as string[]) || [];
-    let newCategories: string[] | null;
+    const currentCategories = effectiveNotificationCategories;
+    let newCategories: string[];
     
     if (currentCategories.length === 0) {
       // Currently receiving all - switch to all except this one
@@ -153,25 +168,24 @@ export default function Profile() {
     } else if (currentCategories.includes(categoryId)) {
       // Remove this category
       newCategories = currentCategories.filter(id => id !== categoryId);
-      if (newCategories.length === 0) {
-        newCategories = null; // Back to all
-      }
     } else {
       // Add this category
       newCategories = [...currentCategories, categoryId];
     }
     
-    updateNotificationsMutation.mutate({ notificationCategories: newCategories });
+    // Update local state immediately for responsive UI
+    setLocalNotificationCategories(newCategories);
+    updateNotificationsMutation.mutate({ notificationCategories: newCategories.length > 0 ? newCategories : null });
   };
 
   const handleRadiusChange = (radius: string) => {
+    setLocalNotificationRadius(radius);
     updateNotificationsMutation.mutate({ notificationRadius: radius });
   };
 
   const isCategoryEnabled = (categoryId: string): boolean => {
-    const currentCategories = (user?.notificationCategories as string[]) || [];
-    if (currentCategories.length === 0) return true; // All enabled
-    return currentCategories.includes(categoryId);
+    if (effectiveNotificationCategories.length === 0) return true; // All enabled
+    return effectiveNotificationCategories.includes(categoryId);
   };
 
   const handleGetUploadParameters = async () => {
@@ -617,13 +631,13 @@ export default function Profile() {
                     <p className="text-xs text-muted-foreground">Receive alerts for nearby posts</p>
                   </div>
                   <Switch
-                    checked={user.notificationsEnabled !== false}
+                    checked={effectiveNotificationsEnabled}
                     onCheckedChange={handleToggleNotifications}
                     data-testid="switch-notifications-enabled"
                   />
                 </div>
 
-                {user.notificationsEnabled !== false && (
+                {effectiveNotificationsEnabled && (
                   <>
                     <Separator />
                     
@@ -637,7 +651,7 @@ export default function Profile() {
                         {['1km', '2km', '5km', '10km', '25km', '50km'].map((radius) => (
                           <Button
                             key={radius}
-                            variant={user.notificationRadius === radius ? "default" : "outline"}
+                            variant={effectiveNotificationRadius === radius ? "default" : "outline"}
                             size="sm"
                             onClick={() => handleRadiusChange(radius)}
                             data-testid={`button-radius-${radius}`}
