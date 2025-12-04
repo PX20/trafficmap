@@ -81,25 +81,34 @@ export function usePushNotifications() {
     setIsLoading(true);
 
     try {
+      console.log('[Push] Starting subscription process...');
+      
       // Register service worker
       const registration = await navigator.serviceWorker.register('/sw.js');
+      console.log('[Push] Service worker registered');
       
       // Wait for service worker to be ready
       await navigator.serviceWorker.ready;
+      console.log('[Push] Service worker ready');
 
       // Get VAPID public key from environment
       const vapidPublicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+      console.log('[Push] VAPID key available:', !!vapidPublicKey);
+      
       if (!vapidPublicKey) {
-        throw new Error('VAPID public key not configured');
+        throw new Error('VAPID public key not configured - check environment variables');
       }
 
       // Get or create push subscription
+      console.log('[Push] Creating push subscription...');
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(vapidPublicKey)
       });
+      console.log('[Push] Push subscription created:', subscription.endpoint.substring(0, 50) + '...');
 
       // Send subscription to backend
+      console.log('[Push] Sending subscription to backend...');
       const response = await fetch('/api/push/subscribe', {
         method: 'POST',
         headers: {
@@ -117,8 +126,12 @@ export function usePushNotifications() {
         })
       });
 
+      console.log('[Push] Backend response status:', response.status);
+      
       if (!response.ok) {
-        throw new Error('Failed to save subscription');
+        const errorText = await response.text();
+        console.error('[Push] Backend error:', errorText);
+        throw new Error(`Failed to save subscription: ${response.status} - ${errorText}`);
       }
 
       setIsSubscribed(true);
@@ -127,12 +140,14 @@ export function usePushNotifications() {
         description: "You'll receive safety alerts for incidents in your area.",
       });
       
+      console.log('[Push] Subscription complete!');
       return true;
-    } catch (error) {
-      console.error('Error subscribing to push notifications:', error);
+    } catch (error: any) {
+      console.error('[Push] Error subscribing to push notifications:', error);
+      console.error('[Push] Error details:', error?.message, error?.stack);
       toast({
         title: "Subscription Failed",
-        description: "Unable to enable push notifications. Please try again.",
+        description: error?.message || "Unable to enable push notifications. Please try again.",
         variant: "destructive",
       });
       return false;

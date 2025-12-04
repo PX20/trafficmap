@@ -3714,16 +3714,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Push notification subscription endpoints
   app.post('/api/push/subscribe', isAuthenticated, async (req, res) => {
     try {
+      console.log('[Push Subscribe] Request received');
       const { subscription } = req.body;
       const userId = (req.user as any)?.claims?.sub || (req.user as any)?.id;
 
+      console.log('[Push Subscribe] User ID:', userId);
+      console.log('[Push Subscribe] Has subscription:', !!subscription);
+
       if (!subscription || !userId) {
+        console.error('[Push Subscribe] Missing subscription or userId');
         return res.status(400).json({ error: 'Invalid subscription data' });
       }
 
       // Extract keys from the subscription
       const { endpoint, keys } = subscription;
+      console.log('[Push Subscribe] Endpoint:', endpoint?.substring(0, 50) + '...');
+      console.log('[Push Subscribe] Has keys:', !!keys, 'p256dh:', !!keys?.p256dh, 'auth:', !!keys?.auth);
+      
       if (!endpoint || !keys?.p256dh || !keys?.auth) {
+        console.error('[Push Subscribe] Invalid format - missing endpoint or keys');
         return res.status(400).json({ error: 'Invalid subscription format - missing endpoint or keys' });
       }
 
@@ -3737,8 +3746,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`✅ Push subscription saved for user ${userId}`);
       res.json({ success: true });
-    } catch (error) {
-      console.error('Error saving push subscription:', error);
+    } catch (error: any) {
+      console.error('[Push Subscribe] Error:', error?.message);
+      console.error('[Push Subscribe] Stack:', error?.stack);
       res.status(500).json({ error: 'Failed to save subscription' });
     }
   });
