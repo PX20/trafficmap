@@ -656,15 +656,46 @@ export default function Profile() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
+                {/* Push Notification Status */}
+                {!pushSupported && (
+                  <div className="p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-md">
+                    <p className="text-sm text-yellow-600 dark:text-yellow-400">
+                      Push notifications are not supported on this browser. Try adding this app to your home screen on mobile.
+                    </p>
+                  </div>
+                )}
+                
+                {pushSupported && pushPermission === 'denied' && (
+                  <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-md">
+                    <p className="text-sm text-red-600 dark:text-red-400">
+                      Notifications are blocked. Please enable them in your browser settings.
+                    </p>
+                  </div>
+                )}
+
+                {pushSupported && pushSubscribed && (
+                  <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-md">
+                    <p className="text-sm text-green-600 dark:text-green-400 flex items-center gap-2">
+                      <Check className="w-4 h-4" />
+                      Push notifications are enabled
+                    </p>
+                  </div>
+                )}
+
                 {/* Master Toggle */}
                 <div className="flex items-center justify-between">
                   <div>
                     <span className="text-sm font-medium">Enable Notifications</span>
-                    <p className="text-xs text-muted-foreground">Receive alerts for nearby posts</p>
+                    <p className="text-xs text-muted-foreground">
+                      {pushSupported && !pushSubscribed && pushPermission !== 'denied' 
+                        ? "Tap to enable push notifications" 
+                        : "Receive alerts for nearby posts"}
+                    </p>
                   </div>
                   <Switch
                     checked={effectiveNotificationsEnabled}
                     onCheckedChange={handleToggleNotifications}
+                    disabled={pushPermission === 'denied'}
                     data-testid="switch-notifications-enabled"
                   />
                 </div>
