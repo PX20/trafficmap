@@ -103,7 +103,11 @@ export default function Profile() {
   const { data: categoriesData } = useQuery({
     queryKey: ["/api/categories"],
   });
-  const categories = (categoriesData as any[]) || [];
+  const dbCategories = (categoriesData as any[]) || [];
+  
+  // Add TMR Traffic as a special source option alongside regular categories
+  const TMR_SOURCE = { id: 'tmr', name: 'TMR Traffic Alerts', isSource: true };
+  const categories = [TMR_SOURCE, ...dbCategories];
 
   // Local state for optimistic UI updates
   const [localNotificationsEnabled, setLocalNotificationsEnabled] = useState<boolean | null>(null);
