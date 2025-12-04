@@ -440,18 +440,18 @@ export default function Feed() {
         </Card>
 
         {/* Location Filter */}
-        <div className="px-4 py-2 flex items-center justify-between gap-2">
+        <div className="px-4 py-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="gap-2 text-muted-foreground hover:text-foreground"
+                className="w-full justify-start gap-2 text-muted-foreground hover:text-foreground h-auto py-2"
                 data-testid="button-location-filter"
               >
-                <MapPin className={`w-4 h-4 ${hasLocation ? 'text-blue-500' : 'text-muted-foreground'}`} />
+                <MapPin className={`w-4 h-4 flex-shrink-0 ${hasLocation ? 'text-blue-500' : 'text-muted-foreground'}`} />
                 {hasLocation ? (
-                  <span className="text-sm">
+                  <span className="text-sm text-left flex-1 min-w-0">
                     Within {distanceFilter}
                     {user?.preferredLocation && (
                       <span className="text-muted-foreground"> of {user.preferredLocation}</span>
@@ -460,7 +460,7 @@ export default function Feed() {
                 ) : (
                   <span className="text-sm">Set Location</span>
                 )}
-                <ChevronDown className="w-3 h-3" />
+                <ChevronDown className="w-3 h-3 flex-shrink-0" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-56">
