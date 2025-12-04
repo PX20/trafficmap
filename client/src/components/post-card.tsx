@@ -123,33 +123,33 @@ export function PostCard({ post, onCommentClick }: PostCardProps) {
   const totalReactions = reactionData?.count || 0;
 
   return (
-    <Card className="border-0 shadow-sm bg-white rounded-none sm:rounded-lg mb-2">
+    <Card className="border-0 shadow-sm bg-card rounded-none sm:rounded-lg mb-2">
       <CardContent className="p-0">
         {/* Post Header */}
-        <div className="flex items-start justify-between p-3 pb-2">
+        <div className="flex items-start justify-between p-3 sm:p-4 pb-2">
           <div className="flex items-center gap-3">
             <Link href={posterId ? `/users/${posterId}` : "#"}>
-              <Avatar className="h-10 w-10 cursor-pointer">
+              <Avatar className="h-10 w-10 sm:h-11 sm:w-11 cursor-pointer">
                 {posterAvatar && <AvatarImage src={posterAvatar} />}
-                <AvatarFallback className="bg-blue-100 text-blue-600 font-medium">
+                <AvatarFallback className="bg-primary/10 text-primary font-medium">
                   {posterName.charAt(0).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
             </Link>
             <div className="flex-1 min-w-0">
               <Link href={posterId ? `/users/${posterId}` : "#"}>
-                <p className="font-semibold text-sm text-gray-900 hover:underline cursor-pointer">
+                <p className="font-semibold text-sm text-foreground hover:underline cursor-pointer">
                   {posterName}
                 </p>
               </Link>
-              <div className="flex items-center gap-1.5 text-xs text-gray-500">
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <Clock className="w-3 h-3" />
                 <span>{getTimeAgo(timestamp)}</span>
                 {location && (
                   <>
                     <span>·</span>
                     <MapPin className="w-3 h-3" />
-                    <span className="truncate max-w-[150px]">{location}</span>
+                    <span className="truncate max-w-[120px] sm:max-w-[150px]">{location}</span>
                   </>
                 )}
               </div>
@@ -157,30 +157,30 @@ export function PostCard({ post, onCommentClick }: PostCardProps) {
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-500">
+              <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground">
                 <MoreHorizontal className="w-5 h-5" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem>Save post</DropdownMenuItem>
               <DropdownMenuItem>Hide post</DropdownMenuItem>
-              <DropdownMenuItem className="text-red-600">Report</DropdownMenuItem>
+              <DropdownMenuItem className="text-destructive">Report</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
 
         {/* Category Badge */}
-        <div className="px-3 pb-2">
-          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+        <div className="px-3 sm:px-4 pb-2">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
             {category}
           </span>
         </div>
 
         {/* Post Content */}
-        <div className="px-3 pb-3">
-          <h3 className="font-semibold text-gray-900 mb-1">{title}</h3>
+        <div className="px-3 sm:px-4 pb-3">
+          <h3 className="font-semibold text-foreground mb-1">{title}</h3>
           {description && (
-            <p className="text-gray-700 text-sm leading-relaxed">{description}</p>
+            <p className="text-muted-foreground text-sm leading-relaxed">{description}</p>
           )}
         </div>
 
@@ -242,7 +242,7 @@ export function PostCard({ post, onCommentClick }: PostCardProps) {
         )}
 
         {/* Action Buttons */}
-        <div className="border-t border-gray-100">
+        <div className="border-t border-border">
           <div className="flex items-center justify-around py-1">
             {/* Like Button with Reactions */}
             <Popover open={showReactions} onOpenChange={setShowReactions}>
@@ -302,8 +302,9 @@ export function PostCard({ post, onCommentClick }: PostCardProps) {
             {/* Comment Button */}
             <Button
               variant="ghost"
-              className="flex-1 gap-2 h-10 rounded-none text-gray-600"
+              className="flex-1 gap-2 h-10 sm:h-11 rounded-none text-muted-foreground"
               onClick={onCommentClick}
+              data-testid="button-comment"
             >
               <MessageCircle className="w-5 h-5" />
               <span className="text-sm font-medium">Comment</span>
@@ -312,7 +313,7 @@ export function PostCard({ post, onCommentClick }: PostCardProps) {
             {/* Share Button */}
             <Button
               variant="ghost"
-              className="flex-1 gap-2 h-10 rounded-none text-gray-600"
+              className="flex-1 gap-2 h-10 sm:h-11 rounded-none text-muted-foreground"
               onClick={() => {
                 if (navigator.share) {
                   navigator.share({
@@ -322,6 +323,7 @@ export function PostCard({ post, onCommentClick }: PostCardProps) {
                   });
                 }
               }}
+              data-testid="button-share"
             >
               <Share2 className="w-5 h-5" />
               <span className="text-sm font-medium">Share</span>

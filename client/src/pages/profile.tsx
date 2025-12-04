@@ -262,20 +262,27 @@ export default function Profile() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-4xl mx-auto p-4 sm:p-6">
-        {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
-          <Link href="/">
-            <Button variant="ghost" size="sm" data-testid="button-back-home">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Map
-            </Button>
-          </Link>
-          <h1 className="text-2xl font-bold text-foreground">User Profile</h1>
+    <div className="min-h-screen bg-background pb-20 sm:pb-6">
+      {/* Mobile-optimized header */}
+      <div className="sticky top-0 z-40 bg-background border-b border-border sm:relative sm:border-0">
+        <div className="max-w-4xl mx-auto px-4 py-3 sm:px-6 sm:py-4">
+          <div className="flex items-center gap-3">
+            <Link href="/">
+              <Button variant="ghost" size="icon" className="sm:hidden" data-testid="button-back-home-mobile">
+                <ArrowLeft className="w-5 h-5" />
+              </Button>
+              <Button variant="ghost" size="sm" className="hidden sm:flex" data-testid="button-back-home">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Feed
+              </Button>
+            </Link>
+            <h1 className="text-lg sm:text-2xl font-bold text-foreground">Profile</h1>
+          </div>
         </div>
+      </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
           {/* Main Profile Card */}
           <div className="lg:col-span-2">
             <Card>
@@ -341,7 +348,7 @@ export default function Profile() {
               <CardContent>
                 {isEditing ? (
                   <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <Label htmlFor="firstName">First Name</Label>
                         <Input
@@ -403,7 +410,7 @@ export default function Profile() {
                         <Separator className="my-6" />
                         <h3 className="text-lg font-semibold mb-4">Business Information</h3>
                         
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div>
                             <Label htmlFor="businessName">Business Name</Label>
                             <Input
@@ -437,7 +444,7 @@ export default function Profile() {
                           />
                         </div>
                         
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div>
                             <Label htmlFor="businessWebsite">Business Website</Label>
                             <Input
@@ -473,16 +480,17 @@ export default function Profile() {
                       </>
                     )}
                     
-                    <div className="flex gap-2 pt-4">
+                    <div className="flex flex-col-reverse sm:flex-row gap-2 pt-4">
+                      <Button variant="outline" onClick={handleCancel} className="w-full sm:w-auto" data-testid="button-cancel-edit">
+                        Cancel
+                      </Button>
                       <Button 
                         onClick={handleSave} 
                         disabled={updateProfileMutation.isPending}
+                        className="w-full sm:w-auto"
                         data-testid="button-save-profile"
                       >
                         {updateProfileMutation.isPending ? "Saving..." : "Save Changes"}
-                      </Button>
-                      <Button variant="outline" onClick={handleCancel} data-testid="button-cancel-edit">
-                        Cancel
                       </Button>
                     </div>
                   </div>
