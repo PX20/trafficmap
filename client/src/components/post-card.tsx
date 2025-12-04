@@ -120,7 +120,7 @@ export function PostCard({ post, onCommentClick }: PostCardProps) {
   const description = props.description || "";
   const location = props.location || props.locationDescription || "";
   const photoUrl = props.photoUrl;
-  const timestamp = props.incidentTime || props.lastUpdated || props.publishedAt;
+  const timestamp = props.tmrStartTime || props.createdAt || props.incidentTime || props.lastUpdated || props.publishedAt;
   const category = props.category || "Community";
   
   const posterName = props.reporterName || props.userName || "Community Member";
