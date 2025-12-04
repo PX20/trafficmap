@@ -16,11 +16,13 @@ import { ArrowLeft, MapPin, Shield, Users, Phone, UserCheck, Camera, Bell, Check
 import { Switch } from "@/components/ui/switch";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
+import { usePushNotifications } from "@/hooks/use-push-notifications";
 
 export default function Profile() {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { isSupported: pushSupported, isSubscribed: pushSubscribed, subscribe: subscribePush, unsubscribe: unsubscribePush, permission: pushPermission } = usePushNotifications();
   
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
@@ -155,8 +157,26 @@ export default function Profile() {
     },
   });
 
-  const handleToggleNotifications = (enabled: boolean) => {
+  const handleToggleNotifications = async (enabled: boolean) => {
     setLocalNotificationsEnabled(enabled);
+    
+    if (enabled) {
+      // When enabling, request browser permission and subscribe to push
+      if (pushSupported) {
+        const subscribed = await subscribePush();
+        if (!subscribed) {
+          // If subscription failed, revert the toggle
+          setLocalNotificationsEnabled(false);
+          return;
+        }
+      }
+    } else {
+      // When disabling, unsubscribe from push
+      if (pushSupported && pushSubscribed) {
+        await unsubscribePush();
+      }
+    }
+    
     updateNotificationsMutation.mutate({ notificationsEnabled: enabled });
   };
 
