@@ -4,27 +4,20 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Bell, BellOff, Smartphone, AlertTriangle, Car, Shield, Flame, Megaphone } from 'lucide-react';
+import { Bell, BellOff, Smartphone, AlertTriangle, Car, Shield, Flame, Megaphone, PawPrint, Search } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useMutation } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
-import { Separator } from '@/components/ui/separator';
 
-interface NotificationCategory {
-  id: string;
-  name: string;
-  description: string;
-  icon: any;
-  enabled: boolean;
-}
-
-const DEFAULT_CATEGORIES: NotificationCategory[] = [
-  { id: 'tmr', name: 'TMR Traffic Alerts', description: 'Road closures, crashes, roadworks from Transport and Main Roads', icon: Car, enabled: true },
-  { id: 'safety', name: 'Safety & Crime', description: 'Crime reports, suspicious activity, public disturbances', icon: Shield, enabled: true },
-  { id: 'emergency', name: 'Emergencies', description: 'Fire, flood, natural disasters, medical emergencies', icon: Flame, enabled: true },
-  { id: 'community', name: 'Community Posts', description: 'Local community updates and reports', icon: Megaphone, enabled: true },
+const NOTIFICATION_CATEGORIES = [
+  { id: 'tmr', name: 'TMR Traffic', icon: Car },
+  { id: 'safety', name: 'Safety & Crime', icon: Shield },
+  { id: 'emergency', name: 'Emergencies', icon: Flame },
+  { id: 'community', name: 'Community', icon: Megaphone },
+  { id: 'pets', name: 'Pets', icon: PawPrint },
+  { id: 'lostfound', name: 'Lost & Found', icon: Search },
 ];
 
 export function NotificationSettings() {
@@ -41,52 +34,42 @@ export function NotificationSettings() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [testLoading, setTestLoading] = useState(false);
-  const [categories, setCategories] = useState<NotificationCategory[]>(DEFAULT_CATEGORIES);
+  const [enabledCategories, setEnabledCategories] = useState<string[]>(
+    NOTIFICATION_CATEGORIES.map(c => c.id)
+  );
 
-  // Load user's notification preferences
   useEffect(() => {
-    if (user?.notificationCategories) {
-      const enabledCategories = user.notificationCategories as string[];
-      setCategories(prev => prev.map(cat => ({
-        ...cat,
-        enabled: enabledCategories.includes(cat.id)
-      })));
+    if (user?.notificationCategories && Array.isArray(user.notificationCategories)) {
+      setEnabledCategories(user.notificationCategories as string[]);
     }
   }, [user?.notificationCategories]);
 
-  // Mutation to save notification preferences
   const savePreferencesMutation = useMutation({
-    mutationFn: async (enabledCategoryIds: string[]) => {
+    mutationFn: async (categories: string[]) => {
       const response = await apiRequest('PATCH', '/api/user/notification-preferences', {
-        notificationCategories: enabledCategoryIds
+        notificationCategories: categories
       });
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
-      toast({
-        title: 'Preferences saved',
-        description: 'Your notification settings have been updated.',
-      });
     },
     onError: () => {
       toast({
         title: 'Error',
-        description: 'Failed to save notification preferences.',
+        description: 'Failed to save preferences.',
         variant: 'destructive',
       });
     }
   });
 
-  const handleCategoryToggle = (categoryId: string, enabled: boolean) => {
-    const newCategories = categories.map(cat => 
-      cat.id === categoryId ? { ...cat, enabled } : cat
-    );
-    setCategories(newCategories);
+  const handleCategoryToggle = (categoryId: string) => {
+    const newCategories = enabledCategories.includes(categoryId)
+      ? enabledCategories.filter(id => id !== categoryId)
+      : [...enabledCategories, categoryId];
     
-    // Save to server
-    const enabledIds = newCategories.filter(c => c.enabled).map(c => c.id);
-    savePreferencesMutation.mutate(enabledIds);
+    setEnabledCategories(newCategories);
+    savePreferencesMutation.mutate(newCategories);
   };
 
   const handleToggleNotifications = async () => {
@@ -108,7 +91,6 @@ export function NotificationSettings() {
       });
       
       if (response.ok) {
-        // Show a browser notification as a test since backend doesn't actually send one yet
         if (permission === 'granted') {
           new Notification('Test Notification', {
             body: 'Push notifications are working! You\'ll receive alerts about safety incidents in your area.',
@@ -188,7 +170,7 @@ export function NotificationSettings() {
           </div>
         </div>
 
-        {/* Toggle Switch */}
+        {/* Master Toggle */}
         <div className="flex items-center justify-between">
           <div className="space-y-1">
             <Label htmlFor="notifications-toggle" className="text-sm font-medium">
@@ -200,11 +182,42 @@ export function NotificationSettings() {
           </div>
           <Switch
             id="notifications-toggle"
+            data-testid="switch-notifications-master"
             checked={isSubscribed}
             onCheckedChange={handleToggleNotifications}
             disabled={isLoading || permission === 'denied'}
           />
         </div>
+
+        {/* Category Toggles */}
+        {isSubscribed && (
+          <div className="space-y-3 pt-2">
+            <Label className="text-sm font-medium">Alert Categories</Label>
+            <div className="space-y-2">
+              {NOTIFICATION_CATEGORIES.map((category) => {
+                const Icon = category.icon;
+                const isEnabled = enabledCategories.includes(category.id);
+                return (
+                  <div 
+                    key={category.id}
+                    className="flex items-center justify-between py-1"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Icon className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-sm">{category.name}</span>
+                    </div>
+                    <Switch
+                      data-testid={`switch-category-${category.id}`}
+                      checked={isEnabled}
+                      onCheckedChange={() => handleCategoryToggle(category.id)}
+                      disabled={savePreferencesMutation.isPending}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Action Buttons */}
         <div className="space-y-2">
@@ -213,6 +226,7 @@ export function NotificationSettings() {
               onClick={requestPermission}
               className="w-full"
               variant="default"
+              data-testid="button-enable-notifications"
             >
               <Bell className="w-4 h-4 mr-2" />
               Enable Notifications
@@ -234,21 +248,11 @@ export function NotificationSettings() {
               className="w-full"
               variant="outline"
               size="sm"
+              data-testid="button-test-notification"
             >
               {testLoading ? 'Testing...' : 'Test Notification'}
             </Button>
           )}
-        </div>
-
-        {/* What You'll Receive */}
-        <div className="text-xs text-muted-foreground space-y-1">
-          <p className="font-medium">You'll be notified about:</p>
-          <ul className="list-disc list-inside space-y-0.5 ml-2">
-            <li>Emergency incidents in your area</li>
-            <li>Major traffic events and road closures</li>
-            <li>Community safety alerts</li>
-            <li>Crime reports and suspicious activity</li>
-          </ul>
         </div>
       </CardContent>
     </Card>
