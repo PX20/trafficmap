@@ -119,6 +119,12 @@ export function setupAuth(app: Express) {
   const CACHE_TTL = 5 * 60 * 1000; // 5 minutes cache TTL
   const MAX_CACHE_SIZE = 1000; // Prevent memory leaks
   
+  // Export function to clear a specific user's cache (call after profile updates)
+  (app as any).clearUserCache = (userId: string) => {
+    userCache.delete(userId);
+    console.log(`🗑️ Cleared cache for user ${userId}`);
+  };
+  
   // Cache cleanup function
   const cleanupCache = () => {
     const now = Date.now();

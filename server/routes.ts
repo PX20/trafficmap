@@ -1128,6 +1128,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found" });
       }
       
+      // Clear user cache so next auth request gets fresh data
+      if ((app as any).clearUserCache) {
+        (app as any).clearUserCache(userId);
+      }
+      
       res.json(updatedUser);
     } catch (error) {
       console.error("Error updating notification preferences:", error);
