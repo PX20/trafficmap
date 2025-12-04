@@ -250,48 +250,35 @@ export function InlineComments({ incident, onClose }: InlineCommentsProps) {
     setSelectedPhotos(prev => prev.filter((_, i) => i !== index));
   };
 
-  const uploadPhotos = async () => {
+  const convertPhotosToBase64 = async (): Promise<string[]> => {
     if (selectedPhotos.length === 0) return [];
     
-    setIsUploadingPhotos(true);
-    try {
-      const formData = new FormData();
-      selectedPhotos.forEach(photo => {
-        formData.append('photos', photo);
-      });
-      
-      const response = await fetch('/api/upload/comment-photos', {
-        method: 'POST',
-        body: formData,
-        credentials: 'include',
-      });
-      
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Photo upload failed');
+    const base64Photos: string[] = [];
+    
+    for (const photo of selectedPhotos) {
+      try {
+        const base64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(photo);
+        });
+        base64Photos.push(base64);
+      } catch (error) {
+        console.error('Error converting photo to base64:', error);
       }
-      
-      const data = await response.json();
-      return data.urls || [];
-    } catch (error: any) {
-      toast({
-        title: "Photo upload failed",
-        description: error.message || "Failed to upload photos",
-        variant: "destructive",
-      });
-      throw error;
-    } finally {
-      setIsUploadingPhotos(false);
     }
+    
+    return base64Photos;
   };
 
   // Comment submission
   const createCommentMutation = useMutation({
-    mutationFn: async ({ content, parentCommentId, photoUrls }: { content: string; parentCommentId?: string; photoUrls?: string[] }) => {
+    mutationFn: async ({ content, parentCommentId, base64Photos }: { content: string; parentCommentId?: string; base64Photos?: string[] }) => {
       return apiRequest("POST", `/api/incidents/${incidentId}/social/comments`, { 
         content, 
         parentCommentId: parentCommentId || null,
-        photoUrls: photoUrls || []
+        base64Photos: base64Photos || []
       });
     },
     onSuccess: () => {
@@ -328,17 +315,24 @@ export function InlineComments({ incident, onClose }: InlineCommentsProps) {
     if (!newComment.trim()) return;
     
     try {
-      // Upload photos first if any are selected
-      const photoUrls = await uploadPhotos();
+      setIsUploadingPhotos(true);
+      // Convert photos to base64 and send with the comment
+      const base64Photos = await convertPhotosToBase64();
       
-      // Submit comment with photo URLs
+      // Submit comment with base64 photos
       createCommentMutation.mutate({ 
         content: newComment.trim(),
-        photoUrls 
+        base64Photos 
       });
     } catch (error) {
-      // Error already handled in uploadPhotos
-      return;
+      console.error('Error preparing photos:', error);
+      toast({
+        title: "Error",
+        description: "Failed to process photos",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploadingPhotos(false);
     }
   };
 

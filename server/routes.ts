@@ -2253,6 +2253,93 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Maximum 3 photos allowed per comment" });
       }
 
+      // Handle base64 photo uploads if provided
+      let uploadedPhotoUrls: string[] = [];
+      if (req.body.base64Photos && Array.isArray(req.body.base64Photos) && req.body.base64Photos.length > 0) {
+        if (req.body.base64Photos.length > 3) {
+          return res.status(400).json({ message: "Maximum 3 photos allowed per comment" });
+        }
+
+        const rateLimitCheck = checkPhotoUploadRateLimit(userId);
+        if (!rateLimitCheck.allowed) {
+          const resetDate = new Date(rateLimitCheck.resetTime!);
+          return res.status(429).json({ 
+            error: 'Upload rate limit exceeded',
+            resetTime: resetDate.toISOString(),
+            message: `Maximum ${UPLOADS_PER_HOUR} uploads per hour. Try again after ${resetDate.toLocaleTimeString()}.`
+          });
+        }
+
+        try {
+          const objectStorageService = new ObjectStorageService();
+          const privateObjectDir = objectStorageService.getPrivateObjectDir();
+          
+          if (!privateObjectDir) {
+            console.error('Object storage not configured for comment photos');
+          } else {
+            for (const base64Data of req.body.base64Photos) {
+              try {
+                // Extract base64 content (remove data URL prefix if present)
+                const matches = base64Data.match(/^data:image\/(\w+);base64,(.+)$/);
+                if (!matches) {
+                  console.error('Invalid base64 image format');
+                  continue;
+                }
+                
+                const imageType = matches[1];
+                const base64Content = matches[2];
+                const buffer = Buffer.from(base64Content, 'base64');
+                
+                // Validate file size (5MB max)
+                if (buffer.length > 5 * 1024 * 1024) {
+                  console.error('Image too large, skipping');
+                  continue;
+                }
+                
+                // Generate filename and upload
+                const fileId = randomUUID();
+                const filename = `comment-${fileId}.${imageType === 'jpeg' ? 'jpg' : imageType}`;
+                const fullPath = `${privateObjectDir}/comment-photos/${filename}`;
+                
+                const parseObjectPath = (path: string) => {
+                  if (!path.startsWith("/")) path = `/${path}`;
+                  const pathParts = path.split("/");
+                  const bucketName = pathParts[1];
+                  const objectName = pathParts.slice(2).join("/");
+                  return { bucketName, objectName };
+                };
+                
+                const { bucketName, objectName } = parseObjectPath(fullPath);
+                const bucket = objectStorageClient.bucket(bucketName);
+                const file = bucket.file(objectName);
+                
+                await file.save(buffer, {
+                  metadata: {
+                    contentType: `image/${imageType}`,
+                    metadata: {
+                      uploadedBy: userId,
+                      uploadedAt: new Date().toISOString(),
+                    }
+                  },
+                  public: true,
+                });
+                
+                const publicUrl = `https://storage.googleapis.com/${bucketName}/${objectName}`;
+                uploadedPhotoUrls.push(publicUrl);
+              } catch (uploadError) {
+                console.error('Error uploading base64 photo:', uploadError);
+              }
+            }
+          }
+        } catch (storageError) {
+          console.error('Error with object storage for base64 photos:', storageError);
+        }
+      }
+
+      // Merge any uploaded photos with provided photoUrls
+      const finalPhotoUrls = [...(validatedData.photoUrls || []), ...uploadedPhotoUrls];
+      validatedData.photoUrls = finalPhotoUrls.slice(0, 3); // Ensure max 3
+
       const comment = await storage.createIncidentComment(validatedData);
       const count = await storage.getIncidentCommentsCount(incidentId);
       
