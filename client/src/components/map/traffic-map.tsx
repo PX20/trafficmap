@@ -205,9 +205,11 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
 
 
     // Unified timestamp helper to ensure consistent ordering with aging logic
-    // Check root-level fields first (where TMR stores timestamps), then properties
+    // Check TMR-specific fields first, then root-level fields, then properties
     const getTimestamp = (feature: any) => {
       const candidates = [
+        // TMR events store timestamps in tmrStartTime
+        feature?.properties?.tmrStartTime,
         // Root-level fields (TMR events store timestamps here)
         feature?.incidentTime,
         feature?.lastUpdated,
@@ -252,8 +254,9 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
         // TMR events should always use 'traffic' marker type
         const markerType = 'traffic';
         
-        // Calculate aging for traffic events - check root-level fields first (TMR), then properties
-        const referenceTime = feature.incidentTime || 
+        // Calculate aging for traffic events - check TMR-specific fields first, then other common fields
+        const referenceTime = feature.properties?.tmrStartTime ||  // TMR events use tmrStartTime
+                             feature.incidentTime || 
                              feature.lastUpdated || 
                              feature.publishedAt ||
                              feature.properties?.incidentTime || 
