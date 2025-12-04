@@ -106,7 +106,7 @@ export default function Profile() {
   const dbCategories = (categoriesData as any[]) || [];
   
   // Add TMR Traffic as a special source option alongside regular categories
-  const TMR_SOURCE = { id: 'tmr', name: 'TMR Traffic Alerts', isSource: true };
+  const TMR_SOURCE = { id: 'tmr', name: 'Traffic Alerts', isSource: true };
   const categories = [TMR_SOURCE, ...dbCategories];
 
   // Local state for optimistic UI updates
