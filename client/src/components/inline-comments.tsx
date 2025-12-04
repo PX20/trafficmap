@@ -250,6 +250,37 @@ export function InlineComments({ incident, onClose }: InlineCommentsProps) {
     setSelectedPhotos(prev => prev.filter((_, i) => i !== index));
   };
 
+  const compressAndConvertPhoto = async (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      
+      img.onload = () => {
+        const maxWidth = 1200;
+        const maxHeight = 1200;
+        let { width, height } = img;
+        
+        if (width > maxWidth || height > maxHeight) {
+          const ratio = Math.min(maxWidth / width, maxHeight / height);
+          width = Math.round(width * ratio);
+          height = Math.round(height * ratio);
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        
+        ctx?.drawImage(img, 0, 0, width, height);
+        
+        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+        resolve(compressedBase64);
+      };
+      
+      img.onerror = reject;
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
   const convertPhotosToBase64 = async (): Promise<string[]> => {
     if (selectedPhotos.length === 0) return [];
     
@@ -257,15 +288,10 @@ export function InlineComments({ incident, onClose }: InlineCommentsProps) {
     
     for (const photo of selectedPhotos) {
       try {
-        const base64 = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result as string);
-          reader.onerror = reject;
-          reader.readAsDataURL(photo);
-        });
-        base64Photos.push(base64);
+        const compressedBase64 = await compressAndConvertPhoto(photo);
+        base64Photos.push(compressedBase64);
       } catch (error) {
-        console.error('Error converting photo to base64:', error);
+        console.error('Error compressing photo:', error);
       }
     }
     
