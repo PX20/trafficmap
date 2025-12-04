@@ -898,6 +898,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Serve comment photos from object storage
+  app.get('/api/photos/comment-photos/:filename', async (req, res) => {
+    try {
+      const { filename } = req.params;
+      
+      // Validate filename to prevent path traversal
+      if (!filename || filename.includes('..') || filename.includes('/')) {
+        return res.status(400).json({ error: 'Invalid filename' });
+      }
+      
+      const objectStorageService = new ObjectStorageService();
+      const privateObjectDir = objectStorageService.getPrivateObjectDir();
+      
+      if (!privateObjectDir) {
+        return res.status(500).json({ error: 'Object storage not configured' });
+      }
+      
+      const fullPath = `${privateObjectDir}/comment-photos/${filename}`;
+      
+      const parseObjectPath = (path: string) => {
+        if (!path.startsWith("/")) path = `/${path}`;
+        const pathParts = path.split("/");
+        const bucketName = pathParts[1];
+        const objectName = pathParts.slice(2).join("/");
+        return { bucketName, objectName };
+      };
+      
+      const { bucketName, objectName } = parseObjectPath(fullPath);
+      const bucket = objectStorageClient.bucket(bucketName);
+      const file = bucket.file(objectName);
+      
+      const [exists] = await file.exists();
+      if (!exists) {
+        return res.status(404).json({ error: 'Photo not found' });
+      }
+      
+      const [metadata] = await file.getMetadata();
+      const contentType = metadata.contentType || 'image/jpeg';
+      
+      res.setHeader('Content-Type', contentType);
+      res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache for 1 day
+      
+      const stream = file.createReadStream();
+      stream.pipe(res);
+      
+    } catch (error) {
+      console.error('Error serving comment photo:', error);
+      res.status(500).json({ error: 'Failed to serve photo' });
+    }
+  });
+
   // Enhanced image compression endpoint with multiple sizes and WebP support
   app.get('/api/compress-image', async (req, res) => {
     const imagePath = req.query.path as string;
@@ -2323,12 +2374,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   },
                 });
                 
-                // Generate signed URL for viewing (valid for 7 days)
-                const [signedUrl] = await file.getSignedUrl({
-                  action: 'read',
-                  expires: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
-                });
-                uploadedPhotoUrls.push(signedUrl);
+                // Use our own proxy endpoint to serve the photo
+                const proxyUrl = `/api/photos/comment-photos/${filename}`;
+                uploadedPhotoUrls.push(proxyUrl);
               } catch (uploadError) {
                 console.error('Error uploading base64 photo:', uploadError);
               }
