@@ -54,7 +54,7 @@ import { Link } from "wouter";
 import { queryClient } from "@/lib/queryClient";
 import { calculateDistance, type Coordinates } from "@/lib/location-utils";
 
-type DistanceFilter = 'all' | '5km' | '10km' | '25km';
+type DistanceFilter = '1km' | '2km' | '5km' | '10km' | '25km' | '50km';
 
 export default function Feed() {
   const { user, logoutMutation } = useAuth();
@@ -65,7 +65,7 @@ export default function Feed() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [viewMode, setViewMode] = useState<'feed' | 'map'>('feed');
   const [menuOpen, setMenuOpen] = useState(false);
-  const [distanceFilter, setDistanceFilter] = useState<DistanceFilter>('all');
+  const [distanceFilter, setDistanceFilter] = useState<DistanceFilter>('10km');
 
   const userLocation = useMemo((): Coordinates | null => {
     if (user?.preferredLocationLat && user?.preferredLocationLng) {
@@ -80,10 +80,11 @@ export default function Feed() {
   const hasLocation = !!userLocation && !!user?.preferredLocation;
 
   useEffect(() => {
-    if (user?.distanceFilter && ['all', '5km', '10km', '25km'].includes(user.distanceFilter)) {
+    const validFilters = ['1km', '2km', '5km', '10km', '25km', '50km'];
+    if (user?.distanceFilter && validFilters.includes(user.distanceFilter)) {
       setDistanceFilter(user.distanceFilter as DistanceFilter);
     } else if (user && !user.distanceFilter) {
-      setDistanceFilter('all');
+      setDistanceFilter('10km');
     }
   }, [user?.id, user?.distanceFilter]);
 
@@ -111,7 +112,7 @@ export default function Feed() {
     }) || [];
 
   const posts = useMemo(() => {
-    if (distanceFilter === 'all' || !userLocation) {
+    if (!userLocation) {
       return allPosts;
     }
 
@@ -433,7 +434,7 @@ export default function Feed() {
                 <MapPin className={`w-4 h-4 ${hasLocation ? 'text-blue-500' : 'text-muted-foreground'}`} />
                 {hasLocation ? (
                   <span className="text-sm">
-                    {distanceFilter === 'all' ? 'All Areas' : `Within ${distanceFilter}`}
+                    Within {distanceFilter}
                     {user?.preferredLocation && (
                       <span className="text-muted-foreground"> of {user.preferredLocation}</span>
                     )}
@@ -454,8 +455,11 @@ export default function Feed() {
                     value={distanceFilter} 
                     onValueChange={(value) => handleDistanceChange(value as DistanceFilter)}
                   >
-                    <DropdownMenuRadioItem value="all" data-testid="radio-distance-all">
-                      All Areas
+                    <DropdownMenuRadioItem value="1km" data-testid="radio-distance-1km">
+                      Within 1km
+                    </DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="2km" data-testid="radio-distance-2km">
+                      Within 2km
                     </DropdownMenuRadioItem>
                     <DropdownMenuRadioItem value="5km" data-testid="radio-distance-5km">
                       Within 5km
@@ -465,6 +469,9 @@ export default function Feed() {
                     </DropdownMenuRadioItem>
                     <DropdownMenuRadioItem value="25km" data-testid="radio-distance-25km">
                       Within 25km
+                    </DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="50km" data-testid="radio-distance-50km">
+                      Within 50km
                     </DropdownMenuRadioItem>
                   </DropdownMenuRadioGroup>
                   <DropdownMenuSeparator />
@@ -489,7 +496,7 @@ export default function Feed() {
             </DropdownMenuContent>
           </DropdownMenu>
           
-          {posts.length !== allPosts.length && distanceFilter !== 'all' && (
+          {posts.length !== allPosts.length && (
             <Badge variant="secondary" className="text-xs">
               {posts.length} of {allPosts.length}
             </Badge>

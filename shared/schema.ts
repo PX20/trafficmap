@@ -239,7 +239,7 @@ export const users = pgTable("users", {
   preferredLocationLat: doublePrecision("preferred_location_lat"), // Latitude coordinate
   preferredLocationLng: doublePrecision("preferred_location_lng"), // Longitude coordinate
   preferredLocationBounds: jsonb("preferred_location_bounds"), // Bounding box {southwest: [lat,lng], northeast: [lat,lng]}
-  distanceFilter: varchar("distance_filter", { enum: ["all", "5km", "10km", "25km"] }).default("all"), // Proximity filter preference
+  distanceFilter: varchar("distance_filter", { enum: ["1km", "2km", "5km", "10km", "25km", "50km"] }).default("10km"), // Proximity filter preference
   // Business account fields
   accountType: varchar("account_type", { enum: ["regular", "business"] }).default("regular"),
   businessName: varchar("business_name"),
