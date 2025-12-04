@@ -249,6 +249,8 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
       
       sortedEvents.forEach((feature: any) => {
         const eventType = getSafeString(feature.properties, 'event_type');
+        // TMR events should always use 'traffic' marker type
+        const markerType = 'traffic';
         
         // Calculate aging for traffic events - check root-level fields first (TMR), then properties
         const referenceTime = feature.incidentTime || 
@@ -326,7 +328,7 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
           
           if (coords) {
             // Calculate aged color for traffic events
-            const originalColor = getMarkerColor(eventType, feature.properties);
+            const originalColor = getMarkerColor(markerType, feature.properties);
             const agedColor = getAgedColor(originalColor, agingData.agePercentage);
             
             // Set z-index based on timestamp to ensure newest events appear on top
@@ -334,7 +336,7 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
             const zIndexOffset = Math.floor(timestamp / 1000); // Convert to reasonable z-index value
             
             const marker = L.marker(coords, {
-              icon: createCustomMarker(eventType, agedColor, 1.0),
+              icon: createCustomMarker(markerType, agedColor, 1.0),
               zIndexOffset: zIndexOffset
             });
 

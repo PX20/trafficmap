@@ -95,7 +95,8 @@ export function useTrafficData(filters: FilterState, viewportBounds?: { southwes
   
   const allIncidentsData = allFeatures.filter((feature: any) => {
     const source = feature.properties?.source;
-    return source === 'emergency' || source === 'user'; // Emergency services + user reports
+    // Include emergency, user, or posts without a source (default to user posts)
+    return source === 'emergency' || source === 'user' || !source;
   });
 
   // CLIENT-SIDE PROXIMITY-BASED FILTERING - Primary filtering method
