@@ -200,9 +200,9 @@ export default function Feed() {
   ];
 
   return (
-    <div className="min-h-screen bg-background dark:bg-background">
+    <div className={`bg-background dark:bg-background ${isMobile ? 'mobile-app-container' : 'min-h-screen'}`}>
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-card dark:bg-card border-b border-border shadow-sm">
+      <header className={`${isMobile ? '' : 'sticky top-0'} z-50 bg-card dark:bg-card border-b border-border shadow-sm shrink-0`}>
         <div className="max-w-2xl mx-auto px-4">
           <div className="flex items-center justify-between h-14 gap-2">
             {/* Left: Hamburger Menu */}
@@ -352,38 +352,40 @@ export default function Feed() {
       </header>
 
       {/* Feed/Map Toggle */}
-      <div className="sticky top-14 z-40 bg-card dark:bg-card border-b border-border">
-        <div className="max-w-2xl mx-auto px-4">
-          <div className="flex items-center justify-center gap-1 py-2">
-            <Button
-              variant={viewMode === 'feed' ? 'default' : 'ghost'}
-              size="sm"
-              className="flex-1 max-w-32 gap-2"
-              onClick={() => setViewMode('feed')}
-              data-testid="button-view-feed"
-            >
-              <List className="w-4 h-4" />
-              Feed
-            </Button>
-            <Button
-              variant={viewMode === 'map' ? 'default' : 'ghost'}
-              size="sm"
-              className="flex-1 max-w-32 gap-2"
-              onClick={() => {
-                setViewMode('map');
-                setLocation('/map');
-              }}
-              data-testid="button-view-map"
-            >
-              <Map className="w-4 h-4" />
-              Map
-            </Button>
+      {/* Scrollable content area for mobile */}
+      <div className={isMobile ? 'mobile-app-content' : ''}>
+        <div className={`${isMobile ? '' : 'sticky top-14'} z-40 bg-card dark:bg-card border-b border-border`}>
+          <div className="max-w-2xl mx-auto px-4">
+            <div className="flex items-center justify-center gap-1 py-2">
+              <Button
+                variant={viewMode === 'feed' ? 'default' : 'ghost'}
+                size="sm"
+                className="flex-1 max-w-32 gap-2"
+                onClick={() => setViewMode('feed')}
+                data-testid="button-view-feed"
+              >
+                <List className="w-4 h-4" />
+                Feed
+              </Button>
+              <Button
+                variant={viewMode === 'map' ? 'default' : 'ghost'}
+                size="sm"
+                className="flex-1 max-w-32 gap-2"
+                onClick={() => {
+                  setViewMode('map');
+                  setLocation('/map');
+                }}
+                data-testid="button-view-map"
+              >
+                <Map className="w-4 h-4" />
+                Map
+              </Button>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Main Content */}
-      <main className="max-w-2xl mx-auto pb-20">
+        {/* Main Content */}
+        <main className="max-w-2xl mx-auto pb-20">
         {/* Stories */}
         <StoriesBar />
 
@@ -577,6 +579,7 @@ export default function Feed() {
           )}
         </div>
       </main>
+      </div>
 
       {/* Mobile Navigation */}
       {isMobile && <MobileNav />}

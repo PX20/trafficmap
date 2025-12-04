@@ -175,18 +175,36 @@
     margin-bottom: env(safe-area-inset-bottom, 0px);
   }
   
-  /* Mobile bottom navigation - force truly fixed positioning */
+  /* Mobile bottom navigation - use sticky positioning at viewport bottom */
   .mobile-bottom-nav {
     position: fixed !important;
     bottom: 0 !important;
     left: 0 !important;
     right: 0 !important;
     z-index: 9999 !important;
-    transform: translateZ(0);
-    -webkit-transform: translateZ(0);
+    transform: translate3d(0, 0, 0);
+    -webkit-transform: translate3d(0, 0, 0);
     will-change: transform;
     backface-visibility: hidden;
     -webkit-backface-visibility: hidden;
+  }
+  
+  /* Mobile app-like layout */
+  @supports (height: 100dvh) {
+    .mobile-app-container {
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    
+    .mobile-app-content {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior-y: contain;
+    }
   }
   
   /* Mobile-specific touch improvements */
