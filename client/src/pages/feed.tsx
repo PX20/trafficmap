@@ -119,14 +119,30 @@ export default function Feed() {
     const maxDistance = parseInt(distanceFilter.replace('km', ''));
     
     return allPosts.filter((post: any) => {
-      const coords = post.geometry?.coordinates;
-      if (!coords || coords.length < 2) return false;
+      const geometry = post.geometry;
+      if (!geometry?.coordinates) return false;
       
-      const postLocation: Coordinates = {
-        lat: coords[1],
-        lon: coords[0]
-      };
+      let lng: number | undefined;
+      let lat: number | undefined;
       
+      if (geometry.type === 'Point') {
+        [lng, lat] = geometry.coordinates;
+      } else if (geometry.type === 'MultiPoint' && geometry.coordinates[0]) {
+        [lng, lat] = geometry.coordinates[0];
+      } else if (geometry.type === 'LineString' && geometry.coordinates[0]) {
+        [lng, lat] = geometry.coordinates[0];
+      } else if (geometry.type === 'MultiLineString' && geometry.coordinates[0]?.[0]) {
+        [lng, lat] = geometry.coordinates[0][0];
+      } else if (geometry.type === 'GeometryCollection' && geometry.geometries?.[0]) {
+        const pointGeom = geometry.geometries.find((g: any) => g.type === 'Point');
+        if (pointGeom?.coordinates) {
+          [lng, lat] = pointGeom.coordinates;
+        }
+      }
+      
+      if (typeof lng !== 'number' || typeof lat !== 'number') return false;
+      
+      const postLocation: Coordinates = { lat, lon: lng };
       const distance = calculateDistance(userLocation, postLocation);
       return distance <= maxDistance;
     });
