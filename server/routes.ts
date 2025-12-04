@@ -4456,16 +4456,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Convert to GeoJSON
         result = {
           type: 'FeatureCollection' as const,
-          features: incidents.map(inc => ({
-            type: 'Feature' as const,
-            id: inc.id,
-            geometry: inc.geometry as any,
-            properties: {
-              ...inc,
-              geometry: undefined,
-              originalProperties: inc.originalProperties || {}
-            }
-          }))
+          features: incidents.map(inc => {
+            const incAny = inc as any;
+            return {
+              type: 'Feature' as const,
+              id: inc.id,
+              geometry: inc.geometry as any,
+              properties: {
+                ...incAny,
+                geometry: undefined,
+                originalProperties: incAny.originalProperties || {}
+              }
+            };
+          })
         };
       }
       // Regional filtering 
