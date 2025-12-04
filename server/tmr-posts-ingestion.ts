@@ -269,11 +269,36 @@ class TMRPostsIngestionEngine {
   }
 
   /**
+   * Safely extract a string value from any type (handles nested objects)
+   */
+  private safeString(value: any): string {
+    if (value === null || value === undefined) return '';
+    if (typeof value === 'string') return value;
+    if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+    if (typeof value === 'object') {
+      // Try common string properties first
+      if (value.name) return this.safeString(value.name);
+      if (value.value) return this.safeString(value.value);
+      if (value.text) return this.safeString(value.text);
+      if (value.road_name) return this.safeString(value.road_name);
+      if (value.locality) return this.safeString(value.locality);
+      // Last resort: try to find any string property
+      for (const key of Object.keys(value)) {
+        if (typeof value[key] === 'string' && value[key].length > 0) {
+          return value[key];
+        }
+      }
+      return '';
+    }
+    return '';
+  }
+
+  /**
    * Build a readable title from TMR event properties
    */
   private buildEventTitle(props: any): string {
-    const eventType = props.event_type || props.type || 'Traffic';
-    const eventSubtype = props.event_subtype || props.subtype || '';
+    const eventType = this.safeString(props.event_type || props.type) || 'Traffic';
+    const eventSubtype = this.safeString(props.event_subtype || props.subtype);
     
     // Handle road_summary as object or string
     let roadName = '';
@@ -281,15 +306,15 @@ class TMRPostsIngestionEngine {
     
     if (props.road_summary) {
       if (typeof props.road_summary === 'object') {
-        roadName = props.road_summary.road_name || '';
-        locality = props.road_summary.locality || props.locality || '';
+        roadName = this.safeString(props.road_summary.road_name);
+        locality = this.safeString(props.road_summary.locality) || this.safeString(props.locality);
       } else if (typeof props.road_summary === 'string') {
         roadName = props.road_summary;
-        locality = props.locality || '';
+        locality = this.safeString(props.locality);
       }
     } else {
-      roadName = props.road || props.street || '';
-      locality = props.locality || props.suburb || '';
+      roadName = this.safeString(props.road || props.street);
+      locality = this.safeString(props.locality || props.suburb);
     }
 
     // Build title parts

@@ -4068,72 +4068,88 @@ export async function registerRoutes(app: Express): Promise<Server> {
           [Math.max(swLat, neLat), Math.max(swLng, neLng)]
         );
         
-        // Convert to GeoJSON
+        // Convert to GeoJSON - preserve actual source from post properties
         result = {
           type: 'FeatureCollection' as const,
-          features: postsInArea.map(post => ({
-            type: 'Feature' as const,
-            id: post.id,
-            geometry: post.geometry || (post.centroidLat && post.centroidLng ? {
-              type: 'Point',
-              coordinates: [post.centroidLng, post.centroidLat]
-            } : null),
-            properties: {
+          features: postsInArea.map(post => {
+            const postProps = post.properties as any || {};
+            const actualSource = postProps.source || 'user';
+            const isTmrPost = actualSource === 'tmr';
+            
+            return {
+              type: 'Feature' as const,
               id: post.id,
-              title: post.title,
-              description: post.description,
-              location: post.location,
-              photoUrl: post.photoUrl,
-              categoryId: post.categoryId,
-              categoryUuid: post.categoryId,
-              subcategoryId: post.subcategoryId,
-              status: post.status,
-              userId: post.userId,
-              reactionsCount: post.reactionsCount || 0,
-              commentsCount: post.commentsCount || 0,
-              createdAt: post.createdAt?.toISOString(),
-              updatedAt: post.updatedAt?.toISOString(),
-              centroidLat: post.centroidLat,
-              centroidLng: post.centroidLng,
-              source: 'user' as const,
-              userReported: true,
-            }
-          }))
+              geometry: post.geometry || (post.centroidLat && post.centroidLng ? {
+                type: 'Point',
+                coordinates: [post.centroidLng, post.centroidLat]
+              } : null),
+              properties: {
+                id: post.id,
+                title: post.title,
+                description: post.description,
+                location: post.location,
+                photoUrl: post.photoUrl,
+                categoryId: post.categoryId,
+                categoryUuid: post.categoryId,
+                subcategoryId: post.subcategoryId,
+                status: post.status,
+                userId: post.userId,
+                reactionsCount: post.reactionsCount || 0,
+                commentsCount: post.commentsCount || 0,
+                createdAt: post.createdAt?.toISOString(),
+                updatedAt: post.updatedAt?.toISOString(),
+                centroidLat: post.centroidLat,
+                centroidLng: post.centroidLng,
+                source: actualSource,
+                userReported: !isTmrPost,
+                iconType: postProps.iconType || (isTmrPost ? 'traffic' : undefined),
+                ...postProps,
+              }
+            };
+          })
         };
       }
-      // User-specific posts
+      // User-specific posts - preserve actual source from post properties
       else if (userId) {
         const userPosts = await storage.getPostsByUser(userId as string);
         result = {
           type: 'FeatureCollection' as const,
-          features: userPosts.map(post => ({
-            type: 'Feature' as const,
-            id: post.id,
-            geometry: post.geometry || (post.centroidLat && post.centroidLng ? {
-              type: 'Point',
-              coordinates: [post.centroidLng, post.centroidLat]
-            } : null),
-            properties: {
+          features: userPosts.map(post => {
+            const postProps = post.properties as any || {};
+            const actualSource = postProps.source || 'user';
+            const isTmrPost = actualSource === 'tmr';
+            
+            return {
+              type: 'Feature' as const,
               id: post.id,
-              title: post.title,
-              description: post.description,
-              location: post.location,
-              photoUrl: post.photoUrl,
-              categoryId: post.categoryId,
-              categoryUuid: post.categoryId,
-              subcategoryId: post.subcategoryId,
-              status: post.status,
-              userId: post.userId,
-              reactionsCount: post.reactionsCount || 0,
-              commentsCount: post.commentsCount || 0,
-              createdAt: post.createdAt?.toISOString(),
-              updatedAt: post.updatedAt?.toISOString(),
-              centroidLat: post.centroidLat,
-              centroidLng: post.centroidLng,
-              source: 'user' as const,
-              userReported: true,
-            }
-          }))
+              geometry: post.geometry || (post.centroidLat && post.centroidLng ? {
+                type: 'Point',
+                coordinates: [post.centroidLng, post.centroidLat]
+              } : null),
+              properties: {
+                id: post.id,
+                title: post.title,
+                description: post.description,
+                location: post.location,
+                photoUrl: post.photoUrl,
+                categoryId: post.categoryId,
+                categoryUuid: post.categoryId,
+                subcategoryId: post.subcategoryId,
+                status: post.status,
+                userId: post.userId,
+                reactionsCount: post.reactionsCount || 0,
+                commentsCount: post.commentsCount || 0,
+                createdAt: post.createdAt?.toISOString(),
+                updatedAt: post.updatedAt?.toISOString(),
+                centroidLat: post.centroidLat,
+                centroidLng: post.centroidLng,
+                source: actualSource,
+                userReported: !isTmrPost,
+                iconType: postProps.iconType || (isTmrPost ? 'traffic' : undefined),
+                ...postProps,
+              }
+            };
+          })
         };
       }
       // All posts with enriched data
