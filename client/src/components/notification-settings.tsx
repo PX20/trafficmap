@@ -1,11 +1,31 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { usePushNotifications } from '@/hooks/use-push-notifications';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Bell, BellOff, Smartphone, AlertTriangle } from 'lucide-react';
+import { Bell, BellOff, Smartphone, AlertTriangle, Car, Shield, Flame, Megaphone } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { useAuth } from '@/hooks/useAuth';
+import { apiRequest, queryClient } from '@/lib/queryClient';
+import { useMutation } from '@tanstack/react-query';
+import { useToast } from '@/hooks/use-toast';
+import { Separator } from '@/components/ui/separator';
+
+interface NotificationCategory {
+  id: string;
+  name: string;
+  description: string;
+  icon: any;
+  enabled: boolean;
+}
+
+const DEFAULT_CATEGORIES: NotificationCategory[] = [
+  { id: 'tmr', name: 'TMR Traffic Alerts', description: 'Road closures, crashes, roadworks from Transport and Main Roads', icon: Car, enabled: true },
+  { id: 'safety', name: 'Safety & Crime', description: 'Crime reports, suspicious activity, public disturbances', icon: Shield, enabled: true },
+  { id: 'emergency', name: 'Emergencies', description: 'Fire, flood, natural disasters, medical emergencies', icon: Flame, enabled: true },
+  { id: 'community', name: 'Community Posts', description: 'Local community updates and reports', icon: Megaphone, enabled: true },
+];
 
 export function NotificationSettings() {
   const {
@@ -18,7 +38,56 @@ export function NotificationSettings() {
     requestPermission
   } = usePushNotifications();
 
+  const { user } = useAuth();
+  const { toast } = useToast();
   const [testLoading, setTestLoading] = useState(false);
+  const [categories, setCategories] = useState<NotificationCategory[]>(DEFAULT_CATEGORIES);
+
+  // Load user's notification preferences
+  useEffect(() => {
+    if (user?.notificationCategories) {
+      const enabledCategories = user.notificationCategories as string[];
+      setCategories(prev => prev.map(cat => ({
+        ...cat,
+        enabled: enabledCategories.includes(cat.id)
+      })));
+    }
+  }, [user?.notificationCategories]);
+
+  // Mutation to save notification preferences
+  const savePreferencesMutation = useMutation({
+    mutationFn: async (enabledCategoryIds: string[]) => {
+      const response = await apiRequest('PATCH', '/api/user/notification-preferences', {
+        notificationCategories: enabledCategoryIds
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+      toast({
+        title: 'Preferences saved',
+        description: 'Your notification settings have been updated.',
+      });
+    },
+    onError: () => {
+      toast({
+        title: 'Error',
+        description: 'Failed to save notification preferences.',
+        variant: 'destructive',
+      });
+    }
+  });
+
+  const handleCategoryToggle = (categoryId: string, enabled: boolean) => {
+    const newCategories = categories.map(cat => 
+      cat.id === categoryId ? { ...cat, enabled } : cat
+    );
+    setCategories(newCategories);
+    
+    // Save to server
+    const enabledIds = newCategories.filter(c => c.enabled).map(c => c.id);
+    savePreferencesMutation.mutate(enabledIds);
+  };
 
   const handleToggleNotifications = async () => {
     if (isSubscribed) {
