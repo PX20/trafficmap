@@ -412,8 +412,8 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
                 markerType = 'wildlife';
                 incidentCategory = 'wildlife';
               } else if (categoryId === 'ec2f7fc1-ffe3-4efb-bd42-ab1a2645325e') {
-                // Infrastructure & Hazards
-                markerType = 'traffic';
+                // Infrastructure & Hazards - user reported (not TMR traffic)
+                markerType = 'hazard';
                 incidentCategory = 'traffic';
               } else if (categoryId === '0a250604-2cd7-4a7c-8d98-5567c403e514') {
                 // Emergency Situations
@@ -445,7 +445,8 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
                 markerType = 'wildlife';
                 incidentCategory = 'wildlife';
               } else if (category === 'ec2f7fc1-ffe3-4efb-bd42-ab1a2645325e' || category === 'infrastructure & hazards') {
-                markerType = 'traffic';
+                // Infrastructure & Hazards - user reported (not TMR traffic)
+                markerType = 'hazard';
                 incidentCategory = 'traffic';
               } else if (category === '0a250604-2cd7-4a7c-8d98-5567c403e514' || category === 'emergency situations') {
                 markerType = 'emergency';
@@ -562,7 +563,8 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
                   markerType = 'wildlife';
                   incidentCategory = 'wildlife';
                 } else if (categoryId === 'dca6e799-6d6b-420b-9ed2-d63fc16594d3') {
-                  markerType = 'traffic';
+                  // Infrastructure & Hazards - user reported (not TMR traffic)
+                  markerType = 'hazard';
                   incidentCategory = 'traffic';
                 } else if (categoryId === '4e2fb550-3288-45f7-8e0f-dcc2e18783bb') {
                   markerType = 'emergency';
@@ -583,7 +585,8 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
                   markerType = 'wildlife';
                   incidentCategory = 'wildlife';
                 } else if (category === 'dca6e799-6d6b-420b-9ed2-d63fc16594d3' || category === 'infrastructure & hazards') {
-                  markerType = 'traffic';
+                  // Infrastructure & Hazards - user reported (not TMR traffic)
+                  markerType = 'hazard';
                   incidentCategory = 'traffic';
                 } else if (category === '4e2fb550-3288-45f7-8e0f-dcc2e18783bb' || category === 'emergency situations') {
                   markerType = 'emergency';
@@ -949,7 +952,6 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
         case 'congestion':
           return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>`;
         case 'crash':
-        case 'hazard': 
         case 'restriction':
         case 'incident':
         case 'roadworks':
@@ -959,8 +961,11 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
         case 'multi-vehicle':
         case 'road damage':
         case 'recurring':
-          // Car icon for TMR traffic events
+          // Car icon for TMR traffic events only
           return `<svg width="16" height="16" viewBox="0 0 24 24" fill="${color}"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/></svg>`;
+        case 'hazard':
+          // Warning triangle for user-reported infrastructure/hazard issues
+          return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>`;
         // Community reports get specific icons
         case 'crime':
           return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg>`;
