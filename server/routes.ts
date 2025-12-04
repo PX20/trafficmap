@@ -1024,7 +1024,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         distanceFilter: z.enum(['all', '5km', '10km', '25km']).optional(),
       }).parse(req.body);
 
-      const userId = (req.user as any).claims.sub;
+      // Support both OAuth and local authentication
+      const userId = (req.user as any).claims?.sub || (req.user as any).id;
       const updatedUser = await storage.updateUserProfile(userId, preferences);
       
       if (!updatedUser) {

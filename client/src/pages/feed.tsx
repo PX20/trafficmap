@@ -79,6 +79,14 @@ export default function Feed() {
 
   const hasLocation = !!userLocation && !!user?.preferredLocation;
 
+  useEffect(() => {
+    if (user?.distanceFilter && ['all', '5km', '10km', '25km'].includes(user.distanceFilter)) {
+      setDistanceFilter(user.distanceFilter as DistanceFilter);
+    } else if (user && !user.distanceFilter) {
+      setDistanceFilter('all');
+    }
+  }, [user?.id, user?.distanceFilter]);
+
   const openReportForm = (entryPoint: EntryPoint) => {
     setReportEntryPoint(entryPoint);
     setReportFormOpen(true);
@@ -128,7 +136,7 @@ export default function Feed() {
     
     if (user) {
       try {
-        await fetch('/api/user/location-preferences', {
+        const response = await fetch('/api/user/location-preferences', {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
@@ -136,6 +144,10 @@ export default function Feed() {
             distanceFilter: newDistance
           })
         });
+        
+        if (response.ok) {
+          queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+        }
       } catch (error) {
         console.error('Failed to save distance preference:', error);
       }
@@ -409,19 +421,80 @@ export default function Feed() {
         </Card>
 
         {/* Location Filter */}
-        {user?.preferredLocation && (
-          <div className="px-4 py-2 flex items-center gap-2">
-            <MapPin className="w-4 h-4 text-muted-foreground" />
-            <span className="text-sm text-muted-foreground">
-              Showing posts near <strong className="text-foreground">{user.preferredLocation}</strong>
-            </span>
-            <Link href="/profile">
-              <button className="text-sm text-primary hover:underline ml-auto" data-testid="button-change-location">
-                Change
-              </button>
-            </Link>
-          </div>
-        )}
+        <div className="px-4 py-2 flex items-center justify-between gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="gap-2 text-muted-foreground hover:text-foreground"
+                data-testid="button-location-filter"
+              >
+                <MapPin className={`w-4 h-4 ${hasLocation ? 'text-blue-500' : 'text-muted-foreground'}`} />
+                {hasLocation ? (
+                  <span className="text-sm">
+                    {distanceFilter === 'all' ? 'All Areas' : `Within ${distanceFilter}`}
+                    {user?.preferredLocation && (
+                      <span className="text-muted-foreground"> of {user.preferredLocation}</span>
+                    )}
+                  </span>
+                ) : (
+                  <span className="text-sm">Set Location</span>
+                )}
+                <ChevronDown className="w-3 h-3" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-56">
+              {hasLocation ? (
+                <>
+                  <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
+                    Show posts
+                  </div>
+                  <DropdownMenuRadioGroup 
+                    value={distanceFilter} 
+                    onValueChange={(value) => handleDistanceChange(value as DistanceFilter)}
+                  >
+                    <DropdownMenuRadioItem value="all" data-testid="radio-distance-all">
+                      All Areas
+                    </DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="5km" data-testid="radio-distance-5km">
+                      Within 5km
+                    </DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="10km" data-testid="radio-distance-10km">
+                      Within 10km
+                    </DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="25km" data-testid="radio-distance-25km">
+                      Within 25km
+                    </DropdownMenuRadioItem>
+                  </DropdownMenuRadioGroup>
+                  <DropdownMenuSeparator />
+                  <Link href="/profile" className="block">
+                    <div className="px-2 py-1.5 text-sm text-primary hover:bg-accent rounded-sm cursor-pointer">
+                      Change location
+                    </div>
+                  </Link>
+                </>
+              ) : (
+                <div className="p-3">
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Set your location to filter posts by distance
+                  </p>
+                  <Link href="/profile">
+                    <Button size="sm" className="w-full" data-testid="button-set-location">
+                      Set Location
+                    </Button>
+                  </Link>
+                </div>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+          
+          {posts.length !== allPosts.length && distanceFilter !== 'all' && (
+            <Badge variant="secondary" className="text-xs">
+              {posts.length} of {allPosts.length}
+            </Badge>
+          )}
+        </div>
 
         {/* Refresh Button */}
         <div className="px-4 py-2">
