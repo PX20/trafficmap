@@ -250,6 +250,10 @@ export const users = pgTable("users", {
   businessCategory: varchar("business_category"),
   role: varchar("role").default("user"), // 'user' | 'admin'
   isOfficialAgency: boolean("is_official_agency").default(false), // Mark agency accounts
+  // Notification Preferences
+  notificationsEnabled: boolean("notifications_enabled").default(true), // Master toggle
+  notificationCategories: jsonb("notification_categories"), // Array of category IDs to receive notifications for (null = all)
+  notificationRadius: varchar("notification_radius", { enum: ["1km", "2km", "5km", "10km", "25km", "50km"] }).default("10km"), // Proximity filter for notifications
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

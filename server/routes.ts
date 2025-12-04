@@ -1021,7 +1021,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         preferredLocationLat: z.number().nullable().optional(),
         preferredLocationLng: z.number().nullable().optional(),
         preferredLocationBounds: z.any().nullable().optional(), // JSONB field
-        distanceFilter: z.enum(['all', '5km', '10km', '25km']).optional(),
+        distanceFilter: z.enum(['1km', '2km', '5km', '10km', '25km', '50km']).optional(),
       }).parse(req.body);
 
       // Support both OAuth and local authentication
@@ -1036,6 +1036,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating location preferences:", error);
       res.status(500).json({ message: "Failed to update location preferences" });
+    }
+  });
+
+  // Update user's notification preferences
+  app.patch('/api/user/notification-preferences', isAuthenticated, async (req: any, res) => {
+    try {
+      const preferences = z.object({
+        notificationsEnabled: z.boolean().optional(),
+        notificationCategories: z.array(z.string()).nullable().optional(), // Array of category IDs (null = all)
+        notificationRadius: z.enum(['1km', '2km', '5km', '10km', '25km', '50km']).optional(),
+      }).parse(req.body);
+
+      // Support both OAuth and local authentication
+      const userId = (req.user as any).claims?.sub || (req.user as any).id;
+      const updatedUser = await storage.updateUserProfile(userId, preferences);
+      
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Error updating notification preferences:", error);
+      res.status(500).json({ message: "Failed to update notification preferences" });
     }
   });
 
