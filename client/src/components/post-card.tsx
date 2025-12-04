@@ -96,10 +96,23 @@ export function PostCard({ post, onCommentClick }: PostCardProps) {
     const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
     
     if (diffInMinutes < 1) return "Just now";
-    if (diffInMinutes < 60) return `${diffInMinutes}m`;
-    if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h`;
-    if (diffInMinutes < 10080) return `${Math.floor(diffInMinutes / 1440)}d`;
-    return `${Math.floor(diffInMinutes / 10080)}w`;
+    if (diffInMinutes === 1) return "1 minute ago";
+    if (diffInMinutes < 60) return `${diffInMinutes} minutes ago`;
+    
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours === 1) return "1 hour ago";
+    if (diffInHours < 24) return `${diffInHours} hours ago`;
+    
+    const diffInDays = Math.floor(diffInHours / 24);
+    if (diffInDays === 1) return "1 day ago";
+    if (diffInDays < 7) return `${diffInDays} days ago`;
+    
+    const diffInWeeks = Math.floor(diffInDays / 7);
+    if (diffInWeeks === 1) return "1 week ago";
+    if (diffInWeeks < 4) return `${diffInWeeks} weeks ago`;
+    
+    // For older posts, show the actual date
+    return date.toLocaleDateString();
   };
 
   const props = post.properties || {};
