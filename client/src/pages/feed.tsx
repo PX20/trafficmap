@@ -3,7 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useLocation } from "wouter";
 import { MobileNav } from "@/components/mobile-nav";
-import { StoriesBar } from "@/components/stories-bar";
 import { PostCard } from "@/components/post-card";
 import { IncidentReportForm, type EntryPoint } from "@/components/incident-report-form";
 import { Button } from "@/components/ui/button";
@@ -386,8 +385,6 @@ export default function Feed() {
 
         {/* Main Content */}
         <main className="max-w-2xl mx-auto pb-20">
-        {/* Stories */}
-        <StoriesBar />
 
         {/* Create Post Card */}
         <Card className="mx-0 sm:mx-4 mt-2 rounded-none sm:rounded-lg border-0 shadow-sm">
