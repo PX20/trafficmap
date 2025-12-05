@@ -3027,6 +3027,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // PATCH /api/users/me - Update current user's profile (used by onboarding wizard)
+  app.patch('/api/users/me', isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any)?.claims?.sub || (req.user as any)?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+      
+      // Validate allowed fields - accept both string and number arrays for notificationCategories
+      const updateSchema = z.object({
+        firstName: z.string().optional(),
+        lastName: z.string().optional(),
+        preferredLocation: z.string().nullable().optional(),
+        preferredLocationLat: z.number().nullable().optional(),
+        preferredLocationLng: z.number().nullable().optional(),
+        preferredLocationBounds: z.any().nullable().optional(),
+        distanceFilter: z.enum(['1km', '2km', '5km', '10km', '25km', '50km']).optional(),
+        notificationsEnabled: z.boolean().optional(),
+        notificationCategories: z.array(z.union([z.number(), z.string()])).nullable().optional(),
+        notificationRadius: z.enum(['1km', '2km', '5km', '10km', '25km', '50km']).optional(),
+        onboardingCompleted: z.boolean().optional(),
+      });
+      
+      const parsed = updateSchema.parse(req.body);
+      
+      // Normalize notificationCategories to numbers for consistency
+      const profileData = {
+        ...parsed,
+        notificationCategories: parsed.notificationCategories 
+          ? parsed.notificationCategories.map(c => typeof c === 'string' ? parseInt(c, 10) : c)
+          : parsed.notificationCategories
+      };
+      
+      const updatedUser = await storage.updateUserProfile(userId, profileData);
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Clear user cache so next auth request gets fresh data
+      if ((app as any).clearUserCache) {
+        (app as any).clearUserCache(userId);
+      }
+      
+      res.json(updatedUser);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      console.error("Error updating user profile:", error);
+      res.status(500).json({ message: "Failed to update profile" });
+    }
+  });
+
   // Business account upgrade endpoint
   app.post('/api/users/upgrade-to-business', isAuthenticated, async (req, res) => {
     try {

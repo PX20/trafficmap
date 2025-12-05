@@ -23,11 +23,13 @@ import EditAd from "@/pages/edit-ad";
 import EditIncident from "@/pages/edit-incident";
 import IncidentDetail from "@/pages/incident-detail";
 import { TermsAndConditionsModal } from "@/components/terms-and-conditions-modal";
+import { OnboardingWizard } from "@/components/onboarding-wizard";
 
 function Router() {
   const { user, isLoading } = useAuth();
   const isAuthenticated = !!user;
   const [showTermsModal, setShowTermsModal] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const [location] = useLocation();
   
   // Track the background route to maintain when showing incident modal
@@ -44,12 +46,17 @@ function Router() {
     }
   }, [location, isIncidentRoute, backgroundRoute]);
 
-  // Check if user needs to accept terms or complete account setup
+  // Check if user needs to accept terms or complete onboarding
   useEffect(() => {
     if (user && user.id && !user.termsAccepted) {
       setShowTermsModal(true);
+      setShowOnboarding(false);
+    } else if (user && user.id && user.termsAccepted && !user.onboardingCompleted) {
+      setShowTermsModal(false);
+      setShowOnboarding(true);
     } else {
       setShowTermsModal(false);
+      setShowOnboarding(false);
     }
   }, [user]);
 
@@ -149,6 +156,12 @@ function Router() {
       <TermsAndConditionsModal
         isOpen={showTermsModal}
         onAccept={() => setShowTermsModal(false)}
+      />
+      
+      {/* Onboarding Wizard for new users */}
+      <OnboardingWizard
+        open={showOnboarding}
+        onComplete={() => setShowOnboarding(false)}
       />
     </>
   );

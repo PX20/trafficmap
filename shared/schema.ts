@@ -368,6 +368,7 @@ export const users = pgTable("users", {
   notificationsEnabled: boolean("notifications_enabled").default(true), // Master toggle
   notificationCategories: jsonb("notification_categories"), // Array of category IDs to receive notifications for (null = all)
   notificationRadius: varchar("notification_radius", { enum: ["1km", "2km", "5km", "10km", "25km", "50km"] }).default("10km"), // Proximity filter for notifications
+  onboardingCompleted: boolean("onboarding_completed").default(false), // Track if user has completed onboarding wizard
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
