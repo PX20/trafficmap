@@ -99,6 +99,17 @@ export function useTrafficData(filters: FilterState, viewportBounds?: { southwes
     // Include emergency, user, or posts without a source (default to user posts)
     return source === 'emergency' || source === 'user' || !source;
   });
+  
+  // DEBUG: Log what sources are in incidents to catch TMR leaks
+  if (allIncidentsData.length > 0) {
+    const incidentSources = allIncidentsData.map((f: any) => ({
+      title: f.properties?.title?.substring(0, 40),
+      source: f.source,
+      propsSource: f.properties?.source,
+      id: f.id
+    }));
+    console.log('🔍 INCIDENTS SOURCES DEBUG:', incidentSources);
+  }
 
   // CLIENT-SIDE PROXIMITY-BASED FILTERING - Primary filtering method
   const defaultRadius = 50; // Default 50km radius

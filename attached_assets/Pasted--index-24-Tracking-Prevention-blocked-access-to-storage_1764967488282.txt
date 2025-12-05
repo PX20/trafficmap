@@ -1,0 +1,95 @@
+(index):24  Tracking Prevention blocked access to storage for https://unpkg.com/leaflet@1.9.4/dist/leaflet.css.
+(index):24  Tracking Prevention blocked access to storage for https://unpkg.com/leaflet@1.9.4/dist/leaflet.css.
+(index):24  Tracking Prevention blocked access to storage for https://unpkg.com/leaflet@1.9.4/dist/leaflet.css.
+(index):24  Tracking Prevention blocked access to storage for https://unpkg.com/leaflet@1.9.4/dist/leaflet.css.
+(index):1  Mixed Content: The page at 'https://neighbour-app--pkingdom83.replit.app/' was loaded over HTTPS, but requested an insecure script 'http://replit.com.x.319230dd0551e04834096970aa6ebed8f4cc.43d7532e.id.opendns.com/s/malware.opendns.com/?X-OpenDNS-Session=aa51dc5c0ccc5aad4_319230dd0551e04834096970aa6ebed8f4cc_d9fd36476f179775fe33ac0e5f2a9d7ab6a6fa97_server=nginx-proxy-https-a80bbde6437e.iproxy.syd&url=https://replit.com/public/js/replit-dev-banner.js%3FX-OpenDNS-Session=_9cc0137c065b20483f0bbd201cb8b365748f9270f95d_rz4peDBa_&proxy=y&prefs=1597504&tagging=0x110004214C4001C10000070070000080039F7000102000000000'. This request has been blocked; the content must be served over HTTPS.
+/api/notifications/unread-count:1   Failed to load resource: the server responded with a status of 401 ()
+/api/notifications/unread-count:1   Failed to load resource: the server responded with a status of 401 ()
+(index):1 [Intervention] Images loaded lazily and replaced with placeholders. Load events are deferred. See https://go.microsoft.com/fwlink/?linkid=2048113
+index-dEBHrQoy.js:48   GET https://neighbour-app--pkingdom83.replit.app/api/notifications/unread-count 401 (Unauthorized)
+(anonymous) @ index-dEBHrQoy.js:48
+o @ index-dEBHrQoy.js:48
+j @ index-dEBHrQoy.js:48
+start @ index-dEBHrQoy.js:48
+fetch @ index-dEBHrQoy.js:48
+_d @ index-dEBHrQoy.js:48
+fetch @ index-dEBHrQoy.js:48
+refetch @ index-dEBHrQoy.js:48
+onFocus @ index-dEBHrQoy.js:48
+(anonymous) @ index-dEBHrQoy.js:48
+(anonymous) @ index-dEBHrQoy.js:48
+batch @ index-dEBHrQoy.js:48
+onFocus @ index-dEBHrQoy.js:48
+(anonymous) @ index-dEBHrQoy.js:48
+await in (anonymous)
+(anonymous) @ index-dEBHrQoy.js:48
+onFocus @ index-dEBHrQoy.js:48
+(anonymous) @ index-dEBHrQoy.js:48
+n @ index-dEBHrQoy.js:48
+index-dEBHrQoy.js:48   GET https://neighbour-app--pkingdom83.replit.app/api/notifications/unread-count 401 (Unauthorized)
+(anonymous) @ index-dEBHrQoy.js:48
+o @ index-dEBHrQoy.js:48
+j @ index-dEBHrQoy.js:48
+(anonymous) @ index-dEBHrQoy.js:48
+Promise.then
+(anonymous) @ index-dEBHrQoy.js:48
+Promise.catch
+j @ index-dEBHrQoy.js:48
+start @ index-dEBHrQoy.js:48
+fetch @ index-dEBHrQoy.js:48
+_d @ index-dEBHrQoy.js:48
+fetch @ index-dEBHrQoy.js:48
+refetch @ index-dEBHrQoy.js:48
+onFocus @ index-dEBHrQoy.js:48
+(anonymous) @ index-dEBHrQoy.js:48
+(anonymous) @ index-dEBHrQoy.js:48
+batch @ index-dEBHrQoy.js:48
+onFocus @ index-dEBHrQoy.js:48
+(anonymous) @ index-dEBHrQoy.js:48
+await in (anonymous)
+(anonymous) @ index-dEBHrQoy.js:48
+onFocus @ index-dEBHrQoy.js:48
+(anonymous) @ index-dEBHrQoy.js:48
+n @ index-dEBHrQoy.js:48
+index-dEBHrQoy.js:536 🔍 RAW UNIFIED DATA: {hasUnifiedData: false, featuresCount: 0, viewportBounds: 'not provided', allowFetchWithoutViewport: false}
+index-dEBHrQoy.js:536 🔍 BEFORE FILTERING: {allEventsCount: 0, allIncidentsCount: 0, hasHomeCoordinates: false, distanceFilter: 'all'}
+index-dEBHrQoy.js:536 🔍 AFTER FILTERING: {regionalEventsCount: 0, regionalIncidentsCount: 0}
+index-dEBHrQoy.js:536 🔍 RAW UNIFIED DATA: {hasUnifiedData: false, featuresCount: 0, viewportBounds: 'not provided', allowFetchWithoutViewport: false}
+index-dEBHrQoy.js:536 🔍 BEFORE FILTERING: {allEventsCount: 0, allIncidentsCount: 0, hasHomeCoordinates: false, distanceFilter: 'all'}
+index-dEBHrQoy.js:536 🔍 AFTER FILTERING: {regionalEventsCount: 0, regionalIncidentsCount: 0}
+index-dEBHrQoy.js:536 🚗 EVENTS LOOP: {hasEventsData: true, eventsCount: 0, firstEvent: undefined}
+index-dEBHrQoy.js:536 📢 INCIDENTS LOOP: {hasIncidentsData: true, incidentsCount: 0, firstIncident: undefined}
+index-dEBHrQoy.js:536 🔍 RAW UNIFIED DATA: {hasUnifiedData: false, featuresCount: 0, viewportBounds: 'not provided', allowFetchWithoutViewport: false}
+index-dEBHrQoy.js:536 🔍 BEFORE FILTERING: {allEventsCount: 0, allIncidentsCount: 0, hasHomeCoordinates: true, distanceFilter: '50km'}
+index-dEBHrQoy.js:536 🔍 AFTER FILTERING: {regionalEventsCount: 0, regionalIncidentsCount: 0}
+index-dEBHrQoy.js:536 🔍 RAW UNIFIED DATA: {hasUnifiedData: false, featuresCount: 0, viewportBounds: 'provided', allowFetchWithoutViewport: false}
+index-dEBHrQoy.js:536 🔍 BEFORE FILTERING: {allEventsCount: 0, allIncidentsCount: 0, hasHomeCoordinates: true, distanceFilter: '50km'}
+index-dEBHrQoy.js:536 🔍 AFTER FILTERING: {regionalEventsCount: 0, regionalIncidentsCount: 0}
+index-dEBHrQoy.js:536 🚗 EVENTS LOOP: {hasEventsData: true, eventsCount: 0, firstEvent: undefined}
+index-dEBHrQoy.js:536 📢 INCIDENTS LOOP: {hasIncidentsData: true, incidentsCount: 0, firstIncident: undefined}
+index-dEBHrQoy.js:536 🔍 RAW UNIFIED DATA: {hasUnifiedData: false, featuresCount: 0, viewportBounds: 'provided', allowFetchWithoutViewport: false}
+index-dEBHrQoy.js:536 🔍 BEFORE FILTERING: {allEventsCount: 0, allIncidentsCount: 0, hasHomeCoordinates: true, distanceFilter: '50km'}
+index-dEBHrQoy.js:536 🔍 AFTER FILTERING: {regionalEventsCount: 0, regionalIncidentsCount: 0}
+index-dEBHrQoy.js:536 🚗 EVENTS LOOP: {hasEventsData: true, eventsCount: 0, firstEvent: undefined}
+index-dEBHrQoy.js:536 📢 INCIDENTS LOOP: {hasIncidentsData: true, incidentsCount: 0, firstIncident: undefined}
+index-dEBHrQoy.js:536 🔍 RAW UNIFIED DATA: {hasUnifiedData: false, featuresCount: 0, viewportBounds: 'not provided', allowFetchWithoutViewport: false}
+index-dEBHrQoy.js:536 🔍 BEFORE FILTERING: {allEventsCount: 0, allIncidentsCount: 0, hasHomeCoordinates: true, distanceFilter: '50km'}
+index-dEBHrQoy.js:536 🔍 AFTER FILTERING: {regionalEventsCount: 0, regionalIncidentsCount: 0}
+index-dEBHrQoy.js:536 🔍 RAW UNIFIED DATA: {hasUnifiedData: false, featuresCount: 0, viewportBounds: 'provided', allowFetchWithoutViewport: false}
+index-dEBHrQoy.js:536 🔍 BEFORE FILTERING: {allEventsCount: 0, allIncidentsCount: 0, hasHomeCoordinates: true, distanceFilter: '50km'}
+index-dEBHrQoy.js:536 🔍 AFTER FILTERING: {regionalEventsCount: 0, regionalIncidentsCount: 0}
+index-dEBHrQoy.js:536 🚗 EVENTS LOOP: {hasEventsData: true, eventsCount: 0, firstEvent: undefined}
+index-dEBHrQoy.js:536 📢 INCIDENTS LOOP: {hasIncidentsData: true, incidentsCount: 0, firstIncident: undefined}
+index-dEBHrQoy.js:536 🔍 RAW UNIFIED DATA: {hasUnifiedData: false, featuresCount: 0, viewportBounds: 'not provided', allowFetchWithoutViewport: false}
+index-dEBHrQoy.js:536 🔍 BEFORE FILTERING: {allEventsCount: 0, allIncidentsCount: 0, hasHomeCoordinates: true, distanceFilter: '50km'}
+index-dEBHrQoy.js:536 🔍 AFTER FILTERING: {regionalEventsCount: 0, regionalIncidentsCount: 0}
+index-dEBHrQoy.js:536 🔍 RAW UNIFIED DATA: {hasUnifiedData: false, featuresCount: 0, viewportBounds: 'provided', allowFetchWithoutViewport: false}
+index-dEBHrQoy.js:536 🔍 BEFORE FILTERING: {allEventsCount: 0, allIncidentsCount: 0, hasHomeCoordinates: true, distanceFilter: '50km'}
+index-dEBHrQoy.js:536 🔍 AFTER FILTERING: {regionalEventsCount: 0, regionalIncidentsCount: 0}
+index-dEBHrQoy.js:536 🚗 EVENTS LOOP: {hasEventsData: true, eventsCount: 0, firstEvent: undefined}
+index-dEBHrQoy.js:536 📢 INCIDENTS LOOP: {hasIncidentsData: true, incidentsCount: 0, firstIncident: undefined}
+index-dEBHrQoy.js:536 🔍 RAW UNIFIED DATA: {hasUnifiedData: true, featuresCount: 53, viewportBounds: 'provided', allowFetchWithoutViewport: false}
+index-dEBHrQoy.js:536 🔍 BEFORE FILTERING: {allEventsCount: 37, allIncidentsCount: 16, hasHomeCoordinates: true, distanceFilter: '50km'}
+index-dEBHrQoy.js:536 🔍 AFTER FILTERING: {regionalEventsCount: 37, regionalIncidentsCount: 16}
+index-dEBHrQoy.js:536 🚗 EVENTS LOOP: {hasEventsData: true, eventsCount: 37, firstEvent: 'Hazard - Debris on road on Sunshine Motorway (Pacific Paradise)'}
+index-dEBHrQoy.js:536 📢 INCIDENTS LOOP: {hasIncidentsData: true, incidentsCount: 16, firstIncident: 'Congestion - Recurring on Sunshine Motorway (Mooloolaba)'}
