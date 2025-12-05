@@ -3711,7 +3711,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Push notification subscription endpoints
+  // Push notification endpoints
+  
+  // Get VAPID public key - needed for push subscription
+  app.get('/api/push/vapid-key', (req, res) => {
+    const publicKey = process.env.VAPID_PUBLIC_KEY;
+    if (!publicKey) {
+      return res.status(503).json({ error: 'Push notifications not configured' });
+    }
+    res.json({ publicKey });
+  });
+
+  // Subscribe to push notifications
   app.post('/api/push/subscribe', isAuthenticated, async (req, res) => {
     try {
       console.log('[Push Subscribe] Request received');
@@ -4518,6 +4529,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         centroidLat,
         centroidLng,
         status: 'active',
+        source: 'user',
         properties: {}
       });
 

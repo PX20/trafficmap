@@ -91,13 +91,14 @@ export function usePushNotifications() {
       await navigator.serviceWorker.ready;
       console.log('[Push] Service worker ready');
 
-      // Get VAPID public key from environment
-      const vapidPublicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
-      console.log('[Push] VAPID key available:', !!vapidPublicKey);
-      
-      if (!vapidPublicKey) {
-        throw new Error('VAPID public key not configured - check environment variables');
+      // Get VAPID public key from API (works in both dev and production)
+      console.log('[Push] Fetching VAPID key from API...');
+      const vapidResponse = await fetch('/api/push/vapid-key');
+      if (!vapidResponse.ok) {
+        throw new Error('VAPID public key not configured - push notifications unavailable');
       }
+      const { publicKey: vapidPublicKey } = await vapidResponse.json();
+      console.log('[Push] VAPID key available:', !!vapidPublicKey);
 
       // Get or create push subscription
       console.log('[Push] Creating push subscription...');
