@@ -700,9 +700,9 @@ export class DatabaseStorage implements IStorage {
       const subcat = post.subcategoryId ? subcategoryMap.get(post.subcategoryId) : null;
       const user = userMap.get(post.userId);
       
-      // Determine source from post properties (supports TMR, emergency, user sources)
+      // Determine source - check post.source column first, then properties fallback
       const postProps = post.properties as any || {};
-      const source = postProps.source || 'user';
+      const source = post.source || postProps.source || 'user';
       const isUserReported = source === 'user';
       
       return {
