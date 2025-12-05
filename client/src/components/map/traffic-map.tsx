@@ -196,6 +196,13 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
   useEffect(() => {
     if (!mapInstanceRef.current) return;
 
+    // FORCE CLEAR: Remove ALL existing markers to ensure fresh rendering
+    // This fixes stale megaphone markers for TMR posts
+    markersRef.current.forEach((marker) => {
+      mapInstanceRef.current?.removeLayer(marker);
+    });
+    markersRef.current.clear();
+
     // Track which marker IDs are in the current data
     const currentMarkerIds = new Set<string>();
     
@@ -244,6 +251,12 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
 
     // Add event markers (already filtered by shared hook)
     // Sort events by timestamp (oldest first, newest last) so newer markers appear on top
+    console.log('🚗 EVENTS LOOP:', {
+      hasEventsData: !!(filteredEventsData as any)?.features,
+      eventsCount: (filteredEventsData as any)?.features?.length || 0,
+      firstEvent: (filteredEventsData as any)?.features?.[0]?.properties?.title
+    });
+    
     if ((filteredEventsData as any)?.features) {
       const sortedEvents = [...(filteredEventsData as any).features].sort((a: any, b: any) => {
         return getTimestamp(a) - getTimestamp(b);
@@ -377,15 +390,23 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
 
     // Add incident markers (already filtered by shared hook)
     // Sort incidents by timestamp (oldest first, newest last) so newer markers appear on top
+    console.log('📢 INCIDENTS LOOP:', {
+      hasIncidentsData: !!(filteredIncidentsData as any)?.features,
+      incidentsCount: (filteredIncidentsData as any)?.features?.length || 0,
+      firstIncident: (filteredIncidentsData as any)?.features?.[0]?.properties?.title
+    });
+    
     if ((filteredIncidentsData as any)?.features) {
       const sortedIncidents = [...(filteredIncidentsData as any).features].sort((a: any, b: any) => {
         return getTimestamp(a) - getTimestamp(b);
       });
       
+      let tmrSkippedCount = 0;
       sortedIncidents.forEach((feature: any) => {
         // CRITICAL: Skip TMR posts - they should only be rendered in the events loop with car icons
         const source = feature.source || feature.properties?.source;
         if (source === 'tmr') {
+          tmrSkippedCount++;
           return; // TMR posts are handled in the events loop above
         }
         
