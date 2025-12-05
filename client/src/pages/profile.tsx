@@ -349,9 +349,9 @@ export default function Profile() {
                         </div>
                       </CardDescription>
                       {user.preferredLocation && (
-                        <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
-                          <MapPin className="w-3 h-3 flex-shrink-0" />
-                          <span className="truncate" data-testid="text-user-location">{user.preferredLocation}</span>
+                        <div className="flex items-start gap-1 text-sm text-muted-foreground mt-1">
+                          <MapPin className="w-3 h-3 flex-shrink-0 mt-0.5" />
+                          <span className="break-words" data-testid="text-user-location">{user.preferredLocation}</span>
                         </div>
                       )}
                     </div>
