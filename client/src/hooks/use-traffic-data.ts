@@ -88,13 +88,14 @@ export function useTrafficData(filters: FilterState, viewportBounds?: { southwes
   });
   
   // Separate by source type for backward compatibility
+  // Check feature.source first (top-level), then fall back to properties.source
   const allEventsData = allFeatures.filter((feature: any) => {
-    const source = feature.properties?.source;
+    const source = feature.source || feature.properties?.source;
     return source === 'tmr'; // Traffic events from TMR source
   });
   
   const allIncidentsData = allFeatures.filter((feature: any) => {
-    const source = feature.properties?.source;
+    const source = feature.source || feature.properties?.source;
     // Include emergency, user, or posts without a source (default to user posts)
     return source === 'emergency' || source === 'user' || !source;
   });
