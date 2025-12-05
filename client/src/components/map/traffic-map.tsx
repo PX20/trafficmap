@@ -1052,6 +1052,26 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
     return `${diffDays}d ago`;
   };
 
+  const formatDateTime = (dateStr: string) => {
+    if (!dateStr) return "";
+    const date = new Date(dateStr);
+    return date.toLocaleString('en-AU', { 
+      day: 'numeric',
+      month: 'short',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
+  };
+
+  const formatTimeWithRelative = (dateStr: string) => {
+    if (!dateStr) return "Unknown time";
+    const relativeTime = formatEventTime(dateStr);
+    const actualTime = formatDateTime(dateStr);
+    if (!actualTime) return relativeTime;
+    return `${actualTime} (${relativeTime})`;
+  };
+
   const createEventPopup = (properties: any) => {
     // Get event type and limit to 25 characters with ellipsis
     const eventType = properties.event_type || properties.description || 'Traffic Event';
@@ -1079,7 +1099,7 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
                 <svg class="w-3.5 h-3.5 text-orange-500" fill="currentColor" viewBox="0 0 20 20">
                   <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path>
                 </svg>
-                <span class="font-medium">${formatEventTime(properties.last_updated || properties.published || properties.Response_Date || properties.createdAt || properties.timeReported)}</span>
+                <span class="font-medium">${formatTimeWithRelative(properties.last_updated || properties.published || properties.Response_Date || properties.createdAt || properties.timeReported)}</span>
               </div>
             </div>
           </div>
@@ -1165,7 +1185,7 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
                   <svg class="w-3.5 h-3.5 text-purple-500" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path>
                   </svg>
-                  <span class="font-medium">${formatEventTime(properties.timeReported || properties.createdAt || properties.Response_Date)}</span>
+                  <span class="font-medium">${formatTimeWithRelative(properties.timeReported || properties.createdAt || properties.Response_Date)}</span>
                 </div>
                 <span class="px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full text-xs font-medium">Community</span>
               </div>
@@ -1269,7 +1289,7 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
                 <svg class="w-3.5 h-3.5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
                   <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path>
                 </svg>
-                <span class="font-medium">${formatEventTime(getProperty(properties, 'Response_Date') || getProperty(properties, 'createdAt') || getProperty(properties, 'published'))}</span>
+                <span class="font-medium">${formatTimeWithRelative(getProperty(properties, 'Response_Date') || getProperty(properties, 'createdAt') || getProperty(properties, 'published'))}</span>
               </div>
             </div>
           </div>
