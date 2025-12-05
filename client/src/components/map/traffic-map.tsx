@@ -383,6 +383,12 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
       });
       
       sortedIncidents.forEach((feature: any) => {
+        // CRITICAL: Skip TMR posts - they should only be rendered in the events loop with car icons
+        const source = feature.source || feature.properties?.source;
+        if (source === 'tmr') {
+          return; // TMR posts are handled in the events loop above
+        }
+        
         if (feature.geometry?.coordinates) {
           let coords: [number, number] | null = null;
           let markerType = 'incident';
@@ -390,8 +396,6 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
           
           // Determine incident category for marker styling and aging
           const properties = feature.properties;
-          // Use the unified schema's source field for consistent identification
-          const source = feature.source || properties?.source;
           
           if (source === 'user') {
             // Community Posts - User-reported incidents
