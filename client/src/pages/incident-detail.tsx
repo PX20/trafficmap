@@ -17,6 +17,21 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
+function formatRelativeTime(dateStr: string): string {
+  if (!dateStr) return "";
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMins / 60);
+  const diffDays = Math.floor(diffHours / 24);
+
+  if (diffMins < 1) return "Just now";
+  if (diffMins < 60) return `${diffMins} minute${diffMins !== 1 ? 's' : ''} ago`;
+  if (diffHours < 24) return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
+  return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
+}
+
 export interface IncidentDetailPageProps {
   /** Whether to render as a modal overlay (default) or full page */
   asModal?: boolean;
@@ -409,6 +424,9 @@ function IncidentDetailPage({ asModal = true, incidentId: propIncidentId }: Inci
                 </div>
                 <p className="text-sm md:text-base text-gray-800">
                   {new Date(timestamp).toLocaleString()}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {formatRelativeTime(timestamp)}
                 </p>
               </CardContent>
             </Card>
