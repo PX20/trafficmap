@@ -348,9 +348,21 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
               onEventSelect(feature);
             });
 
-            // Generate stable ID for this marker
-            const markerId = `event-${feature.properties?.id || feature.properties?.guid || feature.properties?.eventId || JSON.stringify(coords)}`;
+            // Generate stable ID for this marker - check top-level id first, then properties
+            const postId = feature.id || feature.properties?.id || feature.properties?.guid || feature.properties?.eventId || JSON.stringify(coords);
+            const markerId = `event-${postId}`;
             currentMarkerIds.add(markerId);
+            
+            // For TMR posts, also add the incident-prefixed ID to ensure old megaphone markers get replaced
+            if (feature.source === 'tmr' || feature.properties?.source === 'tmr') {
+              const oldIncidentMarkerId = `incident-${postId}`;
+              // Remove old incident marker if it exists (from before the fix)
+              if (markersRef.current.has(oldIncidentMarkerId)) {
+                const oldMarker = markersRef.current.get(oldIncidentMarkerId);
+                mapInstanceRef.current?.removeLayer(oldMarker!);
+                markersRef.current.delete(oldIncidentMarkerId);
+              }
+            }
             
             // Only add marker if it doesn't already exist
             if (!markersRef.current.has(markerId)) {
@@ -755,8 +767,9 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
               onEventSelect(feature);
             });
 
-            // Generate stable ID for this marker
-            const markerId = `incident-${feature.properties?.id || feature.properties?.incidentId || feature.properties?.guid || JSON.stringify(coords)}`;
+            // Generate stable ID for this marker - check top-level id first, then properties
+            const postId = feature.id || feature.properties?.id || feature.properties?.incidentId || feature.properties?.guid || JSON.stringify(coords);
+            const markerId = `incident-${postId}`;
             currentMarkerIds.add(markerId);
             
             // Only add marker if it doesn't already exist
