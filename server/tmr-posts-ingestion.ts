@@ -338,23 +338,20 @@ class TMRPostsIngestionEngine {
   }
 
   /**
-   * Process TMR events and create/update posts
+   * Process TMR events and create/update posts using upsert for deduplication
    */
   private async processEvents(events: TMREvent[]): Promise<{ created: number; updated: number; skipped: number }> {
     let created = 0;
     let updated = 0;
     let skipped = 0;
 
-    // Get existing TMR posts for deduplication
-    const existingPosts = await this.getExistingTMRPosts();
+    // Use the new source-based query for existing posts
+    const existingPosts = await storage.getPostsBySource('tmr');
     const existingBySourceId = new Map(
-      existingPosts.map(post => {
-        const props = post.properties as any;
-        return [props?.tmrSourceId, post];
-      })
+      existingPosts.map(post => [post.sourceId, post])
     );
     
-    console.log(`[TMR Posts] Found ${existingPosts.length} existing TMR posts for deduplication (${existingBySourceId.size} unique sourceIds)`);
+    console.log(`[TMR Posts] Found ${existingPosts.length} existing TMR posts for deduplication`);
 
     for (const event of events) {
       try {
@@ -364,11 +361,11 @@ class TMRPostsIngestionEngine {
           continue;
         }
 
-        // Check for existing post with same TMR source ID
+        // Check for existing post with same source ID
         const existingPost = existingBySourceId.get(event.id);
 
         if (existingPost) {
-          // Update existing post if status changed
+          // Update existing post if status changed or has significant changes
           const existingProps = existingPost.properties as any;
           const existingStatus = existingProps?.tmrStatus || existingPost.status;
           
@@ -410,24 +407,13 @@ class TMRPostsIngestionEngine {
   }
 
   /**
-   * Get existing posts from TMR source
-   */
-  private async getExistingTMRPosts(): Promise<any[]> {
-    try {
-      const tmrPosts = await storage.getPostsByUser(SYSTEM_USER_IDS.TMR);
-      return tmrPosts;
-    } catch (error) {
-      console.error('[TMR Posts] Error fetching existing TMR posts:', error);
-      return [];
-    }
-  }
-
-  /**
    * Create a new post from TMR event
    */
   private async createPost(event: TMREvent): Promise<void> {
     const post: InsertPost = {
       userId: SYSTEM_USER_IDS.TMR,
+      source: 'tmr', // Data source tracking
+      sourceId: event.id, // External TMR event ID
       title: event.title,
       description: event.description || `Traffic event reported by Transport and Main Roads Queensland.`,
       location: event.location || 'Queensland',
@@ -441,7 +427,6 @@ class TMRPostsIngestionEngine {
       centroidLng: event.lng,
       status: this.mapTMRStatus(event.status),
       properties: {
-        source: 'tmr',
         tmrSourceId: event.id,
         tmrEventType: event.eventType,
         tmrEventSubtype: event.eventSubtype,

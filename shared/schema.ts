@@ -5,6 +5,12 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 // ============================================================================
+// DATA SOURCE ENUM - Identifies origin of posts (user-generated vs API sources)
+// ============================================================================
+export const DATA_SOURCES = ["user", "tmr", "nsw_live", "vic_roads", "emergency", "qfes"] as const;
+export type DataSource = typeof DATA_SOURCES[number];
+
+// ============================================================================
 // POSTS TABLE - Single source of truth for all community posts
 // Used for both feed display and map plotting
 // ============================================================================
@@ -14,6 +20,10 @@ export const posts = pgTable("posts", {
   
   // User who created the post
   userId: varchar("user_id").notNull(),
+  
+  // Data source tracking for multi-API ingestion
+  source: varchar("source", { enum: ["user", "tmr", "nsw_live", "vic_roads", "emergency", "qfes"] }).default("user"),
+  sourceId: varchar("source_id"), // External ID from the source API (null for user posts)
   
   // Core post content
   title: text("title").notNull(),
@@ -41,6 +51,10 @@ export const posts = pgTable("posts", {
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
   
+  // Incident/event timing (for aging calculations)
+  incidentTime: timestamp("incident_time"), // When the incident actually occurred
+  expiresAt: timestamp("expires_at"), // When this post should auto-expire
+  
   // Optional metadata
   properties: jsonb("properties").default('{}'), // For extensibility
 }, (table) => [
@@ -51,6 +65,10 @@ export const posts = pgTable("posts", {
   index("idx_posts_status").on(table.status),
   index("idx_posts_centroid").on(table.centroidLat, table.centroidLng),
   index("idx_posts_created").on(table.createdAt.desc()),
+  index("idx_posts_source").on(table.source),
+  index("idx_posts_incident_time").on(table.incidentTime),
+  // Unique constraint for deduplication of API-sourced posts
+  unique("unique_source_sourceid").on(table.source, table.sourceId),
 ]);
 
 // Posts Zod Schemas
@@ -64,10 +82,106 @@ export const insertPostSchema = createInsertSchema(posts).omit({
   title: z.string().min(1, "Title is required"),
   userId: z.string().min(1, "User ID is required"),
   status: z.enum(["active", "resolved", "closed"]).default("active"),
+  source: z.enum(["user", "tmr", "nsw_live", "vic_roads", "emergency", "qfes"]).default("user"),
+  sourceId: z.string().nullable().optional(),
 });
 
 export type InsertPost = z.infer<typeof insertPostSchema>;
 export type SelectPost = typeof posts.$inferSelect;
+
+// ============================================================================
+// STAGING TABLE - Intermediate storage for API data before sync to posts
+// Each source writes to this staging area, then orchestrator syncs to posts
+// ============================================================================
+
+export const stagingEvents = pgTable("staging_events", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  // Source identification
+  source: varchar("source", { enum: ["tmr", "nsw_live", "vic_roads", "emergency", "qfes"] }).notNull(),
+  sourceId: varchar("source_id").notNull(), // External ID from source API
+  
+  // Normalized event data
+  title: text("title").notNull(),
+  description: text("description"),
+  location: text("location"),
+  
+  // Category mapping
+  categoryId: varchar("category_id"),
+  subcategoryId: varchar("subcategory_id"),
+  
+  // Spatial data
+  geometry: jsonb("geometry"),
+  centroidLat: doublePrecision("centroid_lat"),
+  centroidLng: doublePrecision("centroid_lng"),
+  
+  // Status and timing
+  status: varchar("status", { enum: ["active", "resolved", "closed"] }).default("active"),
+  severity: varchar("severity", { enum: ["low", "medium", "high", "critical"] }).default("medium"),
+  incidentTime: timestamp("incident_time"), // When event actually occurred
+  expiresAt: timestamp("expires_at"), // When to auto-expire
+  
+  // Raw source data for debugging/extensibility
+  rawData: jsonb("raw_data").default('{}'),
+  properties: jsonb("properties").default('{}'),
+  
+  // Sync tracking
+  syncedToPostsAt: timestamp("synced_to_posts_at"), // null = not yet synced
+  syncError: text("sync_error"), // Error message if sync failed
+  
+  // Timestamps
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  // Unique constraint for deduplication within staging
+  unique("unique_staging_source_sourceid").on(table.source, table.sourceId),
+  // Index for efficient sync queries
+  index("idx_staging_synced").on(table.syncedToPostsAt),
+  index("idx_staging_source").on(table.source),
+  index("idx_staging_updated").on(table.updatedAt),
+  index("idx_staging_created").on(table.createdAt),
+]);
+
+// Staging Zod Schemas
+export const insertStagingEventSchema = createInsertSchema(stagingEvents).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  syncedToPostsAt: true,
+  syncError: true,
+}).extend({
+  source: z.enum(["tmr", "nsw_live", "vic_roads", "emergency", "qfes"]),
+  sourceId: z.string().min(1, "Source ID is required"),
+  title: z.string().min(1, "Title is required"),
+  status: z.enum(["active", "resolved", "closed"]).default("active"),
+  severity: z.enum(["low", "medium", "high", "critical"]).default("medium"),
+});
+
+export type InsertStagingEvent = z.infer<typeof insertStagingEventSchema>;
+export type SelectStagingEvent = typeof stagingEvents.$inferSelect;
+
+// ============================================================================
+// INGEST DTO - Common format that all source adapters must produce
+// ============================================================================
+
+export interface IngestDTO {
+  source: DataSource;
+  sourceId: string;
+  title: string;
+  description?: string;
+  location?: string;
+  categoryId?: string;
+  subcategoryId?: string;
+  geometry?: any;
+  centroidLat: number;
+  centroidLng: number;
+  status: "active" | "resolved" | "closed";
+  severity?: "low" | "medium" | "high" | "critical";
+  incidentTime?: Date;
+  expiresAt?: Date;
+  rawData?: any;
+  properties?: any;
+}
 
 // ============================================================================
 // LEGACY: Unified Incidents (deprecated - use posts table instead)

@@ -21,6 +21,7 @@ import {
   storyViews,
   userBadges,
   posts,
+  stagingEvents,
   type User, 
   type UpsertUser,
   type InsertUser, 
@@ -66,6 +67,10 @@ import {
   type UserBadge,
   type SelectPost,
   type InsertPost,
+  type SelectStagingEvent,
+  type InsertStagingEvent,
+  type DataSource,
+  type IngestDTO,
   adCampaigns,
   adViews,
   adClicks,
@@ -314,6 +319,23 @@ export interface IStorage {
   getBusinessPayments(businessId: string): Promise<Payment[]>;
   getCampaignAnalytics(campaignId: string, startDate: string, endDate: string): Promise<CampaignAnalytics[]>;
   upsertCampaignAnalytics(analytics: InsertCampaignAnalytics): Promise<CampaignAnalytics>;
+  
+  // ============================================================================
+  // STAGING OPERATIONS - Multi-source data ingestion
+  // ============================================================================
+  
+  // Source-specific post queries
+  getPostsBySource(source: DataSource): Promise<SelectPost[]>;
+  getPostBySourceId(source: DataSource, sourceId: string): Promise<SelectPost | undefined>;
+  upsertPostFromSource(source: DataSource, sourceId: string, post: Omit<InsertPost, 'source' | 'sourceId'>): Promise<SelectPost>;
+  
+  // Staging table operations
+  upsertStagingEvent(event: InsertStagingEvent): Promise<SelectStagingEvent>;
+  getStagingEventsBySource(source: DataSource): Promise<SelectStagingEvent[]>;
+  getUnsyncedStagingEvents(source?: DataSource): Promise<SelectStagingEvent[]>;
+  markStagingEventSynced(id: string, postId?: string): Promise<void>;
+  markStagingEventError(id: string, error: string): Promise<void>;
+  cleanupOldStagingEvents(olderThanDays: number): Promise<number>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2215,6 +2237,150 @@ export class DatabaseStorage implements IStorage {
       .update(stories)
       .set({ viewCount: sql`${stories.viewCount} + 1` })
       .where(eq(stories.id, storyId));
+  }
+
+  // ============================================================================
+  // STAGING OPERATIONS - Multi-source data ingestion
+  // ============================================================================
+
+  async getPostsBySource(source: DataSource): Promise<SelectPost[]> {
+    return await db
+      .select()
+      .from(posts)
+      .where(eq(posts.source, source))
+      .orderBy(desc(posts.createdAt));
+  }
+
+  async getPostBySourceId(source: DataSource, sourceId: string): Promise<SelectPost | undefined> {
+    const [post] = await db
+      .select()
+      .from(posts)
+      .where(and(eq(posts.source, source), eq(posts.sourceId, sourceId)));
+    return post;
+  }
+
+  async upsertPostFromSource(
+    source: DataSource, 
+    sourceId: string, 
+    postData: Omit<InsertPost, 'source' | 'sourceId'>
+  ): Promise<SelectPost> {
+    // Enforce sourceId presence for non-user sources
+    if (source !== 'user' && !sourceId) {
+      throw new Error(`sourceId is required for source '${source}'`);
+    }
+    
+    // Use single-statement UPSERT to avoid race conditions
+    // INSERT ... ON CONFLICT (source, source_id) DO UPDATE
+    const [result] = await db
+      .insert(posts)
+      .values({
+        ...postData,
+        source,
+        sourceId,
+      })
+      .onConflictDoUpdate({
+        target: [posts.source, posts.sourceId],
+        set: {
+          title: postData.title,
+          description: postData.description,
+          location: postData.location,
+          photoUrl: postData.photoUrl,
+          categoryId: postData.categoryId,
+          subcategoryId: postData.subcategoryId,
+          geometry: postData.geometry,
+          centroidLat: postData.centroidLat,
+          centroidLng: postData.centroidLng,
+          status: postData.status,
+          properties: postData.properties,
+          incidentTime: postData.incidentTime,
+          expiresAt: postData.expiresAt,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return result;
+  }
+
+  async upsertStagingEvent(event: InsertStagingEvent): Promise<SelectStagingEvent> {
+    const [result] = await db
+      .insert(stagingEvents)
+      .values(event)
+      .onConflictDoUpdate({
+        target: [stagingEvents.source, stagingEvents.sourceId],
+        set: {
+          title: event.title,
+          description: event.description,
+          location: event.location,
+          categoryId: event.categoryId,
+          subcategoryId: event.subcategoryId,
+          geometry: event.geometry,
+          centroidLat: event.centroidLat,
+          centroidLng: event.centroidLng,
+          status: event.status,
+          severity: event.severity,
+          incidentTime: event.incidentTime,
+          expiresAt: event.expiresAt,
+          rawData: event.rawData,
+          properties: event.properties,
+          updatedAt: new Date(),
+          syncedToPostsAt: null, // Reset sync status on update
+          syncError: null,
+        },
+      })
+      .returning();
+    return result;
+  }
+
+  async getStagingEventsBySource(source: DataSource): Promise<SelectStagingEvent[]> {
+    return await db
+      .select()
+      .from(stagingEvents)
+      .where(eq(stagingEvents.source, source as any))
+      .orderBy(desc(stagingEvents.updatedAt));
+  }
+
+  async getUnsyncedStagingEvents(source?: DataSource): Promise<SelectStagingEvent[]> {
+    const conditions = [sql`${stagingEvents.syncedToPostsAt} IS NULL`];
+    
+    if (source) {
+      conditions.push(eq(stagingEvents.source, source as any));
+    }
+    
+    return await db
+      .select()
+      .from(stagingEvents)
+      .where(and(...conditions))
+      .orderBy(stagingEvents.updatedAt);
+  }
+
+  async markStagingEventSynced(id: string, postId?: string): Promise<void> {
+    await db
+      .update(stagingEvents)
+      .set({
+        syncedToPostsAt: new Date(),
+        syncError: null,
+      })
+      .where(eq(stagingEvents.id, id));
+  }
+
+  async markStagingEventError(id: string, error: string): Promise<void> {
+    await db
+      .update(stagingEvents)
+      .set({
+        syncError: error,
+      })
+      .where(eq(stagingEvents.id, id));
+  }
+
+  async cleanupOldStagingEvents(olderThanDays: number): Promise<number> {
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - olderThanDays);
+    
+    const result = await db
+      .delete(stagingEvents)
+      .where(sql`${stagingEvents.createdAt} < ${cutoffDate}`);
+    
+    return result.rowCount ?? 0;
   }
 
 }
