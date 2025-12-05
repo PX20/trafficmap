@@ -257,6 +257,11 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
       firstEvent: (filteredEventsData as any)?.features?.[0]?.properties?.title
     });
     
+    let eventsMarkerCount = 0;
+    let eventsNoGeometryCount = 0;
+    let eventsNoCoordsCount = 0;
+    let eventsHiddenByAgingCount = 0;
+    
     if ((filteredEventsData as any)?.features) {
       const sortedEvents = [...(filteredEventsData as any).features].sort((a: any, b: any) => {
         return getTimestamp(a) - getTimestamp(b);
@@ -305,6 +310,7 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
           
           // Skip events that should be hidden due to aging
           if (!agingData.isVisible) {
+            eventsHiddenByAgingCount++;
             return;
           }
         } else {
@@ -312,6 +318,11 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
           console.warn('Traffic event missing timestamp data, showing with default styling:', feature.properties?.id);
         }
 
+        if (!feature.geometry) {
+          eventsNoGeometryCount++;
+          return;
+        }
+        
         if (feature.geometry) {
           let coords: [number, number] | null = null;
           
@@ -381,9 +392,20 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
             if (!markersRef.current.has(markerId)) {
               marker.addTo(mapInstanceRef.current!);
               markersRef.current.set(markerId, marker);
+              eventsMarkerCount++;
             }
+          } else {
+            eventsNoCoordsCount++;
           }
         }
+      });
+      
+      // Log summary of events loop marker creation
+      console.log('🚗 EVENTS LOOP SUMMARY:', {
+        markersCreated: eventsMarkerCount,
+        noGeometry: eventsNoGeometryCount,
+        noCoords: eventsNoCoordsCount,
+        hiddenByAging: eventsHiddenByAgingCount
       });
     }
 

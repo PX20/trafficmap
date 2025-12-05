@@ -1,0 +1,96 @@
+map:24  Tracking Prevention blocked access to storage for https://unpkg.com/leaflet@1.9.4/dist/leaflet.css.
+map:24  Tracking Prevention blocked access to storage for https://unpkg.com/leaflet@1.9.4/dist/leaflet.css.
+map:24  Tracking Prevention blocked access to storage for https://unpkg.com/leaflet@1.9.4/dist/leaflet.css.
+map:24  Tracking Prevention blocked access to storage for https://unpkg.com/leaflet@1.9.4/dist/leaflet.css.
+map:1  Mixed Content: The page at 'https://neighbour-app--pkingdom83.replit.app/map' was loaded over HTTPS, but requested an insecure script 'http://replit.com.x.84b420360dee6049790b98109c2de065f5a5.43d7532d.id.opendns.com/s/malware.opendns.com/?X-OpenDNS-Session=aa51dc5c0ccc5aad4_84b420360dee6049790b98109c2de065f5a5_8146082a9f0bbdc4395188330182c99f8b428010_server=nginx-proxy-https-043e17c9fc04.iproxy.syd&url=https://replit.com/public/js/replit-dev-banner.js%3FX-OpenDNS-Session=_c27398280eca3041f80a1df02821374684259270f956_0UTrO6w2_&proxy=y&prefs=1597504&tagging=0x110004214C4001C10000070070000080039F7000102000000000'. This request has been blocked; the content must be served over HTTPS.
+index-CIVoE_P5.js:536 🔍 RAW UNIFIED DATA: {hasUnifiedData: false, featuresCount: 0, viewportBounds: 'not provided', allowFetchWithoutViewport: false}
+index-CIVoE_P5.js:536 🔍 BEFORE FILTERING: {allEventsCount: 0, allIncidentsCount: 0, hasHomeCoordinates: false, distanceFilter: 'all'}
+index-CIVoE_P5.js:536 🔍 AFTER FILTERING: {regionalEventsCount: 0, regionalIncidentsCount: 0}
+index-CIVoE_P5.js:536 🔍 RAW UNIFIED DATA: {hasUnifiedData: false, featuresCount: 0, viewportBounds: 'not provided', allowFetchWithoutViewport: false}
+index-CIVoE_P5.js:536 🔍 BEFORE FILTERING: {allEventsCount: 0, allIncidentsCount: 0, hasHomeCoordinates: false, distanceFilter: 'all'}
+index-CIVoE_P5.js:536 🔍 AFTER FILTERING: {regionalEventsCount: 0, regionalIncidentsCount: 0}
+index-CIVoE_P5.js:536 🚗 EVENTS LOOP: {hasEventsData: true, eventsCount: 0, firstEvent: undefined}
+index-CIVoE_P5.js:536 📢 INCIDENTS LOOP: {hasIncidentsData: true, incidentsCount: 0, firstIncident: undefined}
+index-CIVoE_P5.js:536 🔍 RAW UNIFIED DATA: {hasUnifiedData: false, featuresCount: 0, viewportBounds: 'not provided', allowFetchWithoutViewport: false}
+index-CIVoE_P5.js:536 🔍 BEFORE FILTERING: {allEventsCount: 0, allIncidentsCount: 0, hasHomeCoordinates: true, distanceFilter: '50km'}
+index-CIVoE_P5.js:536 🔍 AFTER FILTERING: {regionalEventsCount: 0, regionalIncidentsCount: 0}
+index-CIVoE_P5.js:536 🔍 RAW UNIFIED DATA: {hasUnifiedData: false, featuresCount: 0, viewportBounds: 'provided', allowFetchWithoutViewport: false}
+index-CIVoE_P5.js:536 🔍 BEFORE FILTERING: {allEventsCount: 0, allIncidentsCount: 0, hasHomeCoordinates: true, distanceFilter: '50km'}
+index-CIVoE_P5.js:536 🔍 AFTER FILTERING: {regionalEventsCount: 0, regionalIncidentsCount: 0}
+index-CIVoE_P5.js:536 🚗 EVENTS LOOP: {hasEventsData: true, eventsCount: 0, firstEvent: undefined}
+index-CIVoE_P5.js:536 📢 INCIDENTS LOOP: {hasIncidentsData: true, incidentsCount: 0, firstIncident: undefined}
+index-CIVoE_P5.js:536 🔍 RAW UNIFIED DATA: {hasUnifiedData: false, featuresCount: 0, viewportBounds: 'provided', allowFetchWithoutViewport: false}
+index-CIVoE_P5.js:536 🔍 BEFORE FILTERING: {allEventsCount: 0, allIncidentsCount: 0, hasHomeCoordinates: true, distanceFilter: '50km'}
+index-CIVoE_P5.js:536 🔍 AFTER FILTERING: {regionalEventsCount: 0, regionalIncidentsCount: 0}
+index-CIVoE_P5.js:536 🚗 EVENTS LOOP: {hasEventsData: true, eventsCount: 0, firstEvent: undefined}
+index-CIVoE_P5.js:536 📢 INCIDENTS LOOP: {hasIncidentsData: true, incidentsCount: 0, firstIncident: undefined}
+index-CIVoE_P5.js:536 🔍 RAW UNIFIED DATA: {hasUnifiedData: false, featuresCount: 0, viewportBounds: 'not provided', allowFetchWithoutViewport: false}
+index-CIVoE_P5.js:536 🔍 BEFORE FILTERING: {allEventsCount: 0, allIncidentsCount: 0, hasHomeCoordinates: true, distanceFilter: '50km'}
+index-CIVoE_P5.js:536 🔍 AFTER FILTERING: {regionalEventsCount: 0, regionalIncidentsCount: 0}
+index-CIVoE_P5.js:536 🔍 RAW UNIFIED DATA: {hasUnifiedData: false, featuresCount: 0, viewportBounds: 'provided', allowFetchWithoutViewport: false}
+index-CIVoE_P5.js:536 🔍 BEFORE FILTERING: {allEventsCount: 0, allIncidentsCount: 0, hasHomeCoordinates: true, distanceFilter: '50km'}
+index-CIVoE_P5.js:536 🔍 AFTER FILTERING: {regionalEventsCount: 0, regionalIncidentsCount: 0}
+index-CIVoE_P5.js:536 🚗 EVENTS LOOP: {hasEventsData: true, eventsCount: 0, firstEvent: undefined}
+index-CIVoE_P5.js:536 📢 INCIDENTS LOOP: {hasIncidentsData: true, incidentsCount: 0, firstIncident: undefined}
+index-CIVoE_P5.js:536 🔍 RAW UNIFIED DATA: {hasUnifiedData: false, featuresCount: 0, viewportBounds: 'not provided', allowFetchWithoutViewport: false}
+index-CIVoE_P5.js:536 🔍 BEFORE FILTERING: {allEventsCount: 0, allIncidentsCount: 0, hasHomeCoordinates: true, distanceFilter: '50km'}
+index-CIVoE_P5.js:536 🔍 AFTER FILTERING: {regionalEventsCount: 0, regionalIncidentsCount: 0}
+index-CIVoE_P5.js:536 🔍 RAW UNIFIED DATA: {hasUnifiedData: false, featuresCount: 0, viewportBounds: 'provided', allowFetchWithoutViewport: false}
+index-CIVoE_P5.js:536 🔍 BEFORE FILTERING: {allEventsCount: 0, allIncidentsCount: 0, hasHomeCoordinates: true, distanceFilter: '50km'}
+index-CIVoE_P5.js:536 🔍 AFTER FILTERING: {regionalEventsCount: 0, regionalIncidentsCount: 0}
+index-CIVoE_P5.js:536 🚗 EVENTS LOOP: {hasEventsData: true, eventsCount: 0, firstEvent: undefined}
+index-CIVoE_P5.js:536 📢 INCIDENTS LOOP: {hasIncidentsData: true, incidentsCount: 0, firstIncident: undefined}
+index-CIVoE_P5.js:536 🔍 RAW UNIFIED DATA: {hasUnifiedData: true, featuresCount: 25, viewportBounds: 'provided', allowFetchWithoutViewport: false}
+index-CIVoE_P5.js:536 🔍 INCIDENTS SOURCES DEBUG: (8) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+index-CIVoE_P5.js:536 🔍 BEFORE FILTERING: {allEventsCount: 17, allIncidentsCount: 8, hasHomeCoordinates: true, distanceFilter: '50km'}
+index-CIVoE_P5.js:536 🔍 AFTER FILTERING: {regionalEventsCount: 17, regionalIncidentsCount: 8}
+index-CIVoE_P5.js:536 🚗 EVENTS LOOP: {hasEventsData: true, eventsCount: 17, firstEvent: 'Hazard - Stationary vehicle on Bruce Highway (Palmview)'}
+index-CIVoE_P5.js:536 📢 INCIDENTS LOOP: {hasIncidentsData: true, incidentsCount: 8, firstIncident: 'test'}
+index-CIVoE_P5.js:536 🔍 RAW UNIFIED DATA: {hasUnifiedData: true, featuresCount: 25, viewportBounds: 'provided', allowFetchWithoutViewport: false}
+index-CIVoE_P5.js:536 🔍 INCIDENTS SOURCES DEBUG: (8) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+index-CIVoE_P5.js:536 🔍 BEFORE FILTERING: {allEventsCount: 17, allIncidentsCount: 8, hasHomeCoordinates: true, distanceFilter: '50km'}
+index-CIVoE_P5.js:536 🔍 AFTER FILTERING: {regionalEventsCount: 17, regionalIncidentsCount: 8}
+index-CIVoE_P5.js:536 🚗 EVENTS LOOP: {hasEventsData: true, eventsCount: 17, firstEvent: 'Hazard - Stationary vehicle on Bruce Highway (Palmview)'}
+index-CIVoE_P5.js:536 📢 INCIDENTS LOOP: {hasIncidentsData: true, incidentsCount: 8, firstIncident: 'test'}
+index-CIVoE_P5.js:536 🔍 RAW UNIFIED DATA: {hasUnifiedData: true, featuresCount: 25, viewportBounds: 'provided', allowFetchWithoutViewport: false}
+index-CIVoE_P5.js:536 🔍 INCIDENTS SOURCES DEBUG: (8) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+index-CIVoE_P5.js:536 🔍 BEFORE FILTERING: {allEventsCount: 17, allIncidentsCount: 8, hasHomeCoordinates: true, distanceFilter: '50km'}
+index-CIVoE_P5.js:536 🔍 AFTER FILTERING: {regionalEventsCount: 17, regionalIncidentsCount: 8}
+index-CIVoE_P5.js:536 🚗 EVENTS LOOP: {hasEventsData: true, eventsCount: 17, firstEvent: 'Hazard - Stationary vehicle on Bruce Highway (Palmview)'}
+index-CIVoE_P5.js:536 📢 INCIDENTS LOOP: {hasIncidentsData: true, incidentsCount: 8, firstIncident: 'test'}
+index-CIVoE_P5.js:536 🔍 RAW UNIFIED DATA: {hasUnifiedData: true, featuresCount: 43, viewportBounds: 'provided', allowFetchWithoutViewport: false}
+index-CIVoE_P5.js:536 🔍 INCIDENTS SOURCES DEBUG: (7) [{…}, {…}, {…}, {…}, {…}, {…}, {…}]
+index-CIVoE_P5.js:536 🔍 BEFORE FILTERING: {allEventsCount: 36, allIncidentsCount: 7, hasHomeCoordinates: true, distanceFilter: '50km'}
+index-CIVoE_P5.js:536 🔍 AFTER FILTERING: {regionalEventsCount: 36, regionalIncidentsCount: 7}
+index-CIVoE_P5.js:536 🚗 EVENTS LOOP: {hasEventsData: true, eventsCount: 36, firstEvent: "Hazard - Stationary vehicle on D'Aguilar Highway (D'Aguilar)"}
+index-CIVoE_P5.js:536 📢 INCIDENTS LOOP: {hasIncidentsData: true, incidentsCount: 7, firstIncident: 'test'}
+index-CIVoE_P5.js:536 🔍 RAW UNIFIED DATA: {hasUnifiedData: true, featuresCount: 43, viewportBounds: 'provided', allowFetchWithoutViewport: false}
+index-CIVoE_P5.js:536 🔍 INCIDENTS SOURCES DEBUG: (7) [{…}, {…}, {…}, {…}, {…}, {…}, {…}]
+index-CIVoE_P5.js:536 🔍 BEFORE FILTERING: {allEventsCount: 36, allIncidentsCount: 7, hasHomeCoordinates: true, distanceFilter: '50km'}
+index-CIVoE_P5.js:536 🔍 AFTER FILTERING: {regionalEventsCount: 36, regionalIncidentsCount: 7}
+index-CIVoE_P5.js:536 🚗 EVENTS LOOP: {hasEventsData: true, eventsCount: 36, firstEvent: "Hazard - Stationary vehicle on D'Aguilar Highway (D'Aguilar)"}
+index-CIVoE_P5.js:536 📢 INCIDENTS LOOP: {hasIncidentsData: true, incidentsCount: 7, firstIncident: 'test'}
+index-CIVoE_P5.js:536 🔍 RAW UNIFIED DATA: {hasUnifiedData: true, featuresCount: 43, viewportBounds: 'provided', allowFetchWithoutViewport: false}
+index-CIVoE_P5.js:536 🔍 INCIDENTS SOURCES DEBUG: (7) [{…}, {…}, {…}, {…}, {…}, {…}, {…}]
+index-CIVoE_P5.js:536 🔍 BEFORE FILTERING: {allEventsCount: 36, allIncidentsCount: 7, hasHomeCoordinates: true, distanceFilter: '50km'}
+index-CIVoE_P5.js:536 🔍 AFTER FILTERING: {regionalEventsCount: 36, regionalIncidentsCount: 7}
+index-CIVoE_P5.js:536 🚗 EVENTS LOOP: {hasEventsData: true, eventsCount: 36, firstEvent: "Hazard - Stationary vehicle on D'Aguilar Highway (D'Aguilar)"}
+index-CIVoE_P5.js:536 📢 INCIDENTS LOOP: {hasIncidentsData: true, incidentsCount: 7, firstIncident: 'test'}
+index-CIVoE_P5.js:536 🔍 RAW UNIFIED DATA: {hasUnifiedData: true, featuresCount: 43, viewportBounds: 'provided', allowFetchWithoutViewport: false}
+index-CIVoE_P5.js:536 🔍 INCIDENTS SOURCES DEBUG: (7) [{…}, {…}, {…}, {…}, {…}, {…}, {…}]
+index-CIVoE_P5.js:536 🔍 BEFORE FILTERING: {allEventsCount: 36, allIncidentsCount: 7, hasHomeCoordinates: true, distanceFilter: '50km'}
+index-CIVoE_P5.js:536 🔍 AFTER FILTERING: {regionalEventsCount: 36, regionalIncidentsCount: 7}
+index-CIVoE_P5.js:536 🚗 EVENTS LOOP: {hasEventsData: true, eventsCount: 36, firstEvent: "Hazard - Stationary vehicle on D'Aguilar Highway (D'Aguilar)"}
+index-CIVoE_P5.js:536 📢 INCIDENTS LOOP: {hasIncidentsData: true, incidentsCount: 7, firstIncident: 'test'}
+index-CIVoE_P5.js:536 🔍 RAW UNIFIED DATA: {hasUnifiedData: true, featuresCount: 43, viewportBounds: 'provided', allowFetchWithoutViewport: false}
+index-CIVoE_P5.js:536 🔍 INCIDENTS SOURCES DEBUG: (7) [{…}, {…}, {…}, {…}, {…}, {…}, {…}]
+index-CIVoE_P5.js:536 🔍 BEFORE FILTERING: {allEventsCount: 36, allIncidentsCount: 7, hasHomeCoordinates: true, distanceFilter: '50km'}
+index-CIVoE_P5.js:536 🔍 AFTER FILTERING: {regionalEventsCount: 36, regionalIncidentsCount: 7}
+index-CIVoE_P5.js:536 🚗 EVENTS LOOP: {hasEventsData: true, eventsCount: 36, firstEvent: "Hazard - Stationary vehicle on D'Aguilar Highway (D'Aguilar)"}
+index-CIVoE_P5.js:536 📢 INCIDENTS LOOP: {hasIncidentsData: true, incidentsCount: 7, firstIncident: 'test'}
+index-CIVoE_P5.js:536 🔍 RAW UNIFIED DATA: {hasUnifiedData: true, featuresCount: 180, viewportBounds: 'provided', allowFetchWithoutViewport: false}
+index-CIVoE_P5.js:536 🔍 INCIDENTS SOURCES DEBUG: (28) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+index-CIVoE_P5.js:536 🔍 BEFORE FILTERING: {allEventsCount: 152, allIncidentsCount: 28, hasHomeCoordinates: true, distanceFilter: '50km'}
+index-CIVoE_P5.js:536 🔍 AFTER FILTERING: {regionalEventsCount: 0, regionalIncidentsCount: 0}
+index-CIVoE_P5.js:536 🚗 EVENTS LOOP: {hasEventsData: true, eventsCount: 152, firstEvent: 'Crash - Multi-vehicle on Grange Road (Grange)'}
+index-CIVoE_P5.js:536 📢 INCIDENTS LOOP: {hasIncidentsData: true, incidentsCount: 28, firstIncident: 'Hazard - Signal fault on Nudgee Road (Northgate)'}
