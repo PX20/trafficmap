@@ -22,6 +22,7 @@ import AdminDashboard from "@/pages/admin-dashboard";
 import EditAd from "@/pages/edit-ad";
 import EditIncident from "@/pages/edit-incident";
 import IncidentDetail from "@/pages/incident-detail";
+import Create from "@/pages/create";
 import { TermsAndConditionsModal } from "@/components/terms-and-conditions-modal";
 import { OnboardingWizard } from "@/components/onboarding-wizard";
 
@@ -110,9 +111,12 @@ function Router() {
       return <AccountSetup />;
     }
     
+    // Strip query parameters for route matching
+    const routePath = route.split('?')[0];
+    
     // Handle parameterized routes by creating a temporary Switch with the background route
-    if (route.startsWith('/edit-ad/') || route.startsWith('/edit-incident/') || 
-        route.startsWith('/users/') || route.startsWith('/messages/')) {
+    if (routePath.startsWith('/edit-ad/') || routePath.startsWith('/edit-incident/') || 
+        routePath.startsWith('/users/') || routePath.startsWith('/messages/')) {
       return (
         <Switch location={route}>
           <Route path="/edit-ad/:id" component={EditAd} />
@@ -124,10 +128,11 @@ function Router() {
       );
     }
     
-    // Handle simple routes
-    switch (route) {
+    // Handle simple routes (use path without query params)
+    switch (routePath) {
       case '/map': return <Home />;
       case '/feed': return <Feed />;
+      case '/create': return <Create />;
       case '/advertise':
       case '/create-ad': return <CreateAd />;
       case '/business-upgrade': return <BusinessUpgrade />;

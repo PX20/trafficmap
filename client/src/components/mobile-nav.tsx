@@ -16,10 +16,12 @@ export function MobileNav() {
   
   const unreadCount = unreadData?.count || 0;
 
+  const currentPath = location === "/" ? "/feed" : location;
+  
   const navItems = [
     { href: "/feed", icon: Home, label: "Home", badge: 0 },
     { href: "/map", icon: Map, label: "Map", badge: 0 },
-    { href: "/create", icon: PlusCircle, label: "Post", badge: 0 },
+    { href: `/create?from=${encodeURIComponent(currentPath)}`, icon: PlusCircle, label: "Post", badge: 0 },
     { href: "/notifications", icon: Bell, label: "Alerts", badge: unreadCount },
     { href: "/profile", icon: User, label: "Profile", badge: 0 },
   ];
@@ -28,8 +30,10 @@ export function MobileNav() {
     <nav className="mobile-bottom-nav bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 pb-safe">
       <div className="flex items-center justify-around h-16 max-w-lg mx-auto px-2">
         {navItems.map((item) => {
-          const isActive = location === item.href || 
-            (item.href === "/feed" && location === "/");
+          const itemPath = item.href.split('?')[0];
+          const isActive = location === itemPath || 
+            (itemPath === "/feed" && location === "/") ||
+            (itemPath === "/create" && location.startsWith("/create"));
           const Icon = item.icon;
           
           return (

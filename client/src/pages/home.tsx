@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { TrafficMap } from "@/components/map/traffic-map";
 import { SimpleFilterSidebar } from "@/components/map/simple-filter-sidebar";
 import { IncidentReportForm } from "@/components/incident-report-form";
+import { MobileNav } from "@/components/mobile-nav";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -414,18 +415,11 @@ export default function Home() {
       </main>
 
 
-      {/* Community Report Button */}
-      {isMobile ? (
-        <button
-          onClick={() => setReportFormOpen(true)}
-          className="fixed bottom-6 left-6 w-14 h-14 bg-blue-500 text-white rounded-full shadow-lg z-30 flex items-center justify-center hover:bg-blue-600 transition-colors"
-          data-testid="button-community-report"
-        >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-          </svg>
-        </button>
-      ) : (
+      {/* Mobile Navigation - same as feed */}
+      {isMobile && <MobileNav />}
+
+      {/* Desktop Share Button - centered at bottom */}
+      {!isMobile && (
         <Button
           onClick={() => setReportFormOpen(true)}
           className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-30 shadow-lg"
@@ -436,19 +430,6 @@ export default function Home() {
           </svg>
           Share Community Update
         </Button>
-      )}
-
-      {/* Mobile FAB for filters */}
-      {isMobile && !sidebarOpen && (
-        <button
-          onClick={toggleSidebar}
-          className="fixed bottom-6 right-6 w-14 h-14 bg-primary text-primary-foreground rounded-full shadow-lg z-30 flex items-center justify-center hover:bg-primary/90 transition-colors"
-          data-testid="button-mobile-menu-toggle"
-        >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"></path>
-          </svg>
-        </button>
       )}
 
       {/* Modal functionality moved to unified /incident/:id route */}
