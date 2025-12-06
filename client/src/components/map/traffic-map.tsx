@@ -272,18 +272,25 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
         // TMR events should always use 'traffic' marker type
         const markerType = 'traffic';
         
-        // Calculate aging for traffic events - check TMR-specific fields first, then other common fields
-        const referenceTime = feature.properties?.tmrStartTime ||  // TMR events use tmrStartTime
-                             feature.incidentTime || 
-                             feature.lastUpdated || 
-                             feature.publishedAt ||
-                             feature.properties?.incidentTime || 
+        // For TMR traffic events: Use last_updated (not start time) for aging
+        // This prevents multi-day roadworks from being hidden immediately
+        // Priority: last_updated > updatedAt > published > fallback to start time
+        const referenceTime = feature.properties?.last_updated ||
                              feature.properties?.lastUpdated || 
-                             feature.properties?.publishedAt ||
-                             feature.properties?.duration?.start || 
+                             feature.lastUpdated || 
+                             feature.properties?.updatedAt ||
+                             feature.updatedAt ||
                              feature.properties?.published || 
-                             feature.properties?.last_updated || 
+                             feature.publishedAt ||
+                             feature.properties?.tmrStartTime ||  // Only use start time as last resort
+                             feature.properties?.duration?.start || 
                              feature.properties?.firstSeenAt;
+        
+        // Check if this is an active TMR event (should stay visible regardless of aging)
+        const status = (feature.properties?.status || '').toLowerCase();
+        const isActiveTrafficEvent = status === 'active' || status === 'current' || 
+                                     feature.properties?.impact_type || 
+                                     !feature.properties?.end_time;
         
         // Create default aging data for events without timestamps
         let agingData = {
@@ -293,14 +300,18 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
           shouldAutoHide: false
         };
         
-        // Only calculate aging if we have a valid timestamp
-        if (referenceTime) {
+        // For active TMR traffic events, skip aging entirely - they're official real-time data
+        // They should remain visible until the TMR feed removes them
+        if (isActiveTrafficEvent) {
+          // Keep default agingData (always visible)
+        } else if (referenceTime) {
+          // For inactive/completed events, apply aging
           agingData = calculateIncidentAging({
             category: 'traffic',
             source: 'traffic',
             severity: feature.properties?.priority || feature.properties?.impact_type || 'medium',
             status: feature.properties?.status || 'active',
-            lastUpdated: feature.properties?.last_updated || feature.properties?.published || referenceTime,
+            lastUpdated: referenceTime,
             incidentTime: referenceTime,
             properties: feature.properties
           }, {
