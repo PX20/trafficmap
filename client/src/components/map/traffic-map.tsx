@@ -273,7 +273,7 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
         const markerType = 'traffic';
         
         // For TMR traffic events: Use last_updated (not start time) for aging
-        // This prevents multi-day roadworks from being hidden immediately
+        // This prevents multi-day roadworks from being hidden immediately based on start time
         // Priority: last_updated > updatedAt > published > fallback to start time
         const referenceTime = feature.properties?.last_updated ||
                              feature.properties?.lastUpdated || 
@@ -282,15 +282,9 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
                              feature.updatedAt ||
                              feature.properties?.published || 
                              feature.publishedAt ||
-                             feature.properties?.tmrStartTime ||  // Only use start time as last resort
+                             feature.properties?.tmrStartTime ||
                              feature.properties?.duration?.start || 
                              feature.properties?.firstSeenAt;
-        
-        // Check if this is an active TMR event (should stay visible regardless of aging)
-        const status = (feature.properties?.status || '').toLowerCase();
-        const isActiveTrafficEvent = status === 'active' || status === 'current' || 
-                                     feature.properties?.impact_type || 
-                                     !feature.properties?.end_time;
         
         // Create default aging data for events without timestamps
         let agingData = {
@@ -300,12 +294,9 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
           shouldAutoHide: false
         };
         
-        // For active TMR traffic events, skip aging entirely - they're official real-time data
-        // They should remain visible until the TMR feed removes them
-        if (isActiveTrafficEvent) {
-          // Keep default agingData (always visible)
-        } else if (referenceTime) {
-          // For inactive/completed events, apply aging
+        // Apply aging to all TMR events based on last_updated timestamp
+        // Events that haven't been updated in 12+ hours will be hidden
+        if (referenceTime) {
           agingData = calculateIncidentAging({
             category: 'traffic',
             source: 'traffic',
