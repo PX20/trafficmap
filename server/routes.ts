@@ -4346,13 +4346,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           [Math.max(swLat, neLat), Math.max(swLng, neLng)]
         );
         
-        // Convert to GeoJSON - preserve actual source from post properties
+        // Convert to GeoJSON - preserve actual source from post root level or properties
         result = {
           type: 'FeatureCollection' as const,
           features: postsInArea.map(post => {
             const postProps = post.properties as any || {};
-            const actualSource = postProps.source || 'user';
+            // Read source from root level first (where it's stored), then fallback to properties
+            const actualSource = post.source || postProps.source || 'user';
             const isTmrPost = actualSource === 'tmr';
+            const isEmergencyPost = actualSource === 'emergency';
             
             return {
               type: 'Feature' as const,
@@ -4379,23 +4381,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 centroidLat: post.centroidLat,
                 centroidLng: post.centroidLng,
                 source: actualSource,
-                userReported: !isTmrPost,
-                iconType: postProps.iconType || (isTmrPost ? 'traffic' : undefined),
+                userReported: !isTmrPost && !isEmergencyPost,
+                iconType: postProps.iconType || (isTmrPost ? 'traffic' : isEmergencyPost ? 'emergency' : undefined),
                 ...postProps,
               }
             };
           })
         };
       }
-      // User-specific posts - preserve actual source from post properties
+      // User-specific posts - preserve actual source from post root level or properties
       else if (userId) {
         const userPosts = await storage.getPostsByUser(userId as string);
         result = {
           type: 'FeatureCollection' as const,
           features: userPosts.map(post => {
             const postProps = post.properties as any || {};
-            const actualSource = postProps.source || 'user';
+            // Read source from root level first (where it's stored), then fallback to properties
+            const actualSource = post.source || postProps.source || 'user';
             const isTmrPost = actualSource === 'tmr';
+            const isEmergencyPost = actualSource === 'emergency';
             
             return {
               type: 'Feature' as const,
@@ -4422,8 +4426,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 centroidLat: post.centroidLat,
                 centroidLng: post.centroidLng,
                 source: actualSource,
-                userReported: !isTmrPost,
-                iconType: postProps.iconType || (isTmrPost ? 'traffic' : undefined),
+                userReported: !isTmrPost && !isEmergencyPost,
+                iconType: postProps.iconType || (isTmrPost ? 'traffic' : isEmergencyPost ? 'emergency' : undefined),
                 ...postProps,
               }
             };
