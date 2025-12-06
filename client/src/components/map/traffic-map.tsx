@@ -1047,7 +1047,16 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
             <ellipse cx="17" cy="11" rx="2" ry="2.5"/>
           </svg>`;
         case 'emergency':
-          return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`;
+          // Emergency beacon - same as siren for consistency
+          return `<svg width="16" height="16" viewBox="0 0 24 24" fill="${color}" stroke="${color}" stroke-width="1.5">
+            <path d="M12 2L12 4" stroke-linecap="round"/>
+            <path d="M4.93 4.93L6.34 6.34" stroke-linecap="round"/>
+            <path d="M19.07 4.93L17.66 6.34" stroke-linecap="round"/>
+            <path d="M2 12L4 12" stroke-linecap="round"/>
+            <path d="M20 12L22 12" stroke-linecap="round"/>
+            <circle cx="12" cy="12" r="5" fill="${color}"/>
+            <rect x="8" y="17" width="8" height="5" rx="1" fill="${color}" opacity="0.7"/>
+          </svg>`;
         // QFES Emergency Categories - specific icons
         case 'qfes':
         case 'fire':
@@ -1075,8 +1084,16 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
           // Cloud with lightning for storm/SES
           return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16.326A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 .5 8.973"/><path d="m13 12-3 5h4l-3 5"/></svg>`;
         case 'siren':
-          // Siren icon for general emergency response
-          return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 12a5 5 0 0 1 5-5"/><path d="M17 12a5 5 0 0 0-5-5"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="M7.5 19.5 9 21"/><path d="m15 21 1.5-1.5"/><path d="M9 3 7.5 4.5"/><path d="m15 4.5L16.5 3"/><circle cx="12" cy="12" r="3"/></svg>`;
+          // Emergency beacon/light icon - clear and recognizable
+          return `<svg width="16" height="16" viewBox="0 0 24 24" fill="${color}" stroke="${color}" stroke-width="1.5">
+            <path d="M12 2L12 4" stroke-linecap="round"/>
+            <path d="M4.93 4.93L6.34 6.34" stroke-linecap="round"/>
+            <path d="M19.07 4.93L17.66 6.34" stroke-linecap="round"/>
+            <path d="M2 12L4 12" stroke-linecap="round"/>
+            <path d="M20 12L22 12" stroke-linecap="round"/>
+            <circle cx="12" cy="12" r="5" fill="${color}"/>
+            <rect x="8" y="17" width="8" height="5" rx="1" fill="${color}" opacity="0.7"/>
+          </svg>`;
         case 'wildlife':
           // Leaf icon for wildlife/nature (matches database icon)
           return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>`;
