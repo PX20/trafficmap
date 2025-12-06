@@ -15,6 +15,7 @@
 import { storage } from "./storage";
 import { SYSTEM_USER_IDS, type InsertPost } from "@shared/schema";
 import { CATEGORY_UUIDS, SUBCATEGORY_UUIDS } from "./utils/category-mapping";
+import { broadcastPostNotifications } from "./notification-service";
 
 // ============================================================================
 // CONFIGURATION
@@ -439,7 +440,25 @@ class TMRPostsIngestionEngine {
       }
     };
 
-    await storage.createPost(post);
+    const createdPost = await storage.createPost(post);
+    
+    // Send push notifications to eligible users
+    try {
+      await broadcastPostNotifications(
+        {
+          id: createdPost.id,
+          title: createdPost.title,
+          categoryId: createdPost.categoryId,
+          centroidLat: createdPost.centroidLat,
+          centroidLng: createdPost.centroidLng,
+          userId: createdPost.userId,
+          source: 'tmr'
+        },
+        'Transport and Main Roads QLD'
+      );
+    } catch (notifyError) {
+      console.error('[TMR Posts] Failed to send notifications:', notifyError);
+    }
   }
 
   /**

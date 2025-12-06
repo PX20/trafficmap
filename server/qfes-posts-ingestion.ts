@@ -15,6 +15,7 @@
 import { storage } from "./storage";
 import { SYSTEM_USER_IDS, type InsertPost } from "@shared/schema";
 import { CATEGORY_UUIDS, SUBCATEGORY_UUIDS } from "./utils/category-mapping";
+import { broadcastPostNotifications } from "./notification-service";
 
 // ============================================================================
 // CONFIGURATION
@@ -350,7 +351,25 @@ class QFESPostsIngestionEngine {
       }
     };
 
-    await storage.createPost(post);
+    const createdPost = await storage.createPost(post);
+    
+    // Send push notifications to eligible users
+    try {
+      await broadcastPostNotifications(
+        {
+          id: createdPost.id,
+          title: createdPost.title,
+          categoryId: createdPost.categoryId,
+          centroidLat: createdPost.centroidLat,
+          centroidLng: createdPost.centroidLng,
+          userId: createdPost.userId,
+          source: 'emergency'
+        },
+        'QLD Fire & Emergency Services'
+      );
+    } catch (notifyError) {
+      console.error('[QFES Posts] Failed to send notifications:', notifyError);
+    }
   }
 
   /**
