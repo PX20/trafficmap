@@ -256,38 +256,9 @@ export function getIncidentIconProps(incident: any): { iconName: string, color: 
   }
   
   if (source === 'emergency') {
-    // QFES Emergency Services - check GroupedType FIRST for rescue/crash overrides
-    const groupedType = incident.GroupedType || incident.properties?.GroupedType;
-    if (groupedType) {
-      const type = String(groupedType).toLowerCase();
-      if (type.includes('rescue') || type.includes('crash')) {
-        return { iconName: 'Crash', color: 'text-orange-600' };
-      }
-    }
-    
-    // Fall back to subcategory-based icons
-    const subcategory = incident.subcategory || incident.properties?.subcategory || '';
-    
-    // Category-specific icons for QFES incidents
-    switch (subcategory) {
-      case 'Fire & Smoke':
-        return { iconName: 'Flame', color: 'text-red-600' };
-      case 'Rescue Operation':
-        return { iconName: 'Crash', color: 'text-orange-600' };
-      case 'Medical Emergencies':
-        return { iconName: 'Heart', color: 'text-green-600' };
-      case 'Chemical/Hazmat':
-        return { iconName: 'AlertTriangle', color: 'text-yellow-600' };
-      case 'Power/Gas Emergency':
-        return { iconName: 'Zap', color: 'text-purple-600' };
-      case 'Storm/SES':
-        return { iconName: 'CloudLightning', color: 'text-blue-600' };
-      case 'Public Safety':
-        return { iconName: 'Shield', color: 'text-blue-600' };
-      default:
-        // Default QFES icon for unclassified emergencies
-        return { iconName: 'Siren', color: 'text-red-600' };
-    }
+    // QFES Emergency Services - Single icon type for ALL emergency incidents
+    // This keeps the map clean and easy to understand
+    return { iconName: 'Siren', color: 'text-red-600' };
   }
   
   if (source === 'user') {

@@ -5,6 +5,7 @@ import { setupAuth } from "./auth";
 import { isAuthenticated, setupAuth as setupReplitAuth } from "./replitAuth";
 import { initializeAgencyAccounts } from "./init-agency-accounts";
 import { startTMRPostsIngestion } from "./tmr-posts-ingestion";
+import { startQFESPostsIngestion } from "./qfes-posts-ingestion";
 import webpush from "web-push";
 import Stripe from "stripe";
 import { insertIncidentSchema, insertCommentSchema, insertConversationSchema, insertMessageSchema, insertNotificationSchema, insertIncidentCommentSchema, type SafeUser, categories, subcategories } from "@shared/schema";
@@ -609,6 +610,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.log('✅ TMR Posts Ingestion service started');
   } catch (error) {
     console.error('⚠️ Warning: TMR Posts Ingestion failed to start:', error);
+    // Don't crash - server can still function without this
+  }
+  
+  // Start QFES emergency posts ingestion (5-minute polling)
+  try {
+    startQFESPostsIngestion();
+    console.log('✅ QFES Posts Ingestion service started');
+  } catch (error) {
+    console.error('⚠️ Warning: QFES Posts Ingestion failed to start:', error);
     // Don't crash - server can still function without this
   }
   
