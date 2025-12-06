@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { TrafficMap } from "@/components/map/traffic-map";
 import { SimpleFilterSidebar } from "@/components/map/simple-filter-sidebar";
 import { IncidentReportForm } from "@/components/incident-report-form";
-import { QuickProximityFilter } from "@/components/quick-proximity-filter";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -408,17 +407,6 @@ export default function Home() {
       <main className={`absolute top-[6.5rem] right-0 bottom-0 left-0 transition-all duration-300 ${
         sidebarOpen && !isMobile ? 'left-80' : 'left-0'
       }`}>
-        
-        {/* Quick Proximity Filter - Floating on Map */}
-        <div className="absolute top-4 right-4 z-10">
-          <QuickProximityFilter
-            distanceFilter={filters.distanceFilter}
-            hasLocation={!!filters.homeLocation}
-            onDistanceChange={(distance) => handleFilterChange('distanceFilter', distance)}
-            variant="default"
-          />
-        </div>
-        
         <TrafficMap 
           filters={filters}
           onEventSelect={(incident) => navigateToIncident(incident, setLocation)}
