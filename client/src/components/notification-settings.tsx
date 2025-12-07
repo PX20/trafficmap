@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { usePushNotifications } from '@/hooks/use-push-notifications';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -37,24 +37,40 @@ export function NotificationSettings() {
   const [enabledCategories, setEnabledCategories] = useState<string[]>(
     NOTIFICATION_CATEGORIES.map(c => c.id)
   );
+  const [hasInitialized, setHasInitialized] = useState(false);
+  const pendingUpdateRef = useRef<string[] | null>(null);
 
   useEffect(() => {
     if (user?.notificationCategories && Array.isArray(user.notificationCategories)) {
-      setEnabledCategories(user.notificationCategories as string[]);
+      if (pendingUpdateRef.current === null) {
+        setEnabledCategories(user.notificationCategories as string[]);
+      }
+      if (!hasInitialized) {
+        setHasInitialized(true);
+      }
     }
-  }, [user?.notificationCategories]);
+  }, [user?.notificationCategories, hasInitialized]);
 
   const savePreferencesMutation = useMutation({
     mutationFn: async (categories: string[]) => {
+      pendingUpdateRef.current = categories;
       const response = await apiRequest('PATCH', '/api/user/notification-preferences', {
         notificationCategories: categories
       });
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      if (data?.notificationCategories) {
+        setEnabledCategories(data.notificationCategories as string[]);
+      }
+      pendingUpdateRef.current = null;
       queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
     },
     onError: () => {
+      if (user?.notificationCategories && Array.isArray(user.notificationCategories)) {
+        setEnabledCategories(user.notificationCategories as string[]);
+      }
+      pendingUpdateRef.current = null;
       toast({
         title: 'Error',
         description: 'Failed to save preferences.',
@@ -64,6 +80,8 @@ export function NotificationSettings() {
   });
 
   const handleCategoryToggle = (categoryId: string) => {
+    if (savePreferencesMutation.isPending) return;
+    
     const newCategories = enabledCategories.includes(categoryId)
       ? enabledCategories.filter(id => id !== categoryId)
       : [...enabledCategories, categoryId];
