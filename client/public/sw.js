@@ -1,5 +1,5 @@
-// Service Worker for Push Notifications
-const CACHE_NAME = 'safety-app-v1';
+// Service Worker for Push Notifications - Community Connect Australia
+const CACHE_NAME = 'community-connect-v2';
 
 // Install event - Cache essential resources
 self.addEventListener('install', (event) => {
@@ -31,16 +31,15 @@ self.addEventListener('push', (event) => {
     tag: data.tag || 'safety-incident',
     renotify: true,
     requireInteraction: false,
+    vibrate: [200, 100, 200],
     actions: [
       {
         action: 'view',
-        title: 'View Details',
-        icon: '/action-view.png'
+        title: 'View Details'
       },
       {
         action: 'dismiss',
-        title: 'Dismiss',
-        icon: '/action-dismiss.png'
+        title: 'Dismiss'
       }
     ],
     data: {
@@ -52,7 +51,7 @@ self.addEventListener('push', (event) => {
 
   event.waitUntil(
     self.registration.showNotification(
-      data.title || 'Safety Alert',
+      data.title || 'Community Connect',
       options
     )
   );
@@ -69,7 +68,7 @@ self.addEventListener('notificationclick', (event) => {
   }
 
   // Default action or 'view' action - open the app
-  const urlToOpen = event.notification.data.url || '/';
+  const urlToOpen = event.notification.data?.url || '/';
   
   event.waitUntil(
     self.clients.matchAll({
@@ -107,7 +106,6 @@ async function syncIncidentReports() {
     
     if (pendingReports) {
       const reports = await pendingReports.json();
-      // Process pending reports...
       console.log('Syncing pending incident reports:', reports);
     }
   } catch (error) {
