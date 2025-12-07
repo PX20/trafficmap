@@ -189,13 +189,15 @@ export function PostCard({ post, onCommentClick }: PostCardProps) {
           </span>
         </div>
 
-        {/* Post Content */}
-        <div className="px-3 sm:px-4 pb-3">
-          <h3 className="font-semibold text-foreground mb-1">{title}</h3>
-          {description && (
-            <p className="text-muted-foreground text-sm leading-relaxed">{description}</p>
-          )}
-        </div>
+        {/* Post Content - Clickable to open full post */}
+        <Link href={`/incident/${incidentId}`}>
+          <div className="px-3 sm:px-4 pb-3 cursor-pointer hover-elevate active-elevate-2 rounded-sm">
+            <h3 className="font-semibold text-foreground mb-1">{title}</h3>
+            {description && (
+              <p className="text-muted-foreground text-sm leading-relaxed line-clamp-3">{description}</p>
+            )}
+          </div>
+        </Link>
 
         {/* Post Image */}
         {photoUrl && (
