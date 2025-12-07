@@ -15,7 +15,7 @@
 import { storage } from "./storage";
 import { SYSTEM_USER_IDS, type InsertPost } from "@shared/schema";
 import { CATEGORY_UUIDS, SUBCATEGORY_UUIDS } from "./utils/category-mapping";
-import { broadcastPostNotifications } from "./notification-service";
+import { broadcastPostNotifications, broadcastPostUpdateNotifications } from "./notification-service";
 
 // ============================================================================
 // CONFIGURATION
@@ -369,9 +369,12 @@ class TMRPostsIngestionEngine {
           // Update existing post if status changed or has significant changes
           const existingProps = existingPost.properties as any;
           const existingStatus = existingProps?.tmrStatus || existingPost.status;
+          const statusChanged = event.status !== existingStatus;
+          const impactChanged = this.hasSignificantChanges(event, existingProps);
           
-          if (event.status !== existingStatus || this.hasSignificantChanges(event, existingProps)) {
-            await this.updatePost(existingPost.id, event);
+          if (statusChanged || impactChanged) {
+            // Pass whether status actually changed to control notifications
+            await this.updatePost(existingPost.id, event, statusChanged);
             updated++;
           } else {
             skipped++; // No changes needed
@@ -462,10 +465,11 @@ class TMRPostsIngestionEngine {
   }
 
   /**
-   * Update existing post with new TMR data
+   * Update existing post with new TMR data and optionally notify eligible users
+   * @param statusChanged - Only send notifications when status actually changed
    */
-  private async updatePost(postId: string, event: TMREvent): Promise<void> {
-    await storage.updatePost(postId, {
+  private async updatePost(postId: string, event: TMREvent, statusChanged: boolean = false): Promise<void> {
+    const updatedPost = await storage.updatePost(postId, {
       description: event.description || `Traffic event reported by Transport and Main Roads Queensland.`,
       status: this.mapTMRStatus(event.status),
       properties: {
@@ -481,6 +485,27 @@ class TMRPostsIngestionEngine {
         iconType: 'traffic'
       }
     });
+    
+    // Only send notifications when status actually changed (not just metadata updates)
+    if (updatedPost && statusChanged) {
+      try {
+        await broadcastPostUpdateNotifications(
+          {
+            id: updatedPost.id,
+            title: updatedPost.title,
+            categoryId: updatedPost.categoryId,
+            centroidLat: updatedPost.centroidLat,
+            centroidLng: updatedPost.centroidLng,
+            userId: updatedPost.userId,
+            source: 'tmr'
+          },
+          'Transport and Main Roads QLD',
+          'status_update'
+        );
+      } catch (notifyError) {
+        console.error('[TMR Posts] Failed to send update notifications:', notifyError);
+      }
+    }
   }
 
   /**

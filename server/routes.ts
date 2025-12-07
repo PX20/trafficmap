@@ -6,6 +6,7 @@ import { isAuthenticated, setupAuth as setupReplitAuth } from "./replitAuth";
 import { initializeAgencyAccounts } from "./init-agency-accounts";
 import { startTMRPostsIngestion } from "./tmr-posts-ingestion";
 import { startQFESPostsIngestion } from "./qfes-posts-ingestion";
+import { backfillNotificationsForUser } from "./notification-service";
 import webpush from "web-push";
 import Stripe from "stripe";
 import { insertIncidentSchema, insertCommentSchema, insertConversationSchema, insertMessageSchema, insertNotificationSchema, insertIncidentCommentSchema, type SafeUser, categories, subcategories } from "@shared/schema";
@@ -1214,6 +1215,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Support both OAuth and local authentication
       const userId = (req.user as any).claims?.sub || (req.user as any).id;
+      
+      // Get existing user to check for location changes
+      const existingUser = await storage.getUser(userId);
+      const oldLat = existingUser?.preferredLocationLat;
+      const oldLng = existingUser?.preferredLocationLng;
+      
       const updatedUser = await storage.updateUserProfile(userId, preferences);
       
       if (!updatedUser) {
@@ -1223,6 +1230,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Clear user cache so next auth request gets fresh data with location
       if ((app as any).clearUserCache) {
         (app as any).clearUserCache(userId);
+      }
+      
+      // Backfill notifications when location changes and notifications are enabled
+      const newLat = updatedUser.preferredLocationLat;
+      const newLng = updatedUser.preferredLocationLng;
+      const locationChanged = (newLat !== oldLat || newLng !== oldLng);
+      
+      // Validate coordinates are finite numbers before backfilling
+      const hasValidCoordinates = (
+        typeof newLat === 'number' && Number.isFinite(newLat) &&
+        typeof newLng === 'number' && Number.isFinite(newLng)
+      );
+      
+      if (locationChanged && updatedUser.notificationsEnabled && hasValidCoordinates) {
+        const radiusKm = parseInt((updatedUser.notificationRadius || '10km').replace('km', ''));
+        
+        // Trigger backfill asynchronously (don't block the response)
+        backfillNotificationsForUser(
+          userId,
+          newLat,
+          newLng,
+          radiusKm,
+          24 // Last 24 hours of posts
+        ).then(count => {
+          console.log(`[Routes] Backfilled ${count} notifications for user ${userId} after location change`);
+        }).catch(err => {
+          console.error(`[Routes] Backfill failed for user ${userId}:`, err);
+        });
       }
       
       res.json(updatedUser);
@@ -1243,6 +1278,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Support both OAuth and local authentication
       const userId = (req.user as any).claims?.sub || (req.user as any).id;
+      
+      // Get existing user to check for preference changes
+      const existingUser = await storage.getUser(userId);
+      const wasEnabled = existingUser?.notificationsEnabled ?? false;
+      const oldRadius = existingUser?.notificationRadius || '10km';
+      
       const updatedUser = await storage.updateUserProfile(userId, preferences);
       
       if (!updatedUser) {
@@ -1252,6 +1293,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Clear user cache so next auth request gets fresh data
       if ((app as any).clearUserCache) {
         (app as any).clearUserCache(userId);
+      }
+      
+      // Backfill notifications when enabling or changing radius/categories
+      const nowEnabled = updatedUser.notificationsEnabled ?? false;
+      const newRadius = updatedUser.notificationRadius || '10km';
+      const shouldBackfill = (
+        (nowEnabled && !wasEnabled) || // Just enabled
+        (nowEnabled && newRadius !== oldRadius) // Radius changed while enabled
+      );
+      
+      // Validate coordinates are finite numbers before backfilling
+      const backfillLat = updatedUser.preferredLocationLat;
+      const backfillLng = updatedUser.preferredLocationLng;
+      const hasValidBackfillCoords = (
+        typeof backfillLat === 'number' && Number.isFinite(backfillLat) &&
+        typeof backfillLng === 'number' && Number.isFinite(backfillLng)
+      );
+      
+      if (shouldBackfill && hasValidBackfillCoords) {
+        // Parse radius to km
+        const radiusKm = parseInt(newRadius.replace('km', ''));
+        
+        // Trigger backfill asynchronously (don't block the response)
+        backfillNotificationsForUser(
+          userId,
+          backfillLat,
+          backfillLng,
+          radiusKm,
+          24 // Last 24 hours of posts
+        ).then(count => {
+          console.log(`[Routes] Backfilled ${count} notifications for user ${userId}`);
+        }).catch(err => {
+          console.error(`[Routes] Backfill failed for user ${userId}:`, err);
+        });
       }
       
       res.json(updatedUser);

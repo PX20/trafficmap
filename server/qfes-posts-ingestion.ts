@@ -15,7 +15,7 @@
 import { storage } from "./storage";
 import { SYSTEM_USER_IDS, type InsertPost } from "@shared/schema";
 import { CATEGORY_UUIDS, SUBCATEGORY_UUIDS } from "./utils/category-mapping";
-import { broadcastPostNotifications } from "./notification-service";
+import { broadcastPostNotifications, broadcastPostUpdateNotifications } from "./notification-service";
 
 // ============================================================================
 // CONFIGURATION
@@ -296,7 +296,8 @@ class QFESPostsIngestionEngine {
           const existingStatus = existingProps?.qfesStatus || existingPost.status;
           
           if (incident.status !== existingStatus) {
-            await this.updatePost(existingPost.id, incident);
+            // Status actually changed - pass true to trigger notifications
+            await this.updatePost(existingPost.id, incident, true);
             updated++;
           } else {
             skipped++; // No changes needed
@@ -373,13 +374,14 @@ class QFESPostsIngestionEngine {
   }
 
   /**
-   * Update an existing post from QFES incident
+   * Update an existing post from QFES incident and optionally notify eligible users
+   * @param statusChanged - Only send notifications when status actually changed
    */
-  private async updatePost(postId: string, incident: QFESIncident): Promise<void> {
+  private async updatePost(postId: string, incident: QFESIncident, statusChanged: boolean = false): Promise<void> {
     // Refresh expiry time on update
     const expiresAt = new Date(Date.now() + TTL_HOURS * 60 * 60 * 1000);
     
-    await storage.updatePost(postId, {
+    const updatedPost = await storage.updatePost(postId, {
       title: incident.title,
       description: incident.description,
       status: this.mapQFESStatus(incident.status),
@@ -395,6 +397,27 @@ class QFESPostsIngestionEngine {
         iconType: 'emergency'
       }
     });
+    
+    // Only send notifications when status actually changed (not just metadata updates)
+    if (updatedPost && statusChanged) {
+      try {
+        await broadcastPostUpdateNotifications(
+          {
+            id: updatedPost.id,
+            title: updatedPost.title,
+            categoryId: updatedPost.categoryId,
+            centroidLat: updatedPost.centroidLat,
+            centroidLng: updatedPost.centroidLng,
+            userId: updatedPost.userId,
+            source: 'emergency'
+          },
+          'QLD Fire & Emergency Services',
+          'status_update'
+        );
+      } catch (notifyError) {
+        console.error('[QFES Posts] Failed to send update notifications:', notifyError);
+      }
+    }
   }
 
   /**

@@ -567,6 +567,29 @@ export type InsertPushSubscription = {
 };
 export type SelectPushSubscription = typeof pushSubscriptions.$inferSelect;
 
+// Notification delivery ledger - tracks which users have been notified about which posts
+// Prevents duplicate notifications and enables backfill for new users
+export const notificationDeliveries = pgTable("notification_deliveries", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  postId: varchar("post_id").notNull(),
+  reason: varchar("reason", { enum: ["new_post", "status_update", "severity_update", "backfill"] }).notNull(),
+  deliveredAt: timestamp("delivered_at").defaultNow(),
+  pushSent: boolean("push_sent").default(false), // Whether push notification was actually sent
+}, (table) => [
+  index("idx_notification_deliveries_user").on(table.userId),
+  index("idx_notification_deliveries_post").on(table.postId),
+  unique("unique_user_post_delivery").on(table.userId, table.postId),
+]);
+
+export type InsertNotificationDelivery = {
+  userId: string;
+  postId: string;
+  reason: "new_post" | "status_update" | "severity_update" | "backfill";
+  pushSent?: boolean;
+};
+export type SelectNotificationDelivery = typeof notificationDeliveries.$inferSelect;
+
 // Reports system for user-generated content moderation
 export const reports = pgTable("reports", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),

@@ -12,6 +12,7 @@ import {
   messages,
   notifications,
   pushSubscriptions,
+  notificationDeliveries,
   categories,
   subcategories,
   incidentFollowUps,
@@ -71,6 +72,7 @@ import {
   type InsertStagingEvent,
   type DataSource,
   type IngestDTO,
+  type InsertNotificationDelivery,
   adCampaigns,
   adViews,
   adClicks,
@@ -101,7 +103,7 @@ import {
   type SafeUser
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, or, ne, sql, inArray } from "drizzle-orm";
+import { eq, desc, and, or, ne, sql, inArray, gte, lte } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import bcrypt from "bcryptjs";
 import { spatialLookup, computeGeocellForIncident, type SpatialQuery, type SpatialQueryResult } from "./spatial-lookup";
@@ -278,6 +280,12 @@ export interface IStorage {
   savePushSubscription(subscription: { userId: string; endpoint: string; p256dh: string; auth: string }): Promise<void>;
   removePushSubscription(endpoint: string): Promise<void>;
   getPushSubscriptionsForUsers(userIds: string[]): Promise<Array<{ userId: string; endpoint: string; p256dh: string; auth: string }>>;
+  
+  // Notification delivery ledger operations
+  hasUserBeenNotifiedForPost(userId: string, postId: string): Promise<boolean>;
+  recordNotificationDelivery(delivery: InsertNotificationDelivery): Promise<void>;
+  getUsersNotNotifiedForPost(postId: string, userIds: string[]): Promise<string[]>;
+  getRecentActivePostsInRadius(lat: number, lng: number, radiusKm: number, maxAgeHours?: number): Promise<SelectPost[]>;
   
   // Category operations
   getCategories(): Promise<Category[]>;
@@ -1571,6 +1579,95 @@ export class DatabaseStorage implements IStorage {
       .where(inArray(pushSubscriptions.userId, userIds));
     
     return subscriptions;
+  }
+  
+  // Notification delivery ledger operations
+  async hasUserBeenNotifiedForPost(userId: string, postId: string): Promise<boolean> {
+    const existing = await db
+      .select({ id: notificationDeliveries.id })
+      .from(notificationDeliveries)
+      .where(
+        and(
+          eq(notificationDeliveries.userId, userId),
+          eq(notificationDeliveries.postId, postId)
+        )
+      )
+      .limit(1);
+    return existing.length > 0;
+  }
+  
+  async recordNotificationDelivery(delivery: InsertNotificationDelivery): Promise<void> {
+    await db
+      .insert(notificationDeliveries)
+      .values({
+        id: randomUUID(),
+        userId: delivery.userId,
+        postId: delivery.postId,
+        reason: delivery.reason,
+        pushSent: delivery.pushSent ?? false,
+        deliveredAt: new Date(),
+      })
+      .onConflictDoNothing(); // Ignore if already exists
+  }
+  
+  async getUsersNotNotifiedForPost(postId: string, userIds: string[]): Promise<string[]> {
+    if (userIds.length === 0) return [];
+    
+    // Get users who have already been notified for this post
+    const notified = await db
+      .select({ userId: notificationDeliveries.userId })
+      .from(notificationDeliveries)
+      .where(
+        and(
+          eq(notificationDeliveries.postId, postId),
+          inArray(notificationDeliveries.userId, userIds)
+        )
+      );
+    
+    const notifiedSet = new Set(notified.map(n => n.userId));
+    return userIds.filter(id => !notifiedSet.has(id));
+  }
+  
+  async getRecentActivePostsInRadius(lat: number, lng: number, radiusKm: number, maxAgeHours: number = 24): Promise<SelectPost[]> {
+    // Calculate the bounding box for initial filtering (rough approximation)
+    const latDelta = radiusKm / 111.0; // ~111km per degree latitude
+    const lngDelta = radiusKm / (111.0 * Math.cos(lat * Math.PI / 180));
+    
+    const minLat = lat - latDelta;
+    const maxLat = lat + latDelta;
+    const minLng = lng - lngDelta;
+    const maxLng = lng + lngDelta;
+    
+    const cutoffTime = new Date(Date.now() - maxAgeHours * 60 * 60 * 1000);
+    
+    const results = await db
+      .select()
+      .from(posts)
+      .where(
+        and(
+          eq(posts.status, 'active'),
+          gte(posts.createdAt, cutoffTime),
+          gte(posts.centroidLat, minLat),
+          lte(posts.centroidLat, maxLat),
+          gte(posts.centroidLng, minLng),
+          lte(posts.centroidLng, maxLng)
+        )
+      )
+      .orderBy(desc(posts.createdAt));
+    
+    // Filter by actual distance (Haversine)
+    return results.filter(post => {
+      if (!post.centroidLat || !post.centroidLng) return false;
+      const R = 6371; // Earth's radius in km
+      const dLat = (post.centroidLat - lat) * Math.PI / 180;
+      const dLon = (post.centroidLng - lng) * Math.PI / 180;
+      const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(lat * Math.PI / 180) * Math.cos(post.centroidLat * Math.PI / 180) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      const distance = R * c;
+      return distance <= radiusKm;
+    });
   }
   
   // Category operations
