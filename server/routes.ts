@@ -4409,11 +4409,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
           [Math.max(swLat, neLat), Math.max(swLng, neLng)]
         );
         
+        // Fetch user data for all posts
+        const userIds = Array.from(new Set(postsInArea.map(p => p.userId)));
+        const userMap = new Map<string, { firstName?: string | null; lastName?: string | null; displayName?: string | null; profileImageUrl?: string | null }>();
+        for (const uid of userIds) {
+          const user = await storage.getUser(uid);
+          if (user) {
+            userMap.set(uid, { firstName: user.firstName, lastName: user.lastName, displayName: user.displayName, profileImageUrl: user.profileImageUrl });
+          }
+        }
+        
         // Convert to GeoJSON - preserve actual source from post root level or properties
         result = {
           type: 'FeatureCollection' as const,
           features: postsInArea.map(post => {
             const postProps = post.properties as any || {};
+            const user = userMap.get(post.userId);
             // Read source from root level first (where it's stored), then fallback to properties
             const actualSource = post.source || postProps.source || 'user';
             const isTmrPost = actualSource === 'tmr';
@@ -4437,6 +4448,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 subcategoryId: post.subcategoryId,
                 status: post.status,
                 userId: post.userId,
+                userName: user?.displayName || `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'Anonymous',
+                userAvatar: user?.profileImageUrl || null,
+                reporterName: user?.displayName || `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'Anonymous',
+                reporterAvatar: user?.profileImageUrl || null,
                 reactionsCount: post.reactionsCount || 0,
                 commentsCount: post.commentsCount || 0,
                 createdAt: post.createdAt?.toISOString(),
@@ -4455,6 +4470,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // User-specific posts - preserve actual source from post root level or properties
       else if (userId) {
         const userPosts = await storage.getPostsByUser(userId as string);
+        
+        // Fetch user data for the post author
+        const postUser = await storage.getUser(userId as string);
+        const userData = postUser ? { 
+          firstName: postUser.firstName, 
+          lastName: postUser.lastName, 
+          displayName: postUser.displayName, 
+          profileImageUrl: postUser.profileImageUrl 
+        } : null;
+        
         result = {
           type: 'FeatureCollection' as const,
           features: userPosts.map(post => {
@@ -4482,6 +4507,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 subcategoryId: post.subcategoryId,
                 status: post.status,
                 userId: post.userId,
+                userName: userData?.displayName || `${userData?.firstName || ''} ${userData?.lastName || ''}`.trim() || 'Anonymous',
+                userAvatar: userData?.profileImageUrl || null,
+                reporterName: userData?.displayName || `${userData?.firstName || ''} ${userData?.lastName || ''}`.trim() || 'Anonymous',
+                reporterAvatar: userData?.profileImageUrl || null,
                 reactionsCount: post.reactionsCount || 0,
                 commentsCount: post.commentsCount || 0,
                 createdAt: post.createdAt?.toISOString(),

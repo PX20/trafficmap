@@ -696,14 +696,15 @@ export class DatabaseStorage implements IStorage {
     
     // Get user info for attribution
     const userIds = Array.from(new Set(allPosts.map(p => p.userId)));
-    const userMap = new Map<string, { firstName?: string | null; lastName?: string | null; displayName?: string | null }>();
+    const userMap = new Map<string, { firstName?: string | null; lastName?: string | null; displayName?: string | null; profileImageUrl?: string | null }>();
     
     if (userIds.length > 0) {
       const usersData = await db.select({
         id: users.id,
         firstName: users.firstName,
         lastName: users.lastName,
-        displayName: users.displayName
+        displayName: users.displayName,
+        profileImageUrl: users.profileImageUrl
       }).from(users).where(inArray(users.id, userIds));
       usersData.forEach(u => userMap.set(u.id, u));
     }
@@ -743,6 +744,8 @@ export class DatabaseStorage implements IStorage {
           userId: post.userId,
           userName: user?.displayName || `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'Anonymous',
           reporterName: user?.displayName || `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'Anonymous',
+          userAvatar: user?.profileImageUrl || null,
+          reporterAvatar: user?.profileImageUrl || null,
           reactionsCount: post.reactionsCount || 0,
           commentsCount: post.commentsCount || 0,
           createdAt: post.createdAt?.toISOString(),
