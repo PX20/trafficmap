@@ -190,10 +190,10 @@ export default function Feed() {
 
   const menuItems = [
     { icon: User, label: "My Profile", href: "/profile" },
-    { icon: MapPin, label: "My Location", href: "/location" },
+    { icon: MapPin, label: "My Location", href: "/profile" },
     { icon: Bookmark, label: "Saved Posts", href: "/saved" },
     { icon: Heart, label: "My Reactions", href: "/reactions" },
-    { icon: Settings, label: "Preferences", href: "/settings" },
+    { icon: Settings, label: "Preferences", href: "/profile" },
     { icon: Shield, label: "Privacy", href: "/privacy" },
     { icon: HelpCircle, label: "Help & Support", href: "/help" },
   ];
@@ -263,7 +263,7 @@ export default function Feed() {
                 <nav className="p-2">
                   {menuItems.map((item) => (
                     <Link 
-                      key={item.href} 
+                      key={item.label} 
                       href={item.href}
                       onClick={() => setMenuOpen(false)}
                       data-testid={`link-menu-${item.label.toLowerCase().replace(/\s+/g, '-')}`}

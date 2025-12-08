@@ -636,6 +636,21 @@ export const postReactions = pgTable("post_reactions", {
   unique("unique_user_incident_reaction").on(table.userId, table.incidentId),
 ]);
 
+// Saved posts (bookmarks) - User's saved/bookmarked posts
+export const savedPosts = pgTable("saved_posts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  postId: varchar("post_id").notNull(), // References posts.id
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_saved_posts_user").on(table.userId),
+  index("idx_saved_posts_post").on(table.postId),
+  unique("unique_user_saved_post").on(table.userId, table.postId),
+]);
+
+export type SavedPost = typeof savedPosts.$inferSelect;
+export type InsertSavedPost = typeof savedPosts.$inferInsert;
+
 // Stories - "Happening Now" time-limited posts that expire after 24 hours
 export const stories = pgTable("stories", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),

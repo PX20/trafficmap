@@ -92,3 +92,24 @@ The following changes were made to address intermittent 500 errors on mobile:
 2. `isServerReady = true` is set before deferred tasks
 3. Background tasks run in sequence with delays to prevent connection pool exhaustion
 4. Ingestion services have internal guards to prevent double-starts
+
+### Sidebar Menu & User Features (December 2024)
+The sidebar menu provides access to:
+- **My Profile**: User profile settings (location, notifications, preferences)
+- **My Location**: Redirects to Profile where location settings exist
+- **Saved Posts**: Posts bookmarked by the user (requires authentication)
+- **My Reactions**: Posts the user has reacted to (requires authentication)
+- **Preferences**: Redirects to Profile where notification/display settings exist
+- **Privacy**: Static privacy policy page (accessible without login)
+- **Help & Support**: FAQ and contact information (accessible without login)
+
+### Database Tables for User Features
+- **savedPosts**: User bookmarks with unique(userId, postId) constraint
+- **postReactions**: User reactions with support for multiple reaction types
+
+### API Endpoints for User Features
+- **GET /api/saved-posts**: Get user's saved posts
+- **POST /api/posts/:postId/save**: Save a post
+- **DELETE /api/posts/:postId/save**: Unsave a post
+- **GET /api/posts/:postId/saved**: Check if a post is saved
+- **GET /api/my-reactions**: Get posts the user has reacted to

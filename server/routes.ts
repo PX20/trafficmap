@@ -5102,6 +5102,130 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ============================================================================
+  // MY REACTIONS API - Posts the user has reacted to
+  // ============================================================================
+
+  app.get('/api/my-reactions', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id || req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+
+      const posts = await storage.getPostsUserReactedTo(userId);
+      
+      // Enrich posts with user and category data
+      const enrichedPosts = await Promise.all(posts.map(async (post) => {
+        const user = await storage.getUser(post.userId);
+        const category = post.categoryId ? await storage.getCategory(post.categoryId) : null;
+        const subcategory = post.subcategoryId ? await storage.getSubcategory(post.subcategoryId) : null;
+        
+        return {
+          ...post,
+          userName: user?.displayName || user?.firstName || 'Anonymous',
+          userAvatar: user?.profileImageUrl,
+          categoryName: category?.name,
+          categoryColor: category?.color,
+          subcategoryName: subcategory?.name,
+        };
+      }));
+
+      res.json(enrichedPosts);
+    } catch (error) {
+      console.error('Error getting my reactions:', error);
+      res.status(500).json({ error: 'Failed to get reactions' });
+    }
+  });
+
+  // ============================================================================
+  // SAVED POSTS API - User bookmarks/saved posts
+  // ============================================================================
+
+  // Get user's saved posts
+  app.get('/api/saved-posts', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id || req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+
+      const posts = await storage.getSavedPosts(userId);
+      
+      // Enrich posts with user and category data
+      const enrichedPosts = await Promise.all(posts.map(async (post) => {
+        const user = await storage.getUser(post.userId);
+        const category = post.categoryId ? await storage.getCategory(post.categoryId) : null;
+        const subcategory = post.subcategoryId ? await storage.getSubcategory(post.subcategoryId) : null;
+        
+        return {
+          ...post,
+          userName: user?.displayName || user?.firstName || 'Anonymous',
+          userAvatar: user?.profileImageUrl,
+          categoryName: category?.name,
+          categoryColor: category?.color,
+          subcategoryName: subcategory?.name,
+        };
+      }));
+
+      res.json(enrichedPosts);
+    } catch (error) {
+      console.error('Error getting saved posts:', error);
+      res.status(500).json({ error: 'Failed to get saved posts' });
+    }
+  });
+
+  // Check if a post is saved
+  app.get('/api/posts/:postId/saved', isAuthenticated, async (req: any, res) => {
+    try {
+      const { postId } = req.params;
+      const userId = req.user?.id || req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+
+      const isSaved = await storage.isPostSaved(userId, postId);
+      res.json({ saved: isSaved });
+    } catch (error) {
+      console.error('Error checking saved status:', error);
+      res.status(500).json({ error: 'Failed to check saved status' });
+    }
+  });
+
+  // Save a post
+  app.post('/api/posts/:postId/save', isAuthenticated, async (req: any, res) => {
+    try {
+      const { postId } = req.params;
+      const userId = req.user?.id || req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+
+      const saved = await storage.savePost(userId, postId);
+      res.json({ success: true, saved });
+    } catch (error) {
+      console.error('Error saving post:', error);
+      res.status(500).json({ error: 'Failed to save post' });
+    }
+  });
+
+  // Unsave a post
+  app.delete('/api/posts/:postId/save', isAuthenticated, async (req: any, res) => {
+    try {
+      const { postId } = req.params;
+      const userId = req.user?.id || req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+
+      const removed = await storage.unsavePost(userId, postId);
+      res.json({ success: true, removed });
+    } catch (error) {
+      console.error('Error unsaving post:', error);
+      res.status(500).json({ error: 'Failed to unsave post' });
+    }
+  });
+
+  // ============================================================================
   // STORIES API - "Happening Now" time-limited posts
   // ============================================================================
 

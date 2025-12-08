@@ -23,6 +23,10 @@ import EditAd from "@/pages/edit-ad";
 import EditIncident from "@/pages/edit-incident";
 import IncidentDetail from "@/pages/incident-detail";
 import Create from "@/pages/create";
+import SavedPosts from "@/pages/saved-posts";
+import MyReactions from "@/pages/my-reactions";
+import Privacy from "@/pages/privacy";
+import Help from "@/pages/help";
 import { TermsAndConditionsModal } from "@/components/terms-and-conditions-modal";
 import { OnboardingWizard } from "@/components/onboarding-wizard";
 
@@ -95,6 +99,8 @@ function Router() {
     return (
       <Switch>
         <Route path="/login" component={Login} />
+        <Route path="/privacy" component={Privacy} />
+        <Route path="/help" component={Help} />
         <Route path="/" component={AuthPage} />
         <Route component={AuthPage} />
       </Switch>
@@ -143,6 +149,10 @@ function Router() {
       case '/notifications': return <Notifications />;
       case '/admin': return <AdminDashboard />;
       case '/login': return <Login />;
+      case '/saved': return <SavedPosts />;
+      case '/reactions': return <MyReactions />;
+      case '/privacy': return <Privacy />;
+      case '/help': return <Help />;
       default: return <Feed />; // Default to Feed
     }
   };

@@ -18,6 +18,7 @@ import {
   incidentFollowUps,
   reports,
   postReactions,
+  savedPosts,
   stories,
   storyViews,
   userBadges,
@@ -63,6 +64,7 @@ import {
   type AdClick,
   type InsertAdClick,
   type PostReaction,
+  type SavedPost,
   type Story,
   type StoryView,
   type UserBadge,
@@ -2278,6 +2280,89 @@ export class DatabaseStorage implements IStorage {
         eq(postReactions.userId, userId)
       ));
     return (result.rowCount ?? 0) > 0;
+  }
+
+  // Get posts that a user has reacted to (for My Reactions feature)
+  async getPostsUserReactedTo(userId: string): Promise<SelectPost[]> {
+    const userReactions = await db
+      .select({ incidentId: postReactions.incidentId })
+      .from(postReactions)
+      .where(eq(postReactions.userId, userId))
+      .orderBy(desc(postReactions.createdAt));
+    
+    if (userReactions.length === 0) return [];
+    
+    const postIds = userReactions.map(r => r.incidentId);
+    const result = await db
+      .select()
+      .from(posts)
+      .where(inArray(posts.id, postIds))
+      .orderBy(desc(posts.createdAt));
+    return result;
+  }
+
+  // ============================================================================
+  // SAVED POSTS - User bookmarks/saved posts
+  // ============================================================================
+
+  async getSavedPosts(userId: string): Promise<SelectPost[]> {
+    const saved = await db
+      .select({ postId: savedPosts.postId })
+      .from(savedPosts)
+      .where(eq(savedPosts.userId, userId))
+      .orderBy(desc(savedPosts.createdAt));
+    
+    if (saved.length === 0) return [];
+    
+    const postIds = saved.map(s => s.postId);
+    const result = await db
+      .select()
+      .from(posts)
+      .where(inArray(posts.id, postIds))
+      .orderBy(desc(posts.createdAt));
+    return result;
+  }
+
+  async savePost(userId: string, postId: string): Promise<SavedPost> {
+    const [saved] = await db
+      .insert(savedPosts)
+      .values({ userId, postId })
+      .onConflictDoNothing()
+      .returning();
+    
+    // If conflict (already saved), return the existing one
+    if (!saved) {
+      const [existing] = await db
+        .select()
+        .from(savedPosts)
+        .where(and(
+          eq(savedPosts.userId, userId),
+          eq(savedPosts.postId, postId)
+        ));
+      return existing;
+    }
+    return saved;
+  }
+
+  async unsavePost(userId: string, postId: string): Promise<boolean> {
+    const result = await db
+      .delete(savedPosts)
+      .where(and(
+        eq(savedPosts.userId, userId),
+        eq(savedPosts.postId, postId)
+      ));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  async isPostSaved(userId: string, postId: string): Promise<boolean> {
+    const result = await db
+      .select()
+      .from(savedPosts)
+      .where(and(
+        eq(savedPosts.userId, userId),
+        eq(savedPosts.postId, postId)
+      ));
+    return result.length > 0;
   }
 
   // ============================================================================
