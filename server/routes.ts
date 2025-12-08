@@ -5226,6 +5226,244 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ============================================================================
+  // CONTENT MODERATION REPORTS API - User reporting inappropriate content
+  // ============================================================================
+
+  // Create a new content report
+  app.post('/api/content-reports', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id || req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+
+      const { entityType, entityId, reason, description } = req.body;
+
+      if (!entityType || !entityId || !reason) {
+        return res.status(400).json({ error: 'Entity type, entity ID, and reason are required' });
+      }
+
+      const validReasons = ['spam', 'inappropriate', 'harassment', 'false_information', 'other'];
+      if (!validReasons.includes(reason)) {
+        return res.status(400).json({ error: 'Invalid reason' });
+      }
+
+      const report = await storage.createReport({
+        reporterId: userId,
+        entityType,
+        entityId,
+        reason,
+        description: description || null,
+      });
+
+      res.json({ success: true, report });
+    } catch (error) {
+      console.error('Error creating content report:', error);
+      res.status(500).json({ error: 'Failed to create report' });
+    }
+  });
+
+  // Get all content reports (admin only)
+  app.get('/api/content-reports', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id || req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user?.isAdmin) {
+        return res.status(403).json({ error: 'Admin access required' });
+      }
+
+      const status = req.query.status as string | undefined;
+      const reports = await storage.getReports(status);
+
+      // Enrich reports with reporter info
+      const enrichedReports = await Promise.all(reports.map(async (report) => {
+        const reporter = await storage.getUser(report.reporterId);
+        let entityInfo = null;
+
+        // Get info about the reported content
+        if (report.entityType === 'incident' || report.entityType === 'post') {
+          const post = await storage.getPost(report.entityId);
+          if (post) {
+            const postUser = await storage.getUser(post.userId);
+            entityInfo = {
+              title: post.title,
+              content: post.description,
+              userName: postUser?.displayName || postUser?.firstName || 'Unknown',
+            };
+          }
+        } else if (report.entityType === 'comment') {
+          const comment = await storage.getIncidentComment(report.entityId);
+          if (comment) {
+            const commentUser = await storage.getUser(comment.userId);
+            entityInfo = {
+              content: comment.content,
+              userName: commentUser?.displayName || commentUser?.firstName || 'Unknown',
+            };
+          }
+        }
+
+        return {
+          ...report,
+          reporterName: reporter?.displayName || reporter?.firstName || 'Unknown',
+          entityInfo,
+        };
+      }));
+
+      res.json(enrichedReports);
+    } catch (error) {
+      console.error('Error getting content reports:', error);
+      res.status(500).json({ error: 'Failed to get reports' });
+    }
+  });
+
+  // Update content report status (admin only)
+  app.put('/api/content-reports/:reportId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id || req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user?.isAdmin) {
+        return res.status(403).json({ error: 'Admin access required' });
+      }
+
+      const { reportId } = req.params;
+      const { status, moderatorNotes } = req.body;
+
+      const validStatuses = ['pending', 'reviewed', 'resolved', 'dismissed'];
+      if (!validStatuses.includes(status)) {
+        return res.status(400).json({ error: 'Invalid status' });
+      }
+
+      const report = await storage.updateReportStatus(reportId, status, userId, moderatorNotes);
+
+      if (!report) {
+        return res.status(404).json({ error: 'Report not found' });
+      }
+
+      res.json({ success: true, report });
+    } catch (error) {
+      console.error('Error updating content report:', error);
+      res.status(500).json({ error: 'Failed to update report' });
+    }
+  });
+
+  // ============================================================================
+  // FEEDBACK API - User suggestions and general feedback
+  // ============================================================================
+
+  // Create feedback submission
+  app.post('/api/feedback', async (req: any, res) => {
+    try {
+      const { category, subject, message, email } = req.body;
+
+      if (!category || !subject || !message) {
+        return res.status(400).json({ error: 'Category, subject, and message are required' });
+      }
+
+      const validCategories = ['suggestion', 'bug', 'question', 'other'];
+      if (!validCategories.includes(category)) {
+        return res.status(400).json({ error: 'Invalid category' });
+      }
+
+      // Get user ID if authenticated (optional)
+      let userId = null;
+      if (req.user) {
+        userId = req.user.id || req.user.claims?.sub;
+      }
+
+      const feedbackItem = await storage.createFeedback({
+        userId,
+        email: email || null,
+        category,
+        subject,
+        message,
+      });
+
+      res.json({ success: true, feedback: feedbackItem });
+    } catch (error) {
+      console.error('Error creating feedback:', error);
+      res.status(500).json({ error: 'Failed to submit feedback' });
+    }
+  });
+
+  // Get all feedback (admin only)
+  app.get('/api/feedback', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id || req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user?.isAdmin) {
+        return res.status(403).json({ error: 'Admin access required' });
+      }
+
+      const status = req.query.status as string | undefined;
+      const feedbackList = await storage.getFeedback(status);
+
+      // Enrich feedback with user info if available
+      const enrichedFeedback = await Promise.all(feedbackList.map(async (item) => {
+        let userName = 'Anonymous';
+        if (item.userId) {
+          const feedbackUser = await storage.getUser(item.userId);
+          userName = feedbackUser?.displayName || feedbackUser?.firstName || 'Anonymous';
+        }
+        return {
+          ...item,
+          userName,
+        };
+      }));
+
+      res.json(enrichedFeedback);
+    } catch (error) {
+      console.error('Error getting feedback:', error);
+      res.status(500).json({ error: 'Failed to get feedback' });
+    }
+  });
+
+  // Update feedback status (admin only)
+  app.put('/api/feedback/:feedbackId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id || req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user?.isAdmin) {
+        return res.status(403).json({ error: 'Admin access required' });
+      }
+
+      const { feedbackId } = req.params;
+      const { status, adminNotes } = req.body;
+
+      const validStatuses = ['new', 'read', 'responded', 'archived'];
+      if (!validStatuses.includes(status)) {
+        return res.status(400).json({ error: 'Invalid status' });
+      }
+
+      const feedbackItem = await storage.updateFeedbackStatus(feedbackId, status, adminNotes);
+
+      if (!feedbackItem) {
+        return res.status(404).json({ error: 'Feedback not found' });
+      }
+
+      res.json({ success: true, feedback: feedbackItem });
+    } catch (error) {
+      console.error('Error updating feedback:', error);
+      res.status(500).json({ error: 'Failed to update feedback' });
+    }
+  });
+
+  // ============================================================================
   // STORIES API - "Happening Now" time-limited posts
   // ============================================================================
 
