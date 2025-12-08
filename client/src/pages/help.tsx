@@ -1,10 +1,68 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { HelpCircle, ArrowLeft, MessageCircle, AlertTriangle, MapPin, Bell, Users } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { HelpCircle, ArrowLeft, MessageCircle, AlertTriangle, MapPin, Bell, Users, Send, CheckCircle, Lightbulb } from "lucide-react";
 import { Link } from "wouter";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Help() {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
+  const [feedbackCategory, setFeedbackCategory] = useState("");
+  const [feedbackSubject, setFeedbackSubject] = useState("");
+  const [feedbackMessage, setFeedbackMessage] = useState("");
+  const [feedbackEmail, setFeedbackEmail] = useState("");
+
+  const submitFeedbackMutation = useMutation({
+    mutationFn: async (data: { category: string; subject: string; message: string; email?: string }) => {
+      return apiRequest("POST", "/api/feedback", data);
+    },
+    onSuccess: () => {
+      setFeedbackSubmitted(true);
+      setFeedbackCategory("");
+      setFeedbackSubject("");
+      setFeedbackMessage("");
+      setFeedbackEmail("");
+      toast({
+        title: "Feedback Sent",
+        description: "Thank you for your feedback! We'll review it soon.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to submit feedback. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSubmitFeedback = () => {
+    if (!feedbackCategory || !feedbackSubject.trim() || !feedbackMessage.trim()) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in all required fields.",
+        variant: "destructive",
+      });
+      return;
+    }
+    submitFeedbackMutation.mutate({
+      category: feedbackCategory,
+      subject: feedbackSubject,
+      message: feedbackMessage,
+      email: feedbackEmail || undefined,
+    });
+  };
+
   const faqs = [
     {
       question: "How do I report an incident?",
@@ -108,6 +166,104 @@ export default function Help() {
                   </AccordionItem>
                 ))}
               </Accordion>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Lightbulb className="w-5 h-5 text-primary" />
+                Send Feedback or Suggestions
+              </CardTitle>
+              <CardDescription>
+                Help us improve Community Connect Australia with your ideas
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {feedbackSubmitted ? (
+                <div className="text-center py-6">
+                  <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-3" />
+                  <h3 className="font-semibold text-lg mb-1">Thank You!</h3>
+                  <p className="text-muted-foreground text-sm mb-4">
+                    Your feedback has been submitted successfully.
+                  </p>
+                  <Button
+                    variant="outline"
+                    onClick={() => setFeedbackSubmitted(false)}
+                    data-testid="button-send-more-feedback"
+                  >
+                    Send More Feedback
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="feedback-category">Category *</Label>
+                    <Select value={feedbackCategory} onValueChange={setFeedbackCategory}>
+                      <SelectTrigger id="feedback-category" data-testid="select-feedback-category">
+                        <SelectValue placeholder="Select a category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="suggestion">Feature Suggestion</SelectItem>
+                        <SelectItem value="bug">Bug Report</SelectItem>
+                        <SelectItem value="complaint">Complaint</SelectItem>
+                        <SelectItem value="question">Question</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="feedback-subject">Subject *</Label>
+                    <Input
+                      id="feedback-subject"
+                      placeholder="Brief summary of your feedback"
+                      value={feedbackSubject}
+                      onChange={(e) => setFeedbackSubject(e.target.value)}
+                      data-testid="input-feedback-subject"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="feedback-message">Message *</Label>
+                    <Textarea
+                      id="feedback-message"
+                      placeholder="Please describe your feedback in detail..."
+                      value={feedbackMessage}
+                      onChange={(e) => setFeedbackMessage(e.target.value)}
+                      rows={4}
+                      data-testid="textarea-feedback-message"
+                    />
+                  </div>
+
+                  {!user && (
+                    <div className="space-y-2">
+                      <Label htmlFor="feedback-email">Email (optional)</Label>
+                      <Input
+                        id="feedback-email"
+                        type="email"
+                        placeholder="your@email.com"
+                        value={feedbackEmail}
+                        onChange={(e) => setFeedbackEmail(e.target.value)}
+                        data-testid="input-feedback-email"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Provide your email if you'd like us to respond
+                      </p>
+                    </div>
+                  )}
+
+                  <Button
+                    onClick={handleSubmitFeedback}
+                    disabled={submitFeedbackMutation.isPending}
+                    className="w-full"
+                    data-testid="button-submit-feedback"
+                  >
+                    <Send className="w-4 h-4 mr-2" />
+                    {submitFeedbackMutation.isPending ? "Sending..." : "Submit Feedback"}
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
 

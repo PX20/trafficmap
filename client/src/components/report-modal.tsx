@@ -60,7 +60,7 @@ export function ReportModal({ isOpen, onClose, entityType, entityId, entityTitle
         title: "Report submitted",
         description: "Thank you for helping keep our community safe. We'll review your report.",
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/reports'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/content-reports'] });
       handleClose();
     },
     onError: (error) => {
