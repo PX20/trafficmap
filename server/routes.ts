@@ -583,6 +583,11 @@ async function broadcastPostNotifications(
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Handle favicon.ico requests - redirect to the PWA icon
+  app.get('/favicon.ico', (_req, res) => {
+    res.redirect(301, '/badge-72x72.png');
+  });
+  
   // Readiness check middleware - prevent requests during initialization
   app.use((req, res, next) => {
     // Allow healthcheck even during initialization
