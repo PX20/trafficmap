@@ -5272,7 +5272,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const user = await storage.getUser(userId);
-      if (!user?.isAdmin) {
+      if (!user || user.role !== 'admin') {
         return res.status(403).json({ error: 'Admin access required' });
       }
 
@@ -5296,7 +5296,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             };
           }
         } else if (report.entityType === 'comment') {
-          const comment = await storage.getIncidentComment(report.entityId);
+          const comments = await storage.getIncidentComments(report.entityId);
+          const comment = comments?.[0];
           if (comment) {
             const commentUser = await storage.getUser(comment.userId);
             entityInfo = {
@@ -5329,7 +5330,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const user = await storage.getUser(userId);
-      if (!user?.isAdmin) {
+      if (!user || user.role !== 'admin') {
         return res.status(403).json({ error: 'Admin access required' });
       }
 
@@ -5402,7 +5403,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const user = await storage.getUser(userId);
-      if (!user?.isAdmin) {
+      if (!user || user.role !== 'admin') {
         return res.status(403).json({ error: 'Admin access required' });
       }
 
@@ -5438,7 +5439,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const user = await storage.getUser(userId);
-      if (!user?.isAdmin) {
+      if (!user || user.role !== 'admin') {
         return res.status(403).json({ error: 'Admin access required' });
       }
 

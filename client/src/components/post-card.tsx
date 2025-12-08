@@ -4,6 +4,7 @@ import { Link } from "wouter";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { ReportModal } from "@/components/report-modal";
 import { 
   ThumbsUp, 
   MessageCircle, 
@@ -50,6 +51,7 @@ export function PostCard({ post, onCommentClick }: PostCardProps) {
   const { user } = useAuth();
   const [showReactions, setShowReactions] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
 
   const incidentId = post.id || post.properties?.id;
   const props = post.properties || {};
@@ -197,9 +199,15 @@ export function PostCard({ post, onCommentClick }: PostCardProps) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem>Save post</DropdownMenuItem>
-              <DropdownMenuItem>Hide post</DropdownMenuItem>
-              <DropdownMenuItem className="text-destructive">Report</DropdownMenuItem>
+              <DropdownMenuItem data-testid="menu-save-post">Save post</DropdownMenuItem>
+              <DropdownMenuItem data-testid="menu-hide-post">Hide post</DropdownMenuItem>
+              <DropdownMenuItem 
+                className="text-destructive" 
+                onClick={() => setShowReportModal(true)}
+                data-testid="menu-report-post"
+              >
+                Report
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -372,6 +380,14 @@ export function PostCard({ post, onCommentClick }: PostCardProps) {
           </div>
         </div>
       </CardContent>
+
+      <ReportModal
+        isOpen={showReportModal}
+        onClose={() => setShowReportModal(false)}
+        entityType="incident"
+        entityId={incidentId}
+        entityTitle={title}
+      />
     </Card>
   );
 }
