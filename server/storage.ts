@@ -17,6 +17,7 @@ import {
   subcategories,
   incidentFollowUps,
   reports,
+  feedback,
   postReactions,
   savedPosts,
   stories,
@@ -56,6 +57,8 @@ import {
   type IncidentFollowUp,
   type InsertIncidentFollowUp,
   type Report,
+  type Feedback,
+  type InsertFeedback,
   type InsertReport,
   type AdCampaign,
   type InsertAdCampaign,
@@ -1812,6 +1815,47 @@ export class DatabaseStorage implements IStorage {
         eq(reports.entityId, entityId)
       ))
       .orderBy(desc(reports.createdAt));
+  }
+
+  // ============================================================================
+  // FEEDBACK - User suggestions and general feedback to admin
+  // ============================================================================
+
+  async createFeedback(feedbackData: InsertFeedback): Promise<Feedback> {
+    const [created] = await db
+      .insert(feedback)
+      .values(feedbackData)
+      .returning();
+    return created;
+  }
+
+  async getFeedback(status?: string): Promise<Feedback[]> {
+    if (status) {
+      return await db
+        .select()
+        .from(feedback)
+        .where(eq(feedback.status, status))
+        .orderBy(desc(feedback.createdAt));
+    } else {
+      return await db
+        .select()
+        .from(feedback)
+        .orderBy(desc(feedback.createdAt));
+    }
+  }
+
+  async updateFeedbackStatus(feedbackId: string, status: string, adminNotes?: string): Promise<Feedback | undefined> {
+    const updateData: any = { status };
+    if (adminNotes !== undefined) {
+      updateData.adminNotes = adminNotes;
+    }
+
+    const [updated] = await db
+      .update(feedback)
+      .set(updateData)
+      .where(eq(feedback.id, feedbackId))
+      .returning();
+    return updated;
   }
 
   // Ad Campaign Operations

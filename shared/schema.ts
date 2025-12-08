@@ -605,6 +605,31 @@ export const reports = pgTable("reports", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Feedback system for user suggestions and general feedback to admin
+export const feedback = pgTable("feedback", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id"), // Optional - can be anonymous
+  email: varchar("email"), // Contact email (optional)
+  category: varchar("category").notNull(), // 'suggestion' | 'bug' | 'question' | 'other'
+  subject: varchar("subject").notNull(),
+  message: text("message").notNull(),
+  status: varchar("status").notNull().default('new'), // 'new' | 'read' | 'responded' | 'archived'
+  adminNotes: text("admin_notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_feedback_status").on(table.status),
+  index("idx_feedback_user").on(table.userId),
+]);
+
+export type Feedback = typeof feedback.$inferSelect;
+export type InsertFeedback = {
+  userId?: string;
+  email?: string;
+  category: string;
+  subject: string;
+  message: string;
+};
+
 // Incident comments for unified incident system - social media style commenting
 export const incidentComments = pgTable("incident_comments", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
