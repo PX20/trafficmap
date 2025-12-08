@@ -49,28 +49,40 @@ const reactionTypes = [
 export function PostCard({ post, onCommentClick }: PostCardProps) {
   const { user } = useAuth();
   const [showReactions, setShowReactions] = useState(false);
+  const [hasInteracted, setHasInteracted] = useState(false);
 
   const incidentId = post.id || post.properties?.id;
+  const props = post.properties || {};
   
+  // Use the reactionsCount from post data for initial display (avoids N+1 queries)
+  // Only fetch detailed reactions when user wants to interact
   const { data: reactionData } = useQuery({
     queryKey: ["/api/reactions", incidentId],
     queryFn: async () => {
       const res = await fetch(`/api/reactions/${incidentId}`);
-      if (!res.ok) return { count: 0, userReaction: null, reactions: {} };
+      if (!res.ok) return { count: props.reactionsCount || 0, userReaction: null, reactions: {} };
       return res.json();
     },
-    enabled: !!incidentId,
+    // Only fetch when user has interacted (hovered over reactions or wants to react)
+    enabled: !!incidentId && hasInteracted,
+    // Use stale data while fetching to prevent loading states
+    staleTime: 30000,
   });
 
-  const { data: commentCount = 0 } = useQuery({
+  // Use commentsCount from post data if available (avoids N+1 queries)
+  const postCommentCount = props.commentsCount || 0;
+  
+  const { data: commentCount = postCommentCount } = useQuery({
     queryKey: ["/api/incidents", incidentId, "comments-count"],
     queryFn: async () => {
       const res = await fetch(`/api/incidents/${incidentId}/comments-count`);
-      if (!res.ok) return 0;
+      if (!res.ok) return postCommentCount;
       const data = await res.json();
       return data.count || 0;
     },
-    enabled: !!incidentId,
+    // Only fetch detailed count when user has interacted
+    enabled: !!incidentId && hasInteracted,
+    staleTime: 30000,
   });
 
   const reactMutation = useMutation({
@@ -115,7 +127,6 @@ export function PostCard({ post, onCommentClick }: PostCardProps) {
     return date.toLocaleDateString();
   };
 
-  const props = post.properties || {};
   const title = props.title || "Community Update";
   const description = props.description || "";
   const location = props.location || props.locationDescription || "";
@@ -128,12 +139,23 @@ export function PostCard({ post, onCommentClick }: PostCardProps) {
   const posterId = props.userId || props.reporterId;
 
   const handleReaction = (type: string) => {
+    setHasInteracted(true);
+    // On mobile first tap, userReaction may not be loaded yet
+    // Server handles idempotency - if user already reacted, it will toggle/replace
     reactMutation.mutate(type);
     setShowReactions(false);
   };
+  
+  // For mobile: trigger interaction on touch start to preload reaction data
+  const handleInteractionStart = () => {
+    if (!hasInteracted) {
+      setHasInteracted(true);
+    }
+  };
 
+  // Use reactionData if fetched, otherwise fall back to post's reactionsCount
   const userReaction = reactionData?.userReaction;
-  const totalReactions = reactionData?.count || 0;
+  const totalReactions = reactionData?.count ?? props.reactionsCount ?? 0;
 
   return (
     <Card className="border-0 shadow-sm bg-card rounded-none sm:rounded-lg mb-2">
@@ -268,7 +290,11 @@ export function PostCard({ post, onCommentClick }: PostCardProps) {
                     "flex-1 gap-2 h-10 rounded-none",
                     userReaction && reactionTypes.find(r => r.type === userReaction)?.color
                   )}
-                  onMouseEnter={() => setShowReactions(true)}
+                  onMouseEnter={() => {
+                    setHasInteracted(true);
+                    setShowReactions(true);
+                  }}
+                  onTouchStart={handleInteractionStart}
                   onClick={() => handleReaction(userReaction ? "remove" : "like")}
                   data-testid="button-like"
                 >

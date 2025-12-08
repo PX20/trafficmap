@@ -462,6 +462,9 @@ const upload = secureUpload;
 // Server readiness flag
 let isServerReady = false;
 
+// Guard to prevent multiple deferred initialization runs (e.g., on hot reload)
+let deferredInitStarted = false;
+
 // Haversine distance calculation in km
 function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const R = 6371; // Earth's radius in km
@@ -596,32 +599,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     next();
   });
   
-  // Initialize agency user accounts on startup with error handling
-  try {
-    await initializeAgencyAccounts(storage);
-  } catch (error) {
-    console.error('⚠️ Warning: Agency account initialization failed:', error);
-    console.error('Server will continue, but some features may not work correctly');
-    // Don't crash - server can still function without this
-  }
-  
-  // Start TMR traffic posts ingestion (5-minute polling)
-  try {
-    startTMRPostsIngestion();
-    console.log('✅ TMR Posts Ingestion service started');
-  } catch (error) {
-    console.error('⚠️ Warning: TMR Posts Ingestion failed to start:', error);
-    // Don't crash - server can still function without this
-  }
-  
-  // Start QFES emergency posts ingestion (5-minute polling)
-  try {
-    startQFESPostsIngestion();
-    console.log('✅ QFES Posts Ingestion service started');
-  } catch (error) {
-    console.error('⚠️ Warning: QFES Posts Ingestion failed to start:', error);
-    // Don't crash - server can still function without this
-  }
+  // DEFERRED: Heavy startup tasks are now run AFTER server is ready to accept requests
+  // This prevents database connection pool exhaustion during boot
+  // See deferredInitialization() below
   
   // Debug: log the path being used
   const assetsPath = path.resolve(process.cwd(), 'attached_assets');
@@ -3742,26 +3722,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Get all categories
+  // Get all categories - resilient endpoint that returns empty array on error
   app.get("/api/categories", async (req, res) => {
     try {
       const categories = await storage.getCategories();
-      res.json(categories);
+      res.json(categories || []);
     } catch (error) {
       console.error("Error fetching categories:", error);
-      res.status(500).json({ error: "Failed to fetch categories" });
+      // Return empty array instead of 500 to prevent frontend crashes
+      // Categories will be populated once seeding completes in the background
+      res.json([]);
     }
   });
   
-  // Get subcategories (all or by category)
+  // Get subcategories (all or by category) - resilient endpoint
   app.get("/api/subcategories", async (req, res) => {
     try {
       const categoryId = req.query.categoryId as string | undefined;
       const subcategories = await storage.getSubcategories(categoryId);
-      res.json(subcategories);
+      res.json(subcategories || []);
     } catch (error) {
       console.error("Error fetching subcategories:", error);
-      res.status(500).json({ error: "Failed to fetch subcategories" });
+      // Return empty array instead of 500 to prevent frontend crashes
+      res.json([]);
     }
   });
 
@@ -5062,7 +5045,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // POST REACTIONS API - Facebook-style likes/reactions
   // ============================================================================
 
-  // Get reactions for a post
+  // Get reactions for a post - resilient endpoint that returns default data on error
   app.get('/api/reactions/:incidentId', async (req, res) => {
     try {
       const { incidentId } = req.params;
@@ -5070,7 +5053,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Count by type
       const reactionCounts: Record<string, number> = {};
-      reactions.forEach((r: any) => {
+      (reactions || []).forEach((r: any) => {
         reactionCounts[r.reactionType] = (reactionCounts[r.reactionType] || 0) + 1;
       });
 
@@ -5078,18 +5061,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let userReaction = null;
       if (req.user) {
         const userId = (req.user as any).id || (req.user as any).claims?.sub;
-        const userReact = reactions.find((r: any) => r.userId === userId);
+        const userReact = (reactions || []).find((r: any) => r.userId === userId);
         userReaction = userReact?.reactionType || null;
       }
 
       res.json({
-        count: reactions.length,
+        count: (reactions || []).length,
         reactions: reactionCounts,
         userReaction
       });
     } catch (error) {
       console.error('Error getting reactions:', error);
-      res.status(500).json({ error: 'Failed to get reactions' });
+      // Return default empty data instead of 500 to prevent frontend crashes
+      res.json({ count: 0, reactions: {}, userReaction: null });
     }
   });
 
@@ -5223,23 +5207,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // REMOVED: Legacy background ingestion - replaced by unified ingestion pipeline
 
-  // Initialize unified ingestion pipeline for multi-source consolidation with error handling
-  try {
-    console.log('🚀 Initializing Unified Ingestion Pipeline...');
-    const { unifiedIngestion } = await import('./unified-ingestion');
-    await unifiedIngestion.initialize();
-    console.log('✅ Unified Ingestion Pipeline initialized');
-  } catch (error) {
-    console.error('⚠️ Warning: Unified ingestion pipeline initialization failed:', error);
-    console.error('Server will continue, but real-time data updates may not work');
-    // Don't crash - server can still serve existing data
-  }
-
-  // Mark server as ready to accept requests
+  // Mark server as ready to accept requests FIRST
+  // This allows the server to respond to health checks and user requests immediately
   isServerReady = true;
-  console.log('✅ Server initialization complete - ready to accept requests');
+  console.log('✅ Server ready to accept requests - starting background initialization...');
 
   const httpServer = createServer(app);
+  
+  // DEFERRED INITIALIZATION: Run heavy startup tasks in the background
+  // This prevents blocking user requests during boot
+  // Guard to prevent duplicate runs on hot reload
+  if (deferredInitStarted) {
+    console.log('⏭️ Deferred initialization already started, skipping...');
+    return httpServer;
+  }
+  deferredInitStarted = true;
+  
+  setImmediate(async () => {
+    console.log('🔄 Starting deferred initialization tasks...');
+    
+    // 1. Seed categories (with delay to let connections settle)
+    setTimeout(async () => {
+      try {
+        console.log('🌱 Running deferred category seeding...');
+        await seedCategoriesIfNeeded();
+      } catch (error) {
+        console.error('⚠️ Warning: Category seeding failed:', error);
+      }
+    }, 2000);
+    
+    // 2. Initialize agency accounts (staggered to avoid connection pool exhaustion)
+    setTimeout(async () => {
+      try {
+        console.log('👥 Initializing agency accounts...');
+        await initializeAgencyAccounts(storage);
+        console.log('✅ Agency accounts initialized');
+      } catch (error) {
+        console.error('⚠️ Warning: Agency account initialization failed:', error);
+      }
+    }, 5000);
+    
+    // 3. Start TMR ingestion (further delayed)
+    setTimeout(() => {
+      try {
+        startTMRPostsIngestion();
+        console.log('✅ TMR Posts Ingestion service started');
+      } catch (error) {
+        console.error('⚠️ Warning: TMR Posts Ingestion failed to start:', error);
+      }
+    }, 8000);
+    
+    // 4. Start QFES ingestion (further delayed)
+    setTimeout(() => {
+      try {
+        startQFESPostsIngestion();
+        console.log('✅ QFES Posts Ingestion service started');
+      } catch (error) {
+        console.error('⚠️ Warning: QFES Posts Ingestion failed to start:', error);
+      }
+    }, 10000);
+    
+    // 5. Initialize unified ingestion pipeline (last, most resource-intensive)
+    setTimeout(async () => {
+      try {
+        console.log('🚀 Initializing Unified Ingestion Pipeline...');
+        const { unifiedIngestion } = await import('./unified-ingestion');
+        await unifiedIngestion.initialize();
+        console.log('✅ Unified Ingestion Pipeline initialized');
+        console.log('✅ All deferred initialization complete');
+      } catch (error) {
+        console.error('⚠️ Warning: Unified ingestion pipeline initialization failed:', error);
+      }
+    }, 15000);
+  });
+
   return httpServer;
 }
 

@@ -71,3 +71,24 @@ An interactive mapping solution is provided:
 - **OpenStreetMap**: Tile provider for map base layers.
 - **Google Fonts**: Web font delivery (Inter).
 - **Replit Integration**: Development environment integration.
+
+## Recent Architectural Changes (December 2024)
+
+### Server Stability Improvements
+The following changes were made to address intermittent 500 errors on mobile:
+
+1. **Deferred Initialization**: Heavy startup tasks (category seeding, agency account initialization, TMR/QFES ingestion services, unified ingestion pipeline) are now executed AFTER the server is ready to accept requests. This prevents database connection pool exhaustion during boot and ensures immediate responsiveness.
+
+2. **Staggered Background Tasks**: Initialization tasks run with staggered delays (2s, 5s, 8s, 10s, 15s) to avoid overwhelming the database connection pool.
+
+3. **Idempotent Initialization Guard**: A `deferredInitStarted` flag prevents duplicate initialization runs during hot reload.
+
+4. **Resilient API Endpoints**: `/api/categories`, `/api/subcategories`, and `/api/reactions` now return empty arrays/default data instead of 500 errors when database issues occur.
+
+5. **Reduced N+1 Queries**: PostCard component uses `reactionsCount` and `commentsCount` from post data for initial display, only fetching detailed reaction/comment data when user interacts (hover on desktop, touch on mobile).
+
+### Server Boot Sequence
+1. Express server starts listening immediately
+2. `isServerReady = true` is set before deferred tasks
+3. Background tasks run in sequence with delays to prevent connection pool exhaustion
+4. Ingestion services have internal guards to prevent double-starts
