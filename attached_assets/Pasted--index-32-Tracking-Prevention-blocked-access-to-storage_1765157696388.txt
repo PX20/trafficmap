@@ -1,0 +1,137 @@
+(index):32  Tracking Prevention blocked access to storage for https://unpkg.com/leaflet@1.9.4/dist/leaflet.css.
+(index):32  Tracking Prevention blocked access to storage for https://unpkg.com/leaflet@1.9.4/dist/leaflet.css.
+(index):32  Tracking Prevention blocked access to storage for https://unpkg.com/leaflet@1.9.4/dist/leaflet.css.
+(index):32  Tracking Prevention blocked access to storage for https://unpkg.com/leaflet@1.9.4/dist/leaflet.css.
+(index):1  Mixed Content: The page at 'https://neighbour-app--pkingdom83.replit.app/' was loaded over HTTPS, but requested an insecure script 'http://replit.com.x.a29692d00bd6a043be09c5e0d51544edb221.43d7532e.id.opendns.com/s/malware.opendns.com/?X-OpenDNS-Session=aa51dc5c0ccc5aad4_a29692d00bd6a043be09c5e0d51544edb221_c567ad10a9c37b51c201a5cdcb0fa2f53529446c_server=nginx-proxy-https-a80bbde6437e.iproxy.syd&url=https://replit.com/public/js/replit-dev-banner.js%3FX-OpenDNS-Session=_644ffe320fd6d04417091b00b94c9b06633c9270f955_j2PDrVsJ_&proxy=y&prefs=1597504&tagging=0x110004214C4001C10000070070000080039F7000102000000000'. This request has been blocked; the content must be served over HTTPS.
+(index):1  <meta name="apple-mobile-web-app-capable" content="yes"> is deprecated. Please include <meta name="mobile-web-app-capable" content="yes">
+index-C27U0vt0.js:48   GET https://neighbour-app--pkingdom83.replit.app/api/notifications/unread-count 401 (Unauthorized)
+(anonymous) @ index-C27U0vt0.js:48
+o @ index-C27U0vt0.js:48
+P @ index-C27U0vt0.js:48
+start @ index-C27U0vt0.js:48
+fetch @ index-C27U0vt0.js:48
+bd @ index-C27U0vt0.js:48
+onSubscribe @ index-C27U0vt0.js:48
+subscribe @ index-C27U0vt0.js:48
+(anonymous) @ index-C27U0vt0.js:48
+D4 @ index-C27U0vt0.js:38
+Gg @ index-C27U0vt0.js:40
+vc @ index-C27U0vt0.js:40
+eB @ index-C27U0vt0.js:40
+Ta @ index-C27U0vt0.js:40
+jS @ index-C27U0vt0.js:40
+fa @ index-C27U0vt0.js:38
+(anonymous) @ index-C27U0vt0.js:40
+setTimeout
+YB @ index-C27U0vt0.js:48
+l @ index-C27U0vt0.js:48
+batch @ index-C27U0vt0.js:48
+Ei @ index-C27U0vt0.js:48
+setData @ index-C27U0vt0.js:48
+fetch @ index-C27U0vt0.js:48
+await in fetch
+bd @ index-C27U0vt0.js:48
+onSubscribe @ index-C27U0vt0.js:48
+subscribe @ index-C27U0vt0.js:48
+(anonymous) @ index-C27U0vt0.js:48
+D4 @ index-C27U0vt0.js:38
+Gg @ index-C27U0vt0.js:40
+vc @ index-C27U0vt0.js:40
+jS @ index-C27U0vt0.js:40
+fa @ index-C27U0vt0.js:38
+eB @ index-C27U0vt0.js:40
+Ta @ index-C27U0vt0.js:40
+g5 @ index-C27U0vt0.js:40
+T @ index-C27U0vt0.js:25
+Z @ index-C27U0vt0.js:25
+index-C27U0vt0.js:48   GET https://neighbour-app--pkingdom83.replit.app/api/notifications/unread-count 401 (Unauthorized)
+(anonymous) @ index-C27U0vt0.js:48
+o @ index-C27U0vt0.js:48
+P @ index-C27U0vt0.js:48
+(anonymous) @ index-C27U0vt0.js:48
+Promise.then
+(anonymous) @ index-C27U0vt0.js:48
+Promise.catch
+P @ index-C27U0vt0.js:48
+start @ index-C27U0vt0.js:48
+fetch @ index-C27U0vt0.js:48
+bd @ index-C27U0vt0.js:48
+onSubscribe @ index-C27U0vt0.js:48
+subscribe @ index-C27U0vt0.js:48
+(anonymous) @ index-C27U0vt0.js:48
+D4 @ index-C27U0vt0.js:38
+Gg @ index-C27U0vt0.js:40
+vc @ index-C27U0vt0.js:40
+eB @ index-C27U0vt0.js:40
+Ta @ index-C27U0vt0.js:40
+jS @ index-C27U0vt0.js:40
+fa @ index-C27U0vt0.js:38
+(anonymous) @ index-C27U0vt0.js:40
+setTimeout
+YB @ index-C27U0vt0.js:48
+l @ index-C27U0vt0.js:48
+batch @ index-C27U0vt0.js:48
+Ei @ index-C27U0vt0.js:48
+setData @ index-C27U0vt0.js:48
+fetch @ index-C27U0vt0.js:48
+await in fetch
+bd @ index-C27U0vt0.js:48
+onSubscribe @ index-C27U0vt0.js:48
+subscribe @ index-C27U0vt0.js:48
+(anonymous) @ index-C27U0vt0.js:48
+D4 @ index-C27U0vt0.js:38
+Gg @ index-C27U0vt0.js:40
+vc @ index-C27U0vt0.js:40
+jS @ index-C27U0vt0.js:40
+fa @ index-C27U0vt0.js:38
+eB @ index-C27U0vt0.js:40
+Ta @ index-C27U0vt0.js:40
+g5 @ index-C27U0vt0.js:40
+T @ index-C27U0vt0.js:25
+Z @ index-C27U0vt0.js:25
+index-C27U0vt0.js:40 [Intervention] Images loaded lazily and replaced with placeholders. Load events are deferred. See https://go.microsoft.com/fwlink/?linkid=2048113
+index-C27U0vt0.js:48   GET https://neighbour-app--pkingdom83.replit.app/api/notifications/unread-count 401 (Unauthorized)
+(anonymous) @ index-C27U0vt0.js:48
+o @ index-C27U0vt0.js:48
+P @ index-C27U0vt0.js:48
+start @ index-C27U0vt0.js:48
+fetch @ index-C27U0vt0.js:48
+bd @ index-C27U0vt0.js:48
+fetch @ index-C27U0vt0.js:48
+refetch @ index-C27U0vt0.js:48
+onFocus @ index-C27U0vt0.js:48
+(anonymous) @ index-C27U0vt0.js:48
+(anonymous) @ index-C27U0vt0.js:48
+batch @ index-C27U0vt0.js:48
+onFocus @ index-C27U0vt0.js:48
+(anonymous) @ index-C27U0vt0.js:48
+await in (anonymous)
+(anonymous) @ index-C27U0vt0.js:48
+onFocus @ index-C27U0vt0.js:48
+(anonymous) @ index-C27U0vt0.js:48
+n @ index-C27U0vt0.js:48
+index-C27U0vt0.js:48   GET https://neighbour-app--pkingdom83.replit.app/api/notifications/unread-count 401 (Unauthorized)
+(anonymous) @ index-C27U0vt0.js:48
+o @ index-C27U0vt0.js:48
+P @ index-C27U0vt0.js:48
+(anonymous) @ index-C27U0vt0.js:48
+Promise.then
+(anonymous) @ index-C27U0vt0.js:48
+Promise.catch
+P @ index-C27U0vt0.js:48
+start @ index-C27U0vt0.js:48
+fetch @ index-C27U0vt0.js:48
+bd @ index-C27U0vt0.js:48
+fetch @ index-C27U0vt0.js:48
+refetch @ index-C27U0vt0.js:48
+onFocus @ index-C27U0vt0.js:48
+(anonymous) @ index-C27U0vt0.js:48
+(anonymous) @ index-C27U0vt0.js:48
+batch @ index-C27U0vt0.js:48
+onFocus @ index-C27U0vt0.js:48
+(anonymous) @ index-C27U0vt0.js:48
+await in (anonymous)
+(anonymous) @ index-C27U0vt0.js:48
+onFocus @ index-C27U0vt0.js:48
+(anonymous) @ index-C27U0vt0.js:48
+n @ index-C27U0vt0.js:48
