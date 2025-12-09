@@ -38,14 +38,13 @@ import { computeGeocellForIncident } from "./spatial-lookup";
 
 
 const API_BASE_URL = "https://api.qldtraffic.qld.gov.au";
-const PUBLIC_API_KEY = "3e83add325cbb69ac4d8e5bf433d770b";
 
 // Legacy cache structures removed - now using unified SWR dataCache system
 
 // Legacy constants removed - unified pipeline handles all caching
 
-// QLD Traffic API constants
-const QLD_TRAFFIC_API_KEY = '3e83add325cbb69ac4d8e5bf433d770b';
+// QLD Traffic API constants - use environment variable for security
+const QLD_TRAFFIC_API_KEY = process.env.QLD_TRAFFIC_API_KEY;
 const QLD_TRAFFIC_BASE_URL = 'https://api.qldtraffic.qld.gov.au/v2';
 const QLD_EMERGENCY_API = 'https://services7.arcgis.com/V6ZHFr6zdgNZuVG0/arcgis/rest/services/QLDEmergency_Incidents/FeatureServer/0/query';
 

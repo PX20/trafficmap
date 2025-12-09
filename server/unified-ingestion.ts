@@ -43,7 +43,7 @@ const fetchWithRetry = async (url: string, options: { maxRetries: number; baseDe
 // ============================================================================
 
 const QLD_TRAFFIC_BASE_URL = "https://api.qldtraffic.qld.gov.au/v2";
-const QLD_TRAFFIC_API_KEY = process.env.QLD_TRAFFIC_API_KEY || "3e83add325cbb69ac4d8e5bf433d770b";
+const QLD_TRAFFIC_API_KEY = process.env.QLD_TRAFFIC_API_KEY;
 
 const EMERGENCY_API_URL = "https://services1.arcgis.com/vkTwD8kHw2woKBqV/arcgis/rest/services/ESCAD_Current_Incidents_Public/FeatureServer/0/query?f=geojson&where=1%3D1&outFields=*&outSR=4326";
 
