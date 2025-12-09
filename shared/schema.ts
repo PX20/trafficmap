@@ -1185,6 +1185,100 @@ export type InsertPayment = typeof payments.$inferInsert;
 export type CampaignAnalytics = typeof campaignAnalytics.$inferSelect;
 export type InsertCampaignAnalytics = typeof campaignAnalytics.$inferInsert;
 
+// ============================================================================
+// DISCOUNT CODES - Admin-managed promotional codes for business advertising
+// ============================================================================
+
+export const discountCodes = pgTable("discount_codes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  code: varchar("code", { length: 50 }).notNull().unique(), // The promotional code (e.g., "FREEMONTH2024")
+  description: text("description"), // Admin notes about the code
+  
+  // Discount type and value
+  discountType: varchar("discount_type", { enum: ["percentage", "fixed", "free_month"] }).notNull(),
+  discountValue: real("discount_value"), // Percentage (0-100) or fixed amount in dollars, null for free_month
+  durationDays: integer("duration_days"), // Number of free/discounted days (for free_month type)
+  
+  // Usage limits
+  maxRedemptions: integer("max_redemptions"), // Total redemptions allowed (null = unlimited)
+  perBusinessLimit: integer("per_business_limit").default(1), // Max uses per business
+  currentRedemptions: integer("current_redemptions").default(0), // Counter
+  
+  // Validity period
+  validFrom: timestamp("valid_from").defaultNow(),
+  validUntil: timestamp("valid_until"), // null = never expires
+  
+  // Status
+  isActive: boolean("is_active").default(true),
+  
+  // Audit
+  createdBy: varchar("created_by").notNull(), // Admin user ID
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => ({
+  codeIdx: index("idx_discount_code").on(table.code),
+  activeIdx: index("idx_discount_active").on(table.isActive),
+}));
+
+export const discountRedemptions = pgTable("discount_redemptions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  discountCodeId: varchar("discount_code_id").notNull().references(() => discountCodes.id),
+  businessId: varchar("business_id").notNull().references(() => users.id), // Business account
+  campaignId: varchar("campaign_id").references(() => adCampaigns.id), // Optional - which campaign used it
+  
+  // Discount details at time of redemption
+  discountType: varchar("discount_type", { enum: ["percentage", "fixed", "free_month"] }).notNull(),
+  discountValue: real("discount_value"),
+  amountDiscounted: real("amount_discounted"), // Actual dollar amount saved
+  
+  // Status
+  status: varchar("status", { enum: ["pending", "applied", "expired", "cancelled"] }).default("pending"),
+  
+  // Period for free/discounted advertising
+  periodStart: timestamp("period_start"),
+  periodEnd: timestamp("period_end"),
+  
+  redeemedAt: timestamp("redeemed_at").defaultNow(),
+  appliedAt: timestamp("applied_at"), // When the discount was actually applied to a payment
+}, (table) => ({
+  businessIdx: index("idx_redemption_business").on(table.businessId),
+  codeIdx: index("idx_redemption_code").on(table.discountCodeId),
+  statusIdx: index("idx_redemption_status").on(table.status),
+}));
+
+// Discount code Zod schemas
+export const insertDiscountCodeSchema = createInsertSchema(discountCodes).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  currentRedemptions: true,
+}).extend({
+  code: z.string().min(3, "Code must be at least 3 characters").max(50).transform(s => s.toUpperCase().trim()),
+  discountType: z.enum(["percentage", "fixed", "free_month"]),
+  discountValue: z.number().min(0).max(100).optional().nullable(),
+  durationDays: z.number().min(1).max(365).optional().nullable(),
+  maxRedemptions: z.number().min(1).optional().nullable(),
+  perBusinessLimit: z.number().min(1).default(1),
+  createdBy: z.string().min(1, "Creator ID is required"),
+});
+
+export const insertDiscountRedemptionSchema = createInsertSchema(discountRedemptions).omit({
+  id: true,
+  redeemedAt: true,
+  appliedAt: true,
+}).extend({
+  discountCodeId: z.string().min(1, "Discount code ID is required"),
+  businessId: z.string().min(1, "Business ID is required"),
+  discountType: z.enum(["percentage", "fixed", "free_month"]),
+  status: z.enum(["pending", "applied", "expired", "cancelled"]).default("pending"),
+});
+
+// Discount code types
+export type DiscountCode = typeof discountCodes.$inferSelect;
+export type InsertDiscountCode = z.infer<typeof insertDiscountCodeSchema>;
+export type DiscountRedemption = typeof discountRedemptions.$inferSelect;
+export type InsertDiscountRedemption = z.infer<typeof insertDiscountRedemptionSchema>;
+
 // Analytics types
 export interface AdStats {
   campaignId: string;
