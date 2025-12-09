@@ -9,7 +9,7 @@ import { startQFESPostsIngestion } from "./qfes-posts-ingestion";
 import { backfillNotificationsForUser } from "./notification-service";
 import webpush from "web-push";
 import Stripe from "stripe";
-import { insertIncidentSchema, insertCommentSchema, insertConversationSchema, insertMessageSchema, insertNotificationSchema, insertIncidentCommentSchema, type SafeUser, categories, subcategories } from "@shared/schema";
+import { insertIncidentSchema, insertCommentSchema, insertConversationSchema, insertMessageSchema, insertNotificationSchema, insertIncidentCommentSchema, insertDiscountCodeSchema, type SafeUser, categories, subcategories } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
@@ -4146,6 +4146,139 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error rejecting ad:", error);
       res.status(500).json({ message: "Failed to reject ad" });
+    }
+  });
+
+  // Admin Discount Code Management Endpoints
+  
+  // Create a new discount code
+  app.post('/api/admin/discount-codes', isAdmin, async (req, res) => {
+    try {
+      const userId = (req.user as any)?.claims?.sub || (req.user as any)?.id;
+      
+      // Validate request body with schema
+      const parseResult = insertDiscountCodeSchema.safeParse({
+        ...req.body,
+        createdBy: userId
+      });
+      
+      if (!parseResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid discount code data", 
+          errors: parseResult.error.errors 
+        });
+      }
+      
+      const discountCode = await storage.createDiscountCode(parseResult.data);
+      console.log(`Admin created discount code: ${discountCode.code}`);
+      res.status(201).json(discountCode);
+    } catch (error) {
+      console.error("Error creating discount code:", error);
+      res.status(500).json({ message: "Failed to create discount code" });
+    }
+  });
+  
+  // Get all discount codes
+  app.get('/api/admin/discount-codes', isAdmin, async (req, res) => {
+    try {
+      const discountCodes = await storage.getAllDiscountCodes();
+      res.json(discountCodes);
+    } catch (error) {
+      console.error("Error fetching discount codes:", error);
+      res.status(500).json({ message: "Failed to fetch discount codes" });
+    }
+  });
+  
+  // Get single discount code by ID
+  app.get('/api/admin/discount-codes/:id', isAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const discountCode = await storage.getDiscountCode(id);
+      
+      if (!discountCode) {
+        return res.status(404).json({ message: "Discount code not found" });
+      }
+      
+      res.json(discountCode);
+    } catch (error) {
+      console.error("Error fetching discount code:", error);
+      res.status(500).json({ message: "Failed to fetch discount code" });
+    }
+  });
+  
+  // Update discount code
+  app.put('/api/admin/discount-codes/:id', isAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      // Get existing code to verify it exists
+      const existing = await storage.getDiscountCode(id);
+      if (!existing) {
+        return res.status(404).json({ message: "Discount code not found" });
+      }
+      
+      // Define allowed mutable fields and validate with Zod
+      // Matches the schema: discountType enum, discountValue is real (number), timestamps for dates
+      const updateSchema = z.object({
+        description: z.string().nullable().optional(),
+        discountType: z.enum(['percentage', 'fixed', 'free_month']).optional(),
+        discountValue: z.number().min(0).max(100).nullable().optional(),
+        durationDays: z.number().min(1).max(365).nullable().optional(),
+        maxRedemptions: z.number().min(1).nullable().optional(),
+        perBusinessLimit: z.number().min(1).optional(),
+        validFrom: z.coerce.date().optional(),
+        validUntil: z.coerce.date().nullable().optional(),
+        isActive: z.boolean().optional(),
+      }).strict();
+      
+      const parseResult = updateSchema.safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid update data", 
+          errors: parseResult.error.errors 
+        });
+      }
+      
+      // Ensure at least one field is being updated
+      if (Object.keys(parseResult.data).length === 0) {
+        return res.status(400).json({ message: "At least one field must be provided for update" });
+      }
+      
+      const updatedCode = await storage.updateDiscountCode(id, parseResult.data);
+      console.log(`Admin updated discount code: ${updatedCode?.code}`);
+      res.json(updatedCode);
+    } catch (error) {
+      console.error("Error updating discount code:", error);
+      res.status(500).json({ message: "Failed to update discount code" });
+    }
+  });
+  
+  // Deactivate (soft delete) discount code
+  app.delete('/api/admin/discount-codes/:id', isAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      // Get existing code to verify it exists
+      const existing = await storage.getDiscountCode(id);
+      if (!existing) {
+        return res.status(404).json({ message: "Discount code not found" });
+      }
+      
+      // Check if already inactive
+      if (!existing.isActive) {
+        return res.status(409).json({ message: "Discount code is already inactive" });
+      }
+      
+      const deactivatedCode = await storage.deactivateDiscountCode(id);
+      if (!deactivatedCode) {
+        return res.status(500).json({ message: "Failed to deactivate discount code" });
+      }
+      
+      console.log(`Admin deactivated discount code: ${deactivatedCode.code}`);
+      res.json({ success: true, discountCode: deactivatedCode });
+    } catch (error) {
+      console.error("Error deactivating discount code:", error);
+      res.status(500).json({ message: "Failed to deactivate discount code" });
     }
   });
 
