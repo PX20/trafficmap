@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { useMutation } from '@tanstack/react-query';
-import { ArrowLeft, Store, Coffee, Utensils, Wrench, Heart, Palette, Eye, Upload, Image } from 'lucide-react';
+import { ArrowLeft, Store, Coffee, Utensils, Wrench, Heart, Palette, Eye, Upload, Image, Tag, Loader2, CheckCircle, XCircle } from 'lucide-react';
 import { Link } from 'wouter';
 import { ObjectUploader } from '@/components/ObjectUploader';
 import { LocationAutocomplete } from '@/components/location-autocomplete';
@@ -157,8 +157,83 @@ export default function CreateAd() {
   }, [user]);
 
   const [previewMode, setPreviewMode] = useState(false);
+  const [discountCode, setDiscountCode] = useState('');
+  const [discountPreview, setDiscountPreview] = useState<{
+    valid: boolean;
+    discountType?: string;
+    discountValue?: number;
+    discountAmount?: number;
+    finalCost?: number;
+    description?: string;
+    message?: string;
+  } | null>(null);
+  const [isValidatingDiscount, setIsValidatingDiscount] = useState(false);
 
   const template = AD_TEMPLATES[selectedTemplate];
+
+  // Validate and preview discount code
+  const handleApplyDiscount = async () => {
+    if (!discountCode.trim()) {
+      toast({
+        title: "Enter a discount code",
+        description: "Please enter a discount code to apply.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsValidatingDiscount(true);
+    try {
+      const originalCost = parseFloat(formData.dailyBudget) * 30; // Assume 30 days campaign for preview
+      const response = await fetch(`/api/discount-codes/${encodeURIComponent(discountCode.trim())}/preview?originalCost=${originalCost}`, {
+        credentials: 'include',
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        setDiscountPreview({
+          valid: false,
+          message: errorData.message || 'Invalid discount code',
+        });
+        toast({
+          title: "Invalid Code",
+          description: errorData.message || "This discount code is not valid.",
+          variant: "destructive",
+        });
+      } else {
+        const data = await response.json();
+        setDiscountPreview({
+          valid: true,
+          discountType: data.discountType,
+          discountValue: data.discountValue,
+          discountAmount: data.discountAmount,
+          finalCost: data.finalCost,
+          description: data.description,
+        });
+        toast({
+          title: "Discount Applied!",
+          description: `You'll save $${data.discountAmount.toFixed(2)} on this campaign.`,
+        });
+      }
+    } catch (error) {
+      setDiscountPreview({
+        valid: false,
+        message: 'Failed to validate discount code',
+      });
+      toast({
+        title: "Error",
+        description: "Could not validate discount code. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsValidatingDiscount(false);
+    }
+  };
+
+  const handleClearDiscount = () => {
+    setDiscountCode('');
+    setDiscountPreview(null);
+  };
 
   // Image upload helpers
   const handleLogoUpload = async () => {
@@ -365,7 +440,8 @@ export default function CreateAd() {
       const adData = {
         ...formData,
         status: 'pending', // Require approval
-        template: selectedTemplate
+        template: selectedTemplate,
+        discountCode: discountPreview?.valid ? discountCode.trim() : undefined
       };
       
       console.log('Submitting ad data:', adData);
@@ -711,7 +787,10 @@ export default function CreateAd() {
             <CardContent className="space-y-4">
               <div>
                 <Label htmlFor="budget">Daily Budget</Label>
-                <Select value={formData.dailyBudget} onValueChange={(value) => setFormData(prev => ({ ...prev, dailyBudget: value }))}>
+                <Select value={formData.dailyBudget} onValueChange={(value) => {
+                  setFormData(prev => ({ ...prev, dailyBudget: value }));
+                  if (discountPreview) setDiscountPreview(null);
+                }}>
                   <SelectTrigger data-testid="select-budget">
                     <SelectValue />
                   </SelectTrigger>
@@ -726,6 +805,87 @@ export default function CreateAd() {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+
+              {/* Discount Code Section */}
+              <div className="pt-4 border-t">
+                <Label htmlFor="discountCode" className="flex items-center gap-2">
+                  <Tag className="w-4 h-4" />
+                  Discount Code
+                </Label>
+                <div className="flex gap-2 mt-2">
+                  <Input
+                    id="discountCode"
+                    value={discountCode}
+                    onChange={(e) => {
+                      setDiscountCode(e.target.value.toUpperCase());
+                      if (discountPreview) setDiscountPreview(null);
+                    }}
+                    placeholder="Enter discount code"
+                    disabled={discountPreview?.valid}
+                    data-testid="input-discount-code"
+                  />
+                  {discountPreview?.valid ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleClearDiscount}
+                      data-testid="button-clear-discount"
+                    >
+                      <XCircle className="w-4 h-4" />
+                    </Button>
+                  ) : (
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={handleApplyDiscount}
+                      disabled={isValidatingDiscount || !discountCode.trim()}
+                      data-testid="button-apply-discount"
+                    >
+                      {isValidatingDiscount ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        'Apply'
+                      )}
+                    </Button>
+                  )}
+                </div>
+
+                {/* Discount Preview */}
+                {discountPreview && (
+                  <div className={`mt-3 p-3 rounded-lg ${discountPreview.valid ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800' : 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800'}`}>
+                    {discountPreview.valid ? (
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-green-700 dark:text-green-400">
+                          <CheckCircle className="w-4 h-4" />
+                          <span className="font-medium">Discount Applied!</span>
+                        </div>
+                        {discountPreview.description && (
+                          <p className="text-sm text-green-600 dark:text-green-500">{discountPreview.description}</p>
+                        )}
+                        <div className="text-sm space-y-1">
+                          <div className="flex justify-between">
+                            <span className="text-gray-600 dark:text-gray-400">Original (30 days):</span>
+                            <span className="line-through text-gray-500">${(parseFloat(formData.dailyBudget) * 30).toFixed(2)}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600 dark:text-gray-400">Discount:</span>
+                            <span className="text-green-600 dark:text-green-400">-${discountPreview.discountAmount?.toFixed(2)}</span>
+                          </div>
+                          <div className="flex justify-between font-semibold">
+                            <span>Final Cost:</span>
+                            <span className="text-green-700 dark:text-green-400">${discountPreview.finalCost?.toFixed(2)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2 text-red-700 dark:text-red-400">
+                        <XCircle className="w-4 h-4" />
+                        <span>{discountPreview.message}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
