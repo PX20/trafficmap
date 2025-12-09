@@ -1337,15 +1337,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Ad creation endpoint - for businesses to submit ads
-  app.post("/api/ads/create", async (req: any, res) => {
+  app.post("/api/ads/create", isAuthenticated, async (req: any, res) => {
     try {
-      // Use the same auth pattern as other routes
-      if (!req.user) {
+      // Check if user has a business account
+      const userId = (req.user as any)?.claims?.sub || (req.user as any)?.id;
+      if (!userId) {
         return res.status(401).json({ message: "Unauthorized" });
       }
-
-      // Check if user has a business account
-      const userId = req.user.id;
+      
       const user = await storage.getUser(userId);
       
       if (!user || user.accountType !== 'business') {
@@ -1354,10 +1353,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
+      // Strict validation schema with budget bounds and content sanitization
       const adData = z.object({
-        businessName: z.string().min(1).max(100),
-        title: z.string().min(1).max(100),
-        content: z.string().min(1).max(500),
+        businessName: z.string().min(1).max(100).transform(val => val.trim()),
+        title: z.string().min(1).max(100).transform(val => val.trim()),
+        content: z.string().min(1).max(500).transform(val => val.trim()),
         websiteUrl: z.string().optional().transform(val => {
           if (!val || val.trim() === '') return '';
           // Auto-add https:// if no protocol is provided
@@ -1366,15 +1366,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
           return val;
         }).pipe(z.string().url().optional().or(z.literal(''))),
-        address: z.string().max(200).optional().or(z.literal('')),
-        suburb: z.string().min(1).max(100),
-        cta: z.string().min(1).max(50),
-        targetSuburbs: z.array(z.string()).optional(),
-        dailyBudget: z.string(),
-        totalBudget: z.string().optional(),
-        template: z.string().optional(),
-        logoUrl: z.string().optional(),
-        backgroundUrl: z.string().optional(),
+        address: z.string().max(200).optional().or(z.literal('')).transform(val => val?.trim() || ''),
+        suburb: z.string().min(1).max(100).transform(val => val.trim()),
+        cta: z.string().min(1).max(50).transform(val => val.trim()),
+        targetSuburbs: z.array(z.string().max(100)).max(20).optional(), // Limit array size
+        dailyBudget: z.string().refine(val => {
+          const num = parseFloat(val);
+          return !isNaN(num) && num >= 1 && num <= 10000; // $1 - $10,000 daily budget
+        }, { message: "Daily budget must be between $1 and $10,000" }),
+        totalBudget: z.string().optional().refine(val => {
+          if (!val) return true;
+          const num = parseFloat(val);
+          return !isNaN(num) && num >= 1 && num <= 1000000; // Up to $1M total
+        }, { message: "Total budget must be between $1 and $1,000,000" }),
+        template: z.string().max(50).optional(),
+        logoUrl: z.string().url().optional().or(z.literal('')),
+        backgroundUrl: z.string().url().optional().or(z.literal('')),
         status: z.enum(['pending', 'active', 'paused', 'rejected']).default('pending')
       }).parse(req.body);
 
@@ -1428,18 +1435,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Ad view tracking endpoint
+  // Rate limiting for ad tracking (IP-based)
+  const adTrackingRateLimit = new Map<string, { count: number; resetTime: number }>();
+  const AD_TRACKING_LIMIT = 100; // Max tracking calls per IP per minute
+  const AD_TRACKING_WINDOW = 60 * 1000; // 1 minute
+
+  function checkAdTrackingRateLimit(ip: string): boolean {
+    const now = Date.now();
+    const record = adTrackingRateLimit.get(ip);
+    
+    if (!record || now >= record.resetTime) {
+      adTrackingRateLimit.set(ip, { count: 1, resetTime: now + AD_TRACKING_WINDOW });
+      return true;
+    }
+    
+    if (record.count >= AD_TRACKING_LIMIT) {
+      return false;
+    }
+    
+    record.count++;
+    return true;
+  }
+
+  // Ad view tracking endpoint with rate limiting
   app.post("/api/ads/track-view", async (req, res) => {
     try {
-      const { adId, duration, userSuburb, timestamp } = req.body;
-      
-      // Basic validation
-      if (!adId || !duration || !userSuburb || !timestamp) {
-        return res.status(400).json({ message: "Missing required fields" });
+      // IP-based rate limiting
+      const clientIp = req.ip || req.socket.remoteAddress || 'unknown';
+      if (!checkAdTrackingRateLimit(clientIp)) {
+        return res.status(429).json({ message: "Rate limit exceeded" });
       }
 
-      const userId = (req.user as any)?.claims?.sub || 'anonymous';
+      // Validate input with Zod
+      const trackingData = z.object({
+        adId: z.string().uuid(),
+        duration: z.number().min(0).max(3600000), // Max 1 hour
+        userSuburb: z.string().max(100),
+        timestamp: z.string().or(z.number())
+      }).safeParse(req.body);
+
+      if (!trackingData.success) {
+        return res.status(400).json({ message: "Invalid tracking data" });
+      }
+
+      const { adId, duration, userSuburb, timestamp } = trackingData.data;
+      const userId = (req.user as any)?.claims?.sub || (req.user as any)?.id || `anon_${clientIp}`;
       const viewedAt = new Date(timestamp);
+      
+      // Validate timestamp is not in the future and not too old
+      const now = Date.now();
+      const viewTime = viewedAt.getTime();
+      if (viewTime > now + 60000 || viewTime < now - 86400000) { // Within 1 min future or 24 hours past
+        return res.status(400).json({ message: "Invalid timestamp" });
+      }
       
       // Check if view already recorded today
       const today = viewedAt.toISOString().split('T')[0];
@@ -1465,17 +1513,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Ad click tracking endpoint
+  // Ad click tracking endpoint with rate limiting
   app.post("/api/ads/track-click", async (req, res) => {
     try {
-      const { adId, timestamp } = req.body;
-      
-      if (!adId || !timestamp) {
-        return res.status(400).json({ message: "Missing required fields" });
+      // IP-based rate limiting
+      const clientIp = req.ip || req.socket.remoteAddress || 'unknown';
+      if (!checkAdTrackingRateLimit(clientIp)) {
+        return res.status(429).json({ message: "Rate limit exceeded" });
       }
 
-      const userId = (req.user as any)?.claims?.sub || 'anonymous';
+      // Validate input with Zod
+      const trackingData = z.object({
+        adId: z.string().uuid(),
+        timestamp: z.string().or(z.number())
+      }).safeParse(req.body);
+
+      if (!trackingData.success) {
+        return res.status(400).json({ message: "Invalid tracking data" });
+      }
+
+      const { adId, timestamp } = trackingData.data;
+      const userId = (req.user as any)?.claims?.sub || (req.user as any)?.id || `anon_${clientIp}`;
       const clickedAt = new Date(timestamp);
+
+      // Validate timestamp
+      const now = Date.now();
+      const clickTime = clickedAt.getTime();
+      if (clickTime > now + 60000 || clickTime < now - 86400000) {
+        return res.status(400).json({ message: "Invalid timestamp" });
+      }
+
+      // Rate limit clicks per user per ad (max 5 per day)
+      const today = clickedAt.toISOString().split('T')[0];
+      const existingClicks = await storage.getAdClicksToday?.(userId, adId, today) || 0;
+      
+      if (existingClicks >= 5) {
+        return res.json({ message: "Click limit reached" });
+      }
 
       await storage.recordAdClick({
         adCampaignId: adId,
@@ -3230,11 +3304,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get single ad by ID (for editing)
+  // Get single ad by ID (for editing) - business users only
   app.get('/api/ads/:id', isAuthenticated, async (req, res) => {
     try {
       const { id } = req.params;
-      const userId = (req.user as any)?.claims?.sub;
+      const userId = (req.user as any)?.claims?.sub || (req.user as any)?.id;
+      
+      // Require business account to access ad details
+      const user = await storage.getUser(userId);
+      if (!user || user.accountType !== 'business') {
+        return res.status(403).json({ message: "Business account required" });
+      }
       
       const ad = await storage.getAdCampaign(id);
       
@@ -3242,15 +3322,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Ad not found" });
       }
 
-      // Check if user owns this ad (business users can only edit their own ads)
-      const user = await storage.getUser(userId);
-      if (user?.accountType === 'business') {
-        const userCampaigns = await storage.getUserCampaigns(userId);
-        const userOwnsAd = userCampaigns.some(campaign => campaign.id === id);
-        
-        if (!userOwnsAd) {
-          return res.status(403).json({ message: "You can only edit your own ads" });
-        }
+      // Business users can only view their own ads
+      const userCampaigns = await storage.getUserCampaigns(userId);
+      const userOwnsAd = userCampaigns.some(campaign => campaign.id === id);
+      
+      if (!userOwnsAd) {
+        return res.status(403).json({ message: "You can only view your own ads" });
       }
 
       res.json(ad);
