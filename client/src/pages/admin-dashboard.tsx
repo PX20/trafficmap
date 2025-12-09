@@ -6,11 +6,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle, XCircle, Clock, Building, MapPin, DollarSign, ArrowLeft, Home, Flag, MessageSquare, AlertTriangle, Eye, Archive } from "lucide-react";
+import { CheckCircle, XCircle, Clock, Building, MapPin, DollarSign, ArrowLeft, Home, Flag, MessageSquare, AlertTriangle, Eye, Archive, Tag, Plus, Percent, Calendar, Users } from "lucide-react";
 import { isUnauthorizedError } from "@/lib/authUtils";
 
 interface AdCampaign {
@@ -65,6 +67,24 @@ interface FeedbackItem {
   userName: string;
 }
 
+interface DiscountCode {
+  id: string;
+  code: string;
+  description: string | null;
+  discountType: "percentage" | "fixed" | "free_month";
+  discountValue: number | null;
+  durationDays: number | null;
+  maxRedemptions: number | null;
+  perBusinessLimit: number;
+  currentRedemptions: number;
+  validFrom: string;
+  validUntil: string | null;
+  isActive: boolean;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export default function AdminDashboard() {
   const { user, isLoading: authLoading, isAuthenticated } = useAuth();
   const { toast } = useToast();
@@ -74,6 +94,18 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("ads");
   const [reportModeratorNotes, setReportModeratorNotes] = useState("");
   const [feedbackAdminNotes, setFeedbackAdminNotes] = useState("");
+  const [showCreateDiscount, setShowCreateDiscount] = useState(false);
+  const [newDiscountCode, setNewDiscountCode] = useState({
+    code: "",
+    description: "",
+    discountType: "percentage" as "percentage" | "fixed" | "free_month",
+    discountValue: "",
+    durationDays: "",
+    maxRedemptions: "",
+    perBusinessLimit: "1",
+    validFrom: new Date().toISOString().split('T')[0],
+    validUntil: "",
+  });
 
   // Only run access checks when component actually mounts (user is on /admin page)
   useEffect(() => {
@@ -120,6 +152,86 @@ export default function AdminDashboard() {
     queryKey: ['/api/feedback'],
     retry: false,
     enabled: isAuthenticated && (user as any)?.role === 'admin',
+  });
+
+  const { data: discountCodes = [] } = useQuery<DiscountCode[]>({
+    queryKey: ['/api/admin/discount-codes'],
+    retry: false,
+    enabled: isAuthenticated && (user as any)?.role === 'admin',
+  });
+
+  const createDiscountMutation = useMutation({
+    mutationFn: async (data: any) => {
+      return apiRequest("POST", '/api/admin/discount-codes', data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/discount-codes'] });
+      setShowCreateDiscount(false);
+      setNewDiscountCode({
+        code: "",
+        description: "",
+        discountType: "percentage",
+        discountValue: "",
+        durationDays: "",
+        maxRedemptions: "",
+        perBusinessLimit: "1",
+        validFrom: new Date().toISOString().split('T')[0],
+        validUntil: "",
+      });
+      toast({
+        title: "Discount Code Created",
+        description: "The discount code has been created successfully.",
+      });
+    },
+    onError: (error: any) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: error?.message || "Failed to create discount code. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deactivateDiscountMutation = useMutation({
+    mutationFn: async (codeId: string) => {
+      return apiRequest("DELETE", `/api/admin/discount-codes/${codeId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/discount-codes'] });
+      toast({
+        title: "Discount Code Deactivated",
+        description: "The discount code has been deactivated.",
+      });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: "Failed to deactivate discount code. Please try again.",
+        variant: "destructive",
+      });
+    },
   });
 
   const approveMutation = useMutation({
@@ -352,11 +464,15 @@ export default function AdminDashboard() {
               <MessageSquare className="w-4 h-4" />
               {feedbackList.filter(f => f.status === 'new').length} New Feedback
             </Badge>
+            <Badge variant="outline" className="flex items-center gap-2">
+              <Tag className="w-4 h-4" />
+              {discountCodes.filter(d => d.isActive).length} Active Discounts
+            </Badge>
           </div>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-6">
+          <TabsList className="grid w-full grid-cols-4 mb-6">
             <TabsTrigger value="ads" className="flex items-center gap-2" data-testid="tab-ads">
               <Building className="w-4 h-4" />
               Ads
@@ -368,6 +484,10 @@ export default function AdminDashboard() {
             <TabsTrigger value="feedback" className="flex items-center gap-2" data-testid="tab-feedback">
               <MessageSquare className="w-4 h-4" />
               Feedback
+            </TabsTrigger>
+            <TabsTrigger value="discounts" className="flex items-center gap-2" data-testid="tab-discounts">
+              <Tag className="w-4 h-4" />
+              Discounts
             </TabsTrigger>
           </TabsList>
 
@@ -738,6 +858,261 @@ export default function AdminDashboard() {
                 ))}
               </div>
             )}
+          </TabsContent>
+
+          <TabsContent value="discounts">
+            <div className="space-y-6">
+              <div className="flex items-center justify-between gap-4 flex-wrap">
+                <div>
+                  <h3 className="text-lg font-semibold">Discount Codes</h3>
+                  <p className="text-sm text-muted-foreground">Create and manage promotional discount codes for business advertisers</p>
+                </div>
+                <Dialog open={showCreateDiscount} onOpenChange={setShowCreateDiscount}>
+                  <DialogTrigger asChild>
+                    <Button className="flex items-center gap-2" data-testid="button-create-discount">
+                      <Plus className="w-4 h-4" />
+                      Create Discount Code
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Create Discount Code</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="code">Code</Label>
+                        <Input
+                          id="code"
+                          placeholder="e.g., FREEMONTH2024"
+                          value={newDiscountCode.code}
+                          onChange={(e) => setNewDiscountCode({ ...newDiscountCode, code: e.target.value.toUpperCase() })}
+                          data-testid="input-discount-code"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="description">Description (optional)</Label>
+                        <Textarea
+                          id="description"
+                          placeholder="Internal notes about this code..."
+                          value={newDiscountCode.description}
+                          onChange={(e) => setNewDiscountCode({ ...newDiscountCode, description: e.target.value })}
+                          data-testid="input-discount-description"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="discountType">Discount Type</Label>
+                        <Select
+                          value={newDiscountCode.discountType}
+                          onValueChange={(value: "percentage" | "fixed" | "free_month") => setNewDiscountCode({ ...newDiscountCode, discountType: value })}
+                        >
+                          <SelectTrigger data-testid="select-discount-type">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="percentage">Percentage Off</SelectItem>
+                            <SelectItem value="fixed">Fixed Amount Off</SelectItem>
+                            <SelectItem value="free_month">Free Period</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      {newDiscountCode.discountType !== "free_month" && (
+                        <div>
+                          <Label htmlFor="discountValue">
+                            {newDiscountCode.discountType === "percentage" ? "Percentage (%)" : "Amount ($)"}
+                          </Label>
+                          <Input
+                            id="discountValue"
+                            type="number"
+                            placeholder={newDiscountCode.discountType === "percentage" ? "e.g., 20" : "e.g., 50"}
+                            value={newDiscountCode.discountValue}
+                            onChange={(e) => setNewDiscountCode({ ...newDiscountCode, discountValue: e.target.value })}
+                            data-testid="input-discount-value"
+                          />
+                        </div>
+                      )}
+                      {newDiscountCode.discountType === "free_month" && (
+                        <div>
+                          <Label htmlFor="durationDays">Free Days</Label>
+                          <Input
+                            id="durationDays"
+                            type="number"
+                            placeholder="e.g., 30"
+                            value={newDiscountCode.durationDays}
+                            onChange={(e) => setNewDiscountCode({ ...newDiscountCode, durationDays: e.target.value })}
+                            data-testid="input-duration-days"
+                          />
+                        </div>
+                      )}
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="maxRedemptions">Max Total Uses</Label>
+                          <Input
+                            id="maxRedemptions"
+                            type="number"
+                            placeholder="Unlimited"
+                            value={newDiscountCode.maxRedemptions}
+                            onChange={(e) => setNewDiscountCode({ ...newDiscountCode, maxRedemptions: e.target.value })}
+                            data-testid="input-max-redemptions"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="perBusinessLimit">Per Business Limit</Label>
+                          <Input
+                            id="perBusinessLimit"
+                            type="number"
+                            placeholder="1"
+                            value={newDiscountCode.perBusinessLimit}
+                            onChange={(e) => setNewDiscountCode({ ...newDiscountCode, perBusinessLimit: e.target.value })}
+                            data-testid="input-per-business-limit"
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="validFrom">Valid From</Label>
+                          <Input
+                            id="validFrom"
+                            type="date"
+                            value={newDiscountCode.validFrom}
+                            onChange={(e) => setNewDiscountCode({ ...newDiscountCode, validFrom: e.target.value })}
+                            data-testid="input-valid-from"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="validUntil">Expires On (optional)</Label>
+                          <Input
+                            id="validUntil"
+                            type="date"
+                            value={newDiscountCode.validUntil}
+                            onChange={(e) => setNewDiscountCode({ ...newDiscountCode, validUntil: e.target.value })}
+                            data-testid="input-valid-until"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex gap-3 pt-2">
+                        <Button
+                          onClick={() => {
+                            const data: any = {
+                              code: newDiscountCode.code,
+                              description: newDiscountCode.description || null,
+                              discountType: newDiscountCode.discountType,
+                              perBusinessLimit: parseInt(newDiscountCode.perBusinessLimit) || 1,
+                              validFrom: new Date(newDiscountCode.validFrom).toISOString(),
+                              createdBy: (user as any)?.id,
+                            };
+                            if (newDiscountCode.discountType !== "free_month" && newDiscountCode.discountValue) {
+                              data.discountValue = parseFloat(newDiscountCode.discountValue);
+                            }
+                            if (newDiscountCode.discountType === "free_month" && newDiscountCode.durationDays) {
+                              data.durationDays = parseInt(newDiscountCode.durationDays);
+                            }
+                            if (newDiscountCode.maxRedemptions) {
+                              data.maxRedemptions = parseInt(newDiscountCode.maxRedemptions);
+                            }
+                            if (newDiscountCode.validUntil) {
+                              data.validUntil = new Date(newDiscountCode.validUntil).toISOString();
+                            }
+                            createDiscountMutation.mutate(data);
+                          }}
+                          disabled={createDiscountMutation.isPending || !newDiscountCode.code}
+                          data-testid="button-submit-discount"
+                        >
+                          {createDiscountMutation.isPending ? "Creating..." : "Create Code"}
+                        </Button>
+                        <DialogClose asChild>
+                          <Button variant="outline">Cancel</Button>
+                        </DialogClose>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </div>
+
+              {discountCodes.length === 0 ? (
+                <Card>
+                  <CardContent className="text-center py-12">
+                    <Tag className="w-16 h-16 text-blue-500 mx-auto mb-4" />
+                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                      No discount codes yet
+                    </h3>
+                    <p className="text-gray-600 dark:text-gray-400">
+                      Create your first discount code to offer promotions to business advertisers.
+                    </p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="grid gap-4">
+                  {discountCodes.map((discount) => (
+                    <Card key={discount.id} className={!discount.isActive ? "opacity-60" : ""}>
+                      <CardHeader>
+                        <div className="flex items-start justify-between gap-4 flex-wrap">
+                          <div>
+                            <CardTitle className="flex items-center gap-2 text-base font-mono">
+                              <Tag className="w-5 h-5 text-blue-500" />
+                              {discount.code}
+                            </CardTitle>
+                            <CardDescription className="mt-1">
+                              {discount.description || "No description"}
+                            </CardDescription>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge variant={discount.isActive ? "default" : "secondary"}>
+                              {discount.isActive ? "Active" : "Inactive"}
+                            </Badge>
+                            <Badge variant="outline">
+                              {discount.discountType === "percentage" && `${discount.discountValue}% off`}
+                              {discount.discountType === "fixed" && `$${discount.discountValue} off`}
+                              {discount.discountType === "free_month" && `${discount.durationDays} free days`}
+                            </Badge>
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                          <div className="flex items-center gap-2">
+                            <Users className="w-4 h-4 text-muted-foreground" />
+                            <span>
+                              {discount.currentRedemptions}
+                              {discount.maxRedemptions ? ` / ${discount.maxRedemptions}` : ""} used
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Percent className="w-4 h-4 text-muted-foreground" />
+                            <span>{discount.perBusinessLimit} per business</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Calendar className="w-4 h-4 text-muted-foreground" />
+                            <span>
+                              {discount.validUntil 
+                                ? `Expires ${new Date(discount.validUntil).toLocaleDateString()}`
+                                : "Never expires"}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Clock className="w-4 h-4 text-muted-foreground" />
+                            <span>Created {new Date(discount.createdAt).toLocaleDateString()}</span>
+                          </div>
+                        </div>
+                        {discount.isActive && (
+                          <div className="mt-4 pt-4 border-t">
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => deactivateDiscountMutation.mutate(discount.id)}
+                              disabled={deactivateDiscountMutation.isPending}
+                              data-testid={`button-deactivate-discount-${discount.id}`}
+                            >
+                              <XCircle className="w-4 h-4 mr-1" />
+                              Deactivate
+                            </Button>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </div>
           </TabsContent>
         </Tabs>
       </div>
