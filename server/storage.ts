@@ -105,7 +105,13 @@ import {
   type UnifiedIncidentsResponse,
   generateUnifiedIncidentId,
   prepareUnifiedIncidentForInsert,
-  type SafeUser
+  type SafeUser,
+  discountCodes,
+  discountRedemptions,
+  type DiscountCode,
+  type InsertDiscountCode,
+  type DiscountRedemption,
+  type InsertDiscountRedemption
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, or, ne, sql, inArray, gte, lte } from "drizzle-orm";
@@ -349,6 +355,25 @@ export interface IStorage {
   markStagingEventSynced(id: string, postId?: string): Promise<void>;
   markStagingEventError(id: string, error: string): Promise<void>;
   cleanupOldStagingEvents(olderThanDays: number): Promise<number>;
+  
+  // ============================================================================
+  // DISCOUNT CODE OPERATIONS - Admin-managed promotional codes
+  // ============================================================================
+  
+  // Discount code management (admin)
+  createDiscountCode(code: InsertDiscountCode): Promise<DiscountCode>;
+  getDiscountCode(id: string): Promise<DiscountCode | undefined>;
+  getDiscountCodeByCode(code: string): Promise<DiscountCode | undefined>;
+  getAllDiscountCodes(): Promise<DiscountCode[]>;
+  updateDiscountCode(id: string, updates: Partial<DiscountCode>): Promise<DiscountCode | undefined>;
+  deactivateDiscountCode(id: string): Promise<boolean>;
+  
+  // Discount redemption (business)
+  validateDiscountCode(code: string, businessId: string): Promise<{ valid: boolean; error?: string; discountCode?: DiscountCode }>;
+  redeemDiscountCode(codeId: string, businessId: string, campaignId?: string): Promise<DiscountRedemption>;
+  getBusinessRedemptions(businessId: string): Promise<DiscountRedemption[]>;
+  getRedemptionCount(codeId: string): Promise<number>;
+  getBusinessRedemptionCount(codeId: string, businessId: string): Promise<number>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2610,6 +2635,170 @@ export class DatabaseStorage implements IStorage {
       .where(sql`${stagingEvents.createdAt} < ${cutoffDate}`);
     
     return result.rowCount ?? 0;
+  }
+
+  // ============================================================================
+  // DISCOUNT CODE OPERATIONS - Admin-managed promotional codes
+  // ============================================================================
+
+  async createDiscountCode(codeData: InsertDiscountCode): Promise<DiscountCode> {
+    const [code] = await db
+      .insert(discountCodes)
+      .values({
+        ...codeData,
+        code: codeData.code.toUpperCase().trim(),
+      })
+      .returning();
+    return code;
+  }
+
+  async getDiscountCode(id: string): Promise<DiscountCode | undefined> {
+    const [code] = await db
+      .select()
+      .from(discountCodes)
+      .where(eq(discountCodes.id, id));
+    return code;
+  }
+
+  async getDiscountCodeByCode(code: string): Promise<DiscountCode | undefined> {
+    const [result] = await db
+      .select()
+      .from(discountCodes)
+      .where(eq(discountCodes.code, code.toUpperCase().trim()));
+    return result;
+  }
+
+  async getAllDiscountCodes(): Promise<DiscountCode[]> {
+    return await db
+      .select()
+      .from(discountCodes)
+      .orderBy(desc(discountCodes.createdAt));
+  }
+
+  async updateDiscountCode(id: string, updates: Partial<DiscountCode>): Promise<DiscountCode | undefined> {
+    const [updated] = await db
+      .update(discountCodes)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(discountCodes.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deactivateDiscountCode(id: string): Promise<boolean> {
+    const result = await db
+      .update(discountCodes)
+      .set({ isActive: false, updatedAt: new Date() })
+      .where(eq(discountCodes.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  async validateDiscountCode(code: string, businessId: string): Promise<{ valid: boolean; error?: string; discountCode?: DiscountCode }> {
+    // Find the discount code
+    const discountCode = await this.getDiscountCodeByCode(code);
+    
+    if (!discountCode) {
+      return { valid: false, error: "Invalid discount code" };
+    }
+    
+    if (!discountCode.isActive) {
+      return { valid: false, error: "This discount code is no longer active" };
+    }
+    
+    // Check validity period
+    const now = new Date();
+    if (discountCode.validFrom && now < discountCode.validFrom) {
+      return { valid: false, error: "This discount code is not yet valid" };
+    }
+    if (discountCode.validUntil && now > discountCode.validUntil) {
+      return { valid: false, error: "This discount code has expired" };
+    }
+    
+    // Check max redemptions
+    if (discountCode.maxRedemptions !== null && discountCode.currentRedemptions >= discountCode.maxRedemptions) {
+      return { valid: false, error: "This discount code has reached its maximum redemptions" };
+    }
+    
+    // Check per-business limit
+    if (discountCode.perBusinessLimit !== null) {
+      const businessRedemptions = await this.getBusinessRedemptionCount(discountCode.id, businessId);
+      if (businessRedemptions >= discountCode.perBusinessLimit) {
+        return { valid: false, error: "You have already used this discount code the maximum number of times" };
+      }
+    }
+    
+    return { valid: true, discountCode };
+  }
+
+  async redeemDiscountCode(codeId: string, businessId: string, campaignId?: string): Promise<DiscountRedemption> {
+    const discountCode = await this.getDiscountCode(codeId);
+    if (!discountCode) {
+      throw new Error("Discount code not found");
+    }
+    
+    // Calculate period for free_month type
+    let periodStart: Date | null = null;
+    let periodEnd: Date | null = null;
+    
+    if (discountCode.discountType === "free_month" && discountCode.durationDays) {
+      periodStart = new Date();
+      periodEnd = new Date();
+      periodEnd.setDate(periodEnd.getDate() + discountCode.durationDays);
+    }
+    
+    // Create redemption record
+    const [redemption] = await db
+      .insert(discountRedemptions)
+      .values({
+        discountCodeId: codeId,
+        businessId,
+        campaignId: campaignId || null,
+        discountType: discountCode.discountType,
+        discountValue: discountCode.discountValue,
+        status: "pending",
+        periodStart,
+        periodEnd,
+      })
+      .returning();
+    
+    // Increment redemption counter
+    await db
+      .update(discountCodes)
+      .set({ 
+        currentRedemptions: sql`${discountCodes.currentRedemptions} + 1`,
+        updatedAt: new Date()
+      })
+      .where(eq(discountCodes.id, codeId));
+    
+    return redemption;
+  }
+
+  async getBusinessRedemptions(businessId: string): Promise<DiscountRedemption[]> {
+    return await db
+      .select()
+      .from(discountRedemptions)
+      .where(eq(discountRedemptions.businessId, businessId))
+      .orderBy(desc(discountRedemptions.redeemedAt));
+  }
+
+  async getRedemptionCount(codeId: string): Promise<number> {
+    const result = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(discountRedemptions)
+      .where(eq(discountRedemptions.discountCodeId, codeId));
+    return result[0]?.count ?? 0;
+  }
+
+  async getBusinessRedemptionCount(codeId: string, businessId: string): Promise<number> {
+    const result = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(discountRedemptions)
+      .where(
+        and(
+          eq(discountRedemptions.discountCodeId, codeId),
+          eq(discountRedemptions.businessId, businessId)
+        )
+      );
+    return result[0]?.count ?? 0;
   }
 
 }
