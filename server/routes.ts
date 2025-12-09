@@ -4282,6 +4282,225 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ============================================================================
+  // BUSINESS DISCOUNT CODE ENDPOINTS
+  // ============================================================================
+  
+  // Validate a discount code for a business (checks validity without redeeming)
+  app.post('/api/discount-codes/validate', isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any)?.claims?.sub || (req.user as any)?.id;
+      
+      const validateSchema = z.object({
+        code: z.string().min(1, "Discount code is required"),
+      });
+      
+      const parseResult = validateSchema.safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ 
+          valid: false,
+          message: "Invalid request", 
+          errors: parseResult.error.errors 
+        });
+      }
+      
+      const { code } = parseResult.data;
+      const result = await storage.validateDiscountCode(code.toUpperCase(), userId);
+      
+      if (!result.valid) {
+        return res.json({ 
+          valid: false, 
+          message: result.error 
+        });
+      }
+      
+      // Return discount code details (without sensitive info)
+      const discountCode = result.discountCode!;
+      res.json({
+        valid: true,
+        discountCode: {
+          id: discountCode.id,
+          code: discountCode.code,
+          description: discountCode.description,
+          discountType: discountCode.discountType,
+          discountValue: discountCode.discountValue,
+          durationDays: discountCode.durationDays,
+        }
+      });
+    } catch (error) {
+      console.error("Error validating discount code:", error);
+      res.status(500).json({ valid: false, message: "Failed to validate discount code" });
+    }
+  });
+  
+  // Redeem a discount code for a business
+  app.post('/api/discount-codes/redeem', isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any)?.claims?.sub || (req.user as any)?.id;
+      
+      const redeemSchema = z.object({
+        code: z.string().min(1, "Discount code is required"),
+        campaignId: z.string().optional(), // Optional: associate with a specific campaign
+      });
+      
+      const parseResult = redeemSchema.safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ 
+          success: false,
+          message: "Invalid request", 
+          errors: parseResult.error.errors 
+        });
+      }
+      
+      const { code, campaignId } = parseResult.data;
+      
+      // First validate the code
+      const validation = await storage.validateDiscountCode(code.toUpperCase(), userId);
+      if (!validation.valid) {
+        return res.status(400).json({ 
+          success: false, 
+          message: validation.error 
+        });
+      }
+      
+      // Redeem the code
+      const redemption = await storage.redeemDiscountCode(
+        validation.discountCode!.id, 
+        userId, 
+        campaignId
+      );
+      
+      console.log(`Business ${userId} redeemed discount code: ${code}`);
+      res.json({
+        success: true,
+        redemption: {
+          id: redemption.id,
+          discountType: redemption.discountType,
+          discountValue: redemption.discountValue,
+          periodStart: redemption.periodStart,
+          periodEnd: redemption.periodEnd,
+          status: redemption.status,
+        }
+      });
+    } catch (error) {
+      console.error("Error redeeming discount code:", error);
+      res.status(500).json({ success: false, message: "Failed to redeem discount code" });
+    }
+  });
+  
+  // Get business's redemption history
+  app.get('/api/discount-codes/my-redemptions', isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any)?.claims?.sub || (req.user as any)?.id;
+      
+      const redemptions = await storage.getBusinessRedemptions(userId);
+      
+      res.json(redemptions);
+    } catch (error) {
+      console.error("Error fetching redemptions:", error);
+      res.status(500).json({ message: "Failed to fetch redemption history" });
+    }
+  });
+  
+  // Get billing quote with discount applied
+  app.post('/api/billing/quote-with-discount', isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any)?.claims?.sub || (req.user as any)?.id;
+      
+      const quoteSchema = z.object({
+        campaignId: z.string().optional(),
+        days: z.number().int().min(7, "Minimum 7 days required").max(365, "Maximum 365 days"),
+        discountCode: z.string().optional(),
+      });
+      
+      const parseResult = quoteSchema.safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid request", 
+          errors: parseResult.error.errors 
+        });
+      }
+      
+      const { campaignId, days, discountCode } = parseResult.data;
+      
+      // Get the default plan
+      const plans = await storage.getBillingPlans();
+      const plan = plans.find(p => p.isActive) || plans[0];
+      
+      if (!plan) {
+        return res.status(404).json({ message: 'No billing plans available' });
+      }
+      
+      const dailyRate = parseFloat(plan.pricePerDay);
+      let totalAmount = dailyRate * days;
+      let discountApplied = false;
+      let discountDetails = null;
+      let discountError = null;
+      
+      // If a discount code is provided, validate and calculate the discount
+      if (discountCode) {
+        const validation = await storage.validateDiscountCode(discountCode.toUpperCase(), userId);
+        
+        if (validation.valid && validation.discountCode) {
+          const dc = validation.discountCode;
+          discountApplied = true;
+          
+          let amountDiscounted = 0;
+          
+          if (dc.discountType === 'percentage') {
+            // Percentage discount (e.g., 20% off)
+            amountDiscounted = totalAmount * ((dc.discountValue || 0) / 100);
+          } else if (dc.discountType === 'fixed') {
+            // Fixed amount discount (e.g., $10 off)
+            amountDiscounted = Math.min(dc.discountValue || 0, totalAmount);
+          } else if (dc.discountType === 'free_month') {
+            // Free month - calculate the value of durationDays
+            const freeDays = dc.durationDays || 30;
+            amountDiscounted = dailyRate * Math.min(freeDays, days);
+          }
+          
+          totalAmount = Math.max(0, totalAmount - amountDiscounted);
+          
+          discountDetails = {
+            code: dc.code,
+            type: dc.discountType,
+            value: dc.discountValue,
+            durationDays: dc.durationDays,
+            amountDiscounted: amountDiscounted.toFixed(2),
+            description: dc.description,
+          };
+        } else {
+          discountError = validation.error;
+        }
+      }
+      
+      const amountCents = Math.round(totalAmount * 100);
+      
+      const startDate = new Date();
+      const endDate = new Date(startDate);
+      endDate.setDate(endDate.getDate() + days);
+      
+      res.json({
+        campaignId,
+        days,
+        dailyRate: plan.pricePerDay,
+        originalAmount: (dailyRate * days).toFixed(2),
+        totalAmount: totalAmount.toFixed(2),
+        amountCents,
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+        planId: plan.id,
+        minDaysEnforced: Math.max(days, plan.minimumDays || 7),
+        discountApplied,
+        discountDetails,
+        discountError,
+      });
+    } catch (error) {
+      console.error('Error creating billing quote with discount:', error);
+      res.status(500).json({ message: 'Failed to create quote' });
+    }
+  });
+
   // Initialize default billing plan if it doesn't exist
   async function initializeBillingPlans() {
     try {
