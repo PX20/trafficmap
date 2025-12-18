@@ -582,9 +582,14 @@ async function broadcastPostNotifications(
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Handle favicon.ico requests - redirect to the PWA icon
+  // Handle favicon.ico requests - serve the PWA icon directly
   app.get('/favicon.ico', (_req, res) => {
-    res.redirect(301, '/badge-72x72.png');
+    const faviconPath = path.resolve(process.cwd(), 'client/public/badge-72x72.png');
+    if (fs.existsSync(faviconPath)) {
+      res.sendFile(faviconPath);
+    } else {
+      res.status(204).end(); // No content if file doesn't exist
+    }
   });
   
   // Readiness check middleware - prevent requests during initialization
@@ -3498,17 +3503,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.error('Error creating admin user:', error);
   }
   
-  // Automatically seed categories and subcategories on startup
-  try {
-    const seedResult = await seedCategoriesIfNeeded();
-    if (seedResult.success) {
-      console.log('Categories seeding completed:', seedResult.message);
-    } else {
-      console.error('Categories seeding failed:', seedResult.error);
-    }
-  } catch (error) {
-    console.error('Error during automatic category seeding:', error);
-  }
+  // Note: Category seeding is now handled in deferred initialization
+  // to prevent blocking server startup
 
   // Email/Password authentication routes
   app.post('/api/auth/login', async (req, res) => {
