@@ -8,7 +8,7 @@ import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ChevronDown, ChevronRight, Car, Shield, Users, MapPin, Flame, Zap, Trees, AlertTriangle, RefreshCw, Target, Heart, Clock, Eye } from "lucide-react";
-import type { FilterState } from "@/pages/home";
+import type { FilterState } from "@/types/filters";
 import { LocationAutocomplete } from "@/components/location-autocomplete";
 import { useTrafficData } from "@/hooks/use-traffic-data";
 

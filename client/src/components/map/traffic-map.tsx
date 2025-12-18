@@ -39,7 +39,7 @@ const isQFESIncident = (incident: any) => {
          description.includes('ambulance') ||
          description.includes('rescue');
 };
-import type { FilterState } from "@/pages/home";
+import type { FilterState } from "@/types/filters";
 import { findRegionBySuburb } from "@/lib/regions";
 import { extractCoordinatesFromGeometry } from "@/lib/location-utils";
 import { calculateIncidentAging, getAgedColor, type IncidentAgingData } from "@/lib/incident-aging";

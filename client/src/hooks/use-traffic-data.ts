@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import type { FilterState } from "@/pages/home";
+import type { FilterState } from "@/types/filters";
 import { findRegionBySuburb } from '@/lib/regions';
 
 export interface ProcessedTrafficData {

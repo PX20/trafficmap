@@ -35,42 +35,8 @@ import {
   Bookmark
 } from "lucide-react";
 
-export interface FilterState {
-  // Simplified source-based filters
-  showTrafficEvents: boolean;  // TMR traffic data
-  showIncidents: boolean;      // ESQ emergency data (excluding QFES)
-  showQFES: boolean;           // QFES fire & emergency data
-  showUserReports: boolean;    // All user reports
-  // Individual user report filters
-  showUserSafetyCrime: boolean;
-  showUserWildlife: boolean;
-  showUserCommunity: boolean;
-  showUserTraffic: boolean;
-  showUserLostFound: boolean;
-  showUserPets: boolean;
-  // Status filtering
-  showActiveIncidents: boolean;
-  showResolvedIncidents: boolean;
-  // Priority filtering
-  showHighPriority: boolean;
-  showMediumPriority: boolean;
-  showLowPriority: boolean;
-  // Auto-refresh settings
-  autoRefresh: boolean;
-  // Distance filtering
-  distanceFilter: 'all' | '1km' | '2km' | '5km' | '10km' | '25km' | '50km';
-  radius?: number; // Custom radius in kilometers for proximity filtering
-  // Location filtering
-  locationFilter: boolean;
-  homeLocation?: string;
-  homeCoordinates?: { lat: number; lon: number };
-  homeBoundingBox?: [number, number, number, number];
-  // Aging controls
-  showExpiredIncidents: boolean;
-  agingSensitivity: 'normal' | 'extended' | 'disabled';
-  // Dynamic category filters - any string key for category IDs
-  [key: string]: boolean | string | number | { lat: number; lon: number } | [number, number, number, number] | undefined;
-}
+import type { FilterState } from "@/types/filters";
+export type { FilterState };
 
 export default function Home() {
   // Safety Monitor - Main Home Component

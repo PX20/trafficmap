@@ -136,8 +136,8 @@ function Router() {
     
     // Handle simple routes (use path without query params)
     switch (routePath) {
-      case '/map': return <Home />;
-      case '/feed': return <Feed />;
+      case '/map': return <Feed initialViewMode="map" />;
+      case '/feed': return <Feed initialViewMode="feed" />;
       case '/create': return <Create />;
       case '/advertise':
       case '/create-ad': return <CreateAd />;

@@ -5,12 +5,16 @@ import { useLocation } from "wouter";
 import { MobileNav } from "@/components/mobile-nav";
 import { PostCard } from "@/components/post-card";
 import { IncidentReportForm, type EntryPoint } from "@/components/incident-report-form";
+import { TrafficMap } from "@/components/map/traffic-map";
+import { SimpleFilterSidebar } from "@/components/map/simple-filter-sidebar";
+import { navigateToIncident } from "@/lib/incident-utils";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import type { FilterState } from "@/types/filters";
 import {
   Sheet,
   SheetContent,
@@ -55,16 +59,54 @@ import { calculateDistance, type Coordinates } from "@/lib/location-utils";
 
 type DistanceFilter = '1km' | '2km' | '5km' | '10km' | '25km' | '50km';
 
-export default function Feed() {
+interface FeedProps {
+  initialViewMode?: 'feed' | 'map';
+}
+
+export default function Feed({ initialViewMode = 'feed' }: FeedProps) {
   const { user, logoutMutation } = useAuth();
   const isMobile = useIsMobile();
   const [, setLocation] = useLocation();
   const [reportFormOpen, setReportFormOpen] = useState(false);
   const [reportEntryPoint, setReportEntryPoint] = useState<EntryPoint>("post");
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [viewMode, setViewMode] = useState<'feed' | 'map'>('feed');
+  const [viewMode, setViewMode] = useState<'feed' | 'map'>(initialViewMode);
   const [menuOpen, setMenuOpen] = useState(false);
   const [distanceFilter, setDistanceFilter] = useState<DistanceFilter>('10km');
+  const [mapSidebarOpen, setMapSidebarOpen] = useState(false);
+  
+  // Map filter state - keeps map mounted to prevent crash on mobile
+  const [mapFilters, setMapFilters] = useState<FilterState>({
+    showTrafficEvents: true,
+    showIncidents: true,
+    showQFES: true,
+    showUserReports: true,
+    showUserSafetyCrime: true,
+    showUserWildlife: true,
+    showUserCommunity: true,
+    showUserTraffic: true,
+    showUserLostFound: true,
+    showUserPets: true,
+    showActiveIncidents: true,
+    showResolvedIncidents: false,
+    showHighPriority: true,
+    showMediumPriority: true,
+    showLowPriority: true,
+    autoRefresh: true,
+    distanceFilter: 'all',
+    radius: 50,
+    locationFilter: true,
+    homeLocation: user?.preferredLocation || undefined,
+    homeCoordinates: user?.preferredLocationLat && user?.preferredLocationLng 
+      ? { lat: user.preferredLocationLat, lon: user.preferredLocationLng }
+      : undefined,
+    showExpiredIncidents: false,
+    agingSensitivity: 'normal',
+  });
+  
+  const handleMapFilterChange = (key: keyof FilterState, value: boolean | string | number | { lat: number; lon: number } | [number, number, number, number] | undefined) => {
+    setMapFilters(prev => ({ ...prev, [key]: value }));
+  };
 
   const userLocation = useMemo((): Coordinates | null => {
     if (user?.preferredLocationLat && user?.preferredLocationLng) {
@@ -370,10 +412,7 @@ export default function Feed() {
                 variant={viewMode === 'map' ? 'default' : 'ghost'}
                 size="sm"
                 className="flex-1 max-w-32 gap-2"
-                onClick={() => {
-                  setViewMode('map');
-                  setLocation('/map');
-                }}
+                onClick={() => setViewMode('map')}
                 data-testid="button-view-map"
               >
                 <Map className="w-4 h-4" />
@@ -383,8 +422,26 @@ export default function Feed() {
           </div>
         </div>
 
-        {/* Main Content */}
-        <main className="max-w-2xl mx-auto pb-20">
+        {/* Map View - stays mounted but hidden to prevent crash on mobile */}
+        <div className={viewMode === 'map' ? 'block' : 'hidden'}>
+          <SimpleFilterSidebar
+            isOpen={mapSidebarOpen}
+            filters={mapFilters}
+            onFilterChange={handleMapFilterChange}
+            onClose={() => setMapSidebarOpen(false)}
+          />
+          <div className={`absolute top-[6.5rem] right-0 bottom-0 transition-all duration-300 ${
+            mapSidebarOpen && !isMobile ? 'left-80' : 'left-0'
+          }`}>
+            <TrafficMap 
+              filters={mapFilters}
+              onEventSelect={(incident) => navigateToIncident(incident, setLocation)}
+            />
+          </div>
+        </div>
+
+        {/* Feed View - Main Content */}
+        <main className={`max-w-2xl mx-auto pb-20 ${viewMode === 'feed' ? 'block' : 'hidden'}`}>
 
         {/* Create Post Card */}
         <Card className="mx-0 sm:mx-4 mt-2 rounded-none sm:rounded-lg border-0 shadow-sm">
