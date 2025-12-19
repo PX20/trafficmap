@@ -1,0 +1,360 @@
+index-_zM4LFkL.js:660 🔍 RAW UNIFIED DATA: Object
+index-_zM4LFkL.js:660 🔍 BEFORE FILTERING: Object
+index-_zM4LFkL.js:660 🔍 AFTER FILTERING: Object
+index-_zM4LFkL.js:660 🔍 RAW UNIFIED DATA: Object
+index-_zM4LFkL.js:660 🔍 BEFORE FILTERING: Object
+index-_zM4LFkL.js:660 🔍 AFTER FILTERING: Object
+index-_zM4LFkL.js:660 🚗 EVENTS LOOP: Object
+index-_zM4LFkL.js:660 🚗 EVENTS LOOP SUMMARY: Object
+index-_zM4LFkL.js:660 📢 INCIDENTS LOOP: Object
+index-_zM4LFkL.js:660 🔍 RAW UNIFIED DATA: Object
+index-_zM4LFkL.js:660 🔍 BEFORE FILTERING: Object
+index-_zM4LFkL.js:660 🔍 AFTER FILTERING: Object
+index-_zM4LFkL.js:660 🔍 RAW UNIFIED DATA: Object
+index-_zM4LFkL.js:660 🔍 BEFORE FILTERING: Object
+index-_zM4LFkL.js:660 🔍 AFTER FILTERING: Object
+index-_zM4LFkL.js:660 🚗 EVENTS LOOP: Object
+index-_zM4LFkL.js:660 🚗 EVENTS LOOP SUMMARY: Object
+index-_zM4LFkL.js:660 📢 INCIDENTS LOOP: Object
+/api/notifications/unread-count:1   Failed to load resource: the server responded with a status of 401 ()
+/api/notifications/unread-count:1   Failed to load resource: the server responded with a status of 401 ()
+index-_zM4LFkL.js:660 🔍 RAW UNIFIED DATA: Object
+index-_zM4LFkL.js:660 🔍 BEFORE FILTERING: Object
+index-_zM4LFkL.js:660 🔍 AFTER FILTERING: Object
+index-_zM4LFkL.js:660 🚗 EVENTS LOOP: Object
+index-_zM4LFkL.js:660 🚗 EVENTS LOOP SUMMARY: Object
+index-_zM4LFkL.js:660 📢 INCIDENTS LOOP: Object
+index-_zM4LFkL.js:660 🔍 RAW UNIFIED DATA: {hasUnifiedData: false, featuresCount: 0, viewportBounds: 'not provided', allowFetchWithoutViewport: false}
+index-_zM4LFkL.js:660 🔍 BEFORE FILTERING: {allEventsCount: 0, allIncidentsCount: 0, hasHomeCoordinates: true, distanceFilter: 'all'}
+index-_zM4LFkL.js:660 🔍 AFTER FILTERING: {regionalEventsCount: 0, regionalIncidentsCount: 0}
+index-_zM4LFkL.js:660 🔍 RAW UNIFIED DATA: {hasUnifiedData: true, featuresCount: 0, viewportBounds: 'provided', allowFetchWithoutViewport: false}
+index-_zM4LFkL.js:660 🔍 BEFORE FILTERING: {allEventsCount: 0, allIncidentsCount: 0, hasHomeCoordinates: true, distanceFilter: 'all'}
+index-_zM4LFkL.js:660 🔍 AFTER FILTERING: {regionalEventsCount: 0, regionalIncidentsCount: 0}
+index-_zM4LFkL.js:660 🚗 EVENTS LOOP: {hasEventsData: true, eventsCount: 0, firstEvent: undefined}
+index-_zM4LFkL.js:660 🚗 EVENTS LOOP SUMMARY: {markersCreated: 0, noGeometry: 0, noCoords: 0, hiddenByAging: 0}
+index-_zM4LFkL.js:660 📢 INCIDENTS LOOP: {hasIncidentsData: true, incidentsCount: 0, firstIncident: undefined}
+index-_zM4LFkL.js:660 🔍 RAW UNIFIED DATA: {hasUnifiedData: false, featuresCount: 0, viewportBounds: 'not provided', allowFetchWithoutViewport: false}
+index-_zM4LFkL.js:660 🔍 BEFORE FILTERING: {allEventsCount: 0, allIncidentsCount: 0, hasHomeCoordinates: true, distanceFilter: 'all'}
+index-_zM4LFkL.js:660 🔍 AFTER FILTERING: {regionalEventsCount: 0, regionalIncidentsCount: 0}
+index-_zM4LFkL.js:660 🔍 RAW UNIFIED DATA: {hasUnifiedData: true, featuresCount: 0, viewportBounds: 'provided', allowFetchWithoutViewport: false}
+index-_zM4LFkL.js:660 🔍 BEFORE FILTERING: {allEventsCount: 0, allIncidentsCount: 0, hasHomeCoordinates: true, distanceFilter: 'all'}
+index-_zM4LFkL.js:660 🔍 AFTER FILTERING: {regionalEventsCount: 0, regionalIncidentsCount: 0}
+index-_zM4LFkL.js:660 🚗 EVENTS LOOP: {hasEventsData: true, eventsCount: 0, firstEvent: undefined}
+index-_zM4LFkL.js:660 🚗 EVENTS LOOP SUMMARY: {markersCreated: 0, noGeometry: 0, noCoords: 0, hiddenByAging: 0}
+index-_zM4LFkL.js:660 📢 INCIDENTS LOOP: {hasIncidentsData: true, incidentsCount: 0, firstIncident: undefined}
+index-_zM4LFkL.js:48   GET https://neighbour-app--pkingdom83.replit.app/api/notifications/unread-count 401 (Unauthorized)
+(anonymous) @ index-_zM4LFkL.js:48
+o @ index-_zM4LFkL.js:48
+j @ index-_zM4LFkL.js:48
+start @ index-_zM4LFkL.js:48
+fetch @ index-_zM4LFkL.js:48
+Mu @ index-_zM4LFkL.js:48
+fetch @ index-_zM4LFkL.js:48
+refetch @ index-_zM4LFkL.js:48
+onFocus @ index-_zM4LFkL.js:48
+(anonymous) @ index-_zM4LFkL.js:48
+(anonymous) @ index-_zM4LFkL.js:48
+batch @ index-_zM4LFkL.js:48
+onFocus @ index-_zM4LFkL.js:48
+(anonymous) @ index-_zM4LFkL.js:48
+await in (anonymous)
+(anonymous) @ index-_zM4LFkL.js:48
+onFocus @ index-_zM4LFkL.js:48
+(anonymous) @ index-_zM4LFkL.js:48
+n @ index-_zM4LFkL.js:48
+index-_zM4LFkL.js:48   GET https://neighbour-app--pkingdom83.replit.app/api/notifications/unread-count 401 (Unauthorized)
+(anonymous) @ index-_zM4LFkL.js:48
+o @ index-_zM4LFkL.js:48
+j @ index-_zM4LFkL.js:48
+(anonymous) @ index-_zM4LFkL.js:48
+Promise.then
+(anonymous) @ index-_zM4LFkL.js:48
+Promise.catch
+j @ index-_zM4LFkL.js:48
+start @ index-_zM4LFkL.js:48
+fetch @ index-_zM4LFkL.js:48
+Mu @ index-_zM4LFkL.js:48
+fetch @ index-_zM4LFkL.js:48
+refetch @ index-_zM4LFkL.js:48
+onFocus @ index-_zM4LFkL.js:48
+(anonymous) @ index-_zM4LFkL.js:48
+(anonymous) @ index-_zM4LFkL.js:48
+batch @ index-_zM4LFkL.js:48
+onFocus @ index-_zM4LFkL.js:48
+(anonymous) @ index-_zM4LFkL.js:48
+await in (anonymous)
+(anonymous) @ index-_zM4LFkL.js:48
+onFocus @ index-_zM4LFkL.js:48
+(anonymous) @ index-_zM4LFkL.js:48
+n @ index-_zM4LFkL.js:48
+index-_zM4LFkL.js:660 🔍 RAW UNIFIED DATA: {hasUnifiedData: true, featuresCount: 0, viewportBounds: 'provided', allowFetchWithoutViewport: false}
+index-_zM4LFkL.js:660 🔍 BEFORE FILTERING: {allEventsCount: 0, allIncidentsCount: 0, hasHomeCoordinates: true, distanceFilter: 'all'}
+index-_zM4LFkL.js:660 🔍 AFTER FILTERING: {regionalEventsCount: 0, regionalIncidentsCount: 0}
+index-_zM4LFkL.js:660 🚗 EVENTS LOOP: {hasEventsData: true, eventsCount: 0, firstEvent: undefined}
+index-_zM4LFkL.js:660 🚗 EVENTS LOOP SUMMARY: {markersCreated: 0, noGeometry: 0, noCoords: 0, hiddenByAging: 0}
+index-_zM4LFkL.js:660 📢 INCIDENTS LOOP: {hasIncidentsData: true, incidentsCount: 0, firstIncident: undefined}
+index-_zM4LFkL.js:660 🔍 RAW UNIFIED DATA: {hasUnifiedData: false, featuresCount: 0, viewportBounds: 'not provided', allowFetchWithoutViewport: false}
+index-_zM4LFkL.js:660 🔍 BEFORE FILTERING: {allEventsCount: 0, allIncidentsCount: 0, hasHomeCoordinates: true, distanceFilter: 'all'}
+index-_zM4LFkL.js:660 🔍 AFTER FILTERING: {regionalEventsCount: 0, regionalIncidentsCount: 0}
+index-_zM4LFkL.js:660 🔍 RAW UNIFIED DATA: {hasUnifiedData: true, featuresCount: 0, viewportBounds: 'provided', allowFetchWithoutViewport: false}
+index-_zM4LFkL.js:660 🔍 BEFORE FILTERING: {allEventsCount: 0, allIncidentsCount: 0, hasHomeCoordinates: true, distanceFilter: 'all'}
+index-_zM4LFkL.js:660 🔍 AFTER FILTERING: {regionalEventsCount: 0, regionalIncidentsCount: 0}
+index-_zM4LFkL.js:660 🚗 EVENTS LOOP: {hasEventsData: true, eventsCount: 0, firstEvent: undefined}
+index-_zM4LFkL.js:660 🚗 EVENTS LOOP SUMMARY: {markersCreated: 0, noGeometry: 0, noCoords: 0, hiddenByAging: 0}
+index-_zM4LFkL.js:660 📢 INCIDENTS LOOP: {hasIncidentsData: true, incidentsCount: 0, firstIncident: undefined}
+(index):1 [Intervention] Images loaded lazily and replaced with placeholders. Load events are deferred. See https://go.microsoft.com/fwlink/?linkid=2048113
+index-_zM4LFkL.js:660 🔍 RAW UNIFIED DATA: {hasUnifiedData: false, featuresCount: 0, viewportBounds: 'not provided', allowFetchWithoutViewport: false}
+index-_zM4LFkL.js:660 🔍 BEFORE FILTERING: {allEventsCount: 0, allIncidentsCount: 0, hasHomeCoordinates: true, distanceFilter: 'all'}
+index-_zM4LFkL.js:660 🔍 AFTER FILTERING: {regionalEventsCount: 0, regionalIncidentsCount: 0}
+index-_zM4LFkL.js:660 🔍 RAW UNIFIED DATA: {hasUnifiedData: true, featuresCount: 0, viewportBounds: 'provided', allowFetchWithoutViewport: false}
+index-_zM4LFkL.js:660 🔍 BEFORE FILTERING: {allEventsCount: 0, allIncidentsCount: 0, hasHomeCoordinates: true, distanceFilter: 'all'}
+index-_zM4LFkL.js:660 🔍 AFTER FILTERING: {regionalEventsCount: 0, regionalIncidentsCount: 0}
+index-_zM4LFkL.js:660 🚗 EVENTS LOOP: {hasEventsData: true, eventsCount: 0, firstEvent: undefined}
+index-_zM4LFkL.js:660 🚗 EVENTS LOOP SUMMARY: {markersCreated: 0, noGeometry: 0, noCoords: 0, hiddenByAging: 0}
+index-_zM4LFkL.js:660 📢 INCIDENTS LOOP: {hasIncidentsData: true, incidentsCount: 0, firstIncident: undefined}
+index-_zM4LFkL.js:48   GET https://neighbour-app--pkingdom83.replit.app/api/notifications/unread-count 401 (Unauthorized)
+(anonymous) @ index-_zM4LFkL.js:48
+o @ index-_zM4LFkL.js:48
+j @ index-_zM4LFkL.js:48
+start @ index-_zM4LFkL.js:48
+fetch @ index-_zM4LFkL.js:48
+Mu @ index-_zM4LFkL.js:48
+fetch @ index-_zM4LFkL.js:48
+refetch @ index-_zM4LFkL.js:48
+onFocus @ index-_zM4LFkL.js:48
+(anonymous) @ index-_zM4LFkL.js:48
+(anonymous) @ index-_zM4LFkL.js:48
+batch @ index-_zM4LFkL.js:48
+onFocus @ index-_zM4LFkL.js:48
+(anonymous) @ index-_zM4LFkL.js:48
+await in (anonymous)
+(anonymous) @ index-_zM4LFkL.js:48
+onFocus @ index-_zM4LFkL.js:48
+(anonymous) @ index-_zM4LFkL.js:48
+n @ index-_zM4LFkL.js:48
+index-_zM4LFkL.js:660 🔍 RAW UNIFIED DATA: {hasUnifiedData: false, featuresCount: 0, viewportBounds: 'not provided', allowFetchWithoutViewport: false}
+index-_zM4LFkL.js:660 🔍 BEFORE FILTERING: {allEventsCount: 0, allIncidentsCount: 0, hasHomeCoordinates: true, distanceFilter: 'all'}
+index-_zM4LFkL.js:660 🔍 AFTER FILTERING: {regionalEventsCount: 0, regionalIncidentsCount: 0}
+index-_zM4LFkL.js:660 🔍 RAW UNIFIED DATA: {hasUnifiedData: true, featuresCount: 0, viewportBounds: 'provided', allowFetchWithoutViewport: false}
+index-_zM4LFkL.js:660 🔍 BEFORE FILTERING: {allEventsCount: 0, allIncidentsCount: 0, hasHomeCoordinates: true, distanceFilter: 'all'}
+index-_zM4LFkL.js:660 🔍 AFTER FILTERING: {regionalEventsCount: 0, regionalIncidentsCount: 0}
+index-_zM4LFkL.js:660 🚗 EVENTS LOOP: {hasEventsData: true, eventsCount: 0, firstEvent: undefined}
+index-_zM4LFkL.js:660 🚗 EVENTS LOOP SUMMARY: {markersCreated: 0, noGeometry: 0, noCoords: 0, hiddenByAging: 0}
+index-_zM4LFkL.js:660 📢 INCIDENTS LOOP: {hasIncidentsData: true, incidentsCount: 0, firstIncident: undefined}
+index-_zM4LFkL.js:48   GET https://neighbour-app--pkingdom83.replit.app/api/notifications/unread-count 401 (Unauthorized)
+(anonymous) @ index-_zM4LFkL.js:48
+o @ index-_zM4LFkL.js:48
+j @ index-_zM4LFkL.js:48
+(anonymous) @ index-_zM4LFkL.js:48
+Promise.then
+(anonymous) @ index-_zM4LFkL.js:48
+Promise.catch
+j @ index-_zM4LFkL.js:48
+start @ index-_zM4LFkL.js:48
+fetch @ index-_zM4LFkL.js:48
+Mu @ index-_zM4LFkL.js:48
+fetch @ index-_zM4LFkL.js:48
+refetch @ index-_zM4LFkL.js:48
+onFocus @ index-_zM4LFkL.js:48
+(anonymous) @ index-_zM4LFkL.js:48
+(anonymous) @ index-_zM4LFkL.js:48
+batch @ index-_zM4LFkL.js:48
+onFocus @ index-_zM4LFkL.js:48
+(anonymous) @ index-_zM4LFkL.js:48
+await in (anonymous)
+(anonymous) @ index-_zM4LFkL.js:48
+onFocus @ index-_zM4LFkL.js:48
+(anonymous) @ index-_zM4LFkL.js:48
+n @ index-_zM4LFkL.js:48
+index-_zM4LFkL.js:660 🔍 RAW UNIFIED DATA: {hasUnifiedData: false, featuresCount: 0, viewportBounds: 'not provided', allowFetchWithoutViewport: false}
+index-_zM4LFkL.js:660 🔍 BEFORE FILTERING: {allEventsCount: 0, allIncidentsCount: 0, hasHomeCoordinates: true, distanceFilter: 'all'}
+index-_zM4LFkL.js:660 🔍 AFTER FILTERING: {regionalEventsCount: 0, regionalIncidentsCount: 0}
+index-_zM4LFkL.js:660 🔍 RAW UNIFIED DATA: {hasUnifiedData: true, featuresCount: 0, viewportBounds: 'provided', allowFetchWithoutViewport: false}
+index-_zM4LFkL.js:660 🔍 BEFORE FILTERING: {allEventsCount: 0, allIncidentsCount: 0, hasHomeCoordinates: true, distanceFilter: 'all'}
+index-_zM4LFkL.js:660 🔍 AFTER FILTERING: {regionalEventsCount: 0, regionalIncidentsCount: 0}
+index-_zM4LFkL.js:660 🚗 EVENTS LOOP: {hasEventsData: true, eventsCount: 0, firstEvent: undefined}
+index-_zM4LFkL.js:660 🚗 EVENTS LOOP SUMMARY: {markersCreated: 0, noGeometry: 0, noCoords: 0, hiddenByAging: 0}
+index-_zM4LFkL.js:660 📢 INCIDENTS LOOP: {hasIncidentsData: true, incidentsCount: 0, firstIncident: undefined}
+index-_zM4LFkL.js:660 🔍 RAW UNIFIED DATA: {hasUnifiedData: true, featuresCount: 0, viewportBounds: 'provided', allowFetchWithoutViewport: false}
+index-_zM4LFkL.js:660 🔍 BEFORE FILTERING: {allEventsCount: 0, allIncidentsCount: 0, hasHomeCoordinates: true, distanceFilter: 'all'}
+index-_zM4LFkL.js:660 🔍 AFTER FILTERING: {regionalEventsCount: 0, regionalIncidentsCount: 0}
+index-_zM4LFkL.js:660 🚗 EVENTS LOOP: {hasEventsData: true, eventsCount: 0, firstEvent: undefined}
+index-_zM4LFkL.js:660 🚗 EVENTS LOOP SUMMARY: {markersCreated: 0, noGeometry: 0, noCoords: 0, hiddenByAging: 0}
+index-_zM4LFkL.js:660 📢 INCIDENTS LOOP: {hasIncidentsData: true, incidentsCount: 0, firstIncident: undefined}
+index-_zM4LFkL.js:48   GET https://neighbour-app--pkingdom83.replit.app/api/notifications/unread-count 401 (Unauthorized)
+(anonymous) @ index-_zM4LFkL.js:48
+o @ index-_zM4LFkL.js:48
+j @ index-_zM4LFkL.js:48
+start @ index-_zM4LFkL.js:48
+fetch @ index-_zM4LFkL.js:48
+Mu @ index-_zM4LFkL.js:48
+fetch @ index-_zM4LFkL.js:48
+refetch @ index-_zM4LFkL.js:48
+onFocus @ index-_zM4LFkL.js:48
+(anonymous) @ index-_zM4LFkL.js:48
+(anonymous) @ index-_zM4LFkL.js:48
+batch @ index-_zM4LFkL.js:48
+onFocus @ index-_zM4LFkL.js:48
+(anonymous) @ index-_zM4LFkL.js:48
+await in (anonymous)
+(anonymous) @ index-_zM4LFkL.js:48
+onFocus @ index-_zM4LFkL.js:48
+(anonymous) @ index-_zM4LFkL.js:48
+n @ index-_zM4LFkL.js:48
+index-_zM4LFkL.js:660 🔍 RAW UNIFIED DATA: {hasUnifiedData: true, featuresCount: 0, viewportBounds: 'provided', allowFetchWithoutViewport: false}
+index-_zM4LFkL.js:660 🔍 BEFORE FILTERING: {allEventsCount: 0, allIncidentsCount: 0, hasHomeCoordinates: true, distanceFilter: 'all'}
+index-_zM4LFkL.js:660 🔍 AFTER FILTERING: {regionalEventsCount: 0, regionalIncidentsCount: 0}
+index-_zM4LFkL.js:660 🚗 EVENTS LOOP: {hasEventsData: true, eventsCount: 0, firstEvent: undefined}
+index-_zM4LFkL.js:660 🚗 EVENTS LOOP SUMMARY: {markersCreated: 0, noGeometry: 0, noCoords: 0, hiddenByAging: 0}
+index-_zM4LFkL.js:660 📢 INCIDENTS LOOP: {hasIncidentsData: true, incidentsCount: 0, firstIncident: undefined}
+index-_zM4LFkL.js:48   GET https://neighbour-app--pkingdom83.replit.app/api/notifications/unread-count 401 (Unauthorized)
+(anonymous) @ index-_zM4LFkL.js:48
+o @ index-_zM4LFkL.js:48
+j @ index-_zM4LFkL.js:48
+(anonymous) @ index-_zM4LFkL.js:48
+Promise.then
+(anonymous) @ index-_zM4LFkL.js:48
+Promise.catch
+j @ index-_zM4LFkL.js:48
+start @ index-_zM4LFkL.js:48
+fetch @ index-_zM4LFkL.js:48
+Mu @ index-_zM4LFkL.js:48
+fetch @ index-_zM4LFkL.js:48
+refetch @ index-_zM4LFkL.js:48
+onFocus @ index-_zM4LFkL.js:48
+(anonymous) @ index-_zM4LFkL.js:48
+(anonymous) @ index-_zM4LFkL.js:48
+batch @ index-_zM4LFkL.js:48
+onFocus @ index-_zM4LFkL.js:48
+(anonymous) @ index-_zM4LFkL.js:48
+await in (anonymous)
+(anonymous) @ index-_zM4LFkL.js:48
+onFocus @ index-_zM4LFkL.js:48
+(anonymous) @ index-_zM4LFkL.js:48
+n @ index-_zM4LFkL.js:48
+index-_zM4LFkL.js:660 🔍 RAW UNIFIED DATA: {hasUnifiedData: true, featuresCount: 0, viewportBounds: 'provided', allowFetchWithoutViewport: false}
+index-_zM4LFkL.js:660 🔍 BEFORE FILTERING: {allEventsCount: 0, allIncidentsCount: 0, hasHomeCoordinates: true, distanceFilter: 'all'}
+index-_zM4LFkL.js:660 🔍 AFTER FILTERING: {regionalEventsCount: 0, regionalIncidentsCount: 0}
+index-_zM4LFkL.js:660 🚗 EVENTS LOOP: {hasEventsData: true, eventsCount: 0, firstEvent: undefined}
+index-_zM4LFkL.js:660 🚗 EVENTS LOOP SUMMARY: {markersCreated: 0, noGeometry: 0, noCoords: 0, hiddenByAging: 0}
+index-_zM4LFkL.js:660 📢 INCIDENTS LOOP: {hasIncidentsData: true, incidentsCount: 0, firstIncident: undefined}
+index-_zM4LFkL.js:660 🔍 RAW UNIFIED DATA: {hasUnifiedData: true, featuresCount: 0, viewportBounds: 'provided', allowFetchWithoutViewport: false}
+index-_zM4LFkL.js:660 🔍 BEFORE FILTERING: {allEventsCount: 0, allIncidentsCount: 0, hasHomeCoordinates: true, distanceFilter: 'all'}
+index-_zM4LFkL.js:660 🔍 AFTER FILTERING: {regionalEventsCount: 0, regionalIncidentsCount: 0}
+index-_zM4LFkL.js:660 🚗 EVENTS LOOP: {hasEventsData: true, eventsCount: 0, firstEvent: undefined}
+index-_zM4LFkL.js:660 🚗 EVENTS LOOP SUMMARY: {markersCreated: 0, noGeometry: 0, noCoords: 0, hiddenByAging: 0}
+index-_zM4LFkL.js:660 📢 INCIDENTS LOOP: {hasIncidentsData: true, incidentsCount: 0, firstIncident: undefined}
+index-_zM4LFkL.js:48   GET https://neighbour-app--pkingdom83.replit.app/api/notifications/unread-count 401 (Unauthorized)
+(anonymous) @ index-_zM4LFkL.js:48
+o @ index-_zM4LFkL.js:48
+j @ index-_zM4LFkL.js:48
+start @ index-_zM4LFkL.js:48
+fetch @ index-_zM4LFkL.js:48
+Mu @ index-_zM4LFkL.js:48
+fetch @ index-_zM4LFkL.js:48
+refetch @ index-_zM4LFkL.js:48
+onFocus @ index-_zM4LFkL.js:48
+(anonymous) @ index-_zM4LFkL.js:48
+(anonymous) @ index-_zM4LFkL.js:48
+batch @ index-_zM4LFkL.js:48
+onFocus @ index-_zM4LFkL.js:48
+(anonymous) @ index-_zM4LFkL.js:48
+await in (anonymous)
+(anonymous) @ index-_zM4LFkL.js:48
+onFocus @ index-_zM4LFkL.js:48
+(anonymous) @ index-_zM4LFkL.js:48
+n @ index-_zM4LFkL.js:48
+index-_zM4LFkL.js:660 🔍 RAW UNIFIED DATA: {hasUnifiedData: true, featuresCount: 0, viewportBounds: 'provided', allowFetchWithoutViewport: false}
+index-_zM4LFkL.js:660 🔍 BEFORE FILTERING: {allEventsCount: 0, allIncidentsCount: 0, hasHomeCoordinates: true, distanceFilter: 'all'}
+index-_zM4LFkL.js:660 🔍 AFTER FILTERING: {regionalEventsCount: 0, regionalIncidentsCount: 0}
+index-_zM4LFkL.js:660 🚗 EVENTS LOOP: {hasEventsData: true, eventsCount: 0, firstEvent: undefined}
+index-_zM4LFkL.js:660 🚗 EVENTS LOOP SUMMARY: {markersCreated: 0, noGeometry: 0, noCoords: 0, hiddenByAging: 0}
+index-_zM4LFkL.js:660 📢 INCIDENTS LOOP: {hasIncidentsData: true, incidentsCount: 0, firstIncident: undefined}
+index-_zM4LFkL.js:48   GET https://neighbour-app--pkingdom83.replit.app/api/notifications/unread-count 401 (Unauthorized)
+(anonymous) @ index-_zM4LFkL.js:48
+o @ index-_zM4LFkL.js:48
+j @ index-_zM4LFkL.js:48
+(anonymous) @ index-_zM4LFkL.js:48
+Promise.then
+(anonymous) @ index-_zM4LFkL.js:48
+Promise.catch
+j @ index-_zM4LFkL.js:48
+start @ index-_zM4LFkL.js:48
+fetch @ index-_zM4LFkL.js:48
+Mu @ index-_zM4LFkL.js:48
+fetch @ index-_zM4LFkL.js:48
+refetch @ index-_zM4LFkL.js:48
+onFocus @ index-_zM4LFkL.js:48
+(anonymous) @ index-_zM4LFkL.js:48
+(anonymous) @ index-_zM4LFkL.js:48
+batch @ index-_zM4LFkL.js:48
+onFocus @ index-_zM4LFkL.js:48
+(anonymous) @ index-_zM4LFkL.js:48
+await in (anonymous)
+(anonymous) @ index-_zM4LFkL.js:48
+onFocus @ index-_zM4LFkL.js:48
+(anonymous) @ index-_zM4LFkL.js:48
+n @ index-_zM4LFkL.js:48
+index-_zM4LFkL.js:48   GET https://neighbour-app--pkingdom83.replit.app/api/notifications/unread-count 401 (Unauthorized)
+(anonymous) @ index-_zM4LFkL.js:48
+o @ index-_zM4LFkL.js:48
+j @ index-_zM4LFkL.js:48
+start @ index-_zM4LFkL.js:48
+fetch @ index-_zM4LFkL.js:48
+Mu @ index-_zM4LFkL.js:48
+fetch @ index-_zM4LFkL.js:48
+refetch @ index-_zM4LFkL.js:48
+onFocus @ index-_zM4LFkL.js:48
+(anonymous) @ index-_zM4LFkL.js:48
+(anonymous) @ index-_zM4LFkL.js:48
+batch @ index-_zM4LFkL.js:48
+onFocus @ index-_zM4LFkL.js:48
+(anonymous) @ index-_zM4LFkL.js:48
+await in (anonymous)
+(anonymous) @ index-_zM4LFkL.js:48
+onFocus @ index-_zM4LFkL.js:48
+(anonymous) @ index-_zM4LFkL.js:48
+n @ index-_zM4LFkL.js:48
+index-_zM4LFkL.js:660 🔍 RAW UNIFIED DATA: {hasUnifiedData: true, featuresCount: 0, viewportBounds: 'provided', allowFetchWithoutViewport: false}
+index-_zM4LFkL.js:660 🔍 BEFORE FILTERING: {allEventsCount: 0, allIncidentsCount: 0, hasHomeCoordinates: true, distanceFilter: 'all'}
+index-_zM4LFkL.js:660 🔍 AFTER FILTERING: {regionalEventsCount: 0, regionalIncidentsCount: 0}
+index-_zM4LFkL.js:660 🚗 EVENTS LOOP: {hasEventsData: true, eventsCount: 0, firstEvent: undefined}
+index-_zM4LFkL.js:660 🚗 EVENTS LOOP SUMMARY: {markersCreated: 0, noGeometry: 0, noCoords: 0, hiddenByAging: 0}
+index-_zM4LFkL.js:660 📢 INCIDENTS LOOP: {hasIncidentsData: true, incidentsCount: 0, firstIncident: undefined}
+index-_zM4LFkL.js:660 🔍 RAW UNIFIED DATA: {hasUnifiedData: true, featuresCount: 0, viewportBounds: 'provided', allowFetchWithoutViewport: false}
+index-_zM4LFkL.js:660 🔍 BEFORE FILTERING: {allEventsCount: 0, allIncidentsCount: 0, hasHomeCoordinates: true, distanceFilter: 'all'}
+index-_zM4LFkL.js:660 🔍 AFTER FILTERING: {regionalEventsCount: 0, regionalIncidentsCount: 0}
+index-_zM4LFkL.js:660 🚗 EVENTS LOOP: {hasEventsData: true, eventsCount: 0, firstEvent: undefined}
+index-_zM4LFkL.js:660 🚗 EVENTS LOOP SUMMARY: {markersCreated: 0, noGeometry: 0, noCoords: 0, hiddenByAging: 0}
+index-_zM4LFkL.js:660 📢 INCIDENTS LOOP: {hasIncidentsData: true, incidentsCount: 0, firstIncident: undefined}
+index-_zM4LFkL.js:48   GET https://neighbour-app--pkingdom83.replit.app/api/notifications/unread-count 401 (Unauthorized)
+(anonymous) @ index-_zM4LFkL.js:48
+o @ index-_zM4LFkL.js:48
+j @ index-_zM4LFkL.js:48
+(anonymous) @ index-_zM4LFkL.js:48
+Promise.then
+(anonymous) @ index-_zM4LFkL.js:48
+Promise.catch
+j @ index-_zM4LFkL.js:48
+start @ index-_zM4LFkL.js:48
+fetch @ index-_zM4LFkL.js:48
+Mu @ index-_zM4LFkL.js:48
+fetch @ index-_zM4LFkL.js:48
+refetch @ index-_zM4LFkL.js:48
+onFocus @ index-_zM4LFkL.js:48
+(anonymous) @ index-_zM4LFkL.js:48
+(anonymous) @ index-_zM4LFkL.js:48
+batch @ index-_zM4LFkL.js:48
+onFocus @ index-_zM4LFkL.js:48
+(anonymous) @ index-_zM4LFkL.js:48
+await in (anonymous)
+(anonymous) @ index-_zM4LFkL.js:48
+onFocus @ index-_zM4LFkL.js:48
+(anonymous) @ index-_zM4LFkL.js:48
+n @ index-_zM4LFkL.js:48
+index-_zM4LFkL.js:660 🔍 RAW UNIFIED DATA: {hasUnifiedData: true, featuresCount: 0, viewportBounds: 'provided', allowFetchWithoutViewport: false}
+index-_zM4LFkL.js:660 🔍 BEFORE FILTERING: {allEventsCount: 0, allIncidentsCount: 0, hasHomeCoordinates: true, distanceFilter: 'all'}
+index-_zM4LFkL.js:660 🔍 AFTER FILTERING: {regionalEventsCount: 0, regionalIncidentsCount: 0}
+index-_zM4LFkL.js:660 🚗 EVENTS LOOP: {hasEventsData: true, eventsCount: 0, firstEvent: undefined}
+index-_zM4LFkL.js:660 🚗 EVENTS LOOP SUMMARY: {markersCreated: 0, noGeometry: 0, noCoords: 0, hiddenByAging: 0}
+index-_zM4LFkL.js:660 📢 INCIDENTS LOOP: {hasIncidentsData: true, incidentsCount: 0, firstIncident: undefined}

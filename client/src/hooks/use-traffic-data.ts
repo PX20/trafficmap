@@ -80,13 +80,6 @@ export function useTrafficData(filters: FilterState, viewportBounds?: { southwes
   // Extract and process all unified features
   const allFeatures = unifiedData?.features || [];
   
-  console.log('🔍 RAW UNIFIED DATA:', {
-    hasUnifiedData: !!unifiedData,
-    featuresCount: allFeatures.length,
-    viewportBounds: viewportBounds ? 'provided' : 'not provided',
-    allowFetchWithoutViewport
-  });
-  
   // Separate by source type for backward compatibility
   // Check feature.source first (top-level), then fall back to properties.source
   const allEventsData = allFeatures.filter((feature: any) => {
@@ -100,17 +93,6 @@ export function useTrafficData(filters: FilterState, viewportBounds?: { southwes
     return source === 'emergency' || source === 'user' || !source;
   });
   
-  // DEBUG: Log what sources are in incidents to catch TMR leaks
-  if (allIncidentsData.length > 0) {
-    const incidentSources = allIncidentsData.map((f: any) => ({
-      title: f.properties?.title?.substring(0, 40),
-      source: f.source,
-      propsSource: f.properties?.source,
-      id: f.id
-    }));
-    console.log('🔍 INCIDENTS SOURCES DEBUG:', incidentSources);
-  }
-
   // CLIENT-SIDE PROXIMITY-BASED FILTERING - Primary filtering method
   const defaultRadius = 50; // Default 50km radius
   const filterRadius = typeof filters.radius === 'number' ? filters.radius : defaultRadius;
@@ -119,13 +101,11 @@ export function useTrafficData(filters: FilterState, viewportBounds?: { southwes
   const isWithinProximity = (feature: any) => {
     // If distanceFilter is 'all', include everything
     if (filters.distanceFilter === 'all') {
-      console.log('🔍 PROXIMITY CHECK: distanceFilter is "all", including all features');
       return true;
     }
     
     // Require home coordinates for filtering
     if (!filters.homeCoordinates) {
-      console.log('🔍 PROXIMITY CHECK: No home coordinates, excluding feature');
       return false;
     }
     
@@ -176,22 +156,9 @@ export function useTrafficData(filters: FilterState, viewportBounds?: { southwes
     return withinRadius;
   };
 
-  // Debug: Log the data before filtering
-  console.log('🔍 BEFORE FILTERING:', {
-    allEventsCount: allEventsData.length,
-    allIncidentsCount: allIncidentsData.length,
-    hasHomeCoordinates: !!filters.homeCoordinates,
-    distanceFilter: filters.distanceFilter
-  });
-  
   // Apply proximity-based filtering for feed data
   const regionalEventsData = filters.homeCoordinates ? allEventsData.filter(isWithinProximity) : [];
   const regionalIncidentsData = filters.homeCoordinates ? allIncidentsData.filter(isWithinProximity) : [];
-  
-  console.log('🔍 AFTER FILTERING:', {
-    regionalEventsCount: regionalEventsData.length,
-    regionalIncidentsCount: regionalIncidentsData.length
-  });
 
   // All data for map display (shows everything)
   const allEvents = Array.isArray(allEventsData) ? allEventsData : [];

@@ -17,9 +17,10 @@ interface SimpleFilterSidebarProps {
   filters: FilterState;
   onFilterChange: (key: keyof FilterState, value: boolean | string | number | { lat: number; lon: number } | [number, number, number, number] | undefined) => void;
   onClose: () => void;
+  isActive?: boolean;
 }
 
-export function SimpleFilterSidebar({ isOpen, filters, onFilterChange, onClose }: SimpleFilterSidebarProps) {
+export function SimpleFilterSidebar({ isOpen, filters, onFilterChange, onClose, isActive = true }: SimpleFilterSidebarProps) {
   const isMobile = useIsMobile();
   const { toast } = useToast();
   const [expandedSections, setExpandedSections] = useState({
@@ -34,8 +35,8 @@ export function SimpleFilterSidebar({ isOpen, filters, onFilterChange, onClose }
     }));
   };
   
-  // Use shared data processing hook 
-  const { counts } = useTrafficData(filters);
+  // Use shared data processing hook - only fetch when active to prevent duplicate processing
+  const { counts } = useTrafficData(filters, undefined, isActive && isOpen);
 
   const handleRefresh = async () => {
     try {

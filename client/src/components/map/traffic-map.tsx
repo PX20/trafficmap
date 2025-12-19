@@ -55,9 +55,10 @@ L.Icon.Default.mergeOptions({
 interface TrafficMapProps {
   filters: FilterState;
   onEventSelect: (incident: any) => void;
+  isActive?: boolean;
 }
 
-export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
+export function TrafficMap({ filters, onEventSelect, isActive = true }: TrafficMapProps) {
   
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
@@ -66,8 +67,10 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [viewportBounds, setViewportBounds] = useState<{ southwest: [number, number], northeast: [number, number] } | undefined>();
 
-  // 🎯 OPTIMIZED: Fetch only viewport-visible incidents
-  const { filteredEvents, filteredIncidents } = useTrafficData(filters, viewportBounds);
+  // 🎯 OPTIMIZED: Fetch only when map is active and has viewport bounds
+  // When isActive is false, skip expensive data processing
+  const effectiveBounds = isActive ? viewportBounds : undefined;
+  const { filteredEvents, filteredIncidents } = useTrafficData(filters, effectiveBounds);
   
   // Convert to expected format for backward compatibility  
   const eventsData = { features: filteredEvents || [] };
@@ -251,12 +254,6 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
 
     // Add event markers (already filtered by shared hook)
     // Sort events by timestamp (oldest first, newest last) so newer markers appear on top
-    console.log('🚗 EVENTS LOOP:', {
-      hasEventsData: !!(filteredEventsData as any)?.features,
-      eventsCount: (filteredEventsData as any)?.features?.length || 0,
-      firstEvent: (filteredEventsData as any)?.features?.[0]?.properties?.title
-    });
-    
     let eventsMarkerCount = 0;
     let eventsNoGeometryCount = 0;
     let eventsNoCoordsCount = 0;
@@ -401,25 +398,10 @@ export function TrafficMap({ filters, onEventSelect }: TrafficMapProps) {
           }
         }
       });
-      
-      // Log summary of events loop marker creation
-      console.log('🚗 EVENTS LOOP SUMMARY:', {
-        markersCreated: eventsMarkerCount,
-        noGeometry: eventsNoGeometryCount,
-        noCoords: eventsNoCoordsCount,
-        hiddenByAging: eventsHiddenByAgingCount
-      });
     }
-
 
     // Add incident markers (already filtered by shared hook)
     // Sort incidents by timestamp (oldest first, newest last) so newer markers appear on top
-    console.log('📢 INCIDENTS LOOP:', {
-      hasIncidentsData: !!(filteredIncidentsData as any)?.features,
-      incidentsCount: (filteredIncidentsData as any)?.features?.length || 0,
-      firstIncident: (filteredIncidentsData as any)?.features?.[0]?.properties?.title
-    });
-    
     if ((filteredIncidentsData as any)?.features) {
       const sortedIncidents = [...(filteredIncidentsData as any).features].sort((a: any, b: any) => {
         return getTimestamp(a) - getTimestamp(b);

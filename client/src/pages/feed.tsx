@@ -429,6 +429,7 @@ export default function Feed({ initialViewMode = 'feed' }: FeedProps) {
             filters={mapFilters}
             onFilterChange={handleMapFilterChange}
             onClose={() => setMapSidebarOpen(false)}
+            isActive={viewMode === 'map'}
           />
           <div className={`absolute top-[6.5rem] right-0 bottom-0 transition-all duration-300 ${
             mapSidebarOpen && !isMobile ? 'left-80' : 'left-0'
@@ -436,6 +437,7 @@ export default function Feed({ initialViewMode = 'feed' }: FeedProps) {
             <TrafficMap 
               filters={mapFilters}
               onEventSelect={(incident) => navigateToIncident(incident, setLocation)}
+              isActive={viewMode === 'map'}
             />
           </div>
         </div>
