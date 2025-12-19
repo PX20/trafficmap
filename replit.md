@@ -132,6 +132,25 @@ The ViewModeContext provides instant switching between feed and map views withou
 
 4. **Performance Impact**: Eliminated 30-second navigation delays on mobile by preventing Leaflet map remounting
 
+### Persistent Feed Architecture for Mobile Performance (December 2024)
+To prevent Leaflet map reinitializing on navigation, Feed component stays mounted:
+
+1. **Overlay Routes** (profile, notifications, saved, reactions, privacy, help):
+   - Feed stays mounted but hidden with CSS `hidden` class
+   - Overlay page renders on top of hidden Feed
+   - When navigating back, Feed is already initialized - instant display
+
+2. **Full Page Routes** (create, admin, business pages, messages):
+   - These fully unmount Feed as before (acceptable tradeoff)
+   - Map reinitializes only for these less-frequently-used pages
+
+3. **Lazy Loading**: Overlay pages use React.lazy() with Suspense for better initial load
+
+4. **Implementation in App.tsx**:
+   - `OVERLAY_ROUTES` array defines which pages use the overlay pattern
+   - `isOverlayRoute` check determines if Feed should stay mounted
+   - `isFullPageRoute` check for pages that require full unmount
+
 ### Map Performance & Incident Aging (December 2024)
 The map includes advanced performance optimizations and incident aging:
 
