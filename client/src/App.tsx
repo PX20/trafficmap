@@ -4,15 +4,13 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense, lazy } from "react";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
 import AuthPage from "@/pages/auth-page";
 import Feed from "@/pages/feed";
-import Profile from "@/pages/profile";
 import UserProfile from "@/pages/user-profile";
 import Messages from "@/pages/messages";
-import Notifications from "@/pages/notifications";
 import CreateAd from "@/pages/create-ad";
 import BusinessUpgrade from "@/pages/business-upgrade";
 import BusinessDashboard from "@/pages/business-dashboard";
@@ -23,13 +21,24 @@ import EditAd from "@/pages/edit-ad";
 import EditIncident from "@/pages/edit-incident";
 import IncidentDetail from "@/pages/incident-detail";
 import Create from "@/pages/create";
-import SavedPosts from "@/pages/saved-posts";
-import MyReactions from "@/pages/my-reactions";
-import Privacy from "@/pages/privacy";
-import Help from "@/pages/help";
 import { TermsAndConditionsModal } from "@/components/terms-and-conditions-modal";
 import { OnboardingWizard } from "@/components/onboarding-wizard";
 import { ViewModeProvider } from "@/contexts/view-mode-context";
+
+const Profile = lazy(() => import("@/pages/profile"));
+const Notifications = lazy(() => import("@/pages/notifications"));
+const SavedPosts = lazy(() => import("@/pages/saved-posts"));
+const MyReactions = lazy(() => import("@/pages/my-reactions"));
+const Privacy = lazy(() => import("@/pages/privacy"));
+const Help = lazy(() => import("@/pages/help"));
+
+const OVERLAY_ROUTES = ['/profile', '/notifications', '/saved', '/reactions', '/privacy', '/help'];
+
+const PageLoading = () => (
+  <div className="min-h-screen flex items-center justify-center bg-background">
+    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+  </div>
+);
 
 function Router() {
   const { user, isLoading } = useAuth();
@@ -98,34 +107,61 @@ function Router() {
   // Handle unauthenticated users first
   if (!isAuthenticated) {
     return (
-      <Switch>
-        <Route path="/login" component={Login} />
-        <Route path="/privacy" component={Privacy} />
-        <Route path="/help" component={Help} />
-        <Route path="/" component={AuthPage} />
-        <Route component={AuthPage} />
-      </Switch>
+      <Suspense fallback={<PageLoading />}>
+        <Switch>
+          <Route path="/login" component={Login} />
+          <Route path="/privacy" component={Privacy} />
+          <Route path="/help" component={Help} />
+          <Route path="/" component={AuthPage} />
+          <Route component={AuthPage} />
+        </Switch>
+      </Suspense>
     );
   }
 
   // Handle authenticated users  
   // Determine which route to render (use background route if on incident route)
   const routeToRender = isIncidentRoute ? backgroundRoute : location;
+  const routePath = routeToRender.split('?')[0];
   
-  // Helper function to render route components properly  
-  const renderRouteComponent = (route: string) => {
+  // Check if we're on an overlay route (profile, notifications, etc.)
+  // These pages should render on top of Feed while keeping Feed mounted
+  const isOverlayRoute = OVERLAY_ROUTES.includes(routePath);
+  
+  // Check if we're on a page that needs full unmount (create, admin, business pages, etc.)
+  const isFullPageRoute = [
+    '/create', '/advertise', '/create-ad', '/business-upgrade', 
+    '/business-dashboard', '/account-setup', '/admin', '/login', '/messages'
+  ].includes(routePath) || 
+    routePath.startsWith('/edit-ad/') || 
+    routePath.startsWith('/edit-incident/') || 
+    routePath.startsWith('/users/') || 
+    routePath.startsWith('/messages/');
+  
+  // Helper function to render overlay pages with Suspense
+  const renderOverlayPage = () => {
+    switch (routePath) {
+      case '/profile': return <Suspense fallback={<PageLoading />}><Profile /></Suspense>;
+      case '/notifications': return <Suspense fallback={<PageLoading />}><Notifications /></Suspense>;
+      case '/saved': return <Suspense fallback={<PageLoading />}><SavedPosts /></Suspense>;
+      case '/reactions': return <Suspense fallback={<PageLoading />}><MyReactions /></Suspense>;
+      case '/privacy': return <Suspense fallback={<PageLoading />}><Privacy /></Suspense>;
+      case '/help': return <Suspense fallback={<PageLoading />}><Help /></Suspense>;
+      default: return null;
+    }
+  };
+  
+  // Helper function to render full page routes  
+  const renderFullPageRoute = () => {
     if (needsAccountSetup) {
       return <AccountSetup />;
     }
-    
-    // Strip query parameters for route matching
-    const routePath = route.split('?')[0];
     
     // Handle parameterized routes by creating a temporary Switch with the background route
     if (routePath.startsWith('/edit-ad/') || routePath.startsWith('/edit-incident/') || 
         routePath.startsWith('/users/') || routePath.startsWith('/messages/')) {
       return (
-        <Switch location={route}>
+        <Switch location={routeToRender}>
           <Route path="/edit-ad/:id" component={EditAd} />
           <Route path="/edit-incident/:id" component={EditIncident} />
           <Route path="/users/:userId" component={UserProfile} />
@@ -135,34 +171,40 @@ function Router() {
       );
     }
     
-    // Handle simple routes (use path without query params)
-    // Note: /map and /feed both render Feed - view mode is controlled via ViewModeContext
     switch (routePath) {
-      case '/map': return <Feed />;
-      case '/feed': return <Feed />;
       case '/create': return <Create />;
       case '/advertise':
       case '/create-ad': return <CreateAd />;
       case '/business-upgrade': return <BusinessUpgrade />;
       case '/business-dashboard': return <BusinessDashboard />;
       case '/account-setup': return <AccountSetup />;
-      case '/profile': return <Profile />;
       case '/messages': return <Messages />;
-      case '/notifications': return <Notifications />;
       case '/admin': return <AdminDashboard />;
       case '/login': return <Login />;
-      case '/saved': return <SavedPosts />;
-      case '/reactions': return <MyReactions />;
-      case '/privacy': return <Privacy />;
-      case '/help': return <Help />;
-      default: return <Feed />; // Default to Feed
+      default: return <Feed />;
     }
   };
   
   return (
     <>
-      {/* Render background route (or current route if not on incident) */}
-      {renderRouteComponent(routeToRender)}
+      {/* 
+        ALWAYS keep Feed mounted unless we're on a full-page route.
+        This prevents Leaflet map from being destroyed on navigation to overlay pages.
+        Overlay pages render on top of Feed with their own layout.
+      */}
+      {isFullPageRoute ? (
+        renderFullPageRoute()
+      ) : (
+        <>
+          {/* Feed is always visible/mounted for feed, map, and overlay routes */}
+          <div className={isOverlayRoute ? "hidden" : undefined}>
+            <Feed />
+          </div>
+          
+          {/* Overlay pages render on top when active */}
+          {isOverlayRoute && renderOverlayPage()}
+        </>
+      )}
       
       {/* Incident Detail Modal Overlay - Render over any page when on incident route */}
       {isIncidentRoute && incidentMatch && (
