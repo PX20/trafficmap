@@ -15,6 +15,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import type { FilterState } from "@/types/filters";
+import { useViewMode } from "@/contexts/view-mode-context";
 import {
   Sheet,
   SheetContent,
@@ -70,7 +71,7 @@ export default function Feed({ initialViewMode = 'feed' }: FeedProps) {
   const [reportFormOpen, setReportFormOpen] = useState(false);
   const [reportEntryPoint, setReportEntryPoint] = useState<EntryPoint>("post");
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [viewMode, setViewMode] = useState<'feed' | 'map'>(initialViewMode);
+  const { viewMode, setViewMode } = useViewMode();
   const [menuOpen, setMenuOpen] = useState(false);
   const [distanceFilter, setDistanceFilter] = useState<DistanceFilter>('10km');
   const [mapSidebarOpen, setMapSidebarOpen] = useState(false);

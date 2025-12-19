@@ -11,6 +11,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { LocationAutocomplete } from "@/components/location-autocomplete";
 import { IncidentReportForm } from "@/components/incident-report-form";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useViewMode } from "@/contexts/view-mode-context";
 
 interface AppHeaderProps {
   onMenuToggle: () => void;
@@ -20,8 +21,23 @@ interface AppHeaderProps {
 
 export function AppHeader({ onMenuToggle, onFilterToggle, showFilterButton }: AppHeaderProps) {
   const { user, isAuthenticated } = useAuth();
-  const [location] = useLocation();
+  const [location, setLocationUrl] = useLocation();
   const isMobile = useIsMobile();
+  const { viewMode, setViewMode } = useViewMode();
+  
+  // Check if we're on a feed/map page
+  const isOnFeedPage = location === "/" || location === "/feed" || location === "/map";
+  
+  const handleViewSwitch = (mode: 'map' | 'feed') => {
+    if (isOnFeedPage) {
+      // Just toggle view mode - instant!
+      setViewMode(mode);
+    } else {
+      // Navigate to feed page and set view mode
+      setViewMode(mode);
+      setLocationUrl('/feed');
+    }
+  };
   const [isLocationDrawerOpen, setIsLocationDrawerOpen] = useState(false);
   const [reportFormOpen, setReportFormOpen] = useState(false);
   const [currentLocation, setCurrentLocation] = useState(() => 
@@ -77,26 +93,24 @@ export function AppHeader({ onMenuToggle, onFilterToggle, showFilterButton }: Ap
             <div className="flex items-center gap-2">
               {/* Core Navigation - Always visible */}
               <div className="flex items-center bg-muted p-1 rounded-lg gap-1">
-                <Link href="/map">
-                  <Button
-                    variant={location === "/map" ? "default" : "ghost"}
-                    size="sm"
-                    className="h-11 w-11 p-0 text-xs"
-                    data-testid="button-map-view"
-                  >
-                    <Map className="w-4 h-4" />
-                  </Button>
-                </Link>
-                <Link href="/feed">
-                  <Button
-                    variant={location === "/feed" || location === "/" ? "default" : "ghost"}
-                    size="sm"
-                    className="h-11 w-11 p-0 text-xs"
-                    data-testid="button-feed-view"
-                  >
-                    <List className="w-4 h-4" />
-                  </Button>
-                </Link>
+                <Button
+                  onClick={() => handleViewSwitch('map')}
+                  variant={isOnFeedPage && viewMode === 'map' ? "default" : "ghost"}
+                  size="sm"
+                  className="h-11 w-11 p-0 text-xs"
+                  data-testid="button-map-view"
+                >
+                  <Map className="w-4 h-4" />
+                </Button>
+                <Button
+                  onClick={() => handleViewSwitch('feed')}
+                  variant={isOnFeedPage && viewMode === 'feed' ? "default" : "ghost"}
+                  size="sm"
+                  className="h-11 w-11 p-0 text-xs"
+                  data-testid="button-feed-view"
+                >
+                  <List className="w-4 h-4" />
+                </Button>
                 <Link href="/messages">
                   <Button
                     variant={location === "/messages" ? "default" : "ghost"}
@@ -231,28 +245,26 @@ export function AppHeader({ onMenuToggle, onFilterToggle, showFilterButton }: Ap
               
               {/* Desktop View Toggle */}
               <div className="flex items-center bg-muted p-1.5 rounded-lg gap-1">
-                <Link href="/map">
-                  <Button
-                    variant={location === "/map" ? "default" : "ghost"}
-                    size="sm"
-                    className="h-9 px-4 font-medium"
-                    data-testid="button-map-view"
-                  >
-                    <Map className="w-4 h-4 mr-2" />
-                    Map
-                  </Button>
-                </Link>
-                <Link href="/feed">
-                  <Button
-                    variant={location === "/feed" || location === "/" ? "default" : "ghost"}
-                    size="sm"
-                    className="h-9 px-4 font-medium"
-                    data-testid="button-feed-view"
-                  >
-                    <List className="w-4 h-4 mr-2" />
-                    Feed
-                  </Button>
-                </Link>
+                <Button
+                  onClick={() => handleViewSwitch('map')}
+                  variant={isOnFeedPage && viewMode === 'map' ? "default" : "ghost"}
+                  size="sm"
+                  className="h-9 px-4 font-medium"
+                  data-testid="button-map-view"
+                >
+                  <Map className="w-4 h-4 mr-2" />
+                  Map
+                </Button>
+                <Button
+                  onClick={() => handleViewSwitch('feed')}
+                  variant={isOnFeedPage && viewMode === 'feed' ? "default" : "ghost"}
+                  size="sm"
+                  className="h-9 px-4 font-medium"
+                  data-testid="button-feed-view"
+                >
+                  <List className="w-4 h-4 mr-2" />
+                  Feed
+                </Button>
                 <Link href="/messages">
                   <Button
                     variant={location === "/messages" ? "default" : "ghost"}

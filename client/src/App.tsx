@@ -29,6 +29,7 @@ import Privacy from "@/pages/privacy";
 import Help from "@/pages/help";
 import { TermsAndConditionsModal } from "@/components/terms-and-conditions-modal";
 import { OnboardingWizard } from "@/components/onboarding-wizard";
+import { ViewModeProvider } from "@/contexts/view-mode-context";
 
 function Router() {
   const { user, isLoading } = useAuth();
@@ -135,9 +136,10 @@ function Router() {
     }
     
     // Handle simple routes (use path without query params)
+    // Note: /map and /feed both render Feed - view mode is controlled via ViewModeContext
     switch (routePath) {
-      case '/map': return <Feed initialViewMode="map" />;
-      case '/feed': return <Feed initialViewMode="feed" />;
+      case '/map': return <Feed />;
+      case '/feed': return <Feed />;
       case '/create': return <Create />;
       case '/advertise':
       case '/create-ad': return <CreateAd />;
@@ -186,8 +188,10 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <Toaster />
-        <Router />
+        <ViewModeProvider>
+          <Toaster />
+          <Router />
+        </ViewModeProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );
