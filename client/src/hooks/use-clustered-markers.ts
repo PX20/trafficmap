@@ -9,6 +9,7 @@ export interface MarkerData {
   color: string;
   feature: any;
   timestamp: number;
+  agePercentage: number; // 0 = fresh, 1 = expired (for fade-out effect)
 }
 
 export interface ClusterPoint {
@@ -20,6 +21,7 @@ export interface ClusterPoint {
     color: string;
     feature: any;
     timestamp: number;
+    agePercentage: number;
   };
   geometry: {
     type: 'Point';
@@ -69,6 +71,7 @@ export function useClusteredMarkers(
         color: marker.color,
         feature: marker.feature,
         timestamp: marker.timestamp,
+        agePercentage: marker.agePercentage,
       },
       geometry: {
         type: 'Point',
@@ -82,9 +85,17 @@ export function useClusteredMarkers(
       radius,
       maxZoom,
       minZoom,
+      // Preserve ALL original properties, plus add aggregation fields for clusters
       map: (props: any) => ({
+        // Preserve original point properties for non-cluster rendering
+        id: props.id,
         markerType: props.markerType,
         color: props.color,
+        feature: props.feature,
+        timestamp: props.timestamp,
+        agePercentage: props.agePercentage,
+        cluster: false,
+        // Aggregation fields for cluster stats
         count: 1,
         typeCounts: { [props.markerType]: 1 },
         colorCounts: { [props.color]: 1 },

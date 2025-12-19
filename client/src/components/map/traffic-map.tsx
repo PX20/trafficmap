@@ -174,6 +174,19 @@ export function TrafficMap({ filters, onEventSelect, isActive = true }: TrafficM
         
         if (coords) {
           const postId = feature.id || feature.properties?.id || feature.properties?.guid || feature.properties?.eventId || JSON.stringify(coords);
+          
+          // Calculate aging for this event
+          const agingData = calculateIncidentAging({
+            category: 'traffic',
+            source: 'tmr',
+            lastUpdated: feature.properties?.tmrStartTime || feature.properties?.lastUpdated || new Date().toISOString(),
+            incidentTime: feature.properties?.tmrStartTime,
+            properties: feature.properties,
+          });
+          
+          // Skip expired events
+          if (!agingData.isVisible) continue;
+          
           markers.push({
             id: `event-${postId}`,
             lat: coords[0],
@@ -182,6 +195,7 @@ export function TrafficMap({ filters, onEventSelect, isActive = true }: TrafficM
             color: '#f97316', // Orange for traffic
             feature: feature,
             timestamp: getTimestamp(feature),
+            agePercentage: agingData.agePercentage,
           });
         }
       }
@@ -236,6 +250,21 @@ export function TrafficMap({ filters, onEventSelect, isActive = true }: TrafficM
           }
           
           const postId = feature.id || feature.properties?.id || feature.properties?.incidentId || feature.properties?.guid || JSON.stringify(coords);
+          
+          // Calculate aging for this incident (reuse existing props variable)
+          const agingData = calculateIncidentAging({
+            category: markerType,
+            source: props.source || 'community',
+            severity: props.severity,
+            status: props.status,
+            lastUpdated: props.lastUpdated || props.updatedAt || props.createdAt || new Date().toISOString(),
+            incidentTime: props.incidentTime || props.publishedAt,
+            properties: props,
+          });
+          
+          // Skip expired incidents
+          if (!agingData.isVisible) continue;
+          
           markers.push({
             id: `incident-${postId}`,
             lat: coords[0],
@@ -244,6 +273,7 @@ export function TrafficMap({ filters, onEventSelect, isActive = true }: TrafficM
             color,
             feature,
             timestamp: getTimestamp(feature),
+            agePercentage: agingData.agePercentage,
           });
         }
       }
@@ -452,14 +482,21 @@ export function TrafficMap({ filters, onEventSelect, isActive = true }: TrafficM
         newMarkers.push(marker);
         markersRef.current.set(`cluster-${cluster.properties.cluster_id}`, marker);
       } else {
-        // Render individual marker
+        // Render individual marker with aging effect
         const point = clusterOrPoint as any;
         const feature = point.properties.feature;
         const markerType = point.properties.markerType;
-        const color = point.properties.color;
+        const baseColor = point.properties.color;
+        const agePercentage = point.properties.agePercentage || 0;
+        
+        // Apply aged color - fresh markers are vibrant, older ones fade to grey
+        const agedColor = getAgedColor(baseColor, agePercentage);
+        
+        // Calculate opacity based on age (1.0 at fresh, 0.5 at expired)
+        const opacity = 1.0 - (agePercentage * 0.5);
         
         const marker = L.marker(coords, {
-          icon: createCustomMarker(markerType, color, 1.0),
+          icon: createCustomMarker(markerType, agedColor, opacity),
           zIndexOffset: Math.floor(point.properties.timestamp / 1000)
         });
         
