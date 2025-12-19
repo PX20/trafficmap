@@ -67,8 +67,33 @@ export function TrafficMap({ filters, onEventSelect, isActive = true }: TrafficM
   const clusterLayerRef = useRef<L.LayerGroup | null>(null);
   const viewportDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [currentZoom, setCurrentZoom] = useState(11);
-  const [viewportBounds, setViewportBounds] = useState<{ southwest: [number, number], northeast: [number, number] } | undefined>();
+  const [currentZoom, setCurrentZoom] = useState(8);
+  
+  // Seed initial viewport bounds from localStorage or Brisbane metro for faster first load
+  const [viewportBounds, setViewportBounds] = useState<{ southwest: [number, number], northeast: [number, number] } | undefined>(() => {
+    // Try to restore saved viewport from localStorage
+    const savedMapState = localStorage.getItem('qldSafetyMap_position');
+    if (savedMapState) {
+      try {
+        const { lat, lng, zoom } = JSON.parse(savedMapState);
+        // Calculate approximate bounds from saved center and zoom
+        // At zoom 8, roughly 2 degrees latitude/longitude visible
+        const latRange = 2.0 / Math.pow(2, Math.max(0, zoom - 8));
+        const lngRange = 2.5 / Math.pow(2, Math.max(0, zoom - 8));
+        return {
+          southwest: [lat - latRange, lng - lngRange],
+          northeast: [lat + latRange, lng + lngRange]
+        };
+      } catch (e) {
+        // Fall through to default
+      }
+    }
+    // Default to Brisbane metro area (much smaller than full Queensland)
+    return {
+      southwest: [-27.8, 152.7],  // SW of Brisbane metro
+      northeast: [-27.1, 153.4]   // NE of Brisbane metro  
+    };
+  });
 
   // 🎯 OPTIMIZED: Fetch only when map is active and has viewport bounds
   // When isActive is false, skip expensive data processing
@@ -230,8 +255,8 @@ export function TrafficMap({ filters, onEventSelect, isActive = true }: TrafficM
   // Use Supercluster for high-performance marker clustering
   const { getClusters, getClusterExpansionZoom } = useClusteredMarkers(allMarkerData, {
     radius: 60,
-    maxZoom: 15,
-    minZoom: 11,
+    maxZoom: 17,  // Align with map maxZoom (18) - 1 for better cluster expansion
+    minZoom: 6,   // Lowered from 11 - clustering handles large marker counts efficiently
   });
 
   // Initialize map
@@ -241,7 +266,7 @@ export function TrafficMap({ filters, onEventSelect, isActive = true }: TrafficM
     // Try to restore saved map position and zoom from localStorage
     const savedMapState = localStorage.getItem('qldSafetyMap_position');
     let centerCoords: [number, number] = [-27.4698, 153.0251]; // Brisbane default
-    let zoomLevel = 11; // Regional view - within our restricted range
+    let zoomLevel = 8; // State-wide view - clustering handles large marker counts
     
     if (savedMapState) {
       try {
@@ -264,8 +289,8 @@ export function TrafficMap({ filters, onEventSelect, isActive = true }: TrafficM
     );
 
     const map = L.map(mapRef.current, {
-      minZoom: 11, // Performance optimization - prevents loading too many incidents at once
-      maxZoom: 16, // Allow more detail for local areas
+      minZoom: 6, // Lowered from 11 - clustering handles large marker counts efficiently
+      maxZoom: 18, // Increased from 16 for more street-level detail
       maxBounds: queenslandBounds, // Restrict panning to Queensland
       maxBoundsViscosity: 1.0, // Firm boundary - no bouncing past limits
       // Improved touch handling
@@ -285,8 +310,8 @@ export function TrafficMap({ filters, onEventSelect, isActive = true }: TrafficM
     
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
       attribution: '© OpenStreetMap contributors, © CARTO',
-      minZoom: 11, // Match map's minimum zoom
-      maxZoom: 16 // Match map's maximum zoom
+      minZoom: 6, // Match map's minimum zoom
+      maxZoom: 18 // Match map's maximum zoom
     }).addTo(map);
 
     mapInstanceRef.current = map;
@@ -359,6 +384,26 @@ export function TrafficMap({ filters, onEventSelect, isActive = true }: TrafficM
     setIsLoading(incidentsLoading);
   }, [incidentsLoading]);
 
+  // FIX: Recalculate map dimensions when becoming visible
+  // Leaflet needs invalidateSize() when container was hidden during initialization
+  useEffect(() => {
+    if (isActive && mapInstanceRef.current) {
+      // Small delay to ensure CSS transitions complete
+      setTimeout(() => {
+        mapInstanceRef.current?.invalidateSize();
+        // Also update viewport bounds after resize
+        if (mapInstanceRef.current) {
+          const bounds = mapInstanceRef.current.getBounds();
+          setViewportBounds({
+            southwest: [bounds.getSouth(), bounds.getWest()],
+            northeast: [bounds.getNorth(), bounds.getEast()]
+          });
+          setCurrentZoom(mapInstanceRef.current.getZoom());
+        }
+      }, 100);
+    }
+  }, [isActive]);
+
   // OPTIMIZED: Update markers using Supercluster for high-performance clustering
   // Uses bulk layer operations for 10-50x faster rendering with 3000+ markers
   useEffect(() => {
@@ -401,7 +446,7 @@ export function TrafficMap({ filters, onEventSelect, isActive = true }: TrafficM
         // Click cluster to zoom in
         marker.on('click', () => {
           const expansionZoom = getClusterExpansionZoom(cluster.properties.cluster_id);
-          mapInstanceRef.current?.setView(coords, Math.min(expansionZoom, 16));
+          mapInstanceRef.current?.setView(coords, Math.min(expansionZoom, 18));
         });
         
         newMarkers.push(marker);
