@@ -151,6 +151,14 @@ To prevent Leaflet map reinitializing on navigation, Feed component stays mounte
    - `isOverlayRoute` check determines if Feed should stay mounted
    - `isFullPageRoute` check for pages that require full unmount
 
+5. **isActive Prop Optimization** (December 2024):
+   - Feed component receives `isActive={!isOverlayRoute}` prop
+   - When `isActive=false`:
+     - `useQuery` stops auto-refetching posts (refetchInterval: false)
+     - `refetchOnWindowFocus` is disabled
+     - TrafficMap and SimpleFilterSidebar also receive `isActive=false`
+   - This prevents background polling and expensive operations when Feed is hidden
+
 ### Map Performance & Incident Aging (December 2024)
 The map includes advanced performance optimizations and incident aging:
 

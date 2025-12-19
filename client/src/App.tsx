@@ -197,8 +197,9 @@ function Router() {
       ) : (
         <>
           {/* Feed is always visible/mounted for feed, map, and overlay routes */}
+          {/* Pass isActive=false when on overlay routes to pause expensive operations */}
           <div className={isOverlayRoute ? "hidden" : undefined}>
-            <Feed />
+            <Feed isActive={!isOverlayRoute} />
           </div>
           
           {/* Overlay pages render on top when active */}

@@ -62,9 +62,10 @@ type DistanceFilter = '1km' | '2km' | '5km' | '10km' | '25km' | '50km';
 
 interface FeedProps {
   initialViewMode?: 'feed' | 'map';
+  isActive?: boolean; // When false, pause expensive operations (data fetching, computations)
 }
 
-export default function Feed({ initialViewMode = 'feed' }: FeedProps) {
+export default function Feed({ initialViewMode = 'feed', isActive = true }: FeedProps) {
   const { user, logoutMutation } = useAuth();
   const isMobile = useIsMobile();
   const [, setLocation] = useLocation();
@@ -137,7 +138,10 @@ export default function Feed({ initialViewMode = 'feed' }: FeedProps) {
 
   const { data: postsData, isLoading, refetch } = useQuery({
     queryKey: ["/api/posts"],
-    refetchInterval: 60000,
+    // Only refetch when active - prevents background polling when on overlay pages
+    refetchInterval: isActive ? 60000 : false,
+    // Prevent background refetches when inactive
+    refetchOnWindowFocus: isActive,
   });
 
   const { data: unreadCount = 0 } = useQuery<number>({
@@ -430,7 +434,7 @@ export default function Feed({ initialViewMode = 'feed' }: FeedProps) {
             filters={mapFilters}
             onFilterChange={handleMapFilterChange}
             onClose={() => setMapSidebarOpen(false)}
-            isActive={viewMode === 'map'}
+            isActive={isActive && viewMode === 'map'}
           />
           <div className={`absolute top-[6.5rem] right-0 bottom-0 transition-all duration-300 ${
             mapSidebarOpen && !isMobile ? 'left-80' : 'left-0'
@@ -438,7 +442,7 @@ export default function Feed({ initialViewMode = 'feed' }: FeedProps) {
             <TrafficMap 
               filters={mapFilters}
               onEventSelect={(incident) => navigateToIncident(incident, setLocation)}
-              isActive={viewMode === 'map'}
+              isActive={isActive && viewMode === 'map'}
             />
           </div>
         </div>
