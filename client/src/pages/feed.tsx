@@ -219,8 +219,14 @@ export default function Feed({ initialViewMode = 'feed', isActive = true }: Feed
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
-    await refetch();
-    setTimeout(() => setIsRefreshing(false), 500);
+    try {
+      await refetch();
+    } catch (error) {
+      console.error('Refresh failed:', error);
+    } finally {
+      // Always stop the spinner after a short delay
+      setTimeout(() => setIsRefreshing(false), 500);
+    }
   };
 
   const handleCommentClick = (postId: string) => {

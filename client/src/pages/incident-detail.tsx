@@ -76,11 +76,17 @@ function IncidentDetailPage({ asModal = true, incidentId: propIncidentId }: Inci
     },
   });
   
-  // Fetch posts data
-  const { data: postsData, isLoading } = useQuery({
+  // Fetch posts data - ensure this always fetches when needed
+  const { data: postsData, isLoading, error } = useQuery({
     queryKey: ["/api/posts"],
     staleTime: 1 * 60 * 1000, // 1 minute
+    refetchOnMount: true, // Always check for fresh data when modal opens
   });
+  
+  // Log any query errors for debugging
+  if (error) {
+    console.error('Failed to fetch posts for incident detail:', error);
+  }
   
   // Find the specific post by ID
   const incident = (postsData as any)?.features?.find((feature: any) => {
@@ -94,6 +100,25 @@ function IncidentDetailPage({ asModal = true, incidentId: propIncidentId }: Inci
     // Also check properties.id for backward compatibility
     if (feature.properties?.id === decodedId) {
       return true;
+    }
+    
+    // Handle prefixed IDs (tmr:xxx, esq:xxx, etc.)
+    // The decodedId might be "tmr:abc123" but feature.id is just "abc123"
+    if (decodedId.includes(':')) {
+      const idWithoutPrefix = decodedId.split(':').slice(1).join(':');
+      if (feature.id === idWithoutPrefix || feature.properties?.id === idWithoutPrefix) {
+        return true;
+      }
+    }
+    
+    // Also check if the feature uses the prefixed format
+    const featureId = feature.id || feature.properties?.id;
+    const featureSource = feature.properties?.source;
+    if (featureSource && featureId) {
+      const prefixedFeatureId = `${featureSource}:${featureId}`;
+      if (prefixedFeatureId === decodedId) {
+        return true;
+      }
     }
     
     return false;
@@ -169,6 +194,28 @@ function IncidentDetailPage({ asModal = true, incidentId: propIncidentId }: Inci
       setLocation('/');
     }
   };
+  
+  // If query errored, show error
+  if (error) {
+    return (
+      <Dialog open={true} onOpenChange={handleClose}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Error Loading Incident</DialogTitle>
+          </DialogHeader>
+          <div className="p-4 text-center">
+            <p className="text-muted-foreground mb-4">
+              There was an error loading the incident. Please try again.
+            </p>
+            <Button onClick={handleClose}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Go Back
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
   
   // If no incident found, show error
   if (!isLoading && !incident) {
