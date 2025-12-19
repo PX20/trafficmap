@@ -114,6 +114,24 @@ The sidebar menu provides access to:
 - **GET /api/posts/:postId/saved**: Check if a post is saved
 - **GET /api/my-reactions**: Get posts the user has reacted to
 
+### ViewModeContext for Mobile Performance (December 2024)
+The ViewModeContext provides instant switching between feed and map views without route remounting:
+
+1. **Architecture**: Uses `derivedMode` (from URL) + `overrideMode` (for instant switching)
+   - `derivedMode`: Source of truth from current URL path
+   - `overrideMode`: Local state for instant view switching without URL changes
+
+2. **Override Reset Logic**: Only clears `overrideMode` when navigating AWAY from feed/map pages
+   - Preserves override when switching between feed/map or arriving from other pages
+   - Resets when leaving to /profile, /notifications, etc.
+
+3. **Components Using Context**:
+   - `app-header.tsx`: View mode toggle in header
+   - `mobile-nav.tsx`: Bottom navigation on mobile
+   - `feed.tsx`: Uses viewMode to show/hide map vs feed
+
+4. **Performance Impact**: Eliminated 30-second navigation delays on mobile by preventing Leaflet map remounting
+
 ### Map Performance & Incident Aging (December 2024)
 The map includes advanced performance optimizations and incident aging:
 
