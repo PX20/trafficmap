@@ -677,6 +677,9 @@ export class DatabaseStorage implements IStorage {
     const [swLat, swLng] = southWest;
     const [neLat, neLng] = northEast;
     
+    // Only return posts from the last 12 hours (matches incident aging system)
+    const cutoffTime = new Date(Date.now() - 12 * 60 * 60 * 1000);
+    
     return await db
       .select()
       .from(posts)
@@ -685,7 +688,8 @@ export class DatabaseStorage implements IStorage {
           sql`${posts.centroidLat} >= ${swLat}`,
           sql`${posts.centroidLat} <= ${neLat}`,
           sql`${posts.centroidLng} >= ${swLng}`,
-          sql`${posts.centroidLng} <= ${neLng}`
+          sql`${posts.centroidLng} <= ${neLng}`,
+          gte(posts.createdAt, cutoffTime) // Filter out posts older than 12 hours
         )
       )
       .orderBy(desc(posts.createdAt));
