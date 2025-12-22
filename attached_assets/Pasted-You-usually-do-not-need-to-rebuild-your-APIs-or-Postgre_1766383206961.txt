@@ -1,0 +1,141 @@
+You usually do not need to rebuild your APIs or Postgres layer. You migrate by moving the runtime (your API server) and pointing it at a managed Postgres database, then updating environment variables.
+
+The only time you “rebuild” is if your current setup relies on Replit-specific services or local file persistence.
+
+What carries across cleanly
+1) Your API code
+
+Express, Fastify, NestJS, Next.js API routes, etc. all deploy fine elsewhere.
+
+Anything that runs as a normal npm run start (or Docker) will carry across.
+
+What changes: mainly host config (ports, start command, env vars).
+
+2) Your Postgres schema and queries
+
+Your tables, migrations, and ORM usage (Prisma/Drizzle/Sequelize/Knex) carry across.
+
+You just replace the connection string.
+
+What changes: DATABASE_URL will point to the new database provider.
+
+What you need to do with Postgres specifically
+
+You have two paths:
+
+Path A (recommended): Move to managed Postgres and migrate data
+
+Pick a managed Postgres provider:
+
+Supabase
+
+Neon
+
+Railway Postgres
+
+Render Postgres
+
+Then migrate:
+
+Export schema + data from the Replit database
+
+Best: pg_dump (schema + data)
+
+Import into the new managed database
+
+psql restore, or provider import tooling
+
+Update DATABASE_URL in your deployed API service
+
+Run migrations once to confirm everything matches
+
+This keeps all your existing tables and data.
+
+Path B: Keep Replit Postgres temporarily
+
+If your Replit Postgres is externally reachable (it depends how you set it up), you can point the new host at it.
+
+I don’t recommend this long term because you are still tied to Replit for the most critical part of your system.
+
+What commonly breaks during migration
+1) Environment variables
+
+Replit Secrets do not automatically carry over.
+
+You will need to recreate:
+
+DATABASE_URL
+
+API keys
+
+auth secrets (JWT, session keys)
+
+map provider keys
+
+2) Ports and host binding
+
+Many platforms expect:
+
+PORT provided by the platform
+
+server binds to 0.0.0.0, not localhost
+
+So your server needs to do something like:
+
+app.listen(process.env.PORT || 3000, "0.0.0.0")
+
+3) Background jobs and schedulers
+
+If you have ingestion jobs running inside the Replit process:
+
+you’ll likely move those to a worker service or platform cron
+
+or use an external scheduler
+
+4) File uploads
+
+If you store uploads on disk in Replit:
+
+you’ll want object storage (S3/R2/Supabase Storage)
+
+A clean “no rebuild” migration pattern
+
+If you want the least pain:
+
+Frontend on Vercel or Cloudflare Pages
+
+API on Railway or Render
+
+DB on Supabase or Neon
+
+Your code stays almost identical.
+
+Quick checklist
+
+You do not rebuild if you can answer “yes” to most of these:
+
+Your API is a normal Node app with a clear start script
+
+Your database access uses DATABASE_URL
+
+You have migrations (Prisma/Drizzle/etc.) or can dump and restore
+
+You are not relying on local filesystem for important data
+
+Your scheduled tasks can be moved to cron or a worker
+
+If you tell me one thing, I can give you exact steps
+
+What framework are you using for the API (Express, Fastify, Next.js, NestJS) and what DB layer (Prisma, Drizzle, raw SQL)?
+
+If you’d rather not dig into that, here’s the generic command-level approach you can try immediately on Replit:
+
+pg_dump your database
+
+create a new managed Postgres
+
+psql restore
+
+deploy API elsewhere and set DATABASE_URL
+
+If you paste your current package.json scripts section and say what DB provider you used inside Replit, I’ll map it to the exact target platform setup without any back-and-forth.
